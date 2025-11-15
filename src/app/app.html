@@ -81,6 +81,59 @@
     </div>
   </section>
 
+  <!-- Video & Avatar Section -->
+  <section class="py-16 md:py-24 bg-gradient-to-b from-black/5 via-white to-white relative overflow-hidden">
+    <!-- Decorative Elements -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-10 left-20 w-64 h-64 bg-red-600/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-10 right-20 w-80 h-80 bg-red-600/3 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+        <!-- Left Column - Video Placeholder -->
+        <div class="relative order-2 lg:order-1">
+          <div class="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-black/10 group">
+            <!-- Video Placeholder -->
+            <div class="absolute inset-0 bg-gradient-to-br from-red-600/10 via-black/5 to-red-600/10 flex items-center justify-center">
+              <div class="text-center space-y-4">
+                <div class="w-20 h-20 mx-auto bg-red-600/20 rounded-full flex items-center justify-center group-hover:bg-red-600/30 transition-all duration-300">
+                  <svg class="w-10 h-10 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <p class="text-black/60 font-medium">Video Coming Soon</p>
+              </div>
+            </div>
+            <!-- Decorative overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+          <!-- Glow effect -->
+          <div class="absolute -inset-4 bg-red-600/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+
+        <!-- Right Column - Avatar -->
+        <div class="relative order-1 lg:order-2 flex justify-center lg:justify-end">
+          <div class="relative">
+            <!-- Avatar Image -->
+            <div class="relative z-10">
+              <div class="absolute -inset-4 bg-red-600/20 rounded-full blur-2xl transform rotate-6 animate-pulse"></div>
+              <div class="absolute -inset-4 bg-red-600/10 rounded-full blur-xl transform -rotate-6"></div>
+              <img 
+                src="/assets/jim-pic.png" 
+                alt="Avatar" 
+                class="relative z-10 w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-4 border-white shadow-2xl transform hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <!-- Decorative circles -->
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-red-600/10 rounded-full blur-xl"></div>
+            <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-red-600/5 rounded-full blur-xl"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Features Section -->
   <section class="py-8 md:py-12 bg-white">
     <div class="container mx-auto px-4">
