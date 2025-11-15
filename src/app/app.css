@@ -1,0 +1,128 @@
+/* Rocket Takeoff Animation */
+.rocket-container {
+  animation: rocket-container-float 4s linear infinite;
+}
+
+.rocket-float {
+  animation: rocket-float 4s linear infinite;
+  transform-origin: center center;
+}
+
+.rocket-glow {
+  animation: rocket-glow-pulse 2s ease-in-out infinite;
+}
+
+.rocket-pulse {
+  animation: rocket-pulse 2.5s ease-in-out infinite;
+}
+
+.rocket-trail {
+  width: 100px;
+  height: 200px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, transparent 100%);
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: particle-float 1.2s linear infinite;
+}
+
+.particle-1 {
+  left: 20%;
+  animation-delay: 0s;
+  animation-duration: 1.2s;
+}
+
+.particle-2 {
+  left: 35%;
+  animation-delay: 0.2s;
+  animation-duration: 1.3s;
+}
+
+.particle-3 {
+  left: 50%;
+  animation-delay: 0.1s;
+  animation-duration: 1.25s;
+}
+
+.particle-4 {
+  left: 65%;
+  animation-delay: 0.3s;
+  animation-duration: 1.35s;
+}
+
+.particle-5 {
+  left: 80%;
+  animation-delay: 0.15s;
+  animation-duration: 1.28s;
+}
+
+@keyframes rocket-float {
+  0% {
+    transform: translateY(30px);
+    opacity: 0.9;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-80px);
+    opacity: 0.7;
+  }
+}
+
+@keyframes rocket-container-float {
+  0% {
+    transform: translateY(20px);
+  }
+  100% {
+    transform: translateY(-60px);
+  }
+}
+
+@keyframes rocket-glow-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: rotate(6deg) scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: rotate(6deg) scale(1.1);
+  }
+}
+
+@keyframes rocket-pulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(20px) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-60px) scale(0.7);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-140px) scale(0.4);
+    opacity: 0;
+  }
+}
+
