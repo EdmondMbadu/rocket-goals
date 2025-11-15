@@ -1,9 +1,30 @@
 <div class="min-h-screen bg-white">
   <!-- Navigation Bar -->
   <nav
-    class="w-full px-4 md:px-8 py-6 flex justify-between items-center border-b border-black/5 sticky top-0 bg-white/95 backdrop-blur-sm z-50">
+    class="w-full px-4 md:px-8 py-6 flex justify-between items-center border-b border-black/5 sticky top-0 bg-white/95 backdrop-blur-sm z-50 relative">
     <div class="flex items-center">
       <img src="/assets/rocket-goals.png" alt="RocketGoals Logo" class="w-14 h-14 md:w-20 md:h-20 object-contain" />
+    </div>
+    <!-- Navigation Links - Centered -->
+    <div class="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+      <button
+        (click)="scrollToSection('hero')"
+        class="text-black/80 font-semibold text-sm uppercase tracking-wider hover:text-red-600 transition-all duration-300 relative group">
+        <span class="relative z-10">Overview</span>
+        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></span>
+      </button>
+      <button
+        (click)="scrollToSection('video-avatar')"
+        class="text-black/80 font-semibold text-sm uppercase tracking-wider hover:text-red-600 transition-all duration-300 relative group">
+        <span class="relative z-10">Learn More</span>
+        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></span>
+      </button>
+      <button
+        (click)="scrollToSection('features')"
+        class="text-black/80 font-semibold text-sm uppercase tracking-wider hover:text-red-600 transition-all duration-300 relative group">
+        <span class="relative z-10">Features</span>
+        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></span>
+      </button>
     </div>
     <div class="flex items-center gap-4">
       <button
@@ -18,7 +39,7 @@
   </nav>
 
   <!-- Hero Section -->
-  <section class="relative py-12 md:py-16 overflow-hidden bg-gradient-to-b from-white via-white to-black/5">
+  <section id="hero" class="relative py-12 md:py-16 overflow-hidden bg-gradient-to-b from-white via-white to-black/5">
     <!-- Decorative Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="absolute top-20 right-10 w-72 h-72 bg-red-600/5 rounded-full blur-3xl"></div>
@@ -82,7 +103,7 @@
   </section>
 
   <!-- Video & Avatar Section -->
-  <section class="py-16 md:py-24 bg-gradient-to-b from-black/5 via-white to-white relative overflow-hidden">
+  <section id="video-avatar" class="py-16 md:py-24 bg-gradient-to-b from-black/5 via-white to-white relative overflow-hidden">
     <!-- Decorative Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="absolute top-10 left-20 w-64 h-64 bg-red-600/5 rounded-full blur-3xl"></div>
@@ -152,7 +173,7 @@
   </section>
 
   <!-- Features Section -->
-  <section class="py-8 md:py-12 bg-white">
+  <section id="features" class="py-8 md:py-12 bg-white">
     <div class="container mx-auto px-4">
       <div class="text-center mb-16">
         <h2 class="text-4xl md:text-5xl font-black text-black mb-4">
