@@ -1,5 +1,19 @@
 {
   "projects": {
     "default": "rocket-prompt"
+  },
+  "targets": {
+    "rocket-prompt": {
+      "hosting": {
+        "rocket-goals": [
+          "rocket-goals"
+        ]
+      }
+    }
+  },
+  "etags": {
+    "rocket-prompt": {
+      "extensionInstances": {}
+    }
   }
 }

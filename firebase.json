@@ -23,7 +23,8 @@
     }
   ],
   "hosting": {
-    "public": "dist",
+    "site": "rocket-goals",
+    "public": "dist/rocket-goals/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
