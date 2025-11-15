@@ -4,7 +4,7 @@
 }
 
 .rocket-float {
-  animation: rocket-float 4s linear infinite;
+  animation: rocket-float-wobble 4s linear infinite;
   transform-origin: center center;
 }
 
@@ -17,66 +17,165 @@
 }
 
 .rocket-trail {
-  width: 100px;
-  height: 200px;
+  width: 150px;
+  height: 250px;
   z-index: 5;
   pointer-events: none;
 }
 
 .particle {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, transparent 100%);
+  background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, #b91c1c 80%, transparent 100%);
   border-radius: 50%;
-  opacity: 0.8;
-  animation: particle-float 1.2s linear infinite;
+  opacity: 0.9;
+  animation: particle-float 1.5s linear infinite;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
 }
 
 .particle-1 {
-  left: 20%;
+  left: 10%;
+  width: 6px;
+  height: 6px;
   animation-delay: 0s;
   animation-duration: 1.2s;
 }
 
 .particle-2 {
-  left: 35%;
-  animation-delay: 0.2s;
-  animation-duration: 1.3s;
+  left: 20%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 0.1s;
+  animation-duration: 1.4s;
 }
 
 .particle-3 {
-  left: 50%;
-  animation-delay: 0.1s;
-  animation-duration: 1.25s;
+  left: 30%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.05s;
+  animation-duration: 1.3s;
 }
 
 .particle-4 {
-  left: 65%;
-  animation-delay: 0.3s;
-  animation-duration: 1.35s;
+  left: 40%;
+  width: 9px;
+  height: 9px;
+  animation-delay: 0.15s;
+  animation-duration: 1.5s;
 }
 
 .particle-5 {
-  left: 80%;
-  animation-delay: 0.15s;
-  animation-duration: 1.28s;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 0.08s;
+  animation-duration: 1.35s;
+  transform: translateX(-50%);
 }
 
-@keyframes rocket-float {
+.particle-6 {
+  left: 60%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.2s;
+  animation-duration: 1.4s;
+}
+
+.particle-7 {
+  left: 70%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 0.12s;
+  animation-duration: 1.25s;
+}
+
+.particle-8 {
+  left: 80%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 0.18s;
+  animation-duration: 1.45s;
+}
+
+.particle-9 {
+  left: 90%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.25s;
+  animation-duration: 1.3s;
+}
+
+.particle-10 {
+  left: 15%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 0.3s;
+  animation-duration: 1.6s;
+}
+
+@keyframes rocket-float-wobble {
   0% {
-    transform: translateY(30px);
-    opacity: 0.9;
+    transform: translate(0px, 30px);
+    opacity: 0.4;
+  }
+  2% {
+    transform: translate(2px, 25px);
+  }
+  4% {
+    transform: translate(0px, 20px);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(-2px, 15px);
+  }
+  8% {
+    transform: translate(0px, 10px);
   }
   10% {
+    transform: translate(1px, 5px);
+  }
+  12% {
+    transform: translate(0px, 0px);
+  }
+  14% {
+    transform: translate(-1px, -10px);
+  }
+  16% {
+    transform: translate(0px, -20px);
+  }
+  18% {
+    transform: translate(2px, -30px);
+  }
+  20% {
+    transform: translate(0px, -40px);
+  }
+  30% {
+    transform: translate(-2px, -60px);
+  }
+  40% {
+    transform: translate(1px, -80px);
+  }
+  50% {
+    transform: translate(0px, -100px);
+  }
+  60% {
+    transform: translate(-1px, -120px);
+  }
+  70% {
+    transform: translate(0px, -140px);
     opacity: 1;
+  }
+  80% {
+    transform: translate(2px, -160px);
+    opacity: 0.7;
   }
   90% {
-    opacity: 1;
+    transform: translate(0px, -180px);
+    opacity: 0.3;
   }
   100% {
-    transform: translateY(-80px);
-    opacity: 0.7;
+    transform: translate(-1px, -200px);
+    opacity: 0;
   }
 }
 
@@ -85,7 +184,7 @@
     transform: translateY(20px);
   }
   100% {
-    transform: translateY(-60px);
+    transform: translateY(-140px);
   }
 }
 
@@ -116,12 +215,16 @@
     transform: translateY(20px) scale(1);
     opacity: 0.9;
   }
-  50% {
-    transform: translateY(-60px) scale(0.7);
+  30% {
+    transform: translateY(-40px) scale(0.9);
+    opacity: 0.8;
+  }
+  60% {
+    transform: translateY(-100px) scale(0.7);
     opacity: 0.6;
   }
   100% {
-    transform: translateY(-140px) scale(0.4);
+    transform: translateY(-180px) scale(0.4);
     opacity: 0;
   }
 }
