@@ -181,9 +181,28 @@ export class App {
     const conversationText = this.conversationHistory
       .map(item => {
         const role = item.role === 'user' ? 'You' : "Jim's Avatar";
-        const message = item.role === 'avatar' 
-          ? item.message.replace(/<[^>]*>/g, '') // Strip HTML tags
+        let message = item.role === 'avatar' 
+          ? item.message
           : item.message;
+        
+        // Convert HTML line breaks to actual newlines first
+        message = message.replace(/<br\s*\/?>/gi, '\n');
+        
+        // Strip HTML tags but preserve line breaks
+        message = message.replace(/<[^>]*>/g, '');
+        
+        // Clean up markdown asterisks and weird punctuation, but preserve spacing and line breaks
+        message = message
+          .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown (**text** -> text)
+          .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown (*text* -> text)
+          .replace(/`(.*?)`/g, '$1') // Remove inline code
+          .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove markdown links but keep text
+          .replace(/[•·▪▫‣⁃]/g, '-') // Replace weird bullet points with dash
+          .replace(/[—–]/g, '-') // Replace em/en dashes with regular dash
+          .replace(/[""]/g, '"') // Replace smart quotes with regular quotes
+          .replace(/['']/g, "'"); // Replace smart apostrophes with regular apostrophe
+        // Note: We intentionally DON'T normalize whitespace to preserve line breaks and spacing
+        
         return `${role}: ${message}`;
       })
       .join('\n\n');
@@ -211,8 +230,9 @@ export class App {
 <html>
 <head>
 <title>RocketGoals Conversation</title>
+<meta charset="utf-8">
 <style>
-@media print{@page{margin:1in}}
+@media print{@page{margin:1in;size:letter}}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;line-height:1.6;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px}
 h1{color:#dc2626;border-bottom:3px solid #dc2626;padding-bottom:10px;margin-bottom:30px}
 .message{margin-bottom:20px;padding:15px;border-radius:8px}
@@ -228,25 +248,60 @@ h1{color:#dc2626;border-bottom:3px solid #dc2626;padding-bottom:10px;margin-bott
 <div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
 ${this.conversationHistory.map((item) => {
   const role = item.role === 'user' ? 'You' : "Jim's Avatar";
-  const message = item.role === 'avatar' 
+  let message = item.role === 'avatar' 
     ? item.message.replace(/<[^>]*>/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
     : item.message;
+  // Clean up weird punctuation
+  message = message
+    .replace(/[•·▪▫‣⁃]/g, '-')
+    .replace(/[—–]/g, '-')
+    .replace(/[""]/g, '"')
+    .replace(/['']/g, "'");
   const messageClass = item.role === 'user' ? 'user-message' : 'avatar-message';
   return `<div class="message ${messageClass}"><div class="role">${role}</div><div class="content">${message}</div></div>`;
 }).join('')}
 </body>
 </html>`;
 
-    // Create blob and download directly
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `rocket-goals-conversation-${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Create a hidden iframe and trigger print to generate PDF
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    
+    document.body.appendChild(iframe);
+    
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (iframeDoc) {
+      iframeDoc.open();
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
+      
+      // Wait for content to load, then trigger print
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          // Remove iframe after a delay
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 250);
+      };
+    } else {
+      // Fallback: open in new window
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      }
+      document.body.removeChild(iframe);
+    }
   }
 
   /**
