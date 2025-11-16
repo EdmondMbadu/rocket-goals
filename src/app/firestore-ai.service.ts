@@ -10,6 +10,7 @@ export class FirestoreAIService {
   private readonly collectionName = 'public';
   private readonly promptField = 'prompt';
   private readonly responseField = 'response';
+  private activeUnsubscribes: Array<() => void> = [];
 
   private async initializeFirebase(): Promise<any> {
     if (!this.firebaseInitialized) {
@@ -104,6 +105,7 @@ export class FirestoreAIService {
                     // Error persisted too long, likely permanent
                     if (!hasResolved) {
                       hasResolved = true;
+                      this.activeUnsubscribes = this.activeUnsubscribes.filter(u => u !== unsubscribe);
                       unsubscribe();
                       const errorMsg = statusError || data['error'] || statusState || 'Unknown error occurred';
                       reject(new Error(`AI Error (after retry wait): ${errorMsg}`));
@@ -196,6 +198,7 @@ export class FirestoreAIService {
                 
                 if (statusState && statusState.toLowerCase() === 'complete' && !hasResolved) {
                   hasResolved = true;
+                  this.activeUnsubscribes = this.activeUnsubscribes.filter(u => u !== unsubscribe);
                   unsubscribe();
                   console.log(`✅ Complete response received (${response.length} chars)`);
                   resolve(response);
@@ -207,17 +210,22 @@ export class FirestoreAIService {
               console.error('❌ Error listening to document:', error);
               if (!hasResolved) {
                 hasResolved = true;
+                this.activeUnsubscribes = this.activeUnsubscribes.filter(u => u !== unsubscribe);
                 unsubscribe();
                 reject(error);
               }
             }
           );
+          
+          // Track this unsubscribe function
+          this.activeUnsubscribes.push(unsubscribe);
 
           // Timeout after 30 seconds
-          setTimeout(() => {
+          const timeoutId = setTimeout(() => {
             if (!hasResolved) {
               hasResolved = true;
               console.error('⏱️ Timeout: AI response took too long (30s)');
+              this.activeUnsubscribes = this.activeUnsubscribes.filter(u => u !== unsubscribe);
               unsubscribe();
               reject(new Error('Timeout: AI response took too long. Check if the Firestore extension is running.'));
             }
@@ -236,6 +244,22 @@ export class FirestoreAIService {
         reject(error);
       }
     });
+  }
+
+  /**
+   * Cancel all active AI requests
+   */
+  cancelAll(): void {
+    console.log('🛑 Cancelling all active AI requests...');
+    this.activeUnsubscribes.forEach(unsubscribe => {
+      try {
+        unsubscribe();
+      } catch (error) {
+        console.warn('Error cancelling request:', error);
+      }
+    });
+    this.activeUnsubscribes = [];
+    console.log('✅ All AI requests cancelled');
   }
 }
 

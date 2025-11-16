@@ -10,6 +10,8 @@ export class ElevenLabsService {
 
   private currentAudioQueue: Promise<void> = Promise.resolve();
   private isStreaming = false;
+  private currentAudioElement: HTMLAudioElement | null = null;
+  private audioElements: HTMLAudioElement[] = [];
 
   /**
    * Primary method: Uses ElevenLabs only (quality voice, no switching)
@@ -328,6 +330,10 @@ export class ElevenLabsService {
       const audioInitEndTime = performance.now();
       console.log(`⏱️ Audio element created in ${(audioInitEndTime - audioInitStartTime).toFixed(0)}ms`);
       
+      // Track audio element for stopping
+      this.currentAudioElement = audio;
+      this.audioElements.push(audio);
+      
       // Play the audio and clean up when done
       return new Promise((resolve, reject) => {
         let playStartTime: number | null = null;
@@ -367,12 +373,22 @@ export class ElevenLabsService {
           const totalTime = performance.now() - totalStartTime;
           console.log(`✅ Audio playback ended. Total time: ${totalTime.toFixed(0)}ms`);
           URL.revokeObjectURL(audioUrl);
+          // Remove from tracking
+          this.audioElements = this.audioElements.filter(a => a !== audio);
+          if (this.currentAudioElement === audio) {
+            this.currentAudioElement = null;
+          }
           resolve();
         };
         
         audio.onerror = (error) => {
           console.error('❌ Audio playback error:', error);
           URL.revokeObjectURL(audioUrl);
+          // Remove from tracking
+          this.audioElements = this.audioElements.filter(a => a !== audio);
+          if (this.currentAudioElement === audio) {
+            this.currentAudioElement = null;
+          }
           reject(error);
         };
         
@@ -399,6 +415,44 @@ export class ElevenLabsService {
       console.error('Error generating or playing speech:', error);
       throw error;
     }
+  }
+
+  /**
+   * Stop all audio playback and clear the queue
+   */
+  stopAll(): void {
+    console.log('🛑 Stopping all audio playback...');
+    
+    // Stop streaming
+    this.isStreaming = false;
+    
+    // Stop and remove all audio elements
+    this.audioElements.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        // Clean up object URL if possible
+        if (audio.src && audio.src.startsWith('blob:')) {
+          URL.revokeObjectURL(audio.src);
+        }
+      } catch (error) {
+        console.warn('Error stopping audio:', error);
+      }
+    });
+    
+    // Clear arrays
+    this.audioElements = [];
+    this.currentAudioElement = null;
+    
+    // Cancel Web Speech API if active
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
+    
+    // Reset queue
+    this.currentAudioQueue = Promise.resolve();
+    
+    console.log('✅ All audio stopped');
   }
 }
 

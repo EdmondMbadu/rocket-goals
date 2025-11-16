@@ -248,15 +248,34 @@ export class App {
   }
 
   closeConversation(): void {
+    console.log('🛑 Closing conversation and stopping all activity...');
+    
+    // Stop speech recognition
     this.stopListening();
+    this.speechRecognitionService.abort();
+    
+    // Stop all audio playback (TTS)
+    this.elevenLabsService.stopAll();
+    
+    // Cancel all AI requests
+    this.firestoreAIService.cancelAll();
+    
+    // Reset all state
     this.isConversationActive.set(false);
+    this.isSpeaking.set(false);
+    this.isListening.set(false);
     this.isThinking.set(false);
+    
     // Clear all typewriter intervals
     this.typewriterIntervals.forEach(interval => clearInterval(interval));
     this.typewriterIntervals.clear();
+    
+    // Clear conversation data
     this.conversationHistory = [];
     this.userMessage = '';
     this.errorMessage.set(null);
+    
+    console.log('✅ Conversation closed and all activity stopped');
   }
 
   /**
