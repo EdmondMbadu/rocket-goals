@@ -10,11 +10,11 @@ export class ElevenLabsService {
 
   /**
    * Primary method: Uses ElevenLabs only (quality voice, no switching)
-   * Optimized for speed with chunking for long texts
+   * Optimized for speed with chunking for very long texts
    */
   async speakAndPlay(text: string): Promise<void> {
-    // For long texts, use chunking to start faster
-    if (text.length > 1000) {
+    // Only use chunking for very long texts (reduces number of chunks)
+    if (text.length > 2000) {
       return this.speakWithChunking(text);
     } else {
       return this.speakWithElevenLabs(text);
@@ -22,24 +22,57 @@ export class ElevenLabsService {
   }
 
   /**
-   * Split text into chunks (first chunk is smaller for faster start)
+   * Split text into chunks optimized for speed (larger chunks = fewer API calls)
    */
   private splitIntoChunks(text: string): string[] {
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
     const chunks: string[] = [];
+    const targetChunkSize = 800; // Target ~800 chars per chunk (good balance)
+    const firstChunkSize = 400; // First chunk smaller for faster start
     
-    if (sentences.length === 0) return [text];
+    // First chunk: smaller for faster start
+    if (text.length > firstChunkSize) {
+      // Find a good break point (sentence end) near firstChunkSize
+      const firstPart = text.substring(0, firstChunkSize);
+      const lastSentenceEnd = Math.max(
+        firstPart.lastIndexOf('.'),
+        firstPart.lastIndexOf('!'),
+        firstPart.lastIndexOf('?')
+      );
+      
+      if (lastSentenceEnd > firstChunkSize * 0.5) {
+        chunks.push(text.substring(0, lastSentenceEnd + 1).trim());
+        text = text.substring(lastSentenceEnd + 1).trim();
+      } else {
+        chunks.push(text.substring(0, firstChunkSize).trim());
+        text = text.substring(firstChunkSize).trim();
+      }
+    } else {
+      return [text]; // Text is short enough, no chunking needed
+    }
     
-    // First chunk: first 2 sentences (smaller for faster generation)
-    const firstChunkSize = Math.min(2, sentences.length);
-    chunks.push(sentences.slice(0, firstChunkSize).join(' '));
-    
-    // Remaining chunks: group remaining sentences
-    if (sentences.length > firstChunkSize) {
-      const remaining = sentences.slice(firstChunkSize);
-      // Group into chunks of ~4 sentences each
-      for (let i = 0; i < remaining.length; i += 4) {
-        chunks.push(remaining.slice(i, i + 4).join(' '));
+    // Remaining chunks: split by target size at sentence boundaries
+    while (text.length > 0) {
+      if (text.length <= targetChunkSize) {
+        chunks.push(text.trim());
+        break;
+      }
+      
+      // Find sentence boundary near target size
+      const candidate = text.substring(0, targetChunkSize);
+      const lastSentenceEnd = Math.max(
+        candidate.lastIndexOf('.'),
+        candidate.lastIndexOf('!'),
+        candidate.lastIndexOf('?')
+      );
+      
+      if (lastSentenceEnd > targetChunkSize * 0.6) {
+        // Good break point found
+        chunks.push(text.substring(0, lastSentenceEnd + 1).trim());
+        text = text.substring(lastSentenceEnd + 1).trim();
+      } else {
+        // No good break point, split at target size anyway
+        chunks.push(text.substring(0, targetChunkSize).trim());
+        text = text.substring(targetChunkSize).trim();
       }
     }
     

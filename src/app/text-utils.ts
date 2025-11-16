@@ -14,13 +14,19 @@ export function stripMarkdownForTTS(text: string): string {
   // Remove markdown headers (# ## ###)
   cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
 
-  // Remove bold (**text** or __text__)
+  // Remove bold (**text** or __text__) - must be done before removing standalone asterisks
   cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
   cleaned = cleaned.replace(/__(.*?)__/g, '$1');
 
-  // Remove italic (*text* or _text_)
+  // Remove italic (*text* or _text_) - must be done before removing standalone asterisks
   cleaned = cleaned.replace(/\*(.*?)\*/g, '$1');
   cleaned = cleaned.replace(/_(.*?)_/g, '$1');
+  
+  // Remove any remaining standalone asterisks (bullets, etc.)
+  cleaned = cleaned.replace(/\s*\*\s+/g, ' '); // Standalone * with spaces
+  cleaned = cleaned.replace(/\s*\*\s*$/gm, ''); // Asterisk at end of line
+  cleaned = cleaned.replace(/^\s*\*\s*/gm, ''); // Asterisk at start of line
+  cleaned = cleaned.replace(/\s+\*\s+/g, ' '); // Asterisk between words
 
   // Remove links [text](url) -> text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
