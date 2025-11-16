@@ -207,101 +207,46 @@ export class App {
       return;
     }
 
-    // Create a new window with formatted conversation
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      this.errorMessage.set('Please allow popups to download PDF');
-      return;
-    }
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<title>RocketGoals Conversation</title>
+<style>
+@media print{@page{margin:1in}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;line-height:1.6;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px}
+h1{color:#dc2626;border-bottom:3px solid #dc2626;padding-bottom:10px;margin-bottom:30px}
+.message{margin-bottom:20px;padding:15px;border-radius:8px}
+.user-message{background-color:#dc2626;color:white;margin-left:20%;text-align:right}
+.avatar-message{background-color:#f5f5f5;color:#1a1a1a;margin-right:20%}
+.role{font-weight:bold;margin-bottom:8px;font-size:0.9em;opacity:0.9}
+.content{white-space:pre-wrap}
+.timestamp{font-size:0.8em;opacity:0.7;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>RocketGoals Conversation</h1>
+<div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
+${this.conversationHistory.map((item) => {
+  const role = item.role === 'user' ? 'You' : "Jim's Avatar";
+  const message = item.role === 'avatar' 
+    ? item.message.replace(/<[^>]*>/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+    : item.message;
+  const messageClass = item.role === 'user' ? 'user-message' : 'avatar-message';
+  return `<div class="message ${messageClass}"><div class="role">${role}</div><div class="content">${message}</div></div>`;
+}).join('')}
+</body>
+</html>`;
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>RocketGoals Conversation</title>
-          <style>
-            @media print {
-              @page {
-                margin: 1in;
-              }
-            }
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-              line-height: 1.6;
-              color: #1a1a1a;
-              max-width: 800px;
-              margin: 0 auto;
-              padding: 20px;
-            }
-            h1 {
-              color: #dc2626;
-              border-bottom: 3px solid #dc2626;
-              padding-bottom: 10px;
-              margin-bottom: 30px;
-            }
-            .message {
-              margin-bottom: 20px;
-              padding: 15px;
-              border-radius: 8px;
-            }
-            .user-message {
-              background-color: #dc2626;
-              color: white;
-              margin-left: 20%;
-              text-align: right;
-            }
-            .avatar-message {
-              background-color: #f5f5f5;
-              color: #1a1a1a;
-              margin-right: 20%;
-            }
-            .role {
-              font-weight: bold;
-              margin-bottom: 8px;
-              font-size: 0.9em;
-              opacity: 0.9;
-            }
-            .content {
-              white-space: pre-wrap;
-            }
-            .timestamp {
-              font-size: 0.8em;
-              opacity: 0.7;
-              margin-top: 10px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>RocketGoals Conversation</h1>
-          <div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
-          ${this.conversationHistory.map((item, index) => {
-            const role = item.role === 'user' ? 'You' : "Jim's Avatar";
-            const message = item.role === 'avatar' 
-              ? item.message.replace(/<[^>]*>/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
-              : item.message;
-            const messageClass = item.role === 'user' ? 'user-message' : 'avatar-message';
-            return `
-              <div class="message ${messageClass}">
-                <div class="role">${role}</div>
-                <div class="content">${message}</div>
-              </div>
-            `;
-          }).join('')}
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    
-    // Wait for content to load, then trigger print
-    setTimeout(() => {
-      printWindow.print();
-      // Close window after a short delay (user might cancel print)
-      setTimeout(() => {
-        printWindow.close();
-      }, 1000);
-    }, 250);
+    // Create blob and download directly
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rocket-goals-conversation-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   /**
