@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, doc, onSnapshot, Firestore, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, onSnapshot, Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 
 @Injectable({
@@ -28,10 +28,9 @@ export class FirestoreAIService {
         
         const writeStartTime = performance.now();
         
-        // Add document with prompt and createTime (required by Firebase Extension)
+        // Add document with prompt (custom Cloud Function doesn't need createTime)
         addDoc(collection(this.firestore, this.collectionName), {
-          [this.promptField]: userMessage,
-          createTime: serverTimestamp()
+          [this.promptField]: userMessage
         }).then((docRef) => {
           const writeTime = performance.now() - writeStartTime;
           console.log(`✅ Document created in ${writeTime.toFixed(0)}ms with ID:`, docRef.id);
