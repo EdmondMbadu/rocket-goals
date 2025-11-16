@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class ElevenLabsService {
   private readonly apiKey = 'sk_cec0819a20966aa5caf8a89d2136bcfbdc406d8970a5f218';
-  private readonly voiceId = 'JBFqnCBsd6RMkjVDRZzb'; // Default voice ID from your example
+  private readonly voiceId = 'mzrYpmliCpyQZ0vQjs6m';
   private readonly apiUrl = 'https://api.elevenlabs.io/v1/text-to-speech';
 
   private currentAudioQueue: Promise<void> = Promise.resolve();
