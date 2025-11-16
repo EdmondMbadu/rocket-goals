@@ -237,15 +237,15 @@ export class App {
       console.log(`Total time: ${totalTime.toFixed(0)}ms`);
       console.log('✅ AI finished speaking - waiting for user response');
       
-      // Auto-start listening only in Voice mode
+      // Auto-start listening only in Voice mode - longer delay for more natural feel
       if (this.conversationMode() === 'voice' && this.speechSupported() && this.isConversationActive() && !this.isListening()) {
-        // Small delay to ensure audio has finished
+        // Longer delay to let the response sink in and feel more natural
         setTimeout(() => {
           if (this.isConversationActive() && !this.isListening() && !this.isSpeaking()) {
             console.log('🎤 Auto-starting microphone after AI finished speaking (Voice mode)');
             this.startListening();
           }
-        }, 500);
+        }, 800); // Increased from 500ms to 800ms for more natural pause
       }
     } catch (error) {
       this.isThinking.set(false); // Hide thinking indicator on error
@@ -271,6 +271,8 @@ export class App {
     if (this.isSpeaking()) {
       console.log('🛑 User interrupting AI speech...');
       this.interruptAI();
+      // Small delay to ensure audio is fully stopped before starting speech recognition
+      await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 100ms for faster response
     }
 
     this.isListening.set(true);

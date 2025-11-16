@@ -291,29 +291,29 @@
           <!-- Status Text -->
           <div class="mt-8 text-center">
             @if (isSpeaking()) {
-            <p class="text-lg font-semibold text-red-600 flex items-center justify-center gap-2">
+            <p class="text-lg font-semibold text-red-600 flex items-center justify-center gap-2 transition-opacity duration-300">
               <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
               Speaking...
             </p>
             } @else if (isListening()) {
-            <p class="text-lg font-semibold text-red-600 flex items-center justify-center gap-2">
+            <p class="text-lg font-semibold text-red-600 flex items-center justify-center gap-2 transition-opacity duration-300">
               <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-              Listening to you...
+              Listening...
             </p>
             } @else if (isThinking()) {
-            <p class="text-lg font-semibold text-black/60 flex items-center justify-center gap-2">
+            <p class="text-lg font-semibold text-black/60 flex items-center justify-center gap-2 transition-opacity duration-300">
               <span class="w-2 h-2 bg-black/40 rounded-full animate-pulse"></span>
               Thinking...
             </p>
             } @else if (isWaitingForUser()) {
-            <p class="text-lg font-semibold text-blue-600 flex items-center justify-center gap-2">
+            <p class="text-lg font-semibold text-blue-600 flex items-center justify-center gap-2 transition-opacity duration-300">
               <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              Waiting for your response...
+              Your turn...
             </p>
             } @else {
-            <p class="text-lg font-semibold text-green-600 flex items-center justify-center gap-2">
+            <p class="text-lg font-semibold text-green-600 flex items-center justify-center gap-2 transition-opacity duration-300">
               <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              Ready to chat
+              Ready
             </p>
             }
           </div>
@@ -348,6 +348,7 @@
             [class.bg-orange-600]="isSpeaking()"
             [class.bg-red-700]="isListening()" 
             [class.animate-pulse]="isListening()"
+            [title]="isSpeaking() ? 'Click to interrupt and speak' : (isListening() ? 'Stop listening' : 'Start speaking')"
             class="px-6 py-4 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px] shadow-md hover:shadow-lg text-lg">
             @if (isListening()) {
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

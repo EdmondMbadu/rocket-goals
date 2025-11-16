@@ -63,39 +63,39 @@ export const processAIPrompt = functions.firestore
 
             // Mode-specific conversation guidelines
             let conversationGuidelines = '';
-            let maxOutputTokens = 80;
-            let maxChars = 100;
-            let maxSentences = 1;
+            let maxOutputTokens = 100; // Increased for more substantial responses
+            let maxChars = 150; // Increased for more substantial responses
+            let maxSentences = 3; // Allow 2-3 sentences for more natural flow
 
             if (mode === 'voice') {
                 conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (VOICE MODE):
-- Keep responses EXTREMELY BRIEF - ONE sentence maximum per response (20-30 words max)
-- This is a REAL-TIME VOICE CONVERSATION - speak like you're talking to someone, not writing an essay
+- BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
+- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-3 sentences, 40-60 words)
+- If you need clarification, ask ONE SHORT probing question (5-10 words) like "What's your biggest challenge?" or "What does success look like?"
+- After asking a probing question, wait for their response before providing your answer
 - Use natural, conversational language with contractions (I'm, you're, it's, don't, etc.)
-- After ONE sentence, STOP immediately and wait for the user to respond - never continue without their input
-- If a user asks for a detailed plan, offer to send it via email instead of reading it all out
-- Ask ONE question at a time and wait for the user's response before continuing
-- Reference previous parts of the conversation naturally when relevant
+- This is a REAL-TIME VOICE CONVERSATION - speak naturally, like a coach having a meaningful conversation
 - Match the user's energy and tone - be enthusiastic if they are, supportive if they need it
-- NEVER generate more than ONE sentence - if you have more to say, wait for the next turn
-- Think of this as a quick back-and-forth phone conversation, not a monologue`;
+- Reference previous parts of the conversation naturally when relevant
+- Build on the conversation - don't restart from scratch each time
+- The user can interrupt you at any time - be ready to stop and listen immediately`;
             } else {
                 // Chat mode - more natural, asks clarification questions
                 conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (CHAT MODE):
-- Keep responses SHORT and CONVERSATIONAL - 1-2 sentences maximum (30-50 words)
+- BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
+- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-3 sentences, 50-70 words)
+- If you need clarification, ask ONE SHORT probing question (5-10 words) like "What's your biggest challenge?" or "What does success look like?"
+- After asking a probing question, wait for their response before providing your answer
 - Talk like a REAL HUMAN having a friendly chat - use contractions (I'm, you're, it's, don't, can't, etc.)
-- ASK CLARIFICATION QUESTIONS frequently to truly understand the user before giving advice
-- Be curious and genuinely interested - ask "What do you mean by that?" or "Can you tell me more about X?"
-- Don't assume you understand - ask follow-up questions to get clarity
+- Be curious and genuinely interested - ask probing questions when you need clarity, but don't overdo it
 - Use natural, everyday language - avoid sounding like a textbook or corporate coach
 - Show empathy and understanding - acknowledge their feelings before jumping to solutions
-- Ask ONE question at a time and wait for their response
 - Be conversational and warm - like talking to a friend who's also a great coach
-- If something is unclear, ask for clarification rather than guessing
-- Keep it brief but meaningful - quality over quantity`;
-                maxOutputTokens = 120; // Slightly longer for chat mode
-                maxChars = 150;
-                maxSentences = 2;
+- Build on the conversation - don't restart from scratch each time
+- Keep it meaningful and substantial - quality over quantity`;
+                maxOutputTokens = 150; // Longer for more substantial responses
+                maxChars = 200;
+                maxSentences = 3;
             }
 
             // System prompt with instructions for brief, conversational responses
