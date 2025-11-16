@@ -25,7 +25,11 @@ export class FirestoreAIService {
     return this.firestore;
   }
 
-  async getAIResponse(userMessage: string, onStreamChunk?: (chunk: string) => void): Promise<string> {
+  async getAIResponse(
+    userMessage: string, 
+    conversationHistory?: Array<{ role: 'user' | 'avatar', message: string }>,
+    onStreamChunk?: (chunk: string) => void
+  ): Promise<string> {
     const totalStartTime = performance.now();
     
     // Lazy load Firebase modules
@@ -36,14 +40,25 @@ export class FirestoreAIService {
       try {
         console.log('📤 Sending prompt to Firestore collection:', this.collectionName);
         console.log('📝 Prompt:', userMessage);
+        console.log('💬 Conversation history length:', conversationHistory?.length || 0);
         
         const writeStartTime = performance.now();
         let lastResponseText = '';
         let firstChunkReceived = false;
         
-        // Add document with prompt (custom Cloud Function doesn't need createTime)
+        // Format conversation history for the AI (last 10 messages to keep context manageable)
+        const recentHistory = conversationHistory 
+          ? conversationHistory.slice(-10).map(item => ({
+              role: item.role === 'user' ? 'user' : 'model',
+              message: item.message
+            }))
+          : [];
+        
+        // Add document with prompt and conversation history
         addDoc(collection(firestore, this.collectionName), {
-          [this.promptField]: userMessage
+          [this.promptField]: userMessage,
+          conversationHistory: recentHistory,
+          timestamp: new Date().toISOString()
         }).then((docRef) => {
           const writeTime = performance.now() - writeStartTime;
           console.log(`✅ Document created in ${writeTime.toFixed(0)}ms with ID:`, docRef.id);

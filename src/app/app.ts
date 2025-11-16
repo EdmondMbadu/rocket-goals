@@ -26,6 +26,10 @@ export class App {
   errorMessage = signal<string | null>(null);
   speechSupported = signal(false);
   
+  // Conversation state management
+  conversationState = signal<'idle' | 'waiting_for_user' | 'ai_speaking' | 'user_speaking' | 'processing'>('idle');
+  isWaitingForUser = signal(false); // Indicates AI is waiting for user response
+  
   // Typewriter effect state
   private typewriterIntervals: Map<number, any> = new Map();
   private typewriterSpeed = 10; // milliseconds per character (faster = more responsive)
@@ -63,6 +67,16 @@ export class App {
     const welcomeMessage = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
     this.conversationHistory.push({ role: 'avatar', message: welcomeMessage });
     await this.speakMessage(welcomeMessage, 'avatar');
+    
+    // Auto-start listening after welcome message if speech is supported
+    if (this.speechSupported() && !this.isListening()) {
+      setTimeout(() => {
+        if (this.isConversationActive() && !this.isListening() && !this.isSpeaking()) {
+          console.log('🎤 Auto-starting microphone after welcome message');
+          this.startListening();
+        }
+      }, 1000); // Wait a bit longer for welcome message to finish
+    }
   }
 
   async sendMessage(message?: string): Promise<void> {
@@ -81,6 +95,8 @@ export class App {
     this.userMessage = '';
     this.errorMessage.set(null);
     this.isThinking.set(true); // Show thinking indicator
+    this.conversationState.set('processing');
+    this.isWaitingForUser.set(false);
 
     // Add user message to history
     this.conversationHistory.push({ role: 'user', message: textToSend });
@@ -102,6 +118,7 @@ export class App {
           firstChunkSpoken = true;
           this.isThinking.set(false); // Hide thinking indicator
           this.isSpeaking.set(true);
+          this.conversationState.set('ai_speaking');
           
           const timeToFirstChunk = performance.now() - startTime;
           console.log(`⚡ Starting TTS in ${timeToFirstChunk.toFixed(0)}ms`);
@@ -155,7 +172,7 @@ export class App {
         }
       };
       
-      const response = await this.firestoreAIService.getAIResponse(textToSend, streamCallback);
+      const response = await this.firestoreAIService.getAIResponse(textToSend, this.conversationHistory, streamCallback);
       
       const aiTime = performance.now() - startTime;
       console.log(`AI response received in ${aiTime.toFixed(0)}ms:`, response);
@@ -184,9 +201,23 @@ export class App {
       // Finish streaming TTS
       await this.elevenLabsService.finishStreaming();
       this.isSpeaking.set(false);
+      this.conversationState.set('waiting_for_user');
+      this.isWaitingForUser.set(true);
       
       const totalTime = performance.now() - startTime;
       console.log(`Total time: ${totalTime.toFixed(0)}ms`);
+      console.log('✅ AI finished speaking - waiting for user response');
+      
+      // Auto-start listening if speech is supported and conversation is active
+      if (this.speechSupported() && this.isConversationActive() && !this.isListening()) {
+        // Small delay to ensure audio has finished
+        setTimeout(() => {
+          if (this.isConversationActive() && !this.isListening() && !this.isSpeaking()) {
+            console.log('🎤 Auto-starting microphone after AI finished speaking');
+            this.startListening();
+          }
+        }, 500);
+      }
     } catch (error) {
       this.isThinking.set(false); // Hide thinking indicator on error
       this.isSpeaking.set(false);
@@ -214,6 +245,8 @@ export class App {
     }
 
     this.isListening.set(true);
+    this.conversationState.set('user_speaking');
+    this.isWaitingForUser.set(false);
     this.errorMessage.set(null);
 
     try {
@@ -225,6 +258,8 @@ export class App {
 
       // Automatically send the transcribed message
       await this.sendMessage(transcript);
+      
+      // Note: sendMessage will auto-start listening again after AI responds
     } catch (error) {
       console.error('Speech recognition error:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to recognize speech';
@@ -234,7 +269,7 @@ export class App {
   }
 
   /**
-   * Interrupt AI speech and stop all audio playback
+   * Interrupt AI speech and stop all audio playback with state preservation
    */
   private interruptAI(): void {
     console.log('🛑 Interrupting AI...');
@@ -246,18 +281,19 @@ export class App {
     this.typewriterIntervals.forEach(interval => clearInterval(interval));
     this.typewriterIntervals.clear();
     
-    // Complete any partial typewriter messages
+    // Complete any partial typewriter messages (preserve what was said)
     this.conversationHistory.forEach(item => {
       if (item.role === 'avatar' && item.displayedMessage !== undefined) {
         item.displayedMessage = item.message; // Complete the message display
       }
     });
     
-    // Reset speaking state
+    // Reset speaking state but preserve conversation state
     this.isSpeaking.set(false);
     this.isThinking.set(false);
+    this.conversationState.set('waiting_for_user');
     
-    console.log('✅ AI interrupted');
+    console.log('✅ AI interrupted - ready for user input');
   }
 
   stopListening(): void {
@@ -304,6 +340,8 @@ export class App {
     this.isSpeaking.set(false);
     this.isListening.set(false);
     this.isThinking.set(false);
+    this.conversationState.set('idle');
+    this.isWaitingForUser.set(false);
     
     // Clear all typewriter intervals
     this.typewriterIntervals.forEach(interval => clearInterval(interval));

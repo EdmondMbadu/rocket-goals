@@ -36,7 +36,7 @@ export class ElevenLabsService {
   }
 
   /**
-   * Add a chunk to the streaming queue
+   * Add a chunk to the streaming queue with natural pause detection
    */
   async addStreamChunk(chunk: string): Promise<void> {
     if (!this.isStreaming) {
@@ -45,9 +45,13 @@ export class ElevenLabsService {
     }
     
     // Queue this chunk to play after current audio finishes
-    this.currentAudioQueue = this.currentAudioQueue.then(() => {
+    this.currentAudioQueue = this.currentAudioQueue.then(async () => {
       if (chunk.trim().length > 0) {
         console.log(`🎤 Queueing chunk: ${chunk.substring(0, 30)}...`);
+        
+        // Remove pause detection - it's not needed and might cause issues
+        // The AI responses are already very short (1 sentence), so no need for pauses between chunks
+        
         return this.speakWithElevenLabs(chunk);
       }
       return Promise.resolve();

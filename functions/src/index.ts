@@ -32,8 +32,10 @@ export const processAIPrompt = functions.firestore
             return null;
         }
 
-        const prompt = data.prompt;
+        const userMessage = data.prompt;
+        const conversationHistory = data.conversationHistory || [];
         console.log(`🚀 Processing prompt for document ${documentId} (fast mode)`);
+        console.log(`💬 Conversation history: ${conversationHistory.length} messages`);
 
         try {
             // Update status to PROCESSING
@@ -59,13 +61,16 @@ export const processAIPrompt = functions.firestore
             const systemInstruction = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.
 
 CRITICAL CONVERSATION GUIDELINES:
-- Keep responses BRIEF and CONVERSATIONAL (2-3 sentences maximum per response)
-- Speak naturally with pauses - think of this as a real-time voice conversation, not a written essay
+- Keep responses EXTREMELY BRIEF - ONE sentence maximum per response (20-30 words max)
+- This is a REAL-TIME VOICE CONVERSATION - speak like you're talking to someone, not writing an essay
+- Use natural, conversational language with contractions (I'm, you're, it's, don't, etc.)
+- After ONE sentence, STOP immediately and wait for the user to respond - never continue without their input
 - If a user asks for a detailed plan, offer to send it via email instead of reading it all out
-- Ask one question at a time and wait for the user's response before continuing
-- Use natural conversation flow - speak, pause, listen, respond
-- Never generate long-form content that would take more than 30 seconds to speak
-- If you need to provide detailed information, break it into multiple short conversational exchanges
+- Ask ONE question at a time and wait for the user's response before continuing
+- Reference previous parts of the conversation naturally when relevant
+- Match the user's energy and tone - be enthusiastic if they are, supportive if they need it
+- NEVER generate more than ONE sentence - if you have more to say, wait for the next turn
+- Think of this as a quick back-and-forth phone conversation, not a monologue
 
 Using the ROCKET framework, you help users:
 - Remember their Future Self: Envision the person they are becoming and fuel that vision with passion.
@@ -134,22 +139,48 @@ This blueprint embodies your unique approach to achieving opulence through both 
                 model: "gemini-2.0-flash-exp", // Fastest model available
                 systemInstruction: systemInstruction,
                 generationConfig: {
-                    temperature: 0.7, // Balanced creativity/speed
+                    temperature: 0.8, // Slightly higher for more conversational tone
                     topP: 0.95,
                     topK: 40,
-                    maxOutputTokens: 300, // Reduced to enforce brief responses (2-3 sentences)
+                    maxOutputTokens: 80, // Very strict limit: 1 sentence max (~80 tokens = ~60 words)
                 },
             });
 
             console.log(`⏱️ Model initialized in ${Date.now() - aiStartTime}ms`);
 
+            // Build conversation history for Gemini API format
+            const history: Array<{ role: string, parts: Array<{ text: string }> }> = [];
+
+            // Add conversation history (excluding the current message)
+            conversationHistory.forEach((msg: any) => {
+                if (msg.role === 'user' || msg.role === 'model') {
+                    history.push({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.message || msg.text || '' }]
+                    });
+                }
+            });
+
+            // Add current user message
+            history.push({
+                role: 'user',
+                parts: [{ text: userMessage }]
+            });
+
+            console.log(`📝 Sending ${history.length} messages to AI (including current)`);
+
             // Generate content with streaming for instant response
             const generateStartTime = Date.now();
             let fullText = '';
             let firstChunkTime: number | null = null;
+            let sentenceCount = 0;
+            const MAX_SENTENCES = 1; // Hard limit: stop after 1 sentence (very brief)
+            const MAX_CHARS = 100; // Absolute max characters
 
-            // Use streaming API for faster first token
-            const result = await model.generateContentStream(prompt);
+            // Use streaming API with conversation history
+            const result = await model.generateContentStream({
+                contents: history,
+            });
 
             // Stream responses as they arrive
             let lastUpdateTime = Date.now();
@@ -159,6 +190,46 @@ This blueprint embodies your unique approach to achieving opulence through both 
                 const chunkText = chunk.text();
                 if (chunkText) {
                     fullText += chunkText;
+
+                    // Better sentence detection: count actual sentence endings
+                    // Look for sentence-ending punctuation followed by space or end of string
+                    const sentencePattern = /[.!?]+(\s+|$)/g;
+                    const sentences = fullText.match(sentencePattern) || [];
+                    sentenceCount = sentences.length;
+
+                    // Stop early if we've reached max sentences OR max characters
+                    if (sentenceCount >= MAX_SENTENCES || fullText.length >= MAX_CHARS) {
+                        if (sentenceCount >= MAX_SENTENCES) {
+                            // Find the end of the last complete sentence
+                            const lastSentenceEnd = Math.max(
+                                fullText.lastIndexOf('.'),
+                                fullText.lastIndexOf('!'),
+                                fullText.lastIndexOf('?')
+                            );
+
+                            if (lastSentenceEnd > 0) {
+                                fullText = fullText.substring(0, lastSentenceEnd + 1).trim();
+                                console.log(`🛑 Stopped at ${sentenceCount} sentences (enforcing limit)`);
+                            }
+                        } else if (fullText.length >= MAX_CHARS) {
+                            // Find the last sentence boundary before max chars
+                            const truncated = fullText.substring(0, MAX_CHARS);
+                            const lastSentenceEnd = Math.max(
+                                truncated.lastIndexOf('.'),
+                                truncated.lastIndexOf('!'),
+                                truncated.lastIndexOf('?')
+                            );
+
+                            if (lastSentenceEnd > 20) {
+                                fullText = fullText.substring(0, lastSentenceEnd + 1).trim();
+                                console.log(`🛑 Stopped at ${fullText.length} chars (enforcing character limit)`);
+                            } else {
+                                fullText = truncated.trim();
+                                console.log(`🛑 Stopped at ${fullText.length} chars (no sentence boundary found)`);
+                            }
+                        }
+                        break; // Exit the stream loop
+                    }
 
                     // Track first chunk time
                     if (firstChunkTime === null) {
@@ -172,7 +243,7 @@ This blueprint embodies your unique approach to achieving opulence through both 
                             status: "STREAMING",
                             updateTime: admin.firestore.FieldValue.serverTimestamp(),
                         });
-                        console.log(`📤 First chunk written to Firestore (${fullText.length} chars)`);
+                        console.log(`📤 First chunk written to Firestore (${fullText.length} chars, ${sentenceCount} sentences)`);
                         lastUpdateTime = Date.now();
                         lastUpdateLength = fullText.length;
                     } else {
@@ -189,6 +260,24 @@ This blueprint embodies your unique approach to achieving opulence through both 
                             lastUpdateLength = fullText.length;
                         }
                     }
+                }
+            }
+
+            // Validate and truncate response if it somehow exceeded limits (safety check)
+            if (fullText.length > MAX_CHARS || sentenceCount > MAX_SENTENCES) {
+                // Find the last sentence boundary
+                const lastSentenceEnd = Math.max(
+                    fullText.lastIndexOf('.'),
+                    fullText.lastIndexOf('!'),
+                    fullText.lastIndexOf('?')
+                );
+
+                if (lastSentenceEnd > 20) {
+                    fullText = fullText.substring(0, lastSentenceEnd + 1).trim();
+                    console.log(`✂️ Final truncation: ${fullText.length} chars, ${sentenceCount} sentences`);
+                } else if (fullText.length > MAX_CHARS) {
+                    fullText = fullText.substring(0, MAX_CHARS).trim();
+                    console.log(`✂️ Final truncation: ${fullText.length} chars (no sentence boundary)`);
                 }
             }
 
