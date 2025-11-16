@@ -1,36 +1,43 @@
 import { Injectable } from '@angular/core';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ElevenLabsService {
-  private client: ElevenLabsClient;
+  private readonly apiKey = 'sk_cec0819a20966aa5caf8a89d2136bcfbdc406d8970a5f218';
   private readonly voiceId = 'JBFqnCBsd6RMkjVDRZzb'; // Default voice ID from your example
-
-  constructor() {
-    const apiKey = 'sk_cec0819a20966aa5caf8a89d2136bcfbdc406d8970a5f218';
-    this.client = new ElevenLabsClient({ apiKey });
-  }
+  private readonly apiUrl = 'https://api.elevenlabs.io/v1/text-to-speech';
 
   async speakAndPlay(text: string): Promise<void> {
     try {
       console.log('Generating speech for:', text);
       
-      // Get the audio stream from ElevenLabs
-      const audioStream = await this.client.textToSpeech.convert(
-        this.voiceId,
-        {
+      // Call ElevenLabs REST API directly
+      const response = await fetch(`${this.apiUrl}/${this.voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': this.apiKey
+        },
+        body: JSON.stringify({
           text: text,
-          modelId: 'eleven_multilingual_v2',
-          outputFormat: 'mp3_44100_128',
-        }
-      );
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`);
+      }
 
       console.log('Audio stream received, converting to blob...');
 
-      // Convert ReadableStream to Blob using Response
-      const response = new Response(audioStream);
+      // Convert response to blob
       const blob = await response.blob();
       
       console.log('Blob created from stream, size:', blob.size, 'bytes');

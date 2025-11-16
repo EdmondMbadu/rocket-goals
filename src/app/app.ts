@@ -12,13 +12,13 @@ import { ElevenLabsService } from './elevenlabs.service';
 })
 export class App {
   protected readonly title = signal('rocket-goals');
-  
+
   // Conversation state
   isConversationActive = signal(false);
   isSpeaking = signal(false);
   userMessage = '';
   conversationHistory: Array<{ role: 'user' | 'avatar', message: string }> = [];
-  
+
   // Welcome messages
   private welcomeMessages = [
     "Hello! I'm Jim, your personal goal achievement coach. How can I help you today?",
@@ -26,7 +26,7 @@ export class App {
     "Hi there! Ready to power your impossible goals? Let's get started!"
   ];
 
-  constructor(private elevenLabsService: ElevenLabsService) {}
+  constructor(private elevenLabsService: ElevenLabsService) { }
 
   public scrollToSection(sectionId: string): void {
     const element = document.getElementById(sectionId);
@@ -50,23 +50,23 @@ export class App {
 
     const message = this.userMessage.trim();
     this.userMessage = '';
-    
+
     // Add user message to history
     this.conversationHistory.push({ role: 'user', message });
-    
+
     // Generate response (simple for now - you can integrate with an AI API later)
     const response = this.generateResponse(message);
-    
+
     // Add avatar response to history
     this.conversationHistory.push({ role: 'avatar', message: response });
-    
+
     // Speak the response
     await this.speakMessage(response, 'avatar');
   }
 
   private generateResponse(userMessage: string): string {
     const lowerMessage = userMessage.toLowerCase();
-    
+
     // Simple response logic - you can replace this with an AI API call
     if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
       return "Hello! Great to meet you. What goal would you like to work on today?";
@@ -89,7 +89,7 @@ export class App {
     }
 
     this.isSpeaking.set(true);
-    
+
     try {
       await this.elevenLabsService.speakAndPlay(message);
     } catch (error) {
