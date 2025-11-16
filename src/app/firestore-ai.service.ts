@@ -1,25 +1,35 @@
 import { Injectable } from '@angular/core';
-import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, doc, onSnapshot, Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirestoreAIService {
-  private firestore: Firestore;
+  private firestore: any = null;
+  private firebaseInitialized = false;
   private readonly collectionName = 'public';
   private readonly promptField = 'prompt';
   private readonly responseField = 'response';
 
-  constructor() {
-    // Initialize Firebase if not already initialized
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    this.firestore = getFirestore(app);
+  private async initializeFirebase(): Promise<any> {
+    if (!this.firebaseInitialized) {
+      // Dynamically import Firebase only when needed
+      const { getApp, getApps, initializeApp } = await import('firebase/app');
+      const { getFirestore } = await import('firebase/firestore');
+      
+      const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+      this.firestore = getFirestore(app);
+      this.firebaseInitialized = true;
+    }
+    return this.firestore;
   }
 
   async getAIResponse(userMessage: string): Promise<string> {
     const totalStartTime = performance.now();
+    
+    // Lazy load Firebase modules
+    const firestore = await this.initializeFirebase();
+    const { collection, addDoc, doc, onSnapshot } = await import('firebase/firestore');
     
     return new Promise((resolve, reject) => {
       try {
@@ -29,7 +39,7 @@ export class FirestoreAIService {
         const writeStartTime = performance.now();
         
         // Add document with prompt (custom Cloud Function doesn't need createTime)
-        addDoc(collection(this.firestore, this.collectionName), {
+        addDoc(collection(firestore, this.collectionName), {
           [this.promptField]: userMessage
         }).then((docRef) => {
           const writeTime = performance.now() - writeStartTime;
@@ -46,7 +56,7 @@ export class FirestoreAIService {
           
           // Listen for the response
           const unsubscribe = onSnapshot(
-            doc(this.firestore, this.collectionName, docRef.id),
+            doc(firestore, this.collectionName, docRef.id),
             (snapshot) => {
               if (!snapshot.exists()) {
                 console.log('⚠️ Document does not exist yet');

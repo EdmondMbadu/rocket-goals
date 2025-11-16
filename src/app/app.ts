@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -33,12 +33,15 @@ export class App {
     "Hi there! Ready to power your impossible goals? Let's get started!"
   ];
 
-  constructor(
-    private elevenLabsService: ElevenLabsService,
-    private speechRecognitionService: SpeechRecognitionService,
-    private firestoreAIService: FirestoreAIService
-  ) {
-    this.speechSupported.set(this.speechRecognitionService.isAvailable());
+  // Lazy load services only when needed
+  private elevenLabsService = inject(ElevenLabsService);
+  private speechRecognitionService = inject(SpeechRecognitionService);
+  private firestoreAIService = inject(FirestoreAIService);
+
+  constructor() {
+    // Check speech support without initializing the full service
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    this.speechSupported.set(!!SpeechRecognition);
   }
 
   public scrollToSection(sectionId: string): void {
