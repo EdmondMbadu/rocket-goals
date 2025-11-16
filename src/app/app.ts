@@ -68,8 +68,14 @@ export class App {
   async sendMessage(message?: string): Promise<void> {
     const textToSend = message || this.userMessage.trim();
 
-    if (!textToSend || this.isSpeaking() || this.isListening()) {
+    if (!textToSend || this.isListening()) {
       return;
+    }
+
+    // If AI is speaking, interrupt it first
+    if (this.isSpeaking()) {
+      console.log('🛑 User interrupting AI speech with typed message...');
+      this.interruptAI();
     }
 
     this.userMessage = '';
@@ -197,8 +203,14 @@ export class App {
   }
 
   async startListening(): Promise<void> {
-    if (!this.speechSupported() || this.isListening() || this.isSpeaking()) {
+    if (!this.speechSupported() || this.isListening()) {
       return;
+    }
+
+    // If AI is speaking, interrupt it first
+    if (this.isSpeaking()) {
+      console.log('🛑 User interrupting AI speech...');
+      this.interruptAI();
     }
 
     this.isListening.set(true);
@@ -219,6 +231,33 @@ export class App {
       this.errorMessage.set(errorMsg);
       this.isListening.set(false);
     }
+  }
+
+  /**
+   * Interrupt AI speech and stop all audio playback
+   */
+  private interruptAI(): void {
+    console.log('🛑 Interrupting AI...');
+    
+    // Stop all audio playback
+    this.elevenLabsService.stopAll();
+    
+    // Stop typewriter effects
+    this.typewriterIntervals.forEach(interval => clearInterval(interval));
+    this.typewriterIntervals.clear();
+    
+    // Complete any partial typewriter messages
+    this.conversationHistory.forEach(item => {
+      if (item.role === 'avatar' && item.displayedMessage !== undefined) {
+        item.displayedMessage = item.message; // Complete the message display
+      }
+    });
+    
+    // Reset speaking state
+    this.isSpeaking.set(false);
+    this.isThinking.set(false);
+    
+    console.log('✅ AI interrupted');
   }
 
   stopListening(): void {
