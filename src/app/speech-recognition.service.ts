@@ -10,7 +10,7 @@ export class SpeechRecognitionService {
   constructor() {
     // Check if browser supports speech recognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
+
     if (SpeechRecognition) {
       this.isSupported = true;
       this.recognition = new SpeechRecognition();
