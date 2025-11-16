@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ElevenLabsService } from './elevenlabs.service';
 import { SpeechRecognitionService } from './speech-recognition.service';
+import { FirestoreAIService } from './firestore-ai.service';
 
 @Component({
   selector: 'app-root',
@@ -32,7 +33,8 @@ export class App {
 
   constructor(
     private elevenLabsService: ElevenLabsService,
-    private speechRecognitionService: SpeechRecognitionService
+    private speechRecognitionService: SpeechRecognitionService,
+    private firestoreAIService: FirestoreAIService
   ) {
     this.speechSupported.set(this.speechRecognitionService.isAvailable());
   }
@@ -66,14 +68,28 @@ export class App {
     // Add user message to history
     this.conversationHistory.push({ role: 'user', message: textToSend });
 
-    // Generate response (simple for now - you can integrate with an AI API later)
-    const response = this.generateResponse(textToSend);
+    try {
+      // Get AI response from Firestore
+      console.log('Getting AI response for:', textToSend);
+      const response = await this.firestoreAIService.getAIResponse(textToSend);
+      console.log('AI response received:', response);
 
-    // Add avatar response to history
-    this.conversationHistory.push({ role: 'avatar', message: response });
+      // Add avatar response to history
+      this.conversationHistory.push({ role: 'avatar', message: response });
 
-    // Speak the response
-    await this.speakMessage(response, 'avatar');
+      // Speak the response
+      await this.speakMessage(response, 'avatar');
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to get AI response';
+      this.errorMessage.set(errorMsg);
+      
+      // Add error message to history
+      this.conversationHistory.push({ 
+        role: 'avatar', 
+        message: 'Sorry, I encountered an error. Please try again.' 
+      });
+    }
   }
 
   async startListening(): Promise<void> {
