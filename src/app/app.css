@@ -238,3 +238,50 @@
   }
 }
 
+/* Avatar Speaking Animation */
+.avatar-speaking {
+  animation: avatar-speak 0.5s ease-in-out infinite;
+  filter: brightness(1.1);
+}
+
+@keyframes avatar-speak {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1.1);
+  }
+  25% {
+    transform: scale(1.02);
+    filter: brightness(1.15);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+  75% {
+    transform: scale(1.02);
+    filter: brightness(1.15);
+  }
+}
+
+/* Enhanced glow when speaking */
+.avatar-speaking::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  animation: speaking-glow 0.5s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes speaking-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
