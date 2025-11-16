@@ -22,9 +22,14 @@ export class App {
   isListening = signal(false);
   isThinking = signal(false); // Indicates AI is processing
   userMessage = '';
-  conversationHistory: Array<{ role: 'user' | 'avatar', message: string }> = [];
+  conversationHistory: Array<{ role: 'user' | 'avatar', message: string, displayedMessage?: string }> = [];
   errorMessage = signal<string | null>(null);
   speechSupported = signal(false);
+  
+  // Typewriter effect state
+  private typewriterIntervals: Map<number, any> = new Map();
+  private typewriterSpeed = 10; // milliseconds per character (faster = more responsive)
+  private typewriterCatchUpSpeed = 5; // Even faster when catching up to new text
 
   // Welcome messages
   private welcomeMessages = [
@@ -100,11 +105,19 @@ export class App {
           
           // Update conversation history with partial response
           fullResponse = chunk;
-          // Remove any existing avatar message and add new one
+          // Remove any existing avatar message and add new one with typewriter
           this.conversationHistory = this.conversationHistory.filter(
             item => item.role !== 'avatar'
           );
-          this.conversationHistory.push({ role: 'avatar', message: fullResponse });
+          const avatarIndex = this.conversationHistory.length;
+          this.conversationHistory.push({ 
+            role: 'avatar', 
+            message: fullResponse,
+            displayedMessage: '' // Start with empty for typewriter effect
+          });
+          
+          // Start typewriter effect
+          this.startTypewriter(avatarIndex, fullResponse);
         } else {
           // Subsequent chunks - queue for TTS
           // Note: chunk here is only the new text (not the full accumulated)
@@ -113,11 +126,26 @@ export class App {
           // Update conversation history by appending the new chunk
           fullResponse += chunk;
           
-          // Update conversation history
-          this.conversationHistory = this.conversationHistory.filter(
-            item => item.role !== 'avatar'
+          // Find the avatar message and update it
+          const avatarIndex = this.conversationHistory.findIndex(
+            item => item.role === 'avatar'
           );
-          this.conversationHistory.push({ role: 'avatar', message: fullResponse });
+          
+          if (avatarIndex >= 0) {
+            // Update the full message
+            this.conversationHistory[avatarIndex].message = fullResponse;
+            // Continue typewriter effect with new text
+            this.continueTypewriter(avatarIndex, fullResponse);
+          } else {
+            // If no avatar message found, create one
+            const newIndex = this.conversationHistory.length;
+            this.conversationHistory.push({ 
+              role: 'avatar', 
+              message: fullResponse,
+              displayedMessage: ''
+            });
+            this.startTypewriter(newIndex, fullResponse);
+          }
         }
       };
       
@@ -128,10 +156,24 @@ export class App {
 
       // Store final formatted response for display
       fullResponse = response;
-      this.conversationHistory = this.conversationHistory.filter(
-        item => !(item.role === 'avatar')
+      
+      // Ensure typewriter completes for final response
+      const avatarIndex = this.conversationHistory.findIndex(
+        item => item.role === 'avatar'
       );
-      this.conversationHistory.push({ role: 'avatar', message: fullResponse });
+      
+      if (avatarIndex >= 0) {
+        this.conversationHistory[avatarIndex].message = fullResponse;
+        // Complete typewriter effect
+        this.completeTypewriter(avatarIndex, fullResponse);
+      } else {
+        this.conversationHistory.push({ 
+          role: 'avatar', 
+          message: fullResponse,
+          displayedMessage: ''
+        });
+        this.startTypewriter(this.conversationHistory.length - 1, fullResponse);
+      }
 
       // Finish streaming TTS
       await this.elevenLabsService.finishStreaming();
@@ -209,9 +251,114 @@ export class App {
     this.stopListening();
     this.isConversationActive.set(false);
     this.isThinking.set(false);
+    // Clear all typewriter intervals
+    this.typewriterIntervals.forEach(interval => clearInterval(interval));
+    this.typewriterIntervals.clear();
     this.conversationHistory = [];
     this.userMessage = '';
     this.errorMessage.set(null);
+  }
+
+  /**
+   * Start typewriter effect for a message
+   */
+  private startTypewriter(index: number, fullText: string): void {
+    // Clear any existing interval for this index
+    if (this.typewriterIntervals.has(index)) {
+      clearInterval(this.typewriterIntervals.get(index));
+    }
+    
+    const displayedLength = this.conversationHistory[index]?.displayedMessage?.length || 0;
+    let currentLength = displayedLength;
+    
+    const interval = setInterval(() => {
+      if (currentLength < fullText.length) {
+        currentLength++;
+        // Update displayed message
+        if (this.conversationHistory[index]) {
+          this.conversationHistory[index].displayedMessage = fullText.substring(0, currentLength);
+          // Trigger change detection by creating new array reference
+          this.conversationHistory = [...this.conversationHistory];
+        }
+      } else {
+        // Typewriter complete
+        clearInterval(interval);
+        this.typewriterIntervals.delete(index);
+      }
+    }, this.typewriterSpeed);
+    
+    this.typewriterIntervals.set(index, interval);
+  }
+
+  /**
+   * Continue typewriter effect with new text
+   */
+  private continueTypewriter(index: number, fullText: string): void {
+    // If typewriter is already running, restart with faster speed to catch up
+    if (this.typewriterIntervals.has(index)) {
+      // Clear existing and restart with catch-up speed
+      clearInterval(this.typewriterIntervals.get(index));
+      this.typewriterIntervals.delete(index);
+    }
+    
+    // Start with catch-up speed if there's a gap, otherwise normal speed
+    const currentDisplayed = this.conversationHistory[index]?.displayedMessage?.length || 0;
+    const gap = fullText.length - currentDisplayed;
+    
+    if (gap > 20) {
+      // Large gap - use catch-up speed
+      this.startTypewriterWithSpeed(index, fullText, this.typewriterCatchUpSpeed);
+    } else {
+      // Small gap - use normal speed
+      this.startTypewriter(index, fullText);
+    }
+  }
+
+  /**
+   * Start typewriter with custom speed
+   */
+  private startTypewriterWithSpeed(index: number, fullText: string, speed: number): void {
+    // Clear any existing interval for this index
+    if (this.typewriterIntervals.has(index)) {
+      clearInterval(this.typewriterIntervals.get(index));
+    }
+    
+    const displayedLength = this.conversationHistory[index]?.displayedMessage?.length || 0;
+    let currentLength = displayedLength;
+    
+    const interval = setInterval(() => {
+      if (currentLength < fullText.length) {
+        currentLength++;
+        // Update displayed message
+        if (this.conversationHistory[index]) {
+          this.conversationHistory[index].displayedMessage = fullText.substring(0, currentLength);
+          // Trigger change detection by creating new array reference
+          this.conversationHistory = [...this.conversationHistory];
+        }
+      } else {
+        // Typewriter complete
+        clearInterval(interval);
+        this.typewriterIntervals.delete(index);
+      }
+    }, speed);
+    
+    this.typewriterIntervals.set(index, interval);
+  }
+
+  /**
+   * Complete typewriter effect immediately
+   */
+  private completeTypewriter(index: number, fullText: string): void {
+    // Clear interval and set to full text
+    if (this.typewriterIntervals.has(index)) {
+      clearInterval(this.typewriterIntervals.get(index));
+      this.typewriterIntervals.delete(index);
+    }
+    
+    if (this.conversationHistory[index]) {
+      this.conversationHistory[index].displayedMessage = fullText;
+      this.conversationHistory = [...this.conversationHistory];
+    }
   }
 
   copyConversation(): void {

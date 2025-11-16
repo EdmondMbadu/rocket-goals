@@ -101,11 +101,11 @@ export const processAIPrompt = functions.firestore
                         lastUpdateTime = Date.now();
                         lastUpdateLength = fullText.length;
                     } else {
-                        // Update with accumulated text periodically (every ~150ms or every 30 chars)
+                        // Update with accumulated text more frequently (every ~100ms or every 15 chars) for instant feel
                         const timeSinceLastUpdate = Date.now() - lastUpdateTime;
                         const charsSinceLastUpdate = fullText.length - lastUpdateLength;
 
-                        if (timeSinceLastUpdate > 150 || charsSinceLastUpdate >= 30) {
+                        if (timeSinceLastUpdate > 100 || charsSinceLastUpdate >= 15) {
                             await snap.ref.update({
                                 response: fullText,
                                 updateTime: admin.firestore.FieldValue.serverTimestamp(),

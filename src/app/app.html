@@ -341,7 +341,12 @@
           <div [class]="item.role === 'user' 
                 ? 'bg-red-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] shadow-md' 
                 : 'bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] shadow-sm border border-black/5'">
-            <p class="text-sm leading-relaxed" [innerHTML]="item.role === 'avatar' ? formatMessage(item.message) : item.message"></p>
+            <p class="text-sm leading-relaxed" [innerHTML]="item.role === 'avatar' 
+              ? formatMessage(item.displayedMessage !== undefined ? item.displayedMessage : item.message) 
+              : item.message"></p>
+            @if (item.role === 'avatar' && item.displayedMessage !== undefined && item.displayedMessage.length < item.message.length) {
+            <span class="inline-block w-0.5 h-4 bg-red-600 ml-1 animate-pulse"></span>
+            }
           </div>
           @if (item.role === 'user') {
           <div class="flex-shrink-0">

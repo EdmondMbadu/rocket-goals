@@ -163,8 +163,8 @@ export class FirestoreAIService {
                         response.indexOf('?')
                       );
                       
-                      // Start speaking if we have a complete sentence or 50+ chars
-                      if (firstSentenceEnd > 0 || response.length >= 50) {
+                      // Start speaking if we have a complete sentence or 20+ chars (reduced for instant response)
+                      if (firstSentenceEnd > 0 || response.length >= 20) {
                         firstChunkReceived = true;
                         const timeToFirstChunk = updateTime - totalStartTime;
                         console.log(`⚡ First chunk ready for TTS in ${timeToFirstChunk.toFixed(0)}ms (${response.length} chars)`);
