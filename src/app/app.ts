@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ElevenLabsService } from './elevenlabs.service';
+import { SpeechRecognitionService } from './speech-recognition.service';
 
 @Component({
   selector: 'app-root',
@@ -16,9 +17,11 @@ export class App {
   // Conversation state
   isConversationActive = signal(false);
   isSpeaking = signal(false);
+  isListening = signal(false);
   userMessage = '';
   conversationHistory: Array<{ role: 'user' | 'avatar', message: string }> = [];
   errorMessage = signal<string | null>(null);
+  speechSupported = signal(false);
 
   // Welcome messages
   private welcomeMessages = [
@@ -27,7 +30,12 @@ export class App {
     "Hi there! Ready to power your impossible goals? Let's get started!"
   ];
 
-  constructor(private elevenLabsService: ElevenLabsService) { }
+  constructor(
+    private elevenLabsService: ElevenLabsService,
+    private speechRecognitionService: SpeechRecognitionService
+  ) {
+    this.speechSupported.set(this.speechRecognitionService.isAvailable());
+  }
 
   public scrollToSection(sectionId: string): void {
     const element = document.getElementById(sectionId);
@@ -45,25 +53,57 @@ export class App {
     await this.speakMessage(welcomeMessage, 'avatar');
   }
 
-  async sendMessage(): Promise<void> {
-    if (!this.userMessage.trim() || this.isSpeaking()) {
+  async sendMessage(message?: string): Promise<void> {
+    const textToSend = message || this.userMessage.trim();
+
+    if (!textToSend || this.isSpeaking() || this.isListening()) {
       return;
     }
 
-    const message = this.userMessage.trim();
     this.userMessage = '';
+    this.errorMessage.set(null);
 
     // Add user message to history
-    this.conversationHistory.push({ role: 'user', message });
+    this.conversationHistory.push({ role: 'user', message: textToSend });
 
     // Generate response (simple for now - you can integrate with an AI API later)
-    const response = this.generateResponse(message);
+    const response = this.generateResponse(textToSend);
 
     // Add avatar response to history
     this.conversationHistory.push({ role: 'avatar', message: response });
 
     // Speak the response
     await this.speakMessage(response, 'avatar');
+  }
+
+  async startListening(): Promise<void> {
+    if (!this.speechSupported() || this.isListening() || this.isSpeaking()) {
+      return;
+    }
+
+    this.isListening.set(true);
+    this.errorMessage.set(null);
+
+    try {
+      const transcript = await this.speechRecognitionService.startListening();
+      console.log('Speech recognized:', transcript);
+
+      // Automatically send the transcribed message
+      await this.sendMessage(transcript);
+    } catch (error) {
+      console.error('Speech recognition error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to recognize speech';
+      this.errorMessage.set(errorMsg);
+    } finally {
+      this.isListening.set(false);
+    }
+  }
+
+  stopListening(): void {
+    if (this.isListening()) {
+      this.speechRecognitionService.stopListening();
+      this.isListening.set(false);
+    }
   }
 
   private generateResponse(userMessage: string): string {
@@ -105,8 +145,10 @@ export class App {
   }
 
   closeConversation(): void {
+    this.stopListening();
     this.isConversationActive.set(false);
     this.conversationHistory = [];
     this.userMessage = '';
+    this.errorMessage.set(null);
   }
 }
