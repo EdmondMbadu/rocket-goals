@@ -104,13 +104,15 @@ export class App {
       const transcript = await this.speechRecognitionService.startListening();
       console.log('Speech recognized:', transcript);
 
+      // Set listening to false before sending message (so sendMessage doesn't return early)
+      this.isListening.set(false);
+
       // Automatically send the transcribed message
       await this.sendMessage(transcript);
     } catch (error) {
       console.error('Speech recognition error:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to recognize speech';
       this.errorMessage.set(errorMsg);
-    } finally {
       this.isListening.set(false);
     }
   }
