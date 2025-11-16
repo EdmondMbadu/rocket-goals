@@ -8,7 +8,174 @@ export class ElevenLabsService {
   private readonly voiceId = 'JBFqnCBsd6RMkjVDRZzb'; // Default voice ID from your example
   private readonly apiUrl = 'https://api.elevenlabs.io/v1/text-to-speech';
 
+  /**
+   * Primary method: Uses ElevenLabs only (quality voice, no switching)
+   * Optimized for speed with chunking for long texts
+   */
   async speakAndPlay(text: string): Promise<void> {
+    // For long texts, use chunking to start faster
+    if (text.length > 1000) {
+      return this.speakWithChunking(text);
+    } else {
+      return this.speakWithElevenLabs(text);
+    }
+  }
+
+  /**
+   * Split text into chunks (first chunk is smaller for faster start)
+   */
+  private splitIntoChunks(text: string): string[] {
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    const chunks: string[] = [];
+    
+    if (sentences.length === 0) return [text];
+    
+    // First chunk: first 2 sentences (smaller for faster generation)
+    const firstChunkSize = Math.min(2, sentences.length);
+    chunks.push(sentences.slice(0, firstChunkSize).join(' '));
+    
+    // Remaining chunks: group remaining sentences
+    if (sentences.length > firstChunkSize) {
+      const remaining = sentences.slice(firstChunkSize);
+      // Group into chunks of ~4 sentences each
+      for (let i = 0; i < remaining.length; i += 4) {
+        chunks.push(remaining.slice(i, i + 4).join(' '));
+      }
+    }
+    
+    return chunks.filter(c => c.trim().length > 0);
+  }
+
+  /**
+   * Chunked approach: Play first chunk immediately (smaller = faster), then rest
+   * All using ElevenLabs - same voice throughout, no switching
+   */
+  private async speakWithChunking(text: string): Promise<void> {
+    const startTime = performance.now();
+    const chunks = this.splitIntoChunks(text);
+    
+    console.log(`🎯 Using chunked ElevenLabs: ${chunks.length} chunks (same voice throughout)`);
+    console.log(`📝 First chunk: ${chunks[0].substring(0, 50)}... (${chunks[0].length} chars - smaller = faster)`);
+    
+    // Play chunks sequentially with same voice
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkStartTime = performance.now();
+      console.log(`▶️ Playing chunk ${i + 1}/${chunks.length} with ElevenLabs...`);
+      
+      await this.speakWithElevenLabs(chunks[i]);
+      
+      const chunkTime = performance.now() - chunkStartTime;
+      console.log(`✅ Chunk ${i + 1} completed in ${chunkTime.toFixed(0)}ms`);
+    }
+    
+    const totalTime = performance.now() - startTime;
+    console.log(`✅ All chunks completed in ${totalTime.toFixed(0)}ms (same voice throughout)`);
+  }
+
+  /**
+   * Check if Web Speech API is available
+   */
+  private isWebSpeechAvailable(): boolean {
+    return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  }
+
+  /**
+   * Use Web Speech API for instant TTS (no network delay)
+   */
+  private speakWithWebSpeech(text: string): Promise<void> {
+    const startTime = performance.now();
+    console.log('🎤 Using Web Speech API for instant playback');
+    console.log('📝 Text length:', text.length, 'characters');
+
+    return new Promise((resolve, reject) => {
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Configure voice settings for better quality
+        utterance.rate = 1.0; // Normal speed
+        utterance.pitch = 1.0; // Normal pitch
+        utterance.volume = 1.0; // Full volume
+        utterance.lang = 'en-US'; // Set language
+        
+        // Function to select and set voice
+        const selectVoice = () => {
+          const voices = speechSynthesis.getVoices();
+          if (voices.length === 0) {
+            console.log('🎙️ No voices available, using default');
+            return;
+          }
+          
+          // Preferred voices (male voices for "Jim")
+          const preferredVoices = [
+            'Google US English', 'Microsoft David', 'Alex', 'Daniel',
+            'Google UK English Male', 'Microsoft Zira', 'Samantha'
+          ];
+          
+          // Find a good voice
+          let selectedVoice = voices.find(voice => 
+            preferredVoices.some(pref => voice.name.includes(pref))
+          ) || voices.find(voice => voice.lang.startsWith('en')) || null;
+          
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            console.log('🎙️ Using voice:', selectedVoice.name);
+          } else {
+            console.log('🎙️ Using default voice');
+          }
+        };
+        
+        // Try to get voices immediately
+        selectVoice();
+        
+        // If voices aren't loaded yet, wait for them
+        if (speechSynthesis.getVoices().length === 0) {
+          speechSynthesis.onvoiceschanged = () => {
+            selectVoice();
+            speechSynthesis.onvoiceschanged = null; // Remove listener
+          };
+        }
+
+        utterance.onstart = () => {
+          const timeToStart = performance.now() - startTime;
+          console.log(`✅ Speech started in ${timeToStart.toFixed(0)}ms`);
+        };
+
+        utterance.onend = () => {
+          const totalTime = performance.now() - startTime;
+          console.log(`✅ Speech completed in ${totalTime.toFixed(0)}ms`);
+          resolve();
+        };
+
+        utterance.onerror = (error) => {
+          console.error('❌ Web Speech error:', error);
+          // Fallback to ElevenLabs on error
+          console.log('🔄 Falling back to ElevenLabs...');
+          this.speakWithElevenLabs(text).then(resolve).catch(reject);
+        };
+
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+        
+        // Start speaking immediately
+        speechSynthesis.speak(utterance);
+        
+        const initTime = performance.now() - startTime;
+        console.log(`⏱️ Speech initialized in ${initTime.toFixed(0)}ms`);
+        
+      } catch (error) {
+        console.error('❌ Error initializing Web Speech:', error);
+        // Fallback to ElevenLabs
+        console.log('🔄 Falling back to ElevenLabs...');
+        this.speakWithElevenLabs(text).then(resolve).catch(reject);
+      }
+    });
+  }
+
+  /**
+   * Fallback method: Use ElevenLabs API (higher quality, but slower)
+   */
+  private async speakWithElevenLabs(text: string): Promise<void> {
+    console.log('🎤 Using ElevenLabs API (fallback/high quality mode)');
     const totalStartTime = performance.now();
     
     try {
@@ -28,10 +195,12 @@ export class ElevenLabsService {
         },
         body: JSON.stringify({
           text: text,
-          model_id: 'eleven_turbo_v2', // Faster model with lower latency
+          model_id: 'eleven_turbo_v2', // Fastest model available
           voice_settings: {
-            stability: 0.4, // Slightly lower for faster generation
-            similarity_boost: 0.7 // Slightly lower for faster generation
+            stability: 0.3, // Lower for faster generation
+            similarity_boost: 0.6, // Lower for faster generation
+            style: 0.0, // Neutral style for faster processing
+            use_speaker_boost: false // Disable for speed
           }
         })
       });
