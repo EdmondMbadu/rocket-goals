@@ -34,7 +34,8 @@ export const processAIPrompt = functions.firestore
 
         const userMessage = data.prompt;
         const conversationHistory = data.conversationHistory || [];
-        console.log(`🚀 Processing prompt for document ${documentId} (fast mode)`);
+        const mode = data.mode || 'voice'; // Default to 'voice' if not specified
+        console.log(`🚀 Processing prompt for document ${documentId} (${mode} mode)`);
         console.log(`💬 Conversation history: ${conversationHistory.length} messages`);
 
         try {
@@ -57,10 +58,17 @@ export const processAIPrompt = functions.firestore
             const aiStartTime = Date.now();
             const genAI = new GoogleGenerativeAI(apiKey);
 
-            // System prompt with instructions for brief, conversational responses
-            const systemInstruction = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.
+            // Base identity and framework description
+            const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.`;
 
-CRITICAL CONVERSATION GUIDELINES:
+            // Mode-specific conversation guidelines
+            let conversationGuidelines = '';
+            let maxOutputTokens = 80;
+            let maxChars = 100;
+            let maxSentences = 1;
+
+            if (mode === 'voice') {
+                conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (VOICE MODE):
 - Keep responses EXTREMELY BRIEF - ONE sentence maximum per response (20-30 words max)
 - This is a REAL-TIME VOICE CONVERSATION - speak like you're talking to someone, not writing an essay
 - Use natural, conversational language with contractions (I'm, you're, it's, don't, etc.)
@@ -70,7 +78,30 @@ CRITICAL CONVERSATION GUIDELINES:
 - Reference previous parts of the conversation naturally when relevant
 - Match the user's energy and tone - be enthusiastic if they are, supportive if they need it
 - NEVER generate more than ONE sentence - if you have more to say, wait for the next turn
-- Think of this as a quick back-and-forth phone conversation, not a monologue
+- Think of this as a quick back-and-forth phone conversation, not a monologue`;
+            } else {
+                // Chat mode - more natural, asks clarification questions
+                conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (CHAT MODE):
+- Keep responses SHORT and CONVERSATIONAL - 1-2 sentences maximum (30-50 words)
+- Talk like a REAL HUMAN having a friendly chat - use contractions (I'm, you're, it's, don't, can't, etc.)
+- ASK CLARIFICATION QUESTIONS frequently to truly understand the user before giving advice
+- Be curious and genuinely interested - ask "What do you mean by that?" or "Can you tell me more about X?"
+- Don't assume you understand - ask follow-up questions to get clarity
+- Use natural, everyday language - avoid sounding like a textbook or corporate coach
+- Show empathy and understanding - acknowledge their feelings before jumping to solutions
+- Ask ONE question at a time and wait for their response
+- Be conversational and warm - like talking to a friend who's also a great coach
+- If something is unclear, ask for clarification rather than guessing
+- Keep it brief but meaningful - quality over quantity`;
+                maxOutputTokens = 120; // Slightly longer for chat mode
+                maxChars = 150;
+                maxSentences = 2;
+            }
+
+            // System prompt with instructions for brief, conversational responses
+            const systemInstruction = `${baseIdentity}
+
+${conversationGuidelines}
 
 Using the ROCKET framework, you help users:
 - Remember their Future Self: Envision the person they are becoming and fuel that vision with passion.
@@ -139,10 +170,10 @@ This blueprint embodies your unique approach to achieving opulence through both 
                 model: "gemini-2.0-flash-exp", // Fastest model available
                 systemInstruction: systemInstruction,
                 generationConfig: {
-                    temperature: 0.8, // Slightly higher for more conversational tone
+                    temperature: mode === 'chat' ? 0.9 : 0.8, // Slightly higher for chat mode for more natural conversation
                     topP: 0.95,
                     topK: 40,
-                    maxOutputTokens: 80, // Very strict limit: 1 sentence max (~80 tokens = ~60 words)
+                    maxOutputTokens: maxOutputTokens,
                 },
             });
 
@@ -174,8 +205,8 @@ This blueprint embodies your unique approach to achieving opulence through both 
             let fullText = '';
             let firstChunkTime: number | null = null;
             let sentenceCount = 0;
-            const MAX_SENTENCES = 1; // Hard limit: stop after 1 sentence (very brief)
-            const MAX_CHARS = 100; // Absolute max characters
+            const MAX_SENTENCES = maxSentences; // Mode-specific limit
+            const MAX_CHARS = maxChars; // Mode-specific limit
 
             // Use streaming API with conversation history
             const result = await model.generateContentStream({

@@ -38,3 +38,209 @@
 @keyframes wave-animation{0%,100%{transform:scaleY(0.3);opacity:0.7}50%{transform:scaleY(1);opacity:1}}
 @keyframes fade-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .animate-fade-in{animation:fade-in 0.3s ease-out}
+
+/* Voice Mode Wave Animations */
+.voice-waves-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.voice-wave {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid rgba(220, 38, 38, 0.2);
+  animation: voice-wave-expand 4s ease-out infinite;
+}
+
+.voice-wave-1 {
+  left: 50%;
+  top: 50%;
+  width: 200px;
+  height: 200px;
+  margin-left: -100px;
+  margin-top: -100px;
+  animation-delay: 0s;
+  border-color: rgba(220, 38, 38, 0.15);
+}
+
+.voice-wave-2 {
+  left: 50%;
+  top: 50%;
+  width: 300px;
+  height: 300px;
+  margin-left: -150px;
+  margin-top: -150px;
+  animation-delay: 0.5s;
+  border-color: rgba(220, 38, 38, 0.12);
+}
+
+.voice-wave-3 {
+  left: 50%;
+  top: 50%;
+  width: 400px;
+  height: 400px;
+  margin-left: -200px;
+  margin-top: -200px;
+  animation-delay: 1s;
+  border-color: rgba(220, 38, 38, 0.1);
+}
+
+.voice-wave-4 {
+  left: 50%;
+  top: 50%;
+  width: 500px;
+  height: 500px;
+  margin-left: -250px;
+  margin-top: -250px;
+  animation-delay: 1.5s;
+  border-color: rgba(220, 38, 38, 0.08);
+}
+
+@keyframes voice-wave-expand {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Voice Mode Glow Animations */
+.voice-glow-1 {
+  animation: voice-glow-pulse-1 3s ease-in-out infinite;
+}
+
+.voice-glow-2 {
+  animation: voice-glow-pulse-2 2.5s ease-in-out infinite;
+}
+
+.voice-glow-3 {
+  animation: voice-glow-pulse-3 2s ease-in-out infinite;
+}
+
+@keyframes voice-glow-pulse-1 {
+  0%, 100% {
+    opacity: 0.2;
+    transform: rotate(6deg) scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: rotate(6deg) scale(1.1);
+  }
+}
+
+@keyframes voice-glow-pulse-2 {
+  0%, 100% {
+    opacity: 0.15;
+    transform: rotate(-6deg) scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: rotate(-6deg) scale(1.08);
+  }
+}
+
+@keyframes voice-glow-pulse-3 {
+  0%, 100% {
+    opacity: 0.1;
+    transform: rotate(12deg) scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: rotate(12deg) scale(1.05);
+  }
+}
+
+/* Enhanced Voice Audio Waves */
+.voice-audio-waves {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+}
+
+.voice-wave-bar {
+  width: 4px;
+  background: linear-gradient(to top, #ef4444, #dc2626, #b91c1c);
+  border-radius: 3px;
+  animation: voice-wave-bar-animation 1s ease-in-out infinite;
+}
+
+.voice-wave-bar:nth-child(1), .voice-wave-bar:nth-child(7) {
+  height: 12px;
+}
+
+.voice-wave-bar:nth-child(2), .voice-wave-bar:nth-child(6) {
+  height: 20px;
+}
+
+.voice-wave-bar:nth-child(3), .voice-wave-bar:nth-child(5) {
+  height: 28px;
+}
+
+.voice-wave-bar:nth-child(4) {
+  height: 36px;
+}
+
+.voice-wave-bar:nth-child(1) { animation-delay: 0s; }
+.voice-wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.voice-wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.voice-wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.voice-wave-bar:nth-child(5) { animation-delay: 0.2s; }
+.voice-wave-bar:nth-child(6) { animation-delay: 0.1s; }
+.voice-wave-bar:nth-child(7) { animation-delay: 0s; }
+
+@keyframes voice-wave-bar-animation {
+  0%, 100% {
+    transform: scaleY(0.3);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Listening Pulse Animation */
+.avatar-listening {
+  animation: avatar-listen 1.5s ease-in-out infinite;
+}
+
+@keyframes avatar-listen {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03);
+    filter: brightness(1.1);
+  }
+}
+
+.listening-pulse {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, transparent 70%);
+  animation: listening-pulse-animation 1.5s ease-in-out infinite;
+}
+
+@keyframes listening-pulse-animation {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}

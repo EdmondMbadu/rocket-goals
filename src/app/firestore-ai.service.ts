@@ -28,7 +28,8 @@ export class FirestoreAIService {
   async getAIResponse(
     userMessage: string, 
     conversationHistory?: Array<{ role: 'user' | 'avatar', message: string }>,
-    onStreamChunk?: (chunk: string) => void
+    onStreamChunk?: (chunk: string) => void,
+    mode: 'voice' | 'chat' = 'voice'
   ): Promise<string> {
     const totalStartTime = performance.now();
     
@@ -54,10 +55,11 @@ export class FirestoreAIService {
             }))
           : [];
         
-        // Add document with prompt and conversation history
+        // Add document with prompt, conversation history, and mode
         addDoc(collection(firestore, this.collectionName), {
           [this.promptField]: userMessage,
           conversationHistory: recentHistory,
+          mode: mode,
           timestamp: new Date().toISOString()
         }).then((docRef) => {
           const writeTime = performance.now() - writeStartTime;

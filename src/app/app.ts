@@ -26,6 +26,9 @@ export class App {
   errorMessage = signal<string | null>(null);
   speechSupported = signal(false);
   
+  // Conversation mode: 'voice' (default) or 'chat'
+  conversationMode = signal<'voice' | 'chat'>('voice');
+  
   // Conversation state management
   conversationState = signal<'idle' | 'waiting_for_user' | 'ai_speaking' | 'user_speaking' | 'processing'>('idle');
   isWaitingForUser = signal(false); // Indicates AI is waiting for user response
@@ -66,13 +69,17 @@ export class App {
     this.errorMessage.set(null); // Clear any previous errors
     const welcomeMessage = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
     this.conversationHistory.push({ role: 'avatar', message: welcomeMessage });
-    await this.speakMessage(welcomeMessage, 'avatar');
     
-    // Auto-start listening after welcome message if speech is supported
-    if (this.speechSupported() && !this.isListening()) {
+    // Only speak welcome message in voice mode
+    if (this.conversationMode() === 'voice') {
+      await this.speakMessage(welcomeMessage, 'avatar');
+    }
+    
+    // Auto-start listening after welcome message only in Voice mode
+    if (this.conversationMode() === 'voice' && this.speechSupported() && !this.isListening()) {
       setTimeout(() => {
         if (this.isConversationActive() && !this.isListening() && !this.isSpeaking()) {
-          console.log('🎤 Auto-starting microphone after welcome message');
+          console.log('🎤 Auto-starting microphone after welcome message (Voice mode)');
           this.startListening();
         }
       }, 1000); // Wait a bit longer for welcome message to finish
@@ -109,22 +116,28 @@ export class App {
       // Get AI response from Firestore with streaming callback
       console.log('Getting AI response for:', textToSend);
       
-      // Set up streaming callback for immediate TTS
+      // Set up streaming callback for immediate TTS (only in voice mode)
       const streamCallback = async (chunk: string) => {
         const cleanedChunk = stripMarkdownForTTS(chunk);
+        const isVoiceMode = this.conversationMode() === 'voice';
         
         if (!firstChunkSpoken) {
-          // First chunk - start speaking immediately
+          // First chunk - start speaking immediately (only in voice mode)
           firstChunkSpoken = true;
           this.isThinking.set(false); // Hide thinking indicator
-          this.isSpeaking.set(true);
-          this.conversationState.set('ai_speaking');
-          
-          const timeToFirstChunk = performance.now() - startTime;
-          console.log(`⚡ Starting TTS in ${timeToFirstChunk.toFixed(0)}ms`);
-          
-          // Start streaming TTS
-          await this.elevenLabsService.startStreaming(cleanedChunk);
+          if (isVoiceMode) {
+            this.isSpeaking.set(true);
+            this.conversationState.set('ai_speaking');
+            
+            const timeToFirstChunk = performance.now() - startTime;
+            console.log(`⚡ Starting TTS in ${timeToFirstChunk.toFixed(0)}ms (Voice mode)`);
+            
+            // Start streaming TTS
+            await this.elevenLabsService.startStreaming(cleanedChunk);
+          } else {
+            this.conversationState.set('waiting_for_user');
+            console.log(`📝 Chat mode - skipping TTS`);
+          }
           
           // Update conversation history with partial response
           fullResponse = chunk;
@@ -148,9 +161,11 @@ export class App {
           // Start typewriter effect
           this.startTypewriter(avatarIndex, fullResponse);
         } else {
-          // Subsequent chunks - queue for TTS
-          // Note: chunk here is only the new text (not the full accumulated)
-          await this.elevenLabsService.addStreamChunk(cleanedChunk);
+          // Subsequent chunks - queue for TTS (only in voice mode)
+          if (isVoiceMode) {
+            // Note: chunk here is only the new text (not the full accumulated)
+            await this.elevenLabsService.addStreamChunk(cleanedChunk);
+          }
           
           // Update conversation history by appending the new chunk
           fullResponse += chunk;
@@ -180,7 +195,7 @@ export class App {
         }
       };
       
-      const response = await this.firestoreAIService.getAIResponse(textToSend, this.conversationHistory, streamCallback);
+      const response = await this.firestoreAIService.getAIResponse(textToSend, this.conversationHistory, streamCallback, this.conversationMode());
       
       const aiTime = performance.now() - startTime;
       console.log(`AI response received in ${aiTime.toFixed(0)}ms:`, response);
@@ -210,9 +225,11 @@ export class App {
         this.startTypewriter(this.conversationHistory.length - 1, fullResponse);
       }
 
-      // Finish streaming TTS
-      await this.elevenLabsService.finishStreaming();
-      this.isSpeaking.set(false);
+      // Finish streaming TTS (only in voice mode)
+      if (this.conversationMode() === 'voice') {
+        await this.elevenLabsService.finishStreaming();
+        this.isSpeaking.set(false);
+      }
       this.conversationState.set('waiting_for_user');
       this.isWaitingForUser.set(true);
       
@@ -220,12 +237,12 @@ export class App {
       console.log(`Total time: ${totalTime.toFixed(0)}ms`);
       console.log('✅ AI finished speaking - waiting for user response');
       
-      // Auto-start listening if speech is supported and conversation is active
-      if (this.speechSupported() && this.isConversationActive() && !this.isListening()) {
+      // Auto-start listening only in Voice mode
+      if (this.conversationMode() === 'voice' && this.speechSupported() && this.isConversationActive() && !this.isListening()) {
         // Small delay to ensure audio has finished
         setTimeout(() => {
           if (this.isConversationActive() && !this.isListening() && !this.isSpeaking()) {
-            console.log('🎤 Auto-starting microphone after AI finished speaking');
+            console.log('🎤 Auto-starting microphone after AI finished speaking (Voice mode)');
             this.startListening();
           }
         }, 500);
