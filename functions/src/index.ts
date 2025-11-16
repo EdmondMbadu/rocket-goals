@@ -63,14 +63,15 @@ export const processAIPrompt = functions.firestore
 
             // Mode-specific conversation guidelines
             let conversationGuidelines = '';
-            let maxOutputTokens = 100; // Increased for more substantial responses
-            let maxChars = 150; // Increased for more substantial responses
-            let maxSentences = 3; // Allow 2-3 sentences for more natural flow
+            let maxOutputTokens = 150; // Increased for more substantial responses
+            let maxChars = 250; // Increased for more substantial responses (soft limit - allows completion)
+            let maxSentences = 4; // Allow 3-4 sentences for more natural flow (soft limit)
 
             if (mode === 'voice') {
                 conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (VOICE MODE):
 - BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
-- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-3 sentences, 40-60 words)
+- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-4 sentences, 50-80 words)
+- Complete your thoughts fully - don't cut off mid-sentence or mid-thought
 - If you need clarification, ask ONE SHORT probing question (5-10 words) like "What's your biggest challenge?" or "What does success look like?"
 - After asking a probing question, wait for their response before providing your answer
 - Use natural, conversational language with contractions (I'm, you're, it's, don't, etc.)
@@ -83,7 +84,8 @@ export const processAIPrompt = functions.firestore
                 // Chat mode - more natural, asks clarification questions
                 conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (CHAT MODE):
 - BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
-- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-3 sentences, 50-70 words)
+- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-4 sentences, 60-90 words)
+- Complete your thoughts fully - don't cut off mid-sentence or mid-thought
 - If you need clarification, ask ONE SHORT probing question (5-10 words) like "What's your biggest challenge?" or "What does success look like?"
 - After asking a probing question, wait for their response before providing your answer
 - Talk like a REAL HUMAN having a friendly chat - use contractions (I'm, you're, it's, don't, can't, etc.)
@@ -93,9 +95,9 @@ export const processAIPrompt = functions.firestore
 - Be conversational and warm - like talking to a friend who's also a great coach
 - Build on the conversation - don't restart from scratch each time
 - Keep it meaningful and substantial - quality over quantity`;
-                maxOutputTokens = 150; // Longer for more substantial responses
-                maxChars = 200;
-                maxSentences = 3;
+                maxOutputTokens = 200; // Longer for more substantial responses
+                maxChars = 300; // Longer for more substantial responses
+                maxSentences = 4; // Allow 3-4 sentences for more natural flow
             }
 
             // System prompt with instructions for brief, conversational responses
@@ -228,38 +230,34 @@ This blueprint embodies your unique approach to achieving opulence through both 
                     const sentences = fullText.match(sentencePattern) || [];
                     sentenceCount = sentences.length;
 
-                    // Stop early if we've reached max sentences OR max characters
-                    if (sentenceCount >= MAX_SENTENCES || fullText.length >= MAX_CHARS) {
-                        if (sentenceCount >= MAX_SENTENCES) {
-                            // Find the end of the last complete sentence
-                            const lastSentenceEnd = Math.max(
-                                fullText.lastIndexOf('.'),
-                                fullText.lastIndexOf('!'),
-                                fullText.lastIndexOf('?')
-                            );
+                    // Check if we've exceeded limits - but allow completion of current sentence
+                    const hasExceededSentenceLimit = sentenceCount > MAX_SENTENCES;
+                    const hasExceededCharLimit = fullText.length > MAX_CHARS * 1.3; // Allow 30% over for sentence completion
 
-                            if (lastSentenceEnd > 0) {
-                                fullText = fullText.substring(0, lastSentenceEnd + 1).trim();
-                                console.log(`🛑 Stopped at ${sentenceCount} sentences (enforcing limit)`);
-                            }
-                        } else if (fullText.length >= MAX_CHARS) {
-                            // Find the last sentence boundary before max chars
-                            const truncated = fullText.substring(0, MAX_CHARS);
-                            const lastSentenceEnd = Math.max(
-                                truncated.lastIndexOf('.'),
-                                truncated.lastIndexOf('!'),
-                                truncated.lastIndexOf('?')
-                            );
+                    // Only stop if we've exceeded limits AND found a complete sentence boundary
+                    if (hasExceededSentenceLimit || hasExceededCharLimit) {
+                        // Find the end of the last complete sentence
+                        const lastSentenceEnd = Math.max(
+                            fullText.lastIndexOf('.'),
+                            fullText.lastIndexOf('!'),
+                            fullText.lastIndexOf('?')
+                        );
 
-                            if (lastSentenceEnd > 20) {
-                                fullText = fullText.substring(0, lastSentenceEnd + 1).trim();
-                                console.log(`🛑 Stopped at ${fullText.length} chars (enforcing character limit)`);
-                            } else {
-                                fullText = truncated.trim();
-                                console.log(`🛑 Stopped at ${fullText.length} chars (no sentence boundary found)`);
+                        // Only stop if we have a complete sentence boundary
+                        // This ensures we never cut mid-sentence
+                        if (lastSentenceEnd > 0 && lastSentenceEnd < fullText.length - 5) {
+                            // We have a complete sentence that's not at the very end
+                            // Check if we're past our limits
+                            const textUpToSentence = fullText.substring(0, lastSentenceEnd + 1);
+                            const sentencesUpToBoundary = (textUpToSentence.match(sentencePattern) || []).length;
+
+                            if (sentencesUpToBoundary >= MAX_SENTENCES || textUpToSentence.length >= MAX_CHARS) {
+                                fullText = textUpToSentence.trim();
+                                console.log(`🛑 Stopped at ${sentencesUpToBoundary} sentences, ${fullText.length} chars (natural boundary)`);
+                                break; // Exit the stream loop
                             }
                         }
-                        break; // Exit the stream loop
+                        // If no good sentence boundary found, continue to allow completion
                     }
 
                     // Track first chunk time
@@ -294,8 +292,12 @@ This blueprint embodies your unique approach to achieving opulence through both 
                 }
             }
 
-            // Validate and truncate response if it somehow exceeded limits (safety check)
-            if (fullText.length > MAX_CHARS || sentenceCount > MAX_SENTENCES) {
+            // Final validation - only truncate if significantly over limits and we have a good boundary
+            const finalSentenceCount = (fullText.match(/[.!?]+(\s+|$)/g) || []).length;
+            const significantlyOverCharLimit = fullText.length > MAX_CHARS * 1.5; // 50% over
+            const significantlyOverSentenceLimit = finalSentenceCount > MAX_SENTENCES + 1; // More than 1 sentence over
+
+            if ((significantlyOverCharLimit || significantlyOverSentenceLimit) && fullText.length > 0) {
                 // Find the last sentence boundary
                 const lastSentenceEnd = Math.max(
                     fullText.lastIndexOf('.'),
@@ -303,12 +305,19 @@ This blueprint embodies your unique approach to achieving opulence through both 
                     fullText.lastIndexOf('?')
                 );
 
-                if (lastSentenceEnd > 20) {
-                    fullText = fullText.substring(0, lastSentenceEnd + 1).trim();
-                    console.log(`✂️ Final truncation: ${fullText.length} chars, ${sentenceCount} sentences`);
-                } else if (fullText.length > MAX_CHARS) {
-                    fullText = fullText.substring(0, MAX_CHARS).trim();
-                    console.log(`✂️ Final truncation: ${fullText.length} chars (no sentence boundary)`);
+                if (lastSentenceEnd > 50) { // Only if we have a substantial sentence
+                    const truncated = fullText.substring(0, lastSentenceEnd + 1).trim();
+                    const truncatedSentenceCount = (truncated.match(/[.!?]+(\s+|$)/g) || []).length;
+
+                    // Only truncate if the truncated version is within reasonable limits
+                    if (truncated.length <= MAX_CHARS * 1.2 && truncatedSentenceCount <= MAX_SENTENCES + 1) {
+                        fullText = truncated;
+                        console.log(`✂️ Final truncation: ${truncatedSentenceCount} sentences, ${fullText.length} chars (safety check)`);
+                    } else {
+                        console.log(`ℹ️ Keeping full response: ${finalSentenceCount} sentences, ${fullText.length} chars (within acceptable range)`);
+                    }
+                } else {
+                    console.log(`ℹ️ Keeping full response: ${finalSentenceCount} sentences, ${fullText.length} chars (no good boundary found)`);
                 }
             }
 
