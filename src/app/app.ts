@@ -18,6 +18,7 @@ export class App {
   isSpeaking = signal(false);
   userMessage = '';
   conversationHistory: Array<{ role: 'user' | 'avatar', message: string }> = [];
+  errorMessage = signal<string | null>(null);
 
   // Welcome messages
   private welcomeMessages = [
@@ -38,6 +39,7 @@ export class App {
   async startConversation(): Promise<void> {
     this.isConversationActive.set(true);
     this.conversationHistory = []; // Reset conversation history
+    this.errorMessage.set(null); // Clear any previous errors
     const welcomeMessage = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
     this.conversationHistory.push({ role: 'avatar', message: welcomeMessage });
     await this.speakMessage(welcomeMessage, 'avatar');
@@ -89,11 +91,14 @@ export class App {
     }
 
     this.isSpeaking.set(true);
+    this.errorMessage.set(null);
 
     try {
       await this.elevenLabsService.speakAndPlay(message);
     } catch (error) {
       console.error('Error speaking message:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to generate speech. Please check your API key permissions.';
+      this.errorMessage.set(errorMsg);
     } finally {
       this.isSpeaking.set(false);
     }

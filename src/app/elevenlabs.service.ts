@@ -11,6 +11,8 @@ export class ElevenLabsService {
   async speakAndPlay(text: string): Promise<void> {
     try {
       console.log('Generating speech for:', text);
+      console.log('Using API key:', this.apiKey.substring(0, 10) + '...');
+      console.log('Voice ID:', this.voiceId);
       
       // Call ElevenLabs REST API directly
       const response = await fetch(`${this.apiUrl}/${this.voiceId}`, {
@@ -25,13 +27,32 @@ export class ElevenLabsService {
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
             stability: 0.5,
-            similarity_boost: 0.5
+            similarity_boost: 0.75
           }
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { detail: { message: errorText } };
+        }
+        
+        console.error('ElevenLabs API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        
+        // Provide helpful error message
+        if (response.status === 401) {
+          const message = errorData?.detail?.message || 'Authentication failed';
+          throw new Error(`API Key Error: ${message}\n\nTo fix this:\n1. Go to https://elevenlabs.io/app/settings/api-keys\n2. Click "Edit" on your API key\n3. Enable "Text to Speech" permission\n4. Save and try again`);
+        }
+        
         throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`);
       }
 
