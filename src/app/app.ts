@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { ElevenLabsService } from './elevenlabs.service';
 import { SpeechRecognitionService } from './speech-recognition.service';
 import { FirestoreAIService } from './firestore-ai.service';
+import { stripMarkdownForTTS } from './text-utils';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,7 @@ export class App {
   isConversationActive = signal(false);
   isSpeaking = signal(false);
   isListening = signal(false);
+  isThinking = signal(false); // Indicates AI is processing
   userMessage = '';
   conversationHistory: Array<{ role: 'user' | 'avatar', message: string }> = [];
   errorMessage = signal<string | null>(null);
@@ -64,22 +66,38 @@ export class App {
 
     this.userMessage = '';
     this.errorMessage.set(null);
+    this.isThinking.set(true); // Show thinking indicator
 
     // Add user message to history
     this.conversationHistory.push({ role: 'user', message: textToSend });
+
+    const startTime = performance.now();
 
     try {
       // Get AI response from Firestore
       console.log('Getting AI response for:', textToSend);
       const response = await this.firestoreAIService.getAIResponse(textToSend);
-      console.log('AI response received:', response);
+      
+      const aiTime = performance.now() - startTime;
+      console.log(`AI response received in ${aiTime.toFixed(0)}ms:`, response);
 
-      // Add avatar response to history
+      // Store formatted response for display
       this.conversationHistory.push({ role: 'avatar', message: response });
 
-      // Speak the response
-      await this.speakMessage(response, 'avatar');
+      // Strip markdown for TTS (but keep formatted version in history)
+      const cleanedResponse = stripMarkdownForTTS(response);
+      console.log('Cleaned response for TTS:', cleanedResponse);
+
+      this.isThinking.set(false); // Hide thinking indicator
+
+      // Speak the cleaned response
+      const ttsStartTime = performance.now();
+      await this.speakMessage(cleanedResponse, 'avatar');
+      const ttsTime = performance.now() - ttsStartTime;
+      console.log(`TTS completed in ${ttsTime.toFixed(0)}ms`);
+      console.log(`Total time: ${(performance.now() - startTime).toFixed(0)}ms`);
     } catch (error) {
+      this.isThinking.set(false); // Hide thinking indicator on error
       console.error('Error getting AI response:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to get AI response';
       this.errorMessage.set(errorMsg);
@@ -165,8 +183,28 @@ export class App {
   closeConversation(): void {
     this.stopListening();
     this.isConversationActive.set(false);
+    this.isThinking.set(false);
     this.conversationHistory = [];
     this.userMessage = '';
     this.errorMessage.set(null);
+  }
+
+  /**
+   * Format message for display (convert markdown to HTML)
+   * This is a simple formatter - you might want to use a proper markdown library
+   */
+  formatMessage(message: string): string {
+    if (!message) return message;
+    
+    // Simple markdown to HTML conversion for display
+    let formatted = message
+      // Bold
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Line breaks
+      .replace(/\n/g, '<br>');
+    
+    return formatted;
   }
 }

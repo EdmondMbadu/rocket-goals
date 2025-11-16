@@ -215,6 +215,8 @@
               Speaking...
               } @else if (isListening()) {
               Listening to you...
+              } @else if (isThinking()) {
+              Thinking...
               } @else {
               Ready to chat
               }
@@ -251,7 +253,21 @@
           <div [class]="item.role === 'user' 
                 ? 'bg-red-600 text-white rounded-2xl rounded-tr-none px-4 py-2 max-w-[80%]' 
                 : 'bg-black/5 text-black rounded-2xl rounded-tl-none px-4 py-2 max-w-[80%]'">
-            <p class="text-sm leading-relaxed">{{ item.message }}</p>
+            <p class="text-sm leading-relaxed" [innerHTML]="item.role === 'avatar' ? formatMessage(item.message) : item.message"></p>
+          </div>
+        </div>
+        }
+        @if (isThinking()) {
+        <div class="flex">
+          <div class="bg-black/5 text-black rounded-2xl rounded-tl-none px-4 py-2 max-w-[80%]">
+            <div class="flex items-center gap-2">
+              <div class="flex gap-1">
+                <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+              </div>
+              <span class="text-sm text-black/60">Thinking...</span>
+            </div>
           </div>
         </div>
         }
