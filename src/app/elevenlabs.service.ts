@@ -8,6 +8,9 @@ export class ElevenLabsService {
   private readonly voiceId = 'JBFqnCBsd6RMkjVDRZzb'; // Default voice ID from your example
   private readonly apiUrl = 'https://api.elevenlabs.io/v1/text-to-speech';
 
+  private currentAudioQueue: Promise<void> = Promise.resolve();
+  private isStreaming = false;
+
   /**
    * Primary method: Uses ElevenLabs only (quality voice, no switching)
    * Optimized for speed with chunking for very long texts
@@ -19,6 +22,43 @@ export class ElevenLabsService {
     } else {
       return this.speakWithElevenLabs(text);
     }
+  }
+
+  /**
+   * Start streaming TTS - plays first chunk immediately, queues subsequent chunks
+   */
+  async startStreaming(firstChunk: string): Promise<void> {
+    this.isStreaming = true;
+    this.currentAudioQueue = this.speakWithElevenLabs(firstChunk);
+    console.log('🎤 Started streaming TTS with first chunk');
+  }
+
+  /**
+   * Add a chunk to the streaming queue
+   */
+  async addStreamChunk(chunk: string): Promise<void> {
+    if (!this.isStreaming) {
+      // If streaming hasn't started, start it
+      return this.startStreaming(chunk);
+    }
+    
+    // Queue this chunk to play after current audio finishes
+    this.currentAudioQueue = this.currentAudioQueue.then(() => {
+      if (chunk.trim().length > 0) {
+        console.log(`🎤 Queueing chunk: ${chunk.substring(0, 30)}...`);
+        return this.speakWithElevenLabs(chunk);
+      }
+      return Promise.resolve();
+    });
+  }
+
+  /**
+   * Finish streaming and wait for all chunks to complete
+   */
+  async finishStreaming(): Promise<void> {
+    this.isStreaming = false;
+    await this.currentAudioQueue;
+    console.log('✅ Streaming TTS completed');
   }
 
   /**

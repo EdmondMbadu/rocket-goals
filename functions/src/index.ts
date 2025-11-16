@@ -68,23 +68,74 @@ export const processAIPrompt = functions.firestore
 
             console.log(`⏱️ Model initialized in ${Date.now() - aiStartTime}ms`);
 
-            // Generate content
+            // Generate content with streaming for instant response
             const generateStartTime = Date.now();
-            const result = await model.generateContent(prompt);
+            let fullText = '';
+            let firstChunkTime: number | null = null;
+
+            // Use streaming API for faster first token
+            const result = await model.generateContentStream(prompt);
+
+            // Stream responses as they arrive
+            let lastUpdateTime = Date.now();
+            let lastUpdateLength = 0;
+
+            for await (const chunk of result.stream) {
+                const chunkText = chunk.text();
+                if (chunkText) {
+                    fullText += chunkText;
+
+                    // Track first chunk time
+                    if (firstChunkTime === null) {
+                        firstChunkTime = Date.now();
+                        const timeToFirstChunk = firstChunkTime - generateStartTime;
+                        console.log(`⚡ First chunk received in ${timeToFirstChunk}ms`);
+
+                        // Write first chunk immediately for instant TTS
+                        await snap.ref.update({
+                            response: fullText,
+                            status: "STREAMING",
+                            updateTime: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                        console.log(`📤 First chunk written to Firestore (${fullText.length} chars)`);
+                        lastUpdateTime = Date.now();
+                        lastUpdateLength = fullText.length;
+                    } else {
+                        // Update with accumulated text periodically (every ~150ms or every 30 chars)
+                        const timeSinceLastUpdate = Date.now() - lastUpdateTime;
+                        const charsSinceLastUpdate = fullText.length - lastUpdateLength;
+
+                        if (timeSinceLastUpdate > 150 || charsSinceLastUpdate >= 30) {
+                            await snap.ref.update({
+                                response: fullText,
+                                updateTime: admin.firestore.FieldValue.serverTimestamp(),
+                            });
+                            lastUpdateTime = Date.now();
+                            lastUpdateLength = fullText.length;
+                        }
+                    }
+                }
+            }
+
+            // Final update before marking complete (in case last chunk didn't trigger update)
+            if (fullText.length > lastUpdateLength) {
+                await snap.ref.update({
+                    response: fullText,
+                    updateTime: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+
             const generateTime = Date.now() - generateStartTime;
             console.log(`⏱️ AI generation completed in ${generateTime}ms`);
 
-            const response = result.response;
-            const text = response.text();
-
-            console.log(`✅ AI Response generated (${text.length} chars) in ${Date.now() - startTime}ms total`);
-
-            // Update document with response
+            // Final update with complete response
             await snap.ref.update({
-                response: text,
+                response: fullText,
                 status: "COMPLETE",
                 updateTime: admin.firestore.FieldValue.serverTimestamp(),
             });
+
+            console.log(`✅ AI Response generated (${fullText.length} chars) in ${Date.now() - startTime}ms total`);
 
             const totalTime = Date.now() - startTime;
             console.log(`✅ Successfully processed document ${documentId} in ${totalTime}ms`);

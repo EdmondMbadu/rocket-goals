@@ -75,32 +75,73 @@ export class App {
     this.conversationHistory.push({ role: 'user', message: textToSend });
 
     const startTime = performance.now();
+    let fullResponse = '';
+    let firstChunkSpoken = false;
 
     try {
-      // Get AI response from Firestore
+      // Get AI response from Firestore with streaming callback
       console.log('Getting AI response for:', textToSend);
-      const response = await this.firestoreAIService.getAIResponse(textToSend);
+      
+      // Set up streaming callback for immediate TTS
+      const streamCallback = async (chunk: string) => {
+        const cleanedChunk = stripMarkdownForTTS(chunk);
+        
+        if (!firstChunkSpoken) {
+          // First chunk - start speaking immediately
+          firstChunkSpoken = true;
+          this.isThinking.set(false); // Hide thinking indicator
+          this.isSpeaking.set(true);
+          
+          const timeToFirstChunk = performance.now() - startTime;
+          console.log(`⚡ Starting TTS in ${timeToFirstChunk.toFixed(0)}ms`);
+          
+          // Start streaming TTS
+          await this.elevenLabsService.startStreaming(cleanedChunk);
+          
+          // Update conversation history with partial response
+          fullResponse = chunk;
+          // Remove any existing avatar message and add new one
+          this.conversationHistory = this.conversationHistory.filter(
+            item => item.role !== 'avatar'
+          );
+          this.conversationHistory.push({ role: 'avatar', message: fullResponse });
+        } else {
+          // Subsequent chunks - queue for TTS
+          // Note: chunk here is only the new text (not the full accumulated)
+          await this.elevenLabsService.addStreamChunk(cleanedChunk);
+          
+          // Update conversation history by appending the new chunk
+          fullResponse += chunk;
+          
+          // Update conversation history
+          this.conversationHistory = this.conversationHistory.filter(
+            item => item.role !== 'avatar'
+          );
+          this.conversationHistory.push({ role: 'avatar', message: fullResponse });
+        }
+      };
+      
+      const response = await this.firestoreAIService.getAIResponse(textToSend, streamCallback);
       
       const aiTime = performance.now() - startTime;
       console.log(`AI response received in ${aiTime.toFixed(0)}ms:`, response);
 
-      // Store formatted response for display
-      this.conversationHistory.push({ role: 'avatar', message: response });
+      // Store final formatted response for display
+      fullResponse = response;
+      this.conversationHistory = this.conversationHistory.filter(
+        item => !(item.role === 'avatar')
+      );
+      this.conversationHistory.push({ role: 'avatar', message: fullResponse });
 
-      // Strip markdown for TTS (but keep formatted version in history)
-      const cleanedResponse = stripMarkdownForTTS(response);
-      console.log('Cleaned response for TTS:', cleanedResponse);
-
-      this.isThinking.set(false); // Hide thinking indicator
-
-      // Speak the cleaned response
-      const ttsStartTime = performance.now();
-      await this.speakMessage(cleanedResponse, 'avatar');
-      const ttsTime = performance.now() - ttsStartTime;
-      console.log(`TTS completed in ${ttsTime.toFixed(0)}ms`);
-      console.log(`Total time: ${(performance.now() - startTime).toFixed(0)}ms`);
+      // Finish streaming TTS
+      await this.elevenLabsService.finishStreaming();
+      this.isSpeaking.set(false);
+      
+      const totalTime = performance.now() - startTime;
+      console.log(`Total time: ${totalTime.toFixed(0)}ms`);
     } catch (error) {
       this.isThinking.set(false); // Hide thinking indicator on error
+      this.isSpeaking.set(false);
       console.error('Error getting AI response:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to get AI response';
       this.errorMessage.set(errorMsg);

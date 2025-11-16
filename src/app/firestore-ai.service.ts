@@ -24,7 +24,7 @@ export class FirestoreAIService {
     return this.firestore;
   }
 
-  async getAIResponse(userMessage: string): Promise<string> {
+  async getAIResponse(userMessage: string, onStreamChunk?: (chunk: string) => void): Promise<string> {
     const totalStartTime = performance.now();
     
     // Lazy load Firebase modules
@@ -37,6 +37,8 @@ export class FirestoreAIService {
         console.log('📝 Prompt:', userMessage);
         
         const writeStartTime = performance.now();
+        let lastResponseText = '';
+        let firstChunkReceived = false;
         
         // Add document with prompt (custom Cloud Function doesn't need createTime)
         addDoc(collection(firestore, this.collectionName), {
@@ -44,7 +46,7 @@ export class FirestoreAIService {
         }).then((docRef) => {
           const writeTime = performance.now() - writeStartTime;
           console.log(`✅ Document created in ${writeTime.toFixed(0)}ms with ID:`, docRef.id);
-          console.log('👂 Listening for response...');
+          console.log('👂 Listening for streaming response...');
           
           let firstUpdateTime: number | null = null;
           let processingStartTime: number | null = null;
@@ -73,12 +75,9 @@ export class FirestoreAIService {
                 console.log(`⏱️ First update received in ${timeToFirstUpdate.toFixed(0)}ms`);
               }
               
-              console.log('📊 Document data update:', data);
-              
               // Check for status field updates
               if (data && data['status']) {
                 const status = data['status'];
-                console.log('📈 Status:', status);
                 
                 // Handle status object (from Firebase Extension)
                 let statusState: string | null = null;
@@ -121,10 +120,10 @@ export class FirestoreAIService {
                     console.log('✅ Retry succeeded! Status changed from ERROR to COMPLETE');
                     errorFirstSeen = null; // Reset error tracking
                   }
-                } else if (statusState && statusState.toLowerCase() === 'processing') {
-                  // Status is PROCESSING - reset error tracking if it was in error
+                } else if (statusState && (statusState.toLowerCase() === 'processing' || statusState.toLowerCase() === 'streaming')) {
+                  // Status is PROCESSING or STREAMING - reset error tracking if it was in error
                   if (errorFirstSeen !== null) {
-                    console.log('🔄 Status changed to PROCESSING - retry in progress');
+                    console.log('🔄 Status changed to PROCESSING/STREAMING - retry in progress');
                     errorFirstSeen = null; // Reset error tracking
                   }
                   
@@ -149,30 +148,59 @@ export class FirestoreAIService {
               if (data && data[this.responseField]) {
                 const response = data[this.responseField];
                 
+                // Handle streaming: emit new chunks as they arrive
+                if (response.length > lastResponseText.length) {
+                  const newChunk = response.substring(lastResponseText.length);
+                  lastResponseText = response;
+                  
+                  // Emit chunk for immediate TTS
+                  if (onStreamChunk && newChunk.trim().length > 0) {
+                    // Check if we have enough text to start speaking (first sentence or 50 chars)
+                    if (!firstChunkReceived) {
+                      const firstSentenceEnd = Math.max(
+                        response.indexOf('.'),
+                        response.indexOf('!'),
+                        response.indexOf('?')
+                      );
+                      
+                      // Start speaking if we have a complete sentence or 50+ chars
+                      if (firstSentenceEnd > 0 || response.length >= 50) {
+                        firstChunkReceived = true;
+                        const timeToFirstChunk = updateTime - totalStartTime;
+                        console.log(`⚡ First chunk ready for TTS in ${timeToFirstChunk.toFixed(0)}ms (${response.length} chars)`);
+                        onStreamChunk(response); // Send full text so far for first TTS
+                      }
+                    } else {
+                      // For subsequent chunks, send only the new text
+                      onStreamChunk(newChunk);
+                    }
+                  }
+                }
+                
                 if (responseReceivedTime === null) {
                   responseReceivedTime = updateTime;
                   const totalResponseTime = responseReceivedTime - totalStartTime;
                   const processingTime = processingStartTime ? responseReceivedTime - processingStartTime : null;
                   
-                  console.log(`✅ AI Response received in ${totalResponseTime.toFixed(0)}ms`);
+                  console.log(`✅ AI Response chunk received in ${totalResponseTime.toFixed(0)}ms`);
                   if (processingTime !== null) {
                     console.log(`⏱️ Processing took ${processingTime.toFixed(0)}ms`);
                   }
-                  console.log('📝 Response preview:', response.substring(0, 100) + '...');
                 }
                 
-                if (!hasResolved) {
+                // Resolve only when status is COMPLETE
+                const status = data['status'];
+                const statusState = typeof status === 'object' && status !== null 
+                  ? (status.state || status.status) 
+                  : status;
+                
+                if (statusState && statusState.toLowerCase() === 'complete' && !hasResolved) {
                   hasResolved = true;
                   unsubscribe();
+                  console.log(`✅ Complete response received (${response.length} chars)`);
                   resolve(response);
                 }
                 return;
-              }
-              
-              // Log what fields we're seeing
-              if (data) {
-                console.log('📋 Available fields:', Object.keys(data));
-                console.log('🔍 Looking for field:', this.responseField);
               }
             },
             (error) => {
