@@ -128,10 +128,16 @@ export class App {
           
           // Update conversation history with partial response
           fullResponse = chunk;
-          // Remove any existing avatar message and add new one with typewriter
-          this.conversationHistory = this.conversationHistory.filter(
-            item => item.role !== 'avatar'
-          );
+          // Find and remove only the LAST avatar message (current streaming one), not all avatar messages
+          const lastAvatarIndex = this.conversationHistory.map((item, idx) => 
+            item.role === 'avatar' ? idx : -1
+          ).filter(idx => idx !== -1).pop();
+          
+          if (lastAvatarIndex !== undefined) {
+            // Remove only the last avatar message (the one currently being streamed)
+            this.conversationHistory.splice(lastAvatarIndex, 1);
+          }
+          
           const avatarIndex = this.conversationHistory.length;
           this.conversationHistory.push({ 
             role: 'avatar', 
@@ -149,13 +155,15 @@ export class App {
           // Update conversation history by appending the new chunk
           fullResponse += chunk;
           
-          // Find the avatar message and update it
-          const avatarIndex = this.conversationHistory.findIndex(
-            item => item.role === 'avatar'
-          );
+          // Find the LAST avatar message (the one currently being streamed) and update it
+          // Find all avatar indices, get the last one
+          const avatarIndices = this.conversationHistory
+            .map((item, idx) => item.role === 'avatar' ? idx : -1)
+            .filter(idx => idx !== -1);
+          const avatarIndex = avatarIndices.length > 0 ? avatarIndices[avatarIndices.length - 1] : -1;
           
           if (avatarIndex >= 0) {
-            // Update the full message
+            // Update the last avatar message (the one currently being streamed)
             this.conversationHistory[avatarIndex].message = fullResponse;
             // Continue typewriter effect with new text
             this.continueTypewriter(avatarIndex, fullResponse);
@@ -181,15 +189,19 @@ export class App {
       fullResponse = response;
       
       // Ensure typewriter completes for final response
-      const avatarIndex = this.conversationHistory.findIndex(
-        item => item.role === 'avatar'
-      );
+      // Find the LAST avatar message (the one currently being streamed)
+      const avatarIndices = this.conversationHistory
+        .map((item, idx) => item.role === 'avatar' ? idx : -1)
+        .filter(idx => idx !== -1);
+      const avatarIndex = avatarIndices.length > 0 ? avatarIndices[avatarIndices.length - 1] : -1;
       
       if (avatarIndex >= 0) {
+        // Update the last avatar message
         this.conversationHistory[avatarIndex].message = fullResponse;
         // Complete typewriter effect
         this.completeTypewriter(avatarIndex, fullResponse);
       } else {
+        // If no avatar message found, create one
         this.conversationHistory.push({ 
           role: 'avatar', 
           message: fullResponse,
