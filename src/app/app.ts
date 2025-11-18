@@ -40,9 +40,9 @@ export class App {
 
   // Welcome messages
   private welcomeMessages = [
-    "Hello! I'm Jim, your personal goal achievement coach. How can I help you today?",
-    "Welcome to RocketGoals! I'm here to help you turn your dreams into reality. What would you like to know?",
-    "Hi there! Ready to power your impossible goals? Let's get started!"
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started!",
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started!",
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started!"
   ];
 
   // Lazy load services only when needed
