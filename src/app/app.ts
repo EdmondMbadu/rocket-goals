@@ -724,45 +724,345 @@ export class App {
     });
   }
 
-  downloadConversationAsPDF(): void {
+  /**
+   * Convert image to base64 data URL for PDF embedding
+   */
+  private async imageToBase64(imagePath: string): Promise<string> {
+    try {
+      const response = await fetch(imagePath);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return ''; // Return empty string if conversion fails
+    }
+  }
+
+  /**
+   * Convert markdown to HTML for PDF rendering
+   */
+  private markdownToHtml(markdown: string): string {
+    if (!markdown) return '';
+    
+    // Split into lines for better processing
+    const lines = markdown.split('\n');
+    let html = '';
+    let inList = false;
+    let listType = 'ul';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Headers
+      if (line.startsWith('### ')) {
+        if (inList) {
+          html += `</${listType}>`;
+          inList = false;
+        }
+        html += `<h3>${line.substring(4)}</h3>`;
+        continue;
+      }
+      if (line.startsWith('## ')) {
+        if (inList) {
+          html += `</${listType}>`;
+          inList = false;
+        }
+        html += `<h2>${line.substring(3)}</h2>`;
+        continue;
+      }
+      if (line.startsWith('# ')) {
+        if (inList) {
+          html += `</${listType}>`;
+          inList = false;
+        }
+        html += `<h1>${line.substring(2)}</h1>`;
+        continue;
+      }
+      
+      // Lists
+      const bulletMatch = line.match(/^[\*\-] (.+)$/);
+      const numberMatch = line.match(/^\d+\. (.+)$/);
+      
+      if (bulletMatch || numberMatch) {
+        const newListType = bulletMatch ? 'ul' : 'ol';
+        const content = bulletMatch ? bulletMatch[1] : numberMatch![1];
+        
+        if (!inList || listType !== newListType) {
+          if (inList) {
+            html += `</${listType}>`;
+          }
+          html += `<${newListType}>`;
+          inList = true;
+          listType = newListType;
+        }
+        
+        // Process inline formatting
+        let processedContent = content
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        html += `<li>${processedContent}</li>`;
+        continue;
+      }
+      
+      // End list if we hit a non-list line
+      if (inList && line !== '') {
+        html += `</${listType}>`;
+        inList = false;
+      }
+      
+      // Regular paragraph
+      if (line !== '') {
+        let processedLine = line
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Check if it's already a paragraph or header
+        if (!processedLine.startsWith('<')) {
+          html += `<p>${processedLine}</p>`;
+        } else {
+          html += processedLine;
+        }
+      } else if (!inList) {
+        // Empty line - add spacing
+        html += '<br>';
+      }
+    }
+    
+    // Close any open list
+    if (inList) {
+      html += `</${listType}>`;
+    }
+    
+    return html;
+  }
+
+  /**
+   * Check if a message is the generated plan (has markdown headers)
+   */
+  private isPlanMessage(message: string): boolean {
+    // Check if message contains markdown headers (## or ###)
+    return /^##?\s/.test(message) || message.includes('EXECUTIVE SUMMARY') || message.includes('KEY INSIGHTS') || message.includes('ACTIONABLE STEPS');
+  }
+
+  async downloadConversationAsPDF(): Promise<void> {
     if (this.conversationHistory.length === 0) {
       return;
+    }
+
+    // Convert logo to base64
+    const logoBase64 = await this.imageToBase64('/assets/rocket-goals.png');
+    const logoImg = logoBase64 ? `<img src="${logoBase64}" alt="RocketGoals" style="height: 60px; width: auto;" />` : '<div style="font-size: 24px; font-weight: bold; color: #dc2626;">RocketGoals</div>';
+
+    // Separate conversation and plan
+    const conversationMessages: Array<{ role: 'user' | 'avatar', message: string }> = [];
+    const planMessages: Array<string> = [];
+    
+    for (const item of this.conversationHistory) {
+      if (item.role === 'avatar' && this.isPlanMessage(item.message)) {
+        planMessages.push(item.message);
+      } else {
+        conversationMessages.push(item);
+      }
     }
 
     const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-<title>RocketGoals Conversation</title>
+<title>RocketGoals Launch Plan</title>
 <meta charset="utf-8">
 <style>
-@media print{@page{margin:1in;size:letter}}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;line-height:1.6;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px}
-h1{color:#dc2626;border-bottom:3px solid #dc2626;padding-bottom:10px;margin-bottom:30px}
-.message{margin-bottom:20px;padding:15px;border-radius:8px}
-.user-message{background-color:#dc2626;color:white;margin-left:20%;text-align:right}
-.avatar-message{background-color:#f5f5f5;color:#1a1a1a;margin-right:20%}
-.role{font-weight:bold;margin-bottom:8px;font-size:0.9em;opacity:0.9}
-.content{white-space:pre-wrap}
-.timestamp{font-size:0.8em;opacity:0.7;margin-top:10px}
+@page {
+  margin: 0.75in;
+  size: letter;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.7;
+  color: #1a1a1a;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #dc2626;
+}
+.header-content {
+  flex: 1;
+}
+.header h1 {
+  color: #dc2626;
+  font-size: 32px;
+  font-weight: 900;
+  margin: 0 0 8px 0;
+  border: none;
+  padding: 0;
+}
+.header .subtitle {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+.timestamp {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+.conversation-section {
+  margin-bottom: 50px;
+  page-break-inside: avoid;
+}
+.section-title {
+  color: #dc2626;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 40px 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dc2626;
+}
+.message {
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  border-radius: 12px;
+  page-break-inside: avoid;
+}
+.user-message {
+  background-color: #dc2626;
+  color: white;
+  margin-left: 20%;
+  text-align: right;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.avatar-message {
+  background-color: #f5f5f5;
+  color: #1a1a1a;
+  margin-right: 20%;
+  border: 1px solid #e5e5e5;
+}
+.role {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.plan-section {
+  margin-top: 50px;
+  page-break-before: always;
+  background: white;
+}
+.plan-content {
+  color: #1a1a1a;
+  line-height: 1.8;
+}
+.plan-content h1 {
+  color: #dc2626;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 30px 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dc2626;
+}
+.plan-content h2 {
+  color: #dc2626;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 25px 0 15px 0;
+  padding-top: 15px;
+}
+.plan-content h3 {
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 20px 0 12px 0;
+}
+.plan-content p {
+  margin: 12px 0;
+  text-align: justify;
+}
+.plan-content ul, .plan-content ol {
+  margin: 15px 0;
+  padding-left: 30px;
+}
+.plan-content li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+.plan-content strong {
+  color: #dc2626;
+  font-weight: 700;
+}
+.separator {
+  height: 2px;
+  background: linear-gradient(to right, transparent, #dc2626, transparent);
+  margin: 40px 0;
+  page-break-inside: avoid;
+}
+@media print {
+  .message {
+    page-break-inside: avoid;
+  }
+  .plan-section {
+    page-break-before: always;
+  }
+}
 </style>
 </head>
 <body>
-<h1>RocketGoals Conversation</h1>
-<div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
-${this.conversationHistory.map((item) => {
-  const role = item.role === 'user' ? 'You' : "Jim's Avatar";
-  let message = item.role === 'avatar' 
-    ? item.message.replace(/<[^>]*>/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
-    : item.message;
-  // Clean up weird punctuation
-  message = message
-    .replace(/[•·▪▫‣⁃]/g, '-')
-    .replace(/[—–]/g, '-')
-    .replace(/[""]/g, '"')
-    .replace(/['']/g, "'");
-  const messageClass = item.role === 'user' ? 'user-message' : 'avatar-message';
-  return `<div class="message ${messageClass}"><div class="role">${role}</div><div class="content">${message}</div></div>`;
-}).join('')}
+<div class="header">
+  ${logoImg}
+  <div class="header-content" style="margin-left: 20px;">
+    <h1>RocketGoals Launch Plan</h1>
+    <div class="subtitle">Your Personalized Goal Achievement Roadmap</div>
+    <div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
+  </div>
+</div>
+
+${conversationMessages.length > 0 ? `
+<div class="conversation-section">
+  <div class="section-title">Conversation</div>
+  ${conversationMessages.map((item) => {
+    const role = item.role === 'user' ? 'You' : "Jim's Avatar";
+    let message = item.message;
+    // Clean up HTML tags but preserve content
+    message = message.replace(/<[^>]*>/g, '');
+    // Clean up weird punctuation
+    message = message
+      .replace(/[•·▪▫‣⁃]/g, '•')
+      .replace(/[—–]/g, '-')
+      .replace(/[""]/g, '"')
+      .replace(/['']/g, "'");
+    const messageClass = item.role === 'user' ? 'user-message' : 'avatar-message';
+    return `<div class="message ${messageClass}"><div class="role">${role}</div><div class="content">${message}</div></div>`;
+  }).join('')}
+</div>
+` : ''}
+
+${planMessages.length > 0 ? `
+<div class="separator"></div>
+<div class="plan-section">
+  <div class="section-title">Your Rocket Goals Launch Plan</div>
+  <div class="plan-content">
+    ${planMessages.map(plan => this.markdownToHtml(plan)).join('<div class="separator" style="margin: 30px 0;"></div>')}
+  </div>
+</div>
+` : ''}
 </body>
 </html>`;
 
@@ -789,9 +1089,11 @@ ${this.conversationHistory.map((item) => {
           iframe.contentWindow?.print();
           // Remove iframe after a delay
           setTimeout(() => {
-            document.body.removeChild(iframe);
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
           }, 1000);
-        }, 250);
+        }, 500); // Increased delay to ensure images load
       };
     } else {
       // Fallback: open in new window
@@ -801,9 +1103,11 @@ ${this.conversationHistory.map((item) => {
         printWindow.document.close();
         setTimeout(() => {
           printWindow.print();
-        }, 250);
+        }, 500);
       }
-      document.body.removeChild(iframe);
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
     }
   }
 
