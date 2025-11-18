@@ -24,9 +24,11 @@ export class SpeechRecognitionService {
     return this.isSupported;
   }
 
-  startListening(options?: { maxDurationMs?: number }): Promise<string> {
+  startListening(options?: { maxDurationMs?: number; maxTotalMs?: number; silenceMs?: number }): Promise<string> {
+    // maxTotalMs is a flexible ceiling (resets while user speaks); silenceMs is the gap allowed between sounds
     const config = {
-      maxDurationMs: options?.maxDurationMs ?? 12000 // Give users up to ~12s to respond before timing out
+      silenceMs: options?.silenceMs ?? 4500,
+      maxTotalMs: options?.maxTotalMs ?? options?.maxDurationMs ?? 15000
     };
 
     return new Promise((resolve, reject) => {
@@ -37,28 +39,57 @@ export class SpeechRecognitionService {
 
       let finalTranscript = '';
       let attempt = 0;
-      let timeoutId: number | null = null;
-      let timedOut = false;
+      let silenceTimeoutId: number | null = null;
+      let totalTimeoutId: number | null = null;
+      let timedOutCause: 'silence' | 'total' | null = null;
 
-      const startWithTimer = () => {
-        attempt += 1;
-        finalTranscript = '';
-        timedOut = false;
-
-        // Safety timeout so we never hang waiting for the API to end on its own
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+      const clearTimers = () => {
+        if (silenceTimeoutId) {
+          clearTimeout(silenceTimeoutId);
+          silenceTimeoutId = null;
         }
-        if (config.maxDurationMs > 0) {
-          timeoutId = window.setTimeout(() => {
-            timedOut = true;
+        if (totalTimeoutId) {
+          clearTimeout(totalTimeoutId);
+          totalTimeoutId = null;
+        }
+      };
+
+      const resetSilenceTimer = () => {
+        if (silenceTimeoutId) {
+          clearTimeout(silenceTimeoutId);
+        }
+        if (config.silenceMs > 0) {
+          silenceTimeoutId = window.setTimeout(() => {
+            timedOutCause = 'silence';
             try {
               this.recognition?.stop();
             } catch {
               // ignore
             }
-          }, config.maxDurationMs);
+          }, config.silenceMs);
         }
+      };
+
+      const startWithTimer = () => {
+        attempt += 1;
+        finalTranscript = '';
+        timedOutCause = null;
+        clearTimers();
+
+        // Total session ceiling
+        if (config.maxTotalMs > 0) {
+          totalTimeoutId = window.setTimeout(() => {
+            timedOutCause = 'total';
+            try {
+              this.recognition?.stop();
+            } catch {
+              // ignore
+            }
+          }, config.maxTotalMs);
+        }
+
+        // Silence gap timer
+        resetSilenceTimer();
 
         try {
           this.recognition?.start();
@@ -73,6 +104,9 @@ export class SpeechRecognitionService {
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
           }
+
+          // Any audible result extends the silence window
+          resetSilenceTimer();
         }
       };
 
@@ -90,9 +124,7 @@ export class SpeechRecognitionService {
           return;
         }
 
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        clearTimers();
 
         if (event.error === 'audio-capture') {
           reject(new Error('No microphone found. Please check your microphone settings.'));
@@ -106,16 +138,14 @@ export class SpeechRecognitionService {
       };
 
       this.recognition.onend = () => {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        clearTimers();
 
         if (finalTranscript.trim()) {
           resolve(finalTranscript.trim());
-        } else if (timedOut && attempt < 2) {
+        } else if (timedOutCause && attempt < 2) {
           // Auto-retry once after a timeout to give users more room
           setTimeout(startWithTimer, 150);
-        } else if (timedOut) {
+        } else if (timedOutCause) {
           reject(new Error('Listening timed out. Please try speaking again.'));
         } else if (attempt < 2) {
           // Allow one restart when users pause too long to start speaking

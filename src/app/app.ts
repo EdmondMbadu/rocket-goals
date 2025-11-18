@@ -36,8 +36,8 @@ export class App {
   // Timer state management
   conversationStartTime = signal<number | null>(null);
   private currentTime = signal<number>(Date.now()); // Signal that updates every second to trigger recomputation
-  private readonly CONVERSATION_TIME_LIMIT = 120; // 2 minutes in seconds to keep chats tight
-  private readonly MAX_LISTEN_DURATION_MS = 12000; // Allow users ~12s to respond before timing out
+  private readonly CONVERSATION_TIME_LIMIT = 180; // 3 minutes in seconds to keep chats tight
+  private readonly MAX_LISTEN_DURATION_MS = 15000; // Let users respond without lingering too long
   conversationElapsedTime = computed(() => {
     const start = this.conversationStartTime();
     const now = this.currentTime();
@@ -53,6 +53,7 @@ export class App {
   userEmail = signal<string | null>(null);
   isGeneratingPlan = signal(false);
   private timerInterval: any = null;
+  private timeUpPending = false; // Prevents overlapping plan generation when time runs out mid-speech
   
   // Typewriter effect state
   private typewriterIntervals: Map<number, any> = new Map();
@@ -61,9 +62,9 @@ export class App {
 
   // Welcome messages
   private welcomeMessages = [
-    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started! What's the one goal you're most excited about achieving?",
-    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started! What's the one goal you're most excited about achieving?",
-    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started! What's the one goal you're most excited about achieving?"
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes less than three minutes - let's get started! What's the one goal you're most excited about achieving?",
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes less than three minutes - let's get started! What's the one goal you're most excited about achieving?",
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes less than three minutes - let's get started! What's the one goal you're most excited about achieving?"
   ];
 
   // Lazy load services only when needed
@@ -93,6 +94,7 @@ export class App {
     this.isConversationActive.set(true);
     this.conversationHistory = []; // Reset conversation history
     this.errorMessage.set(null); // Clear any previous errors
+    this.timeUpPending = false;
     
     // Start timer
     this.conversationStartTime.set(Date.now());
@@ -131,7 +133,19 @@ export class App {
       // Update currentTime signal to trigger recomputation of elapsed time
       this.currentTime.set(Date.now());
       
+      // If time is up, set a pending flag but only act when we're idle to avoid overlap
       if (this.isTimeUp() && !this.shouldAskForEmail() && !this.isGeneratingPlan() && !this.isWaitingForEmail()) {
+        this.timeUpPending = true;
+      }
+      
+      const readyForTimeUp = this.timeUpPending
+        && !this.isListening()
+        && !this.isSpeaking()
+        && !this.isThinking()
+        && this.conversationState() === 'waiting_for_user';
+      
+      if (readyForTimeUp) {
+        this.timeUpPending = false;
         // Time is up - generate plan first, then ask for email
         this.generatePlanAndRequestEmail();
       }
@@ -154,6 +168,9 @@ export class App {
     
     // Stop listening if active
     this.stopListening();
+    
+    // Clear any pending time-up flag now that we're generating
+    this.timeUpPending = false;
     
     // Interrupt AI if speaking
     if (this.isSpeaking()) {
@@ -465,7 +482,8 @@ export class App {
 
     try {
       const transcript = await this.speechRecognitionService.startListening({
-        maxDurationMs: this.MAX_LISTEN_DURATION_MS
+        maxTotalMs: this.MAX_LISTEN_DURATION_MS, // Flexible total cap with auto-extend while user speaks
+        silenceMs: 4500 // Reset on speech so users aren't cut off mid-thought, but tighter pause
       });
       console.log('Speech recognized:', transcript);
 
