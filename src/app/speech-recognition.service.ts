@@ -27,7 +27,7 @@ export class SpeechRecognitionService {
   startListening(options?: { maxDurationMs?: number; maxTotalMs?: number; silenceMs?: number }): Promise<string> {
     // maxTotalMs is a flexible ceiling (resets while user speaks); silenceMs is the gap allowed between sounds
     const config = {
-      silenceMs: options?.silenceMs ?? 4500,
+      silenceMs: options?.silenceMs ?? 3000, // Tight pause window for quicker hand-offs
       maxTotalMs: options?.maxTotalMs ?? options?.maxDurationMs ?? 15000
     };
 

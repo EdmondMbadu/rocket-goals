@@ -483,7 +483,7 @@ export class App {
     try {
       const transcript = await this.speechRecognitionService.startListening({
         maxTotalMs: this.MAX_LISTEN_DURATION_MS, // Flexible total cap with auto-extend while user speaks
-        silenceMs: 4500 // Reset on speech so users aren't cut off mid-thought, but tighter pause
+        silenceMs: 3000 // Reset on speech so users aren't cut off mid-thought, but tighter pause
       });
       console.log('Speech recognized:', transcript);
 
@@ -906,102 +906,151 @@ export class App {
 <title>RocketGoals Launch Plan</title>
 <meta charset="utf-8">
 <style>
+:root {
+  --accent: #dc2626;
+  --ink: #0f172a;
+  --muted: #4b5563;
+  --border: #e5e7eb;
+  --soft: #f8fafc;
+}
 @page {
   margin: 0.75in;
   size: letter;
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.7;
-  color: #1a1a1a;
-  max-width: 800px;
+  line-height: 1.8;
+  color: var(--ink);
+  max-width: 850px;
   margin: 0 auto;
   padding: 20px;
-  background: white;
+  background: var(--soft);
+}
+.sheet {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  padding: 32px;
 }
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 3px solid #dc2626;
+  gap: 18px;
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--border);
   page-break-after: avoid;
 }
-.header-content {
-  flex: 1;
-}
 .header h1 {
-  color: #dc2626;
+  color: var(--accent);
   font-size: 32px;
   font-weight: 900;
-  margin: 0 0 8px 0;
-  border: none;
-  padding: 0;
+  letter-spacing: -0.5px;
+  margin: 0 0 6px 0;
 }
 .header .subtitle {
-  color: #666;
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 15px;
   margin: 0;
 }
 .timestamp {
   font-size: 12px;
-  color: #999;
-  margin-top: 8px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+.tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(220, 38, 38, 0.06);
+  color: var(--accent);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.4px;
 }
 .plan-section {
-  margin-top: 0;
-  background: white;
   page-break-before: avoid;
 }
-.plan-content {
-  color: #1a1a1a;
-  line-height: 1.8;
+.card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 18px;
 }
 .plan-content h1 {
-  color: #dc2626;
-  font-size: 28px;
+  color: var(--ink);
+  font-size: 26px;
   font-weight: 800;
-  margin: 30px 0 20px 0;
+  margin: 0 0 18px 0;
   padding-bottom: 10px;
-  border-bottom: 2px solid #dc2626;
+  border-bottom: 2px solid var(--border);
 }
 .plan-content h2 {
-  color: #dc2626;
-  font-size: 22px;
-  font-weight: 700;
-  margin: 25px 0 15px 0;
-  padding-top: 15px;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 24px 0 12px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.plan-content h2::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.12);
 }
 .plan-content h3 {
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 20px 0 12px 0;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 16px 0 10px 0;
 }
 .plan-content p {
   margin: 12px 0;
-  text-align: justify;
+  color: var(--muted);
 }
 .plan-content ul, .plan-content ol {
-  margin: 15px 0;
-  padding-left: 30px;
+  margin: 12px 0;
+  padding-left: 22px;
+  color: var(--ink);
 }
 .plan-content li {
   margin: 8px 0;
   line-height: 1.6;
 }
 .plan-content strong {
-  color: #dc2626;
-  font-weight: 700;
+  color: var(--accent);
+  font-weight: 800;
 }
 .separator {
-  height: 2px;
-  background: linear-gradient(to right, transparent, #dc2626, transparent);
-  margin: 40px 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(15, 23, 42, 0.2), transparent);
+  margin: 28px 0;
   page-break-inside: avoid;
 }
+.footer-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: right;
+}
 @media print {
+  body {
+    background: white;
+    padding: 0.75in;
+  }
+  .sheet {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
   .header {
     page-break-after: avoid;
   }
@@ -1009,30 +1058,32 @@ body {
     page-break-before: avoid;
     page-break-inside: avoid;
   }
-  body {
-    margin: 0;
-    padding: 0.75in;
-  }
 }
 </style>
 </head>
 <body>
-<div class="header">
-  ${logoImg}
-  <div class="header-content" style="margin-left: 20px;">
-    <h1>RocketGoals Launch Plan</h1>
-    <div class="subtitle">Your Personalized Goal Achievement Roadmap</div>
-    <div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
+<div class="sheet">
+  <div class="header">
+    ${logoImg}
+    <div class="header-content" style="margin-left: 12px;">
+      <div class="tagline">Launch Plan</div>
+      <h1>RocketGoals Launch Plan</h1>
+      <div class="subtitle">Your Personalized Goal Achievement Roadmap</div>
+      <div class="timestamp">Generated on ${new Date().toLocaleString()}</div>
+    </div>
   </div>
-</div>
 
-${planMessages.length > 0 ? `
-<div class="plan-section">
-  <div class="plan-content">
-    ${planMessages.map(plan => this.markdownToHtml(plan)).join('<div class="separator" style="margin: 30px 0;"></div>')}
+  ${planMessages.length > 0 ? `
+  <div class="plan-section">
+    <div class="card">
+      <div class="plan-content">
+        ${planMessages.map(plan => this.markdownToHtml(plan)).join('<div class="separator"></div>')}
+      </div>
+    </div>
+    <div class="footer-note">Prepared for you by RocketGoals</div>
   </div>
+  ` : ''}
 </div>
-` : ''}
 </body>
 </html>`;
 
