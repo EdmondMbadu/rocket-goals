@@ -859,16 +859,19 @@ export class App {
     const logoBase64 = await this.imageToBase64('/assets/rocket-goals.png');
     const logoImg = logoBase64 ? `<img src="${logoBase64}" alt="RocketGoals" style="height: 60px; width: auto;" />` : '<div style="font-size: 24px; font-weight: bold; color: #dc2626;">RocketGoals</div>';
 
-    // Separate conversation and plan
-    const conversationMessages: Array<{ role: 'user' | 'avatar', message: string }> = [];
+    // Extract only the plan messages
     const planMessages: Array<string> = [];
     
     for (const item of this.conversationHistory) {
       if (item.role === 'avatar' && this.isPlanMessage(item.message)) {
         planMessages.push(item.message);
-      } else {
-        conversationMessages.push(item);
       }
+    }
+    
+    // If no plan messages found, show a message
+    if (planMessages.length === 0) {
+      console.warn('No plan messages found in conversation history');
+      return;
     }
 
     const htmlContent = `<!DOCTYPE html>
@@ -919,52 +922,8 @@ body {
   color: #999;
   margin-top: 8px;
 }
-.conversation-section {
-  margin-bottom: 50px;
-  page-break-inside: avoid;
-}
-.section-title {
-  color: #dc2626;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 40px 0 20px 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #dc2626;
-}
-.message {
-  margin-bottom: 20px;
-  padding: 15px 20px;
-  border-radius: 12px;
-  page-break-inside: avoid;
-}
-.user-message {
-  background-color: #dc2626;
-  color: white;
-  margin-left: 20%;
-  text-align: right;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.avatar-message {
-  background-color: #f5f5f5;
-  color: #1a1a1a;
-  margin-right: 20%;
-  border: 1px solid #e5e5e5;
-}
-.role {
-  font-weight: 700;
-  margin-bottom: 8px;
-  font-size: 0.85em;
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.content {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
 .plan-section {
-  margin-top: 50px;
-  page-break-before: always;
+  margin-top: 20px;
   background: white;
 }
 .plan-content {
@@ -1015,11 +974,8 @@ body {
   page-break-inside: avoid;
 }
 @media print {
-  .message {
-    page-break-inside: avoid;
-  }
   .plan-section {
-    page-break-before: always;
+    page-break-inside: avoid;
   }
 }
 </style>
@@ -1034,30 +990,8 @@ body {
   </div>
 </div>
 
-${conversationMessages.length > 0 ? `
-<div class="conversation-section">
-  <div class="section-title">Conversation</div>
-  ${conversationMessages.map((item) => {
-    const role = item.role === 'user' ? 'You' : "Jim's Avatar";
-    let message = item.message;
-    // Clean up HTML tags but preserve content
-    message = message.replace(/<[^>]*>/g, '');
-    // Clean up weird punctuation
-    message = message
-      .replace(/[•·▪▫‣⁃]/g, '•')
-      .replace(/[—–]/g, '-')
-      .replace(/[""]/g, '"')
-      .replace(/['']/g, "'");
-    const messageClass = item.role === 'user' ? 'user-message' : 'avatar-message';
-    return `<div class="message ${messageClass}"><div class="role">${role}</div><div class="content">${message}</div></div>`;
-  }).join('')}
-</div>
-` : ''}
-
 ${planMessages.length > 0 ? `
-<div class="separator"></div>
 <div class="plan-section">
-  <div class="section-title">Your Rocket Goals Launch Plan</div>
   <div class="plan-content">
     ${planMessages.map(plan => this.markdownToHtml(plan)).join('<div class="separator" style="margin: 30px 0;"></div>')}
   </div>
