@@ -483,7 +483,7 @@ export class App {
     try {
       const transcript = await this.speechRecognitionService.startListening({
         maxTotalMs: this.MAX_LISTEN_DURATION_MS, // Flexible total cap with auto-extend while user speaks
-        silenceMs: 3000 // Reset on speech so users aren't cut off mid-thought, but tighter pause
+        silenceMs: 2500 // Reset on speech so users aren't cut off mid-thought, but tighter pause
       });
       console.log('Speech recognized:', transcript);
 
@@ -918,7 +918,7 @@ export class App {
   size: letter;
 }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Georgia, 'Times New Roman', Times, serif;
   line-height: 1.8;
   color: var(--ink);
   max-width: 850px;
@@ -928,9 +928,9 @@ body {
 }
 .sheet {
   background: #ffffff;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 18px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.06);
   padding: 32px;
 }
 .header {
@@ -938,8 +938,8 @@ body {
   align-items: center;
   gap: 18px;
   margin-bottom: 28px;
-  padding-bottom: 18px;
-  border-bottom: 2px solid var(--border);
+  padding-bottom: 12px;
+  border-bottom: none;
   page-break-after: avoid;
 }
 .header h1 {
@@ -976,7 +976,7 @@ body {
 }
 .card {
   background: #ffffff;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 18px;
@@ -985,9 +985,8 @@ body {
   color: var(--ink);
   font-size: 26px;
   font-weight: 800;
-  margin: 0 0 18px 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--border);
+  margin: 0 0 16px 0;
+  padding-bottom: 4px;
 }
 .plan-content h2 {
   color: var(--ink);
