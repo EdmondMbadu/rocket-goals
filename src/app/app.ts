@@ -906,6 +906,7 @@ export class App {
 <title>RocketGoals Launch Plan</title>
 <meta charset="utf-8">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Latin+Modern+Roman:wght@400;700&display=swap');
 :root {
   --accent: #dc2626;
   --ink: #0f172a;
@@ -918,7 +919,7 @@ export class App {
   size: letter;
 }
 body {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: 'Latin Modern Roman', 'Computer Modern Serif', 'STIX Two Text', Georgia, 'Times New Roman', Times, serif;
   line-height: 1.8;
   color: var(--ink);
   max-width: 850px;
