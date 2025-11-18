@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -32,6 +32,26 @@ export class App {
   // Conversation state management
   conversationState = signal<'idle' | 'waiting_for_user' | 'ai_speaking' | 'user_speaking' | 'processing'>('idle');
   isWaitingForUser = signal(false); // Indicates AI is waiting for user response
+  
+  // Timer state management
+  conversationStartTime = signal<number | null>(null);
+  private currentTime = signal<number>(Date.now()); // Signal that updates every second to trigger recomputation
+  private readonly CONVERSATION_TIME_LIMIT = 120; // 2 minutes in seconds
+  conversationElapsedTime = computed(() => {
+    const start = this.conversationStartTime();
+    const now = this.currentTime();
+    if (!start) return 0;
+    return Math.floor((now - start) / 1000);
+  });
+  conversationTimeRemaining = computed(() => {
+    return Math.max(0, this.CONVERSATION_TIME_LIMIT - this.conversationElapsedTime());
+  });
+  isTimeUp = computed(() => this.conversationTimeRemaining() === 0);
+  shouldAskForEmail = signal(false);
+  isWaitingForEmail = signal(false);
+  userEmail = signal<string | null>(null);
+  isGeneratingPlan = signal(false);
+  private timerInterval: any = null;
   
   // Typewriter effect state
   private typewriterIntervals: Map<number, any> = new Map();
@@ -67,6 +87,15 @@ export class App {
     this.isConversationActive.set(true);
     this.conversationHistory = []; // Reset conversation history
     this.errorMessage.set(null); // Clear any previous errors
+    
+    // Start timer
+    this.conversationStartTime.set(Date.now());
+    this.shouldAskForEmail.set(false);
+    this.isWaitingForEmail.set(false);
+    this.userEmail.set(null);
+    this.isGeneratingPlan.set(false);
+    this.startTimerCheck();
+    
     const welcomeMessage = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
     this.conversationHistory.push({ role: 'avatar', message: welcomeMessage });
     
@@ -85,12 +114,160 @@ export class App {
       }, 1000); // Wait a bit longer for welcome message to finish
     }
   }
+  
+  private startTimerCheck(): void {
+    // Clear any existing interval
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
+    
+    this.timerInterval = setInterval(() => {
+      // Update currentTime signal to trigger recomputation of elapsed time
+      this.currentTime.set(Date.now());
+      
+      if (this.isTimeUp() && !this.shouldAskForEmail() && !this.isGeneratingPlan() && !this.isWaitingForEmail()) {
+        // Time is up - generate plan first, then ask for email
+        this.generatePlanAndRequestEmail();
+      }
+    }, 1000);
+  }
+  
+  formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+  
+  private async generatePlanAndRequestEmail(): Promise<void> {
+    if (this.isGeneratingPlan()) {
+      return; // Already generating
+    }
+    
+    this.isGeneratingPlan.set(true);
+    this.shouldAskForEmail.set(true);
+    
+    // Stop listening if active
+    this.stopListening();
+    
+    // Interrupt AI if speaking
+    if (this.isSpeaking()) {
+      this.interruptAI();
+    }
+    
+    // Add message that plan is being generated
+    const generatingMessage = "Great conversation! I'm now creating your personalized Rocket Goals Launch Plan based on everything we discussed. This will just take a moment...";
+    this.conversationHistory.push({ role: 'avatar', message: generatingMessage });
+    
+    // Speak the message (voice mode only)
+    if (this.conversationMode() === 'voice') {
+      await this.speakMessage(generatingMessage, 'avatar');
+    }
+    
+    try {
+      // Generate the plan with generatePlan: true
+      // Use a more explicit prompt and exclude the "generating plan" message from history
+      const planPrompt = "Generate a comprehensive Rocket Goals Launch Plan based on the entire conversation. Create a well-structured document with:\n\n1. EXECUTIVE SUMMARY\n   - User's primary goals and aspirations\n   - Key motivations and values identified\n\n2. KEY INSIGHTS\n   - Important discoveries from the conversation\n   - Challenges and opportunities identified\n\n3. ACTIONABLE STEPS\n   - Specific, measurable actions the user can take\n   - Prioritized by importance and impact\n   - Timeline recommendations where relevant\n\n4. PERSONALIZED RECOMMENDATIONS\n   - Customized strategies based on the user's unique situation\n   - Resources and next steps\n\n5. INSPIRATION & MOTIVATION\n   - Encouraging message tailored to the user\n\nFormat with clear headers (use ## for main sections, ### for subsections), bullet points, and organized structure. Make it comprehensive and detailed - this is the final deliverable.";
+      
+      // Exclude the "generating plan" message from history - only pass actual conversation
+      const conversationForPlan = this.conversationHistory.filter((item, index) => {
+        // Exclude the last message (the "generating plan" message we just added)
+        return index < this.conversationHistory.length - 1;
+      });
+      
+      this.isThinking.set(true);
+      const plan = await this.firestoreAIService.getAIResponse(
+        planPrompt,
+        conversationForPlan, // Use filtered history without the "generating" message
+        async (chunk: string) => {
+          // Stream plan chunks (but don't speak them in voice mode - too long)
+          const lastIndex = this.conversationHistory.length - 1;
+          if (this.conversationHistory[lastIndex]?.role === 'avatar') {
+            this.conversationHistory[lastIndex].message = chunk;
+            this.conversationHistory[lastIndex].displayedMessage = chunk;
+            this.conversationHistory = [...this.conversationHistory];
+          }
+        },
+        this.conversationMode(),
+        true // generatePlan: true
+      );
+      
+      this.isThinking.set(false);
+      
+      // Update the last message with the full plan
+      const lastIndex = this.conversationHistory.length - 1;
+      if (this.conversationHistory[lastIndex]?.role === 'avatar') {
+        this.conversationHistory[lastIndex].message = plan;
+        this.conversationHistory[lastIndex].displayedMessage = plan;
+        this.conversationHistory = [...this.conversationHistory];
+      }
+      
+      // Now ask for email
+      await this.requestEmail();
+    } catch (error) {
+      console.error('Error generating plan:', error);
+      this.isThinking.set(false);
+      // Still ask for email even if plan generation fails
+      await this.requestEmail();
+    }
+  }
+  
+  private async requestEmail(): Promise<void> {
+    this.isGeneratingPlan.set(false);
+    this.isWaitingForEmail.set(true);
+    
+    const emailRequestMessage = "Perfect! Your Rocket Goals Launch Plan is ready. To receive it, I'll need your email address. Please type your email below:";
+    this.conversationHistory.push({ role: 'avatar', message: emailRequestMessage });
+    
+    // Speak the request (voice mode only)
+    if (this.conversationMode() === 'voice') {
+      await this.speakMessage(emailRequestMessage, 'avatar');
+    }
+  }
+  
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  }
 
   async sendMessage(message?: string): Promise<void> {
     const textToSend = message || this.userMessage.trim();
 
     if (!textToSend || this.isListening()) {
       return;
+    }
+
+    // Check if we're waiting for email
+    if (this.isWaitingForEmail()) {
+      const email = textToSend.trim();
+      
+      if (this.isValidEmail(email)) {
+        // Valid email - capture it
+        this.userEmail.set(email);
+        this.isWaitingForEmail.set(false);
+        
+        // Add confirmation message
+        const confirmationMessage = `Perfect! I've got your email (${email}). Your Rocket Goals Launch Plan is ready to download!`;
+        this.conversationHistory.push({ role: 'avatar', message: confirmationMessage });
+        
+        // Speak confirmation (voice mode only)
+        if (this.conversationMode() === 'voice') {
+          await this.speakMessage(confirmationMessage, 'avatar');
+        }
+        
+        this.userMessage = '';
+        return; // Don't proceed with normal message flow
+      } else {
+        // Invalid email - ask again
+        const errorMessage = "That doesn't look like a valid email address. Please enter your email in the format: yourname@example.com";
+        this.conversationHistory.push({ role: 'avatar', message: errorMessage });
+        
+        if (this.conversationMode() === 'voice') {
+          await this.speakMessage(errorMessage, 'avatar');
+        }
+        
+        this.userMessage = '';
+        return;
+      }
     }
 
     // If AI is speaking, interrupt it first
@@ -366,6 +543,12 @@ export class App {
     // Cancel all AI requests
     this.firestoreAIService.cancelAll();
     
+    // Clear timer
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    
     // Reset all state
     this.isConversationActive.set(false);
     this.isSpeaking.set(false);
@@ -373,6 +556,10 @@ export class App {
     this.isThinking.set(false);
     this.conversationState.set('idle');
     this.isWaitingForUser.set(false);
+    this.conversationStartTime.set(null);
+    this.shouldAskForEmail.set(false);
+    this.isWaitingForEmail.set(false);
+    this.isGeneratingPlan.set(false);
     
     // Clear all typewriter intervals
     this.typewriterIntervals.forEach(interval => clearInterval(interval));
@@ -382,6 +569,7 @@ export class App {
     this.conversationHistory = [];
     this.userMessage = '';
     this.errorMessage.set(null);
+    this.userEmail.set(null);
     
     console.log('✅ Conversation closed and all activity stopped');
   }

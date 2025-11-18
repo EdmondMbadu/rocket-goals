@@ -29,7 +29,8 @@ export class FirestoreAIService {
     userMessage: string, 
     conversationHistory?: Array<{ role: 'user' | 'avatar', message: string }>,
     onStreamChunk?: (chunk: string) => void,
-    mode: 'voice' | 'chat' = 'voice'
+    mode: 'voice' | 'chat' = 'voice',
+    generatePlan: boolean = false
   ): Promise<string> {
     const totalStartTime = performance.now();
     
@@ -47,19 +48,22 @@ export class FirestoreAIService {
         let lastResponseText = '';
         let firstChunkReceived = false;
         
-        // Format conversation history for the AI (last 10 messages to keep context manageable)
+        // Format conversation history for the AI
+        // For plan generation, use full history. For normal conversation, use last 10 messages
+        const historyLimit = generatePlan ? 1000 : 10; // Much higher limit for plan generation
         const recentHistory = conversationHistory 
-          ? conversationHistory.slice(-10).map(item => ({
+          ? conversationHistory.slice(-historyLimit).map(item => ({
               role: item.role === 'user' ? 'user' : 'model',
               message: item.message
             }))
           : [];
         
-        // Add document with prompt, conversation history, and mode
+        // Add document with prompt, conversation history, mode, and generatePlan flag
         addDoc(collection(firestore, this.collectionName), {
           [this.promptField]: userMessage,
           conversationHistory: recentHistory,
           mode: mode,
+          generatePlan: generatePlan,
           timestamp: new Date().toISOString()
         }).then((docRef) => {
           const writeTime = performance.now() - writeStartTime;

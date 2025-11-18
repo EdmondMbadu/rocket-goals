@@ -218,6 +218,20 @@
       (click)="$event.stopPropagation()">
       <!-- Voice Mode Header -->
       <div class="flex items-center justify-between p-5 border-b border-black/10 bg-white/50 backdrop-blur-sm">
+        <!-- Timer Display -->
+        @if (isConversationActive() && conversationStartTime()) {
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-white/80 rounded-lg border border-black/10"
+          [class.border-red-300]="conversationTimeRemaining() < 30"
+          [class.bg-red-50]="conversationTimeRemaining() < 30">
+          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-semibold" [class.text-red-600]="conversationTimeRemaining() < 30">
+            {{ formatTime(conversationTimeRemaining()) }}
+          </span>
+        </div>
+        }
         <!-- Mode Toggle -->
         <div class="flex items-center gap-2 px-3 py-1.5 bg-white/80 rounded-lg border border-black/10">
           <button (click)="conversationMode.set('voice')" [class.bg-red-600]="conversationMode() === 'voice'"
@@ -328,6 +342,38 @@
 
       <!-- Voice Mode Input Area -->
       <div class="p-5 border-t border-black/10 bg-white/80 backdrop-blur-sm">
+        <!-- Email Input Indicator -->
+        @if (isWaitingForEmail()) {
+        <div class="mb-4 flex items-center gap-3 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 animate-fade-in">
+          <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-blue-800">Please enter your email address</p>
+            <p class="text-xs text-blue-600">Type your email below to receive your Rocket Goals Launch Plan</p>
+          </div>
+        </div>
+        }
+        <!-- Download Button (after email capture) -->
+        @if (userEmail() && !isWaitingForEmail()) {
+        <div
+          class="mb-4 flex flex-col items-center gap-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm font-semibold text-green-800 text-center">Your Rocket Goals Launch Plan is ready!</p>
+          <button (click)="downloadConversationAsPDF()"
+            class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-xl hover:bg-red-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download Your Plan (PDF)
+          </button>
+        </div>
+        }
         <!-- Listening Indicator -->
         @if (isListening()) {
         <div class="mb-4 flex items-center gap-3 bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-fade-in">
@@ -369,10 +415,13 @@
           </button>
           }
 
-          <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()" [disabled]="isListening()"
-            placeholder="Type to interrupt or click on the voice button..."
+          <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
+            [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
+            [placeholder]="isWaitingForEmail() ? 'Enter your email address (e.g., yourname@example.com)' : 'Type to interrupt or click on the voice button...'"
+            [class.border-blue-400]="isWaitingForEmail()" [class.bg-blue-50]="isWaitingForEmail()"
             class="flex-1 px-4 py-3 border-2 border-black/10 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white text-lg" />
-          <button (click)="sendMessage()" [disabled]="!userMessage.trim() || isListening()"
+          <button (click)="sendMessage()"
+            [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
             class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg">
             Send
           </button>
@@ -606,6 +655,36 @@
           <p class="text-xs text-blue-800 font-medium">Microphone is on - speak naturally or type your message</p>
         </div>
         }
+        <!-- Email Input Indicator -->
+        @if (isWaitingForEmail()) {
+        <div class="mb-3 flex items-center gap-2 bg-blue-50 border-2 border-blue-200 rounded-xl p-3 animate-fade-in">
+          <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <p class="text-xs text-blue-800 font-medium">Please enter your email address to receive your Rocket Goals
+            Launch Plan</p>
+        </div>
+        }
+        <!-- Download Button (after email capture) -->
+        @if (userEmail() && !isWaitingForEmail()) {
+        <div
+          class="mb-4 flex flex-col items-center gap-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm font-semibold text-green-800 text-center">Your Rocket Goals Launch Plan is ready!</p>
+          <button (click)="downloadConversationAsPDF()"
+            class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-xl hover:bg-red-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download Your Plan (PDF)
+          </button>
+        </div>
+        }
 
         <div class="flex gap-3">
           <!-- Microphone Button -->
@@ -630,10 +709,13 @@
           </button>
           }
 
-          <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()" [disabled]="isListening()"
-            [placeholder]="isSpeaking() ? 'Type to interrupt Jim...' : (speechSupported() && isConversationActive() ? 'Microphone is on - speak or type...' : (speechSupported() ? 'Type or click mic to speak...' : 'Type your message...'))"
+          <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
+            [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
+            [placeholder]="isWaitingForEmail() ? 'Enter your email address (e.g., yourname@example.com)' : (isSpeaking() ? 'Type to interrupt Jim...' : (speechSupported() && isConversationActive() ? 'Microphone is on - speak or type...' : (speechSupported() ? 'Type or click mic to speak...' : 'Type your message...')))"
+            [class.border-blue-400]="isWaitingForEmail()"
             class="flex-1 px-4 py-3 border-2 border-black/10 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white" />
-          <button (click)="sendMessage()" [disabled]="!userMessage.trim() || isListening()"
+          <button (click)="sendMessage()"
+            [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
             class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
             Send
           </button>

@@ -35,7 +35,8 @@ export const processAIPrompt = functions.firestore
         const userMessage = data.prompt;
         const conversationHistory = data.conversationHistory || [];
         const mode = data.mode || 'voice'; // Default to 'voice' if not specified
-        console.log(`🚀 Processing prompt for document ${documentId} (${mode} mode)`);
+        const generatePlan = data.generatePlan || false; // Check if this is a plan generation request
+        console.log(`🚀 Processing prompt for document ${documentId} (${mode} mode, generatePlan: ${generatePlan})`);
         console.log(`💬 Conversation history: ${conversationHistory.length} messages`);
 
         try {
@@ -66,8 +67,21 @@ export const processAIPrompt = functions.firestore
             let maxOutputTokens = 150; // Increased for more substantial responses
             let maxChars = 250; // Increased for more substantial responses (soft limit - allows completion)
             let maxSentences = 4; // Allow 3-4 sentences for more natural flow (soft limit)
+            let shouldApplyLimits = true; // Whether to apply truncation limits
 
-            if (mode === 'voice') {
+            // If generating plan, remove all limits
+            if (generatePlan) {
+                maxOutputTokens = 8192; // Gemini's maximum
+                maxChars = 10000; // Very high limit (effectively no limit)
+                maxSentences = 1000; // Very high limit (effectively no limit)
+                shouldApplyLimits = false; // Don't truncate plan generation
+                conversationGuidelines = `PLAN GENERATION MODE:
+- Generate a comprehensive, detailed Rocket Goals Launch Plan based on the entire conversation
+- Create a well-structured document with clear sections, headers, and bullet points
+- Include: Summary of user's goals, Key insights from conversation, Actionable steps, Personalized recommendations
+- Format with proper headings, subheadings, and organized content
+- Make it thorough and complete - this is the final deliverable for the user`;
+            } else if (mode === 'voice') {
                 conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (VOICE MODE):
 - BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
 - If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-4 sentences, 50-80 words)
@@ -100,8 +114,24 @@ export const processAIPrompt = functions.firestore
                 maxSentences = 4; // Allow 3-4 sentences for more natural flow
             }
 
-            // System prompt with instructions for brief, conversational responses
-            const systemInstruction = `${baseIdentity}
+            // System prompt - different for plan generation vs normal conversation
+            let systemInstruction = '';
+            if (generatePlan) {
+                systemInstruction = `${baseIdentity}
+
+${conversationGuidelines}
+
+IMPORTANT: You are generating a FINAL COMPREHENSIVE PLAN document. This is NOT a conversation - it's a complete, structured document that will be downloaded as a PDF.
+
+Requirements:
+- Generate a FULL, DETAILED plan (no truncation, no limits)
+- Use markdown formatting: ## for main sections, ### for subsections, **bold** for emphasis, bullet points for lists
+- Include ALL sections requested in the user's prompt
+- Be thorough and comprehensive - this is the user's final deliverable
+- Format professionally with clear structure
+- Do NOT ask questions or continue conversation - just provide the complete plan`;
+            } else {
+                systemInstruction = `${baseIdentity}
 
 ${conversationGuidelines}
 
@@ -166,6 +196,7 @@ Living Your Opulent Life Now:
 Summary:
 
 This blueprint embodies your unique approach to achieving opulence through both bold action and mindful patience. Keep this vision close, take consistent steps forward, and celebrate the wealth of progress each day brings.`;
+            }
 
             // Use fastest model for speed
             const model = genAI.getGenerativeModel({
@@ -224,40 +255,43 @@ This blueprint embodies your unique approach to achieving opulence through both 
                 if (chunkText) {
                     fullText += chunkText;
 
-                    // Better sentence detection: count actual sentence endings
-                    // Look for sentence-ending punctuation followed by space or end of string
-                    const sentencePattern = /[.!?]+(\s+|$)/g;
-                    const sentences = fullText.match(sentencePattern) || [];
-                    sentenceCount = sentences.length;
+                    // Only apply limits if not generating plan
+                    if (shouldApplyLimits) {
+                        // Better sentence detection: count actual sentence endings
+                        // Look for sentence-ending punctuation followed by space or end of string
+                        const sentencePattern = /[.!?]+(\s+|$)/g;
+                        const sentences = fullText.match(sentencePattern) || [];
+                        sentenceCount = sentences.length;
 
-                    // Check if we've exceeded limits - but allow completion of current sentence
-                    const hasExceededSentenceLimit = sentenceCount > MAX_SENTENCES;
-                    const hasExceededCharLimit = fullText.length > MAX_CHARS * 1.3; // Allow 30% over for sentence completion
+                        // Check if we've exceeded limits - but allow completion of current sentence
+                        const hasExceededSentenceLimit = sentenceCount > MAX_SENTENCES;
+                        const hasExceededCharLimit = fullText.length > MAX_CHARS * 1.3; // Allow 30% over for sentence completion
 
-                    // Only stop if we've exceeded limits AND found a complete sentence boundary
-                    if (hasExceededSentenceLimit || hasExceededCharLimit) {
-                        // Find the end of the last complete sentence
-                        const lastSentenceEnd = Math.max(
-                            fullText.lastIndexOf('.'),
-                            fullText.lastIndexOf('!'),
-                            fullText.lastIndexOf('?')
-                        );
+                        // Only stop if we've exceeded limits AND found a complete sentence boundary
+                        if (hasExceededSentenceLimit || hasExceededCharLimit) {
+                            // Find the end of the last complete sentence
+                            const lastSentenceEnd = Math.max(
+                                fullText.lastIndexOf('.'),
+                                fullText.lastIndexOf('!'),
+                                fullText.lastIndexOf('?')
+                            );
 
-                        // Only stop if we have a complete sentence boundary
-                        // This ensures we never cut mid-sentence
-                        if (lastSentenceEnd > 0 && lastSentenceEnd < fullText.length - 5) {
-                            // We have a complete sentence that's not at the very end
-                            // Check if we're past our limits
-                            const textUpToSentence = fullText.substring(0, lastSentenceEnd + 1);
-                            const sentencesUpToBoundary = (textUpToSentence.match(sentencePattern) || []).length;
+                            // Only stop if we have a complete sentence boundary
+                            // This ensures we never cut mid-sentence
+                            if (lastSentenceEnd > 0 && lastSentenceEnd < fullText.length - 5) {
+                                // We have a complete sentence that's not at the very end
+                                // Check if we're past our limits
+                                const textUpToSentence = fullText.substring(0, lastSentenceEnd + 1);
+                                const sentencesUpToBoundary = (textUpToSentence.match(sentencePattern) || []).length;
 
-                            if (sentencesUpToBoundary >= MAX_SENTENCES || textUpToSentence.length >= MAX_CHARS) {
-                                fullText = textUpToSentence.trim();
-                                console.log(`🛑 Stopped at ${sentencesUpToBoundary} sentences, ${fullText.length} chars (natural boundary)`);
-                                break; // Exit the stream loop
+                                if (sentencesUpToBoundary >= MAX_SENTENCES || textUpToSentence.length >= MAX_CHARS) {
+                                    fullText = textUpToSentence.trim();
+                                    console.log(`🛑 Stopped at ${sentencesUpToBoundary} sentences, ${fullText.length} chars (natural boundary)`);
+                                    break; // Exit the stream loop
+                                }
                             }
+                            // If no good sentence boundary found, continue to allow completion
                         }
-                        // If no good sentence boundary found, continue to allow completion
                     }
 
                     // Track first chunk time
@@ -293,32 +327,37 @@ This blueprint embodies your unique approach to achieving opulence through both 
             }
 
             // Final validation - only truncate if significantly over limits and we have a good boundary
-            const finalSentenceCount = (fullText.match(/[.!?]+(\s+|$)/g) || []).length;
-            const significantlyOverCharLimit = fullText.length > MAX_CHARS * 1.5; // 50% over
-            const significantlyOverSentenceLimit = finalSentenceCount > MAX_SENTENCES + 1; // More than 1 sentence over
+            // Skip this entirely if generating plan
+            if (shouldApplyLimits) {
+                const finalSentenceCount = (fullText.match(/[.!?]+(\s+|$)/g) || []).length;
+                const significantlyOverCharLimit = fullText.length > MAX_CHARS * 1.5; // 50% over
+                const significantlyOverSentenceLimit = finalSentenceCount > MAX_SENTENCES + 1; // More than 1 sentence over
 
-            if ((significantlyOverCharLimit || significantlyOverSentenceLimit) && fullText.length > 0) {
-                // Find the last sentence boundary
-                const lastSentenceEnd = Math.max(
-                    fullText.lastIndexOf('.'),
-                    fullText.lastIndexOf('!'),
-                    fullText.lastIndexOf('?')
-                );
+                if ((significantlyOverCharLimit || significantlyOverSentenceLimit) && fullText.length > 0) {
+                    // Find the last sentence boundary
+                    const lastSentenceEnd = Math.max(
+                        fullText.lastIndexOf('.'),
+                        fullText.lastIndexOf('!'),
+                        fullText.lastIndexOf('?')
+                    );
 
-                if (lastSentenceEnd > 50) { // Only if we have a substantial sentence
-                    const truncated = fullText.substring(0, lastSentenceEnd + 1).trim();
-                    const truncatedSentenceCount = (truncated.match(/[.!?]+(\s+|$)/g) || []).length;
+                    if (lastSentenceEnd > 50) { // Only if we have a substantial sentence
+                        const truncated = fullText.substring(0, lastSentenceEnd + 1).trim();
+                        const truncatedSentenceCount = (truncated.match(/[.!?]+(\s+|$)/g) || []).length;
 
-                    // Only truncate if the truncated version is within reasonable limits
-                    if (truncated.length <= MAX_CHARS * 1.2 && truncatedSentenceCount <= MAX_SENTENCES + 1) {
-                        fullText = truncated;
-                        console.log(`✂️ Final truncation: ${truncatedSentenceCount} sentences, ${fullText.length} chars (safety check)`);
+                        // Only truncate if the truncated version is within reasonable limits
+                        if (truncated.length <= MAX_CHARS * 1.2 && truncatedSentenceCount <= MAX_SENTENCES + 1) {
+                            fullText = truncated;
+                            console.log(`✂️ Final truncation: ${truncatedSentenceCount} sentences, ${fullText.length} chars (safety check)`);
+                        } else {
+                            console.log(`ℹ️ Keeping full response: ${finalSentenceCount} sentences, ${fullText.length} chars (within acceptable range)`);
+                        }
                     } else {
-                        console.log(`ℹ️ Keeping full response: ${finalSentenceCount} sentences, ${fullText.length} chars (within acceptable range)`);
+                        console.log(`ℹ️ Keeping full response: ${finalSentenceCount} sentences, ${fullText.length} chars (no good boundary found)`);
                     }
-                } else {
-                    console.log(`ℹ️ Keeping full response: ${finalSentenceCount} sentences, ${fullText.length} chars (no good boundary found)`);
                 }
+            } else {
+                console.log(`📋 Plan generation complete: ${fullText.length} chars (no limits applied)`);
             }
 
             // Final update before marking complete (in case last chunk didn't trigger update)
