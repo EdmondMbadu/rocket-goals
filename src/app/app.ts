@@ -897,9 +897,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
   border-bottom: 3px solid #dc2626;
+  page-break-after: avoid;
 }
 .header-content {
   flex: 1;
@@ -923,8 +924,9 @@ body {
   margin-top: 8px;
 }
 .plan-section {
-  margin-top: 20px;
+  margin-top: 0;
   background: white;
+  page-break-before: avoid;
 }
 .plan-content {
   color: #1a1a1a;
@@ -974,8 +976,16 @@ body {
   page-break-inside: avoid;
 }
 @media print {
+  .header {
+    page-break-after: avoid;
+  }
   .plan-section {
+    page-break-before: avoid;
     page-break-inside: avoid;
+  }
+  body {
+    margin: 0;
+    padding: 0.75in;
   }
 }
 </style>
