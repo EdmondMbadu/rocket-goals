@@ -40,9 +40,9 @@ export class App {
 
   // Welcome messages
   private welcomeMessages = [
-    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started!",
-    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started!",
-    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started!"
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started! What's the one goal you're most excited about achieving?",
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started! What's the one goal you're most excited about achieving?",
+    "Hi! I'm Jim. I'll help you create your instant Rocket Goals Launch Plan. It's free and takes just two minutes - let's get started! What's the one goal you're most excited about achieving?"
   ];
 
   // Lazy load services only when needed
