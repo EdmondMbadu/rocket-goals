@@ -36,7 +36,8 @@ export class App {
   // Timer state management
   conversationStartTime = signal<number | null>(null);
   private currentTime = signal<number>(Date.now()); // Signal that updates every second to trigger recomputation
-  private readonly CONVERSATION_TIME_LIMIT = 120; // 2 minutes in seconds
+  private readonly CONVERSATION_TIME_LIMIT = 120; // 2 minutes in seconds to keep chats tight
+  private readonly MAX_LISTEN_DURATION_MS = 12000; // Allow users ~12s to respond before timing out
   conversationElapsedTime = computed(() => {
     const start = this.conversationStartTime();
     const now = this.currentTime();
@@ -55,8 +56,8 @@ export class App {
   
   // Typewriter effect state
   private typewriterIntervals: Map<number, any> = new Map();
-  private typewriterSpeed = 10; // milliseconds per character (faster = more responsive)
-  private typewriterCatchUpSpeed = 5; // Even faster when catching up to new text
+  private typewriterSpeed = 6; // Faster character cadence for snappier responses
+  private typewriterCatchUpSpeed = 3; // Aggressive catch-up to avoid visible lag
 
   // Welcome messages
   private welcomeMessages = [
@@ -74,6 +75,11 @@ export class App {
     // Check speech support without initializing the full service
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     this.speechSupported.set(!!SpeechRecognition);
+
+    // Warm up Firestore client early to trim first-response latency
+    this.firestoreAIService.preload().catch(error => {
+      console.warn('Firestore preload skipped:', error);
+    });
   }
 
   public scrollToSection(sectionId: string): void {
@@ -111,7 +117,7 @@ export class App {
           console.log('🎤 Auto-starting microphone after welcome message (Voice mode)');
           this.startListening();
         }
-      }, 1000); // Wait a bit longer for welcome message to finish
+      }, 1400); // Give user a quick breather before the mic opens
     }
   }
   
@@ -422,7 +428,7 @@ export class App {
             console.log('🎤 Auto-starting microphone after AI finished speaking (Voice mode)');
             this.startListening();
           }
-        }, 800); // Increased from 500ms to 800ms for more natural pause
+        }, 1400); // Longer pause gives the user space to think before the mic opens
       }
     } catch (error) {
       this.isThinking.set(false); // Hide thinking indicator on error
@@ -458,7 +464,9 @@ export class App {
     this.errorMessage.set(null);
 
     try {
-      const transcript = await this.speechRecognitionService.startListening();
+      const transcript = await this.speechRecognitionService.startListening({
+        maxDurationMs: this.MAX_LISTEN_DURATION_MS
+      });
       console.log('Speech recognized:', transcript);
 
       // Set listening to false before sending message (so sendMessage doesn't return early)

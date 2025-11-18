@@ -268,6 +268,19 @@ export class FirestoreAIService {
   }
 
   /**
+   * Preload Firebase dependencies to shave cold-start latency off the first request
+   */
+  async preload(): Promise<void> {
+    try {
+      await this.initializeFirebase();
+      await import('firebase/firestore');
+      console.log('⚡ Firestore AI service preloaded');
+    } catch (error) {
+      console.warn('Firestore preload failed (non-blocking):', error);
+    }
+  }
+
+  /**
    * Cancel all active AI requests
    */
   cancelAll(): void {
@@ -283,4 +296,3 @@ export class FirestoreAIService {
     console.log('✅ All AI requests cancelled');
   }
 }
-
