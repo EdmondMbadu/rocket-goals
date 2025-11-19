@@ -1,43 +1,428 @@
-.rocket-container{animation:rocket-container-float 4s linear infinite}
-.rocket-float{animation:rocket-float-wobble 4s linear infinite;transform-origin:50% 50%}
-.rocket-glow{animation:rocket-glow-pulse 2s ease-in-out infinite}
-.rocket-pulse{animation:rocket-pulse 2.5s ease-in-out infinite}
-.rocket-trail{width:150px;height:250px;z-index:5;pointer-events:none}
-.particle{position:absolute;background:radial-gradient(circle,#ef4444 0%,#dc2626 50%,#b91c1c 80%,transparent 100%);border-radius:50%;opacity:0.9;animation:particle-float 1.5s linear infinite;box-shadow:0 0 6px rgba(239,68,68,0.6)}
-.particle-1{left:10%;width:6px;height:6px;animation-delay:0s;animation-duration:1.2s}
-.particle-2{left:20%;width:8px;height:8px;animation-delay:0.1s;animation-duration:1.4s}
-.particle-3{left:30%;width:7px;height:7px;animation-delay:0.05s;animation-duration:1.3s}
-.particle-4{left:40%;width:9px;height:9px;animation-delay:0.15s;animation-duration:1.5s}
-.particle-5{left:50%;width:10px;height:10px;animation-delay:0.08s;animation-duration:1.35s;transform:translateX(-50%)}
-.particle-6{left:60%;width:7px;height:7px;animation-delay:0.2s;animation-duration:1.4s}
-.particle-7{left:70%;width:8px;height:8px;animation-delay:0.12s;animation-duration:1.25s}
-.particle-8{left:80%;width:6px;height:6px;animation-delay:0.18s;animation-duration:1.45s}
-.particle-9{left:90%;width:7px;height:7px;animation-delay:0.25s;animation-duration:1.3s}
-.particle-10{left:15%;width:5px;height:5px;animation-delay:0.3s;animation-duration:1.6s}
-@keyframes rocket-float-wobble{0%{transform:translate(0,30px);opacity:0}10%{transform:translate(0,0);opacity:0.95}15%,70%{opacity:1}20%{transform:translate(0,-40px)}40%{transform:translate(0,-80px)}60%{transform:translate(0,-120px)}80%{transform:translate(0,-160px);opacity:0.7}100%{transform:translate(0,-200px);opacity:0}}
-@keyframes rocket-container-float{0%{transform:translateY(20px)}100%{transform:translateY(-140px)}}
-@keyframes rocket-glow-pulse{0%,100%{opacity:0.3;transform:rotate(6deg) scale(1)}50%{opacity:0.5;transform:rotate(6deg) scale(1.1)}}
-@keyframes rocket-pulse{0%,100%{opacity:0.2;transform:scale(1)}50%{opacity:0.4;transform:scale(1.15)}}
-@keyframes particle-float{0%{transform:translateY(20px) scale(1);opacity:0.9}30%{transform:translateY(-40px) scale(0.9);opacity:0.8}60%{transform:translateY(-100px) scale(0.7);opacity:0.6}100%{transform:translateY(-180px) scale(0.4);opacity:0}}
-.avatar-speaking{animation:avatar-speak 0.5s ease-in-out infinite;filter:brightness(1.1)}
-@keyframes avatar-speak{0%,100%{transform:scale(1);filter:brightness(1.1)}25%,75%{transform:scale(1.02);filter:brightness(1.15)}50%{transform:scale(1.05);filter:brightness(1.2)}}
-.avatar-speaking::before{content:'';position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,0.3) 0%,transparent 70%);animation:speaking-glow 0.5s ease-in-out infinite;z-index:-1}
-@keyframes speaking-glow{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.6;transform:scale(1.1)}}
-.avatar-float{animation:avatar-float 3s ease-in-out infinite}
-@keyframes avatar-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.01)}}
-.avatar-glow-outer{animation:avatar-glow-outer 3s ease-in-out infinite}
-@keyframes avatar-glow-outer{0%,100%{opacity:0.25;transform:rotate(6deg) scale(1)}50%{opacity:0.4;transform:rotate(6deg) scale(1.05)}}
-.avatar-glow-middle{animation:avatar-glow-middle 2.5s ease-in-out infinite}
-@keyframes avatar-glow-middle{0%,100%{opacity:0.2;transform:rotate(-6deg) scale(1)}50%{opacity:0.35;transform:rotate(-6deg) scale(1.08)}}
-.audio-waves{display:flex;align-items:center;justify-content:center;gap:3px;width:100%;height:100%}
-.wave-bar{width:3px;background:linear-gradient(to top,#ef4444,#dc2626);border-radius:2px;animation:wave-animation 1.2s ease-in-out infinite}
-.wave-bar:nth-child(1),.wave-bar:nth-child(5){height:8px}
-.wave-bar:nth-child(2),.wave-bar:nth-child(4){height:12px}
-.wave-bar:nth-child(3){height:16px}
-.wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:0.1s}.wave-bar:nth-child(3){animation-delay:0.2s}.wave-bar:nth-child(4){animation-delay:0.3s}.wave-bar:nth-child(5){animation-delay:0.4s}
-@keyframes wave-animation{0%,100%{transform:scaleY(0.3);opacity:0.7}50%{transform:scaleY(1);opacity:1}}
-@keyframes fade-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.animate-fade-in{animation:fade-in 0.3s ease-out}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.rocket-container {
+  animation: rocket-container-float 4s linear infinite
+}
+
+.rocket-float {
+  animation: rocket-float-wobble 4s linear infinite;
+  transform-origin: 50% 50%
+}
+
+.rocket-glow {
+  animation: rocket-glow-pulse 2s ease-in-out infinite
+}
+
+.rocket-pulse {
+  animation: rocket-pulse 2.5s ease-in-out infinite
+}
+
+.rocket-trail {
+  width: 150px;
+  height: 250px;
+  z-index: 5;
+  pointer-events: none
+}
+
+.particle {
+  position: absolute;
+  background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, #b91c1c 80%, transparent 100%);
+  border-radius: 50%;
+  opacity: 0.9;
+  animation: particle-float 1.5s linear infinite;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6)
+}
+
+.particle-1 {
+  left: 10%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 0s;
+  animation-duration: 1.2s
+}
+
+.particle-2 {
+  left: 20%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 0.1s;
+  animation-duration: 1.4s
+}
+
+.particle-3 {
+  left: 30%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.05s;
+  animation-duration: 1.3s
+}
+
+.particle-4 {
+  left: 40%;
+  width: 9px;
+  height: 9px;
+  animation-delay: 0.15s;
+  animation-duration: 1.5s
+}
+
+.particle-5 {
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 0.08s;
+  animation-duration: 1.35s;
+  transform: translateX(-50%)
+}
+
+.particle-6 {
+  left: 60%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.2s;
+  animation-duration: 1.4s
+}
+
+.particle-7 {
+  left: 70%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 0.12s;
+  animation-duration: 1.25s
+}
+
+.particle-8 {
+  left: 80%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 0.18s;
+  animation-duration: 1.45s
+}
+
+.particle-9 {
+  left: 90%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.25s;
+  animation-duration: 1.3s
+}
+
+.particle-10 {
+  left: 15%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 0.3s;
+  animation-duration: 1.6s
+}
+
+@keyframes rocket-float-wobble {
+  0% {
+    transform: translate(0, 30px);
+    opacity: 0
+  }
+
+  10% {
+    transform: translate(0, 0);
+    opacity: 0.95
+  }
+
+  15%,
+  70% {
+    opacity: 1
+  }
+
+  20% {
+    transform: translate(0, -40px)
+  }
+
+  40% {
+    transform: translate(0, -80px)
+  }
+
+  60% {
+    transform: translate(0, -120px)
+  }
+
+  80% {
+    transform: translate(0, -160px);
+    opacity: 0.7
+  }
+
+  100% {
+    transform: translate(0, -200px);
+    opacity: 0
+  }
+}
+
+@keyframes rocket-container-float {
+  0% {
+    transform: translateY(20px)
+  }
+
+  100% {
+    transform: translateY(-140px)
+  }
+}
+
+@keyframes rocket-glow-pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: rotate(6deg) scale(1)
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: rotate(6deg) scale(1.1)
+  }
+}
+
+@keyframes rocket-pulse {
+
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1)
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(1.15)
+  }
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(20px) scale(1);
+    opacity: 0.9
+  }
+
+  30% {
+    transform: translateY(-40px) scale(0.9);
+    opacity: 0.8
+  }
+
+  60% {
+    transform: translateY(-100px) scale(0.7);
+    opacity: 0.6
+  }
+
+  100% {
+    transform: translateY(-180px) scale(0.4);
+    opacity: 0
+  }
+}
+
+.avatar-speaking {
+  animation: avatar-speak 0.5s ease-in-out infinite;
+  filter: brightness(1.1)
+}
+
+@keyframes avatar-speak {
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1.1)
+  }
+
+  25%,
+  75% {
+    transform: scale(1.02);
+    filter: brightness(1.15)
+  }
+
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.2)
+  }
+}
+
+.avatar-speaking::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  animation: speaking-glow 0.5s ease-in-out infinite;
+  z-index: -1
+}
+
+@keyframes speaking-glow {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1)
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1)
+  }
+}
+
+.avatar-float {
+  animation: avatar-float 3s ease-in-out infinite
+}
+
+@keyframes avatar-float {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1)
+  }
+
+  50% {
+    transform: translateY(-8px) scale(1.01)
+  }
+}
+
+.avatar-glow-outer {
+  animation: avatar-glow-outer 3s ease-in-out infinite
+}
+
+@keyframes avatar-glow-outer {
+
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: rotate(6deg) scale(1)
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: rotate(6deg) scale(1.05)
+  }
+}
+
+.avatar-glow-middle {
+  animation: avatar-glow-middle 2.5s ease-in-out infinite
+}
+
+@keyframes avatar-glow-middle {
+
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: rotate(-6deg) scale(1)
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: rotate(-6deg) scale(1.08)
+  }
+}
+
+.audio-waves {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  height: 100%
+}
+
+.wave-bar {
+  width: 3px;
+  background: linear-gradient(to top, #ef4444, #dc2626);
+  border-radius: 2px;
+  animation: wave-animation 1.2s ease-in-out infinite
+}
+
+.wave-bar:nth-child(1),
+.wave-bar:nth-child(5) {
+  height: 8px
+}
+
+.wave-bar:nth-child(2),
+.wave-bar:nth-child(4) {
+  height: 12px
+}
+
+.wave-bar:nth-child(3) {
+  height: 16px
+}
+
+.wave-bar:nth-child(1) {
+  animation-delay: 0s
+}
+
+.wave-bar:nth-child(2) {
+  animation-delay: 0.1s
+}
+
+.wave-bar:nth-child(3) {
+  animation-delay: 0.2s
+}
+
+.wave-bar:nth-child(4) {
+  animation-delay: 0.3s
+}
+
+.wave-bar:nth-child(5) {
+  animation-delay: 0.4s
+}
+
+@keyframes wave-animation {
+
+  0%,
+  100% {
+    transform: scaleY(0.3);
+    opacity: 0.7
+  }
+
+  50% {
+    transform: scaleY(1);
+    opacity: 1
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out
+}
+
+/* Custom Hover Card Effect */
+.hover-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-card:hover {
+  background-color: #000;
+  color: #fff;
+  border-color: #000;
+  transform: translateY(-8px);
+}
+
+.hover-card:hover h3,
+.hover-card:hover p {
+  color: #fff;
+}
+
+.hover-card:hover svg {
+  color: #dc2626;
+  /* Red-600 */
+}
+
+.hover-card:hover .icon-container {
+  background-color: #fff;
+}
 
 /* Voice Mode Wave Animations */
 .voice-waves-container {
@@ -103,9 +488,11 @@
     transform: scale(0.8);
     opacity: 0.8;
   }
+
   50% {
     opacity: 0.4;
   }
+
   100% {
     transform: scale(2.5);
     opacity: 0;
@@ -126,10 +513,13 @@
 }
 
 @keyframes voice-glow-pulse-1 {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.2;
     transform: rotate(6deg) scale(1);
   }
+
   50% {
     opacity: 0.4;
     transform: rotate(6deg) scale(1.1);
@@ -137,10 +527,13 @@
 }
 
 @keyframes voice-glow-pulse-2 {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.15;
     transform: rotate(-6deg) scale(1);
   }
+
   50% {
     opacity: 0.3;
     transform: rotate(-6deg) scale(1.08);
@@ -148,10 +541,13 @@
 }
 
 @keyframes voice-glow-pulse-3 {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.1;
     transform: rotate(12deg) scale(1);
   }
+
   50% {
     opacity: 0.25;
     transform: rotate(12deg) scale(1.05);
@@ -175,15 +571,18 @@
   animation: voice-wave-bar-animation 1s ease-in-out infinite;
 }
 
-.voice-wave-bar:nth-child(1), .voice-wave-bar:nth-child(7) {
+.voice-wave-bar:nth-child(1),
+.voice-wave-bar:nth-child(7) {
   height: 12px;
 }
 
-.voice-wave-bar:nth-child(2), .voice-wave-bar:nth-child(6) {
+.voice-wave-bar:nth-child(2),
+.voice-wave-bar:nth-child(6) {
   height: 20px;
 }
 
-.voice-wave-bar:nth-child(3), .voice-wave-bar:nth-child(5) {
+.voice-wave-bar:nth-child(3),
+.voice-wave-bar:nth-child(5) {
   height: 28px;
 }
 
@@ -191,19 +590,42 @@
   height: 36px;
 }
 
-.voice-wave-bar:nth-child(1) { animation-delay: 0s; }
-.voice-wave-bar:nth-child(2) { animation-delay: 0.1s; }
-.voice-wave-bar:nth-child(3) { animation-delay: 0.2s; }
-.voice-wave-bar:nth-child(4) { animation-delay: 0.3s; }
-.voice-wave-bar:nth-child(5) { animation-delay: 0.2s; }
-.voice-wave-bar:nth-child(6) { animation-delay: 0.1s; }
-.voice-wave-bar:nth-child(7) { animation-delay: 0s; }
+.voice-wave-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.voice-wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.voice-wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.voice-wave-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.voice-wave-bar:nth-child(5) {
+  animation-delay: 0.2s;
+}
+
+.voice-wave-bar:nth-child(6) {
+  animation-delay: 0.1s;
+}
+
+.voice-wave-bar:nth-child(7) {
+  animation-delay: 0s;
+}
 
 @keyframes voice-wave-bar-animation {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scaleY(0.3);
     opacity: 0.7;
   }
+
   50% {
     transform: scaleY(1);
     opacity: 1;
@@ -216,10 +638,13 @@
 }
 
 @keyframes avatar-listen {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     filter: brightness(1);
   }
+
   50% {
     transform: scale(1.03);
     filter: brightness(1.1);
@@ -235,10 +660,13 @@
 }
 
 @keyframes listening-pulse-animation {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.5;
   }
+
   50% {
     transform: scale(1.2);
     opacity: 0.8;

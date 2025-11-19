@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -6,6 +6,7 @@ import { ElevenLabsService } from './elevenlabs.service';
 import { SpeechRecognitionService } from './speech-recognition.service';
 import { FirestoreAIService } from './firestore-ai.service';
 import { stripMarkdownForTTS } from './text-utils';
+import * as THREE from 'three';
 
 @Component({
   selector: 'app-root',
@@ -13,8 +14,15 @@ import { stripMarkdownForTTS } from './text-utils';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class App implements AfterViewInit, OnDestroy {
   protected readonly title = signal('rocket-goals');
+
+  @ViewChild('rocketCanvas') rocketCanvas!: ElementRef<HTMLCanvasElement>;
+  private renderer!: THREE.WebGLRenderer;
+  private scene!: THREE.Scene;
+  private camera!: THREE.PerspectiveCamera;
+  private stars: THREE.Points[] = [];
+  private animationId: number | null = null;
 
   // Conversation state
   isConversationActive = signal(false);
@@ -25,14 +33,14 @@ export class App {
   conversationHistory: Array<{ role: 'user' | 'avatar', message: string, displayedMessage?: string }> = [];
   errorMessage = signal<string | null>(null);
   speechSupported = signal(false);
-  
+
   // Conversation mode: 'voice' (default) or 'chat'
   conversationMode = signal<'voice' | 'chat'>('voice');
-  
+
   // Conversation state management
   conversationState = signal<'idle' | 'waiting_for_user' | 'ai_speaking' | 'user_speaking' | 'processing'>('idle');
   isWaitingForUser = signal(false); // Indicates AI is waiting for user response
-  
+
   // Timer state management
   conversationStartTime = signal<number | null>(null);
   private currentTime = signal<number>(Date.now()); // Signal that updates every second to trigger recomputation
@@ -54,7 +62,7 @@ export class App {
   isGeneratingPlan = signal(false);
   private timerInterval: any = null;
   private timeUpPending = false; // Prevents overlapping plan generation when time runs out mid-speech
-  
+
   // Typewriter effect state
   private typewriterIntervals: Map<number, any> = new Map();
   private typewriterSpeed = 6; // Faster character cadence for snappier responses
@@ -83,6 +91,199 @@ export class App {
     });
   }
 
+  private ngZone = inject(NgZone);
+
+  ngAfterViewInit() {
+    if (this.rocketCanvas) {
+      this.initThreeJs();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    if (this.renderer) {
+      this.renderer.dispose();
+    }
+  }
+
+  private initThreeJs() {
+    const canvas = this.rocketCanvas.nativeElement;
+    // Ensure we have dimensions
+    let width = canvas.clientWidth || window.innerWidth;
+    let height = canvas.clientHeight || 600;
+
+    // Scene setup
+    this.scene = new THREE.Scene();
+    // White fog to fade distant stars into the white background
+    this.scene.fog = new THREE.FogExp2(0xffffff, 0.002);
+
+    // Camera setup
+    this.camera = new THREE.PerspectiveCamera(60, width / height, 1, 1000);
+    this.camera.position.z = 20; // Move back a bit to see the rocket
+    this.camera.position.y = 2;
+    this.camera.rotation.x = -0.1;
+
+    // Renderer setup
+    this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+
+    // --- 1. Create Stars (Warp effect) - BLACK and RED for contrast on White ---
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 6000;
+    const positions = new Float32Array(starCount * 3);
+    const velocities = new Float32Array(starCount);
+    const colors = new Float32Array(starCount * 3);
+
+    const color1 = new THREE.Color(0x000000); // Black
+    const color2 = new THREE.Color(0xdc2626); // Red-600
+
+    for (let i = 0; i < starCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 600;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 600;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 600;
+      velocities[i] = 0;
+
+      // Mix Black and Red stars (mostly black)
+      const color = Math.random() > 0.9 ? color2 : color1;
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    starGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const starMaterial = new THREE.PointsMaterial({
+      size: 0.7,
+      vertexColors: true, // Use the colors attribute
+      transparent: true,
+      opacity: 0.8
+    });
+
+    const starSystem = new THREE.Points(starGeometry, starMaterial);
+    this.scene.add(starSystem);
+
+    // --- 2. Create Low-Poly Rocket Model ---
+    const rocketGroup = new THREE.Group();
+
+    // Body (Cylinder) - White with Black outline feel (using wireframe or just shading)
+    // Actually, let's make it Red and Black to pop against White
+    const bodyGeometry = new THREE.CylinderGeometry(1, 1, 8, 8);
+    const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White body
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+
+    // Add edges for "sketchy" look
+    const bodyEdges = new THREE.EdgesGeometry(bodyGeometry);
+    const bodyLine = new THREE.LineSegments(bodyEdges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+    body.add(bodyLine);
+
+    rocketGroup.add(body);
+
+    // Nose Cone - Red
+    const noseGeometry = new THREE.ConeGeometry(1, 3, 8);
+    const noseMaterial = new THREE.MeshBasicMaterial({ color: 0xdc2626 }); // Red
+    const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+    nose.position.y = 5.5;
+
+    // Edges for nose
+    const noseEdges = new THREE.EdgesGeometry(noseGeometry);
+    const noseLine = new THREE.LineSegments(noseEdges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+    nose.add(noseLine);
+
+    rocketGroup.add(nose);
+
+    // Fins (3 fins)
+    const finGeometry = new THREE.BoxGeometry(1, 3, 0.2);
+    const finMaterial = new THREE.MeshBasicMaterial({ color: 0xdc2626 }); // Red
+
+    for (let i = 0; i < 3; i++) {
+      const fin = new THREE.Mesh(finGeometry, finMaterial);
+      const angle = (i / 3) * Math.PI * 2;
+      fin.position.x = Math.cos(angle) * 1.2;
+      fin.position.z = Math.sin(angle) * 1.2;
+      fin.position.y = -2.5;
+      fin.rotation.y = -angle;
+
+      // Edges for fins
+      const finEdges = new THREE.EdgesGeometry(finGeometry);
+      const finLine = new THREE.LineSegments(finEdges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+      fin.add(finLine);
+
+      rocketGroup.add(fin);
+    }
+
+    // Engine Glow (Point Light visualizer)
+    const engineGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+    const engineMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    const engine = new THREE.Mesh(engineGeometry, engineMaterial);
+    engine.position.y = -4.5;
+    rocketGroup.add(engine);
+
+    // Rotate rocket to fly "forward" (along Z) or just float
+    rocketGroup.rotation.x = Math.PI / 3;
+    rocketGroup.rotation.z = -Math.PI / 6;
+
+    this.scene.add(rocketGroup);
+
+    // Animation Loop - Run outside Angular to avoid change detection cycles
+    this.ngZone.runOutsideAngular(() => {
+      const animate = () => {
+        this.animationId = requestAnimationFrame(animate);
+
+        // Update star positions (Warp Speed)
+        const positions = starGeometry.attributes['position'].array as Float32Array;
+        const velocities = starGeometry.attributes['velocity'].array as Float32Array;
+
+        for (let i = 0; i < starCount; i++) {
+          // Accelerate
+          velocities[i] += 0.05; // Faster acceleration
+
+          // Move star towards camera (positive Z)
+          positions[i * 3 + 2] += velocities[i];
+
+          // Reset if passed camera
+          if (positions[i * 3 + 2] > 50) {
+            positions[i * 3 + 2] = -400; // Reset far back
+            velocities[i] = 0; // Reset speed
+
+            // Randomize X/Y again
+            positions[i * 3] = (Math.random() - 0.5) * 600;
+            positions[i * 3 + 1] = (Math.random() - 0.5) * 600;
+          }
+        }
+
+        starGeometry.attributes['position'].needsUpdate = true;
+
+        // Animate Rocket
+        // Gentle float
+        const time = Date.now() * 0.001;
+        rocketGroup.position.y = Math.sin(time) * 0.5;
+        rocketGroup.rotation.z = -Math.PI / 6 + Math.sin(time * 0.5) * 0.05;
+
+        // Rotate star system slightly
+        starSystem.rotation.z += 0.001;
+
+        this.renderer.render(this.scene, this.camera);
+      };
+
+      animate();
+    });
+
+    // Handle Resize
+    window.addEventListener('resize', () => {
+      if (!this.rocketCanvas) return;
+      const newWidth = this.rocketCanvas.nativeElement.clientWidth;
+      const newHeight = this.rocketCanvas.nativeElement.clientHeight;
+      this.camera.aspect = newWidth / newHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(newWidth, newHeight);
+    });
+  }
+
   public scrollToSection(sectionId: string): void {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -95,7 +296,7 @@ export class App {
     this.conversationHistory = []; // Reset conversation history
     this.errorMessage.set(null); // Clear any previous errors
     this.timeUpPending = false;
-    
+
     // Start timer
     this.conversationStartTime.set(Date.now());
     this.shouldAskForEmail.set(false);
@@ -103,15 +304,15 @@ export class App {
     this.userEmail.set(null);
     this.isGeneratingPlan.set(false);
     this.startTimerCheck();
-    
+
     const welcomeMessage = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
     this.conversationHistory.push({ role: 'avatar', message: welcomeMessage });
-    
+
     // Only speak welcome message in voice mode
     if (this.conversationMode() === 'voice') {
       await this.speakMessage(welcomeMessage, 'avatar');
     }
-    
+
     // Auto-start listening after welcome message only in Voice mode
     if (this.conversationMode() === 'voice' && this.speechSupported() && !this.isListening()) {
       setTimeout(() => {
@@ -122,28 +323,28 @@ export class App {
       }, 1400); // Give user a quick breather before the mic opens
     }
   }
-  
+
   private startTimerCheck(): void {
     // Clear any existing interval
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
-    
+
     this.timerInterval = setInterval(() => {
       // Update currentTime signal to trigger recomputation of elapsed time
       this.currentTime.set(Date.now());
-      
+
       // If time is up, set a pending flag but only act when we're idle to avoid overlap
       if (this.isTimeUp() && !this.shouldAskForEmail() && !this.isGeneratingPlan() && !this.isWaitingForEmail()) {
         this.timeUpPending = true;
       }
-      
+
       const readyForTimeUp = this.timeUpPending
         && !this.isListening()
         && !this.isSpeaking()
         && !this.isThinking()
         && this.conversationState() === 'waiting_for_user';
-      
+
       if (readyForTimeUp) {
         this.timeUpPending = false;
         // Time is up - generate plan first, then ask for email
@@ -151,52 +352,52 @@ export class App {
       }
     }, 1000);
   }
-  
+
   formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
-  
+
   private async generatePlanAndRequestEmail(): Promise<void> {
     if (this.isGeneratingPlan()) {
       return; // Already generating
     }
-    
+
     this.isGeneratingPlan.set(true);
     this.shouldAskForEmail.set(true);
-    
+
     // Stop listening if active
     this.stopListening();
-    
+
     // Clear any pending time-up flag now that we're generating
     this.timeUpPending = false;
-    
+
     // Interrupt AI if speaking
     if (this.isSpeaking()) {
       this.interruptAI();
     }
-    
+
     // Add message that plan is being generated
     const generatingMessage = "Great conversation! I'm now creating your personalized Rocket Goals Launch Plan based on everything we discussed. This will just take a moment...";
     this.conversationHistory.push({ role: 'avatar', message: generatingMessage });
-    
+
     // Speak the message (voice mode only)
     if (this.conversationMode() === 'voice') {
       await this.speakMessage(generatingMessage, 'avatar');
     }
-    
+
     try {
       // Generate the plan with generatePlan: true
       // Use a more explicit prompt and exclude the "generating plan" message from history
       const planPrompt = "Generate a comprehensive Rocket Goals Launch Plan based on the entire conversation. Create a well-structured document with:\n\n1. EXECUTIVE SUMMARY\n   - User's primary goals and aspirations\n   - Key motivations and values identified\n\n2. KEY INSIGHTS\n   - Important discoveries from the conversation\n   - Challenges and opportunities identified\n\n3. ACTIONABLE STEPS\n   - Specific, measurable actions the user can take\n   - Prioritized by importance and impact\n   - Timeline recommendations where relevant\n\n4. PERSONALIZED RECOMMENDATIONS\n   - Customized strategies based on the user's unique situation\n   - Resources and next steps\n\n5. INSPIRATION & MOTIVATION\n   - Encouraging message tailored to the user\n\nFormat with clear headers (use ## for main sections, ### for subsections), bullet points, and organized structure. Make it comprehensive and detailed - this is the final deliverable.";
-      
+
       // Exclude the "generating plan" message from history - only pass actual conversation
       const conversationForPlan = this.conversationHistory.filter((item, index) => {
         // Exclude the last message (the "generating plan" message we just added)
         return index < this.conversationHistory.length - 1;
       });
-      
+
       this.isThinking.set(true);
       const plan = await this.firestoreAIService.getAIResponse(
         planPrompt,
@@ -213,9 +414,9 @@ export class App {
         this.conversationMode(),
         true // generatePlan: true
       );
-      
+
       this.isThinking.set(false);
-      
+
       // Update the last message with the full plan
       const lastIndex = this.conversationHistory.length - 1;
       if (this.conversationHistory[lastIndex]?.role === 'avatar') {
@@ -223,7 +424,7 @@ export class App {
         this.conversationHistory[lastIndex].displayedMessage = plan;
         this.conversationHistory = [...this.conversationHistory];
       }
-      
+
       // Now ask for email
       await this.requestEmail();
     } catch (error) {
@@ -233,20 +434,20 @@ export class App {
       await this.requestEmail();
     }
   }
-  
+
   private async requestEmail(): Promise<void> {
     this.isGeneratingPlan.set(false);
     this.isWaitingForEmail.set(true);
-    
+
     const emailRequestMessage = "Perfect! Your Rocket Goals Launch Plan is ready. To receive it, I'll need your email address. Please type your email below:";
     this.conversationHistory.push({ role: 'avatar', message: emailRequestMessage });
-    
+
     // Speak the request (voice mode only)
     if (this.conversationMode() === 'voice') {
       await this.speakMessage(emailRequestMessage, 'avatar');
     }
   }
-  
+
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email.trim());
@@ -262,32 +463,32 @@ export class App {
     // Check if we're waiting for email
     if (this.isWaitingForEmail()) {
       const email = textToSend.trim();
-      
+
       if (this.isValidEmail(email)) {
         // Valid email - capture it
         this.userEmail.set(email);
         this.isWaitingForEmail.set(false);
-        
+
         // Add confirmation message
         const confirmationMessage = `Perfect! I've got your email (${email}). Your Rocket Goals Launch Plan is ready to download!`;
         this.conversationHistory.push({ role: 'avatar', message: confirmationMessage });
-        
+
         // Speak confirmation (voice mode only)
         if (this.conversationMode() === 'voice') {
           await this.speakMessage(confirmationMessage, 'avatar');
         }
-        
+
         this.userMessage = '';
         return; // Don't proceed with normal message flow
       } else {
         // Invalid email - ask again
         const errorMessage = "That doesn't look like a valid email address. Please enter your email in the format: yourname@example.com";
         this.conversationHistory.push({ role: 'avatar', message: errorMessage });
-        
+
         if (this.conversationMode() === 'voice') {
           await this.speakMessage(errorMessage, 'avatar');
         }
-        
+
         this.userMessage = '';
         return;
       }
@@ -315,12 +516,12 @@ export class App {
     try {
       // Get AI response from Firestore with streaming callback
       console.log('Getting AI response for:', textToSend);
-      
+
       // Set up streaming callback for immediate TTS (only in voice mode)
       const streamCallback = async (chunk: string) => {
         const cleanedChunk = stripMarkdownForTTS(chunk);
         const isVoiceMode = this.conversationMode() === 'voice';
-        
+
         if (!firstChunkSpoken) {
           // First chunk - start speaking immediately (only in voice mode)
           firstChunkSpoken = true;
@@ -328,36 +529,36 @@ export class App {
           if (isVoiceMode) {
             this.isSpeaking.set(true);
             this.conversationState.set('ai_speaking');
-            
+
             const timeToFirstChunk = performance.now() - startTime;
             console.log(`⚡ Starting TTS in ${timeToFirstChunk.toFixed(0)}ms (Voice mode)`);
-            
+
             // Start streaming TTS
             await this.elevenLabsService.startStreaming(cleanedChunk);
           } else {
             this.conversationState.set('waiting_for_user');
             console.log(`📝 Chat mode - skipping TTS`);
           }
-          
+
           // Update conversation history with partial response
           fullResponse = chunk;
           // Find and remove only the LAST avatar message (current streaming one), not all avatar messages
-          const lastAvatarIndex = this.conversationHistory.map((item, idx) => 
+          const lastAvatarIndex = this.conversationHistory.map((item, idx) =>
             item.role === 'avatar' ? idx : -1
           ).filter(idx => idx !== -1).pop();
-          
+
           if (lastAvatarIndex !== undefined) {
             // Remove only the last avatar message (the one currently being streamed)
             this.conversationHistory.splice(lastAvatarIndex, 1);
           }
-          
+
           const avatarIndex = this.conversationHistory.length;
-          this.conversationHistory.push({ 
-            role: 'avatar', 
+          this.conversationHistory.push({
+            role: 'avatar',
             message: fullResponse,
             displayedMessage: '' // Start with empty for typewriter effect
           });
-          
+
           // Start typewriter effect
           this.startTypewriter(avatarIndex, fullResponse);
         } else {
@@ -366,17 +567,17 @@ export class App {
             // Note: chunk here is only the new text (not the full accumulated)
             await this.elevenLabsService.addStreamChunk(cleanedChunk);
           }
-          
+
           // Update conversation history by appending the new chunk
           fullResponse += chunk;
-          
+
           // Find the LAST avatar message (the one currently being streamed) and update it
           // Find all avatar indices, get the last one
           const avatarIndices = this.conversationHistory
             .map((item, idx) => item.role === 'avatar' ? idx : -1)
             .filter(idx => idx !== -1);
           const avatarIndex = avatarIndices.length > 0 ? avatarIndices[avatarIndices.length - 1] : -1;
-          
+
           if (avatarIndex >= 0) {
             // Update the last avatar message (the one currently being streamed)
             this.conversationHistory[avatarIndex].message = fullResponse;
@@ -385,8 +586,8 @@ export class App {
           } else {
             // If no avatar message found, create one
             const newIndex = this.conversationHistory.length;
-            this.conversationHistory.push({ 
-              role: 'avatar', 
+            this.conversationHistory.push({
+              role: 'avatar',
               message: fullResponse,
               displayedMessage: ''
             });
@@ -394,22 +595,22 @@ export class App {
           }
         }
       };
-      
+
       const response = await this.firestoreAIService.getAIResponse(textToSend, this.conversationHistory, streamCallback, this.conversationMode());
-      
+
       const aiTime = performance.now() - startTime;
       console.log(`AI response received in ${aiTime.toFixed(0)}ms:`, response);
 
       // Store final formatted response for display
       fullResponse = response;
-      
+
       // Ensure typewriter completes for final response
       // Find the LAST avatar message (the one currently being streamed)
       const avatarIndices = this.conversationHistory
         .map((item, idx) => item.role === 'avatar' ? idx : -1)
         .filter(idx => idx !== -1);
       const avatarIndex = avatarIndices.length > 0 ? avatarIndices[avatarIndices.length - 1] : -1;
-      
+
       if (avatarIndex >= 0) {
         // Update the last avatar message
         this.conversationHistory[avatarIndex].message = fullResponse;
@@ -417,8 +618,8 @@ export class App {
         this.completeTypewriter(avatarIndex, fullResponse);
       } else {
         // If no avatar message found, create one
-        this.conversationHistory.push({ 
-          role: 'avatar', 
+        this.conversationHistory.push({
+          role: 'avatar',
           message: fullResponse,
           displayedMessage: ''
         });
@@ -432,11 +633,11 @@ export class App {
       }
       this.conversationState.set('waiting_for_user');
       this.isWaitingForUser.set(true);
-      
+
       const totalTime = performance.now() - startTime;
       console.log(`Total time: ${totalTime.toFixed(0)}ms`);
       console.log('✅ AI finished speaking - waiting for user response');
-      
+
       // Auto-start listening only in Voice mode - longer delay for more natural feel
       if (this.conversationMode() === 'voice' && this.speechSupported() && this.isConversationActive() && !this.isListening()) {
         // Longer delay to let the response sink in and feel more natural
@@ -453,11 +654,11 @@ export class App {
       console.error('Error getting AI response:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to get AI response';
       this.errorMessage.set(errorMsg);
-      
+
       // Add error message to history
-      this.conversationHistory.push({ 
-        role: 'avatar', 
-        message: 'Sorry, I encountered an error. Please try again.' 
+      this.conversationHistory.push({
+        role: 'avatar',
+        message: 'Sorry, I encountered an error. Please try again.'
       });
     }
   }
@@ -492,7 +693,7 @@ export class App {
 
       // Automatically send the transcribed message
       await this.sendMessage(transcript);
-      
+
       // Note: sendMessage will auto-start listening again after AI responds
     } catch (error) {
       console.error('Speech recognition error:', error);
@@ -507,26 +708,26 @@ export class App {
    */
   private interruptAI(): void {
     console.log('🛑 Interrupting AI...');
-    
+
     // Stop all audio playback
     this.elevenLabsService.stopAll();
-    
+
     // Stop typewriter effects
     this.typewriterIntervals.forEach(interval => clearInterval(interval));
     this.typewriterIntervals.clear();
-    
+
     // Complete any partial typewriter messages (preserve what was said)
     this.conversationHistory.forEach(item => {
       if (item.role === 'avatar' && item.displayedMessage !== undefined) {
         item.displayedMessage = item.message; // Complete the message display
       }
     });
-    
+
     // Reset speaking state but preserve conversation state
     this.isSpeaking.set(false);
     this.isThinking.set(false);
     this.conversationState.set('waiting_for_user');
-    
+
     console.log('✅ AI interrupted - ready for user input');
   }
 
@@ -558,23 +759,23 @@ export class App {
 
   closeConversation(): void {
     console.log('🛑 Closing conversation and stopping all activity...');
-    
+
     // Stop speech recognition
     this.stopListening();
     this.speechRecognitionService.abort();
-    
+
     // Stop all audio playback (TTS)
     this.elevenLabsService.stopAll();
-    
+
     // Cancel all AI requests
     this.firestoreAIService.cancelAll();
-    
+
     // Clear timer
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    
+
     // Reset all state
     this.isConversationActive.set(false);
     this.isSpeaking.set(false);
@@ -586,17 +787,17 @@ export class App {
     this.shouldAskForEmail.set(false);
     this.isWaitingForEmail.set(false);
     this.isGeneratingPlan.set(false);
-    
+
     // Clear all typewriter intervals
     this.typewriterIntervals.forEach(interval => clearInterval(interval));
     this.typewriterIntervals.clear();
-    
+
     // Clear conversation data
     this.conversationHistory = [];
     this.userMessage = '';
     this.errorMessage.set(null);
     this.userEmail.set(null);
-    
+
     console.log('✅ Conversation closed and all activity stopped');
   }
 
@@ -608,10 +809,10 @@ export class App {
     if (this.typewriterIntervals.has(index)) {
       clearInterval(this.typewriterIntervals.get(index));
     }
-    
+
     const displayedLength = this.conversationHistory[index]?.displayedMessage?.length || 0;
     let currentLength = displayedLength;
-    
+
     const interval = setInterval(() => {
       if (currentLength < fullText.length) {
         currentLength++;
@@ -627,7 +828,7 @@ export class App {
         this.typewriterIntervals.delete(index);
       }
     }, this.typewriterSpeed);
-    
+
     this.typewriterIntervals.set(index, interval);
   }
 
@@ -641,11 +842,11 @@ export class App {
       clearInterval(this.typewriterIntervals.get(index));
       this.typewriterIntervals.delete(index);
     }
-    
+
     // Start with catch-up speed if there's a gap, otherwise normal speed
     const currentDisplayed = this.conversationHistory[index]?.displayedMessage?.length || 0;
     const gap = fullText.length - currentDisplayed;
-    
+
     if (gap > 20) {
       // Large gap - use catch-up speed
       this.startTypewriterWithSpeed(index, fullText, this.typewriterCatchUpSpeed);
@@ -663,10 +864,10 @@ export class App {
     if (this.typewriterIntervals.has(index)) {
       clearInterval(this.typewriterIntervals.get(index));
     }
-    
+
     const displayedLength = this.conversationHistory[index]?.displayedMessage?.length || 0;
     let currentLength = displayedLength;
-    
+
     const interval = setInterval(() => {
       if (currentLength < fullText.length) {
         currentLength++;
@@ -682,7 +883,7 @@ export class App {
         this.typewriterIntervals.delete(index);
       }
     }, speed);
-    
+
     this.typewriterIntervals.set(index, interval);
   }
 
@@ -695,7 +896,7 @@ export class App {
       clearInterval(this.typewriterIntervals.get(index));
       this.typewriterIntervals.delete(index);
     }
-    
+
     if (this.conversationHistory[index]) {
       this.conversationHistory[index].displayedMessage = fullText;
       this.conversationHistory = [...this.conversationHistory];
@@ -710,16 +911,16 @@ export class App {
     const conversationText = this.conversationHistory
       .map(item => {
         const role = item.role === 'user' ? 'You' : "Jim's Avatar";
-        let message = item.role === 'avatar' 
+        let message = item.role === 'avatar'
           ? item.message
           : item.message;
-        
+
         // Convert HTML line breaks to actual newlines first
         message = message.replace(/<br\s*\/?>/gi, '\n');
-        
+
         // Strip HTML tags but preserve line breaks
         message = message.replace(/<[^>]*>/g, '');
-        
+
         // Clean up markdown asterisks and weird punctuation, but preserve spacing and line breaks
         message = message
           .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown (**text** -> text)
@@ -731,7 +932,7 @@ export class App {
           .replace(/[""]/g, '"') // Replace smart quotes with regular quotes
           .replace(/['']/g, "'"); // Replace smart apostrophes with regular apostrophe
         // Note: We intentionally DON'T normalize whitespace to preserve line breaks and spacing
-        
+
         return `${role}: ${message}`;
       })
       .join('\n\n');
@@ -774,16 +975,16 @@ export class App {
    */
   private markdownToHtml(markdown: string): string {
     if (!markdown) return '';
-    
+
     // Split into lines for better processing
     const lines = markdown.split('\n');
     let html = '';
     let inList = false;
     let listType = 'ul';
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      
+
       // Headers
       if (line.startsWith('### ')) {
         if (inList) {
@@ -809,15 +1010,15 @@ export class App {
         html += `<h1>${line.substring(2)}</h1>`;
         continue;
       }
-      
+
       // Lists
       const bulletMatch = line.match(/^[\*\-] (.+)$/);
       const numberMatch = line.match(/^\d+\. (.+)$/);
-      
+
       if (bulletMatch || numberMatch) {
         const newListType = bulletMatch ? 'ul' : 'ol';
         const content = bulletMatch ? bulletMatch[1] : numberMatch![1];
-        
+
         if (!inList || listType !== newListType) {
           if (inList) {
             html += `</${listType}>`;
@@ -826,28 +1027,28 @@ export class App {
           inList = true;
           listType = newListType;
         }
-        
+
         // Process inline formatting
         let processedContent = content
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
+
         html += `<li>${processedContent}</li>`;
         continue;
       }
-      
+
       // End list if we hit a non-list line
       if (inList && line !== '') {
         html += `</${listType}>`;
         inList = false;
       }
-      
+
       // Regular paragraph
       if (line !== '') {
         let processedLine = line
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
+
         // Check if it's already a paragraph or header
         if (!processedLine.startsWith('<')) {
           html += `<p>${processedLine}</p>`;
@@ -859,12 +1060,12 @@ export class App {
         html += '<br>';
       }
     }
-    
+
     // Close any open list
     if (inList) {
       html += `</${listType}>`;
     }
-    
+
     return html;
   }
 
@@ -887,13 +1088,13 @@ export class App {
 
     // Extract only the plan messages
     const planMessages: Array<string> = [];
-    
+
     for (const item of this.conversationHistory) {
       if (item.role === 'avatar' && this.isPlanMessage(item.message)) {
         planMessages.push(item.message);
       }
     }
-    
+
     // If no plan messages found, show a message
     if (planMessages.length === 0) {
       console.warn('No plan messages found in conversation history');
@@ -1095,15 +1296,15 @@ body {
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = 'none';
-    
+
     document.body.appendChild(iframe);
-    
+
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
     if (iframeDoc) {
       iframeDoc.open();
       iframeDoc.write(htmlContent);
       iframeDoc.close();
-      
+
       // Wait for content to load, then trigger print
       iframe.onload = () => {
         setTimeout(() => {
@@ -1138,7 +1339,7 @@ body {
    */
   formatMessage(message: string): string {
     if (!message) return message;
-    
+
     // Simple markdown to HTML conversion for display
     let formatted = message
       // Bold
@@ -1147,7 +1348,7 @@ body {
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       // Line breaks
       .replace(/\n/g, '<br>');
-    
+
     return formatted;
   }
 }

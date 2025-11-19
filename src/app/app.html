@@ -1,118 +1,113 @@
-<div class="min-h-screen bg-white">
+<div class="min-h-screen bg-white font-sans selection:bg-red-600 selection:text-white">
   <!-- Navigation Bar -->
   <nav
-    class="w-full px-4 md:px-8 py-6 flex justify-between items-center border-b border-black/5 sticky top-0 bg-white/95 backdrop-blur-sm z-50 relative">
+    class="fixed top-6 left-0 right-0 mx-auto max-w-7xl px-6 py-4 flex justify-between items-center bg-white/80 backdrop-blur-md border border-black/5 rounded-2xl z-50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-black/10">
     <div class="flex items-center">
-      <a (click)="scrollToSection('hero')" class="cursor-pointer">
-        <img src="/assets/rocket-goals.png" alt="RocketGoals Logo" class="w-14 h-14 md:w-20 md:h-20 object-contain" />
+      <a (click)="scrollToSection('hero')" class="cursor-pointer group">
+        <img src="/assets/rocket-goals.png" alt="RocketGoals Logo"
+          class="w-12 h-12 object-contain transform group-hover:scale-110 transition-transform duration-300" />
       </a>
     </div>
     <!-- Navigation Links - Centered -->
-    <div class="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+    <div class="hidden md:flex items-center gap-10 absolute left-1/2 transform -translate-x-1/2">
       <button (click)="scrollToSection('hero')"
-        class="text-black/80 font-semibold text-sm uppercase tracking-wider hover:text-red-600 transition-all duration-300 relative group">
-        <span class="relative z-10">Overview</span>
+        class="text-black font-bold text-sm uppercase tracking-widest hover:text-red-600 transition-colors duration-300 relative group">
+        Overview
         <span
-          class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></span>
+          class="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-red-600 group-hover:w-full group-hover:left-0 transition-all duration-300"></span>
       </button>
       <button (click)="scrollToSection('video-avatar')"
-        class="text-black/80 font-semibold text-sm uppercase tracking-wider hover:text-red-600 transition-all duration-300 relative group">
-        <span class="relative z-10">Learn More</span>
+        class="text-black font-bold text-sm uppercase tracking-widest hover:text-red-600 transition-colors duration-300 relative group">
+        Interact
         <span
-          class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></span>
+          class="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-red-600 group-hover:w-full group-hover:left-0 transition-all duration-300"></span>
       </button>
       <button (click)="scrollToSection('features')"
-        class="text-black/80 font-semibold text-sm uppercase tracking-wider hover:text-red-600 transition-all duration-300 relative group">
-        <span class="relative z-10">Features</span>
+        class="text-black font-bold text-sm uppercase tracking-widest hover:text-red-600 transition-colors duration-300 relative group">
+        Features
         <span
-          class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></span>
+          class="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-red-600 group-hover:w-full group-hover:left-0 transition-all duration-300"></span>
       </button>
     </div>
     <div class="flex items-center gap-4">
       <button
-        class="px-4 py-2 text-black font-medium border-2 border-black/20 rounded-lg hover:border-red-600 hover:text-red-600 transition-all duration-200">
+        class="px-5 py-2.5 text-black font-bold text-sm border-2 border-black rounded-full hover:bg-black hover:text-white transition-all duration-300">
         Login
       </button>
       <button
-        class="px-6 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg">
+        class="px-6 py-2.5 bg-red-600 text-white font-bold text-sm rounded-full hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 hover:-translate-y-0.5">
         Sign Up
       </button>
     </div>
   </nav>
 
   <!-- Hero Section -->
-  <section id="hero" class="relative py-12 md:py-16 overflow-hidden bg-gradient-to-b from-white via-white to-black/5">
+  <section id="hero" class="relative pt-32 pb-20 md:pt-36 md:pb-32 overflow-hidden">
     <!-- Decorative Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute top-20 right-10 w-72 h-72 bg-red-600/5 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-20 left-10 w-96 h-96 bg-red-600/3 rounded-full blur-3xl"></div>
+      <div
+        class="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-b from-red-50/50 to-transparent rounded-full blur-3xl opacity-60 transform translate-x-1/3 -translate-y-1/4">
+      </div>
+      <div
+        class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-t from-black/5 to-transparent rounded-full blur-3xl opacity-40 transform -translate-x-1/3 translate-y-1/4">
+      </div>
     </div>
 
     <div class="container mx-auto px-4 relative z-10">
-      <div class="grid lg:grid-cols-2 gap-12 items-start">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
         <!-- Left Column - Content -->
-        <div class="text-center lg:text-left space-y-6">
-          <div class="space-y-4">
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-black leading-tight">
-              Power Your
-              <span class="text-red-600">Impossible</span>
+        <div class="text-center lg:text-left space-y-8">
+          <div class="space-y-6">
+            <h1 class="text-6xl md:text-7xl lg:text-8xl font-extrabold text-black leading-[0.9] tracking-tight">
+              IGNITE YOUR <br />
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500">POTENTIAL</span>
             </h1>
-            <p class="text-xl md:text-2xl text-black/70 font-light leading-relaxed max-w-xl mx-auto lg:mx-0">
-              Transform your biggest dreams into achievable goals. Track progress, stay motivated, and launch your
-              success story.
+            <p class="text-xl md:text-2xl text-black/60 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+              Turn impossible dreams into actionable reality. The ultimate launchpad for your personal success story.
             </p>
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <div class="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4">
             <button
-              class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105">
+              class="px-10 py-5 bg-red-600 text-white font-bold text-lg rounded-full hover:bg-red-700 transition-all duration-300 shadow-xl hover:shadow-red-600/40 hover:-translate-y-1 flex items-center justify-center gap-2 group">
               Start Your Journey
+              <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3">
+                </path>
+              </svg>
             </button>
             <button
-              class="px-8 py-4 bg-white text-black font-bold text-lg rounded-lg border-2 border-black hover:bg-black hover:text-white transition-all duration-200">
+              class="px-10 py-5 bg-white text-black font-bold text-lg rounded-full border-2 border-black hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1">
               Learn More
             </button>
           </div>
 
           <!-- Trust Indicators -->
-          <div class="flex flex-wrap gap-8 justify-center lg:justify-start pt-8">
+          <div class="flex flex-wrap gap-12 justify-center lg:justify-start pt-10 border-t border-black/5">
             <div class="text-center lg:text-left">
-              <div class="text-3xl font-black text-red-600">10K+</div>
-              <div class="text-sm text-black/60 font-medium">Active Users</div>
+              <div class="text-4xl font-black text-black">10K+</div>
+              <div class="text-sm text-red-600 font-bold uppercase tracking-wider mt-1">Active Users</div>
             </div>
             <div class="text-center lg:text-left">
-              <div class="text-3xl font-black text-red-600">50K+</div>
-              <div class="text-sm text-black/60 font-medium">Goals Achieved</div>
+              <div class="text-4xl font-black text-black">50K+</div>
+              <div class="text-sm text-red-600 font-bold uppercase tracking-wider mt-1">Goals Crushed</div>
             </div>
             <div class="text-center lg:text-left">
-              <div class="text-3xl font-black text-red-600">95%</div>
-              <div class="text-sm text-black/60 font-medium">Success Rate</div>
+              <div class="text-4xl font-black text-black">95%</div>
+              <div class="text-sm text-red-600 font-bold uppercase tracking-wider mt-1">Success Rate</div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column - Rocket Image -->
-        <div class="relative flex items-center justify-center">
-          <div class="relative z-10 rocket-container">
-            <!-- Rocket exhaust trail particles -->
-            <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 rocket-trail">
-              <div class="particle particle-1"></div>
-              <div class="particle particle-2"></div>
-              <div class="particle particle-3"></div>
-              <div class="particle particle-4"></div>
-              <div class="particle particle-5"></div>
-              <div class="particle particle-6"></div>
-              <div class="particle particle-7"></div>
-              <div class="particle particle-8"></div>
-              <div class="particle particle-9"></div>
-              <div class="particle particle-10"></div>
-            </div>
-            <!-- Enhanced glow effects -->
-            <div class="absolute -inset-4 bg-red-600/20 rounded-3xl blur-2xl transform rotate-6 rocket-glow"></div>
-            <div class="absolute -inset-4 bg-red-600/10 rounded-3xl blur-xl transform -rotate-6"></div>
-            <div class="absolute -inset-8 bg-red-600/15 rounded-full blur-3xl rocket-pulse"></div>
-            <img src="/assets/rocket.png" alt="Rocket Goals"
-              class="relative z-10 max-w-full h-auto max-h-[70vh] object-contain drop-shadow-2xl rocket-float" />
+        <!-- Right Column - Three.js Simulation -->
+        <div class="relative flex items-center justify-center lg:justify-end h-[500px] lg:h-[600px] w-full">
+          <div class="absolute inset-0 z-0">
+            <canvas #rocketCanvas class="w-full h-full rounded-3xl shadow-2xl"></canvas>
+          </div>
+          <!-- Overlay content if needed, e.g., a small badge or text -->
+          <div class="relative z-10 pointer-events-none">
+            <!-- Optional: Add a subtle overlay or text here if desired -->
           </div>
         </div>
       </div>
@@ -120,85 +115,101 @@
   </section>
 
   <!-- Video & Avatar Section -->
-  <section id="video-avatar"
-    class="pt-6 pb-16 md:pt-8 md:pb-24 bg-gradient-to-b from-black/5 via-white to-white relative overflow-hidden">
+  <section id="video-avatar" class="py-24 bg-black text-white relative overflow-hidden">
     <!-- Decorative Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute top-10 left-20 w-64 h-64 bg-red-600/5 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-10 right-20 w-80 h-80 bg-red-600/3 rounded-full blur-3xl"></div>
+      <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-[120px] opacity-50"></div>
+      <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] opacity-30"></div>
     </div>
 
     <div class="container mx-auto px-4 relative z-10">
-      <div class="grid lg:grid-cols-[1fr_1.3fr] gap-12 lg:gap-20 items-center max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-[1fr_1.2fr] gap-16 items-center max-w-7xl mx-auto">
         <!-- Left Column - Video Placeholder -->
-        <div class="relative order-2 lg:order-1 space-y-6">
+        <div class="relative order-2 lg:order-1 space-y-8">
           <div
-            class="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-black/10 group cursor-pointer">
+            class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 group cursor-pointer bg-white/5 backdrop-blur-sm hover:border-red-600/50 transition-all duration-500">
             <!-- Video Placeholder -->
-            <div
-              class="absolute inset-0 bg-gradient-to-br from-red-600/10 via-black/5 to-red-600/10 flex items-center justify-center">
+            <div class="absolute inset-0 flex items-center justify-center">
               <div class="text-center space-y-6 px-8">
                 <div
-                  class="w-24 h-24 mx-auto bg-red-600/20 rounded-full flex items-center justify-center group-hover:bg-red-600/30 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                  <svg class="w-12 h-12 text-red-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  class="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                  <svg class="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
                 <div class="space-y-2">
-                  <h3 class="text-3xl md:text-4xl font-black text-black">
-                    Welcome to <span class="text-red-600">RocketGoals</span>
+                  <h3 class="text-3xl font-bold text-white tracking-tight">
+                    Meet <span class="text-red-600">RocketGoals</span>
                   </h3>
-                  <p class="text-black/60 font-medium text-lg">Watch our introduction video</p>
+                  <p class="text-white/60 font-medium text-lg">Watch the introduction</p>
                 </div>
               </div>
             </div>
             <!-- Decorative overlay -->
             <div
-              class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300">
             </div>
-          </div>
-          <!-- Glow effect -->
-          <div
-            class="absolute -inset-4 bg-red-600/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10">
           </div>
         </div>
 
         <!-- Right Column - Avatar -->
-        <div class="relative order-1 lg:order-2 flex flex-col items-center lg:items-center space-y-8">
-          <div class="relative group">
-            <!-- Enhanced glow effects - multiple layers -->
-            <div
-              class="absolute -inset-8 bg-red-600/25 rounded-full blur-3xl transform rotate-6 animate-pulse avatar-glow-outer">
-            </div>
-            <div class="absolute -inset-6 bg-red-600/20 rounded-full blur-2xl transform -rotate-6 avatar-glow-middle">
-            </div>
-            <div class="absolute -inset-4 bg-red-600/15 rounded-full blur-xl transform rotate-12"></div>
-            <div class="absolute -inset-2 bg-red-600/10 rounded-full blur-lg"></div>
+        <div class="relative order-1 lg:order-2 flex flex-col items-center lg:items-start space-y-10">
+          <div class="relative group w-full max-w-md mx-auto lg:mx-0">
+            <!-- Pod Container -->
+            <div class="relative bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md shadow-2xl">
+              <!-- Avatar Image -->
+              <div class="relative z-10 flex justify-center mb-8">
+                <div class="relative">
+                  <div class="absolute -inset-4 bg-red-600/20 rounded-full blur-xl animate-pulse"></div>
+                  <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
+                    class="relative z-10 w-48 h-48 rounded-full object-cover border-4 border-white/10 shadow-2xl" />
+                  <!-- Status Indicator Badge -->
+                  <div class="absolute bottom-2 right-2 z-20">
+                    @if (isSpeaking()) {
+                    <div
+                      class="flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full shadow-lg border border-white/10">
+                      <div class="flex gap-1 h-3 items-center">
+                        <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></div>
+                        <div class="w-1 h-2 bg-white rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></div>
+                        <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></div>
+                      </div>
+                      <span class="text-xs font-bold text-white uppercase tracking-wider">Speaking</span>
+                    </div>
+                    } @else {
+                    <div
+                      class="flex items-center gap-2 px-3 py-1.5 bg-green-500 rounded-full shadow-lg border border-white/10">
+                      <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      <span class="text-xs font-bold text-white uppercase tracking-wider">Online</span>
+                    </div>
+                    }
+                  </div>
+                </div>
+              </div>
 
-            <!-- Avatar Image -->
-            <div class="relative z-10">
-              <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-                class="relative z-10 w-64 h-64 md:w-80 md:h-80 lg:w-[24rem] lg:h-[24rem] rounded-full object-cover border-[6px] border-white shadow-[0_0_40px_rgba(220,38,38,0.4),0_0_80px_rgba(220,38,38,0.2)] transform hover:scale-105 transition-all duration-500 avatar-float" />
-            </div>
+              <!-- Text Content -->
+              <div class="text-center space-y-6">
+                <div>
+                  <h3 class="text-3xl font-black text-white mb-2">
+                    Talk to <span class="text-red-600">Jim</span>
+                  </h3>
+                  <p class="text-white/60 font-medium text-lg leading-relaxed">
+                    Get your instant Rocket Goals Launch Plan. It's free and takes less than 3 minutes.
+                  </p>
+                </div>
 
-            <!-- Enhanced decorative circles -->
-            <div class="absolute -top-8 -right-8 w-32 h-32 bg-red-600/15 rounded-full blur-2xl animate-pulse"></div>
-            <div class="absolute -bottom-8 -left-8 w-40 h-40 bg-red-600/10 rounded-full blur-2xl"></div>
-            <div class="absolute top-1/2 -left-12 w-24 h-24 bg-red-600/12 rounded-full blur-xl"></div>
-            <div class="absolute top-1/2 -right-12 w-28 h-28 bg-red-600/12 rounded-full blur-xl"></div>
-          </div>
-          <!-- Avatar Text -->
-          <div class="text-center space-y-5 max-w-md">
-            <h3 class="text-4xl md:text-5xl lg:text-6xl font-black text-black leading-tight">
-              Talk to <span class="text-red-600">Jim's Avatar</span>
-            </h3>
-            <p class="text-black/60 font-medium text-xl md:text-2xl">Speak with Jim to get your instant Rocket Goals
-              Launch Plan! It's free and takes less than three minutes!</p>
-            <div class="flex justify-center pt-2">
-              <button (click)="startConversation()" [disabled]="isConversationActive()"
-                class="mt-2 px-10 py-4 bg-red-600 text-white font-bold text-xl rounded-xl hover:bg-red-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-                {{ isConversationActive() ? 'Conversation Active' : 'Start Conversation' }}
-              </button>
+                <button (click)="startConversation()" [disabled]="isConversationActive()"
+                  class="w-full py-4 bg-white text-black font-bold text-lg rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg hover:shadow-red-600/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group">
+                  <span>{{ isConversationActive() ? 'Conversation Active' : 'Start Conversation' }}</span>
+                  @if (!isConversationActive()) {
+                  <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+                    </path>
+                  </svg>
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -208,47 +219,50 @@
 
   <!-- Conversation Modal -->
   @if (isConversationActive()) {
-  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+  <div class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
     (click)="closeConversation()">
 
     <!-- Voice Mode View -->
     @if (conversationMode() === 'voice') {
     <div
-      class="bg-gradient-to-br from-white via-red-50/30 to-white rounded-3xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden relative"
+      class="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative border border-white/20"
       (click)="$event.stopPropagation()">
       <!-- Voice Mode Header -->
-      <div class="flex items-center justify-between p-5 border-b border-black/10 bg-white/50 backdrop-blur-sm">
+      <div
+        class="flex items-center justify-between p-6 border-b border-black/5 bg-white/80 backdrop-blur-sm absolute top-0 left-0 right-0 z-20">
         <!-- Timer Display -->
         @if (isConversationActive() && conversationStartTime()) {
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-white/80 rounded-lg border border-black/10"
-          [class.border-red-300]="conversationTimeRemaining() < 30"
-          [class.bg-red-50]="conversationTimeRemaining() < 30">
-          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-2 px-4 py-2 bg-black/5 rounded-full border border-black/5"
+          [class.bg-red-50]="conversationTimeRemaining() < 30"
+          [class.border-red-200]="conversationTimeRemaining() < 30">
+          <svg class="w-4 h-4 text-black/60" [class.text-red-600]="conversationTimeRemaining() < 30" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span class="text-sm font-semibold" [class.text-red-600]="conversationTimeRemaining() < 30">
+          <span class="text-sm font-bold tabular-nums text-black/80"
+            [class.text-red-600]="conversationTimeRemaining() < 30">
             {{ formatTime(conversationTimeRemaining()) }}
           </span>
         </div>
         }
+
         <!-- Mode Toggle -->
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-white/80 rounded-lg border border-black/10">
-          <button (click)="conversationMode.set('voice')" [class.bg-red-600]="conversationMode() === 'voice'"
-            [class.text-white]="conversationMode() === 'voice'" [class.text-black/60]="conversationMode() !== 'voice'"
-            class="px-3 py-1 text-xs font-semibold rounded transition-all duration-200 hover:bg-red-50">
-            🎤 Voice
+        <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-lg mx-auto shadow-inner">
+          <button (click)="conversationMode.set('voice')"
+            class="px-4 py-2 text-sm font-bold rounded-md transition-all duration-200 bg-white text-black shadow-sm">
+            Voice
           </button>
-          <button (click)="conversationMode.set('chat')" [class.bg-red-600]="conversationMode() === 'chat'"
-            [class.text-white]="conversationMode() === 'chat'" [class.text-black/60]="conversationMode() !== 'chat'"
-            class="px-3 py-1 text-xs font-semibold rounded transition-all duration-200 hover:bg-red-50">
-            💬 Chat
+          <button (click)="conversationMode.set('chat')"
+            class="px-4 py-2 text-sm font-bold rounded-md transition-all duration-200 text-black/60 hover:text-black hover:bg-white/50">
+            Chat
           </button>
         </div>
+
         <!-- Close button -->
         <button (click)="closeConversation()"
-          class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-red-600 hover:scale-110 transition-all duration-200">
-          <svg class="w-5 h-5 text-black/60 hover:text-white transition-colors" fill="none" stroke="currentColor"
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 hover:bg-red-600 hover:text-white transition-all duration-200 group">
+          <svg class="w-5 h-5 text-black/60 group-hover:text-white transition-colors" fill="none" stroke="currentColor"
             viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -256,84 +270,52 @@
       </div>
 
       <!-- Voice Mode Avatar Center -->
-      <div class="flex-1 flex items-center justify-center relative overflow-hidden">
+      <div class="flex-1 flex items-center justify-center relative overflow-hidden bg-white pt-20 pb-32">
         <!-- Animated Background Waves -->
-        <div class="absolute inset-0 voice-waves-container">
-          <div class="voice-wave voice-wave-1"></div>
-          <div class="voice-wave voice-wave-2"></div>
-          <div class="voice-wave voice-wave-3"></div>
-          <div class="voice-wave voice-wave-4"></div>
+        <div class="absolute inset-0 voice-waves-container opacity-30">
+          <div class="voice-wave voice-wave-1 border-red-600"></div>
+          <div class="voice-wave voice-wave-2 border-red-600"></div>
+          <div class="voice-wave voice-wave-3 border-red-600"></div>
         </div>
 
         <!-- Avatar with enhanced animations -->
         <div class="relative z-10 flex flex-col items-center">
-          <!-- Multiple glow layers -->
-          <div
-            class="absolute -inset-16 bg-red-600/20 rounded-full blur-3xl transform rotate-6 animate-pulse voice-glow-1">
-          </div>
-          <div class="absolute -inset-12 bg-red-600/15 rounded-full blur-2xl transform -rotate-6 voice-glow-2"></div>
-          <div class="absolute -inset-8 bg-red-600/10 rounded-full blur-xl transform rotate-12 voice-glow-3"></div>
-
           <!-- Avatar Image -->
           <div class="relative z-20">
+            <div class="absolute -inset-8 bg-red-600/10 rounded-full blur-2xl transform rotate-6 animate-pulse"
+              [class.opacity-100]="isSpeaking()" [class.opacity-0]="!isSpeaking()"></div>
             <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
               [class.avatar-listening]="isListening()"
-              class="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full object-cover border-[8px] border-white shadow-[0_0_60px_rgba(220,38,38,0.5),0_0_120px_rgba(220,38,38,0.3)] transform transition-all duration-500" />
-
-            <!-- Enhanced Audio Waves when speaking -->
-            @if (isSpeaking()) {
-            <div class="absolute -inset-8 flex items-center justify-center pointer-events-none">
-              <div class="voice-audio-waves">
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-              </div>
-            </div>
-            }
+              class="w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-8 border-white shadow-2xl transform transition-all duration-500" />
 
             <!-- Listening indicator -->
             @if (isListening()) {
             <div class="absolute -inset-4 flex items-center justify-center pointer-events-none">
-              <div class="listening-pulse"></div>
+              <div class="listening-pulse border-red-600"></div>
             </div>
             }
           </div>
 
           <!-- Status Text -->
-          <div class="mt-8 text-center">
+          <div class="mt-10 text-center h-8">
             @if (isSpeaking()) {
-            <p
-              class="text-lg font-semibold text-red-600 flex items-center justify-center gap-2 transition-opacity duration-300">
-              <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            <p class="text-xl font-bold text-red-600 flex items-center justify-center gap-3 animate-fade-in">
+              <span class="flex gap-1 h-4 items-center">
+                <span class="w-1.5 h-4 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_infinite]"></span>
+                <span class="w-1.5 h-6 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></span>
+                <span class="w-1.5 h-4 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></span>
+              </span>
               Speaking...
             </p>
             } @else if (isListening()) {
-            <p
-              class="text-lg font-semibold text-red-600 flex items-center justify-center gap-2 transition-opacity duration-300">
-              <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            <p class="text-xl font-bold text-black flex items-center justify-center gap-3 animate-fade-in">
+              <span class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
               Listening...
             </p>
             } @else if (isThinking()) {
-            <p
-              class="text-lg font-semibold text-black/60 flex items-center justify-center gap-2 transition-opacity duration-300">
-              <span class="w-2 h-2 bg-black/40 rounded-full animate-pulse"></span>
+            <p class="text-xl font-bold text-black/60 flex items-center justify-center gap-3 animate-fade-in">
+              <span class="w-3 h-3 bg-black/40 rounded-full animate-bounce"></span>
               Thinking...
-            </p>
-            } @else if (isWaitingForUser()) {
-            <p
-              class="text-lg font-semibold text-blue-600 flex items-center justify-center gap-2 transition-opacity duration-300">
-              <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              Your turn...
-            </p>
-            } @else {
-            <p
-              class="text-lg font-semibold text-green-600 flex items-center justify-center gap-2 transition-opacity duration-300">
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              Ready
             </p>
             }
           </div>
@@ -341,273 +323,189 @@
       </div>
 
       <!-- Voice Mode Input Area -->
-      <div class="p-5 border-t border-black/10 bg-white/80 backdrop-blur-sm">
-        <!-- Email Input Indicator -->
-        @if (isWaitingForEmail()) {
-        <div class="mb-4 flex items-center gap-3 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 animate-fade-in">
-          <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-blue-800">Please enter your email address</p>
-            <p class="text-xs text-blue-600">Type your email below to receive your Rocket Goals Launch Plan</p>
+      <div class="absolute bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-md border-t border-black/5 z-30">
+        <div class="max-w-2xl mx-auto w-full">
+          <!-- Email Input Indicator -->
+          @if (isWaitingForEmail()) {
+          <div
+            class="mb-6 flex items-center gap-4 bg-blue-50 border border-blue-100 rounded-2xl p-5 animate-fade-in shadow-sm">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-base font-bold text-blue-900">Please enter your email address</p>
+              <p class="text-sm text-blue-700">To receive your Rocket Goals Launch Plan</p>
+            </div>
           </div>
-        </div>
-        }
-        <!-- Download Button (after email capture) -->
-        @if (userEmail() && !isWaitingForEmail()) {
-        <div
-          class="mb-4 flex flex-col items-center gap-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p class="text-sm font-semibold text-green-800 text-center">Your Rocket Goals Launch Plan is ready!</p>
-          <button (click)="downloadConversationAsPDF()"
-            class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-xl hover:bg-red-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download Your Plan (PDF)
-          </button>
-        </div>
-        }
-        <!-- Listening Indicator -->
-        @if (isListening()) {
-        <div class="mb-4 flex items-center gap-3 bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-fade-in">
-          <div class="relative">
-            <div class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
-            <div class="absolute inset-0 w-3 h-3 bg-red-600 rounded-full animate-ping opacity-75"></div>
-          </div>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-red-800">Listening...</p>
-            <p class="text-xs text-red-600">Speak now, or click the microphone to stop</p>
-          </div>
-          <button (click)="stopListening()"
-            class="px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-            Stop
-          </button>
-        </div>
-        }
-
-        <div class="flex gap-3">
-          <!-- Microphone Button -->
-          @if (speechSupported()) {
-          <button (click)="isListening() ? stopListening() : startListening()"
-            [class.bg-red-600]="!isListening() && !isSpeaking()" [class.bg-orange-600]="isSpeaking()"
-            [class.bg-red-700]="isListening()" [class.animate-pulse]="isListening()"
-            [title]="isSpeaking() ? 'Click to interrupt and speak' : (isListening() ? 'Stop listening' : 'Start speaking')"
-            class="px-6 py-4 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px] shadow-md hover:shadow-lg text-lg">
-            @if (isListening()) {
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path
-                d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-            </svg>
-            } @else {
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            }
-          </button>
           }
 
-          <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
-            [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
-            [placeholder]="isWaitingForEmail() ? 'Enter your email address (e.g., yourname@example.com)' : 'Type to interrupt or click on the voice button...'"
-            [class.border-blue-400]="isWaitingForEmail()" [class.bg-blue-50]="isWaitingForEmail()"
-            class="flex-1 px-4 py-3 border-2 border-black/10 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white text-lg" />
-          <button (click)="sendMessage()"
-            [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
-            class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg">
-            Send
-          </button>
+          <!-- Download Button -->
+          @if (userEmail() && !isWaitingForEmail()) {
+          <div
+            class="mb-6 flex flex-col items-center gap-4 bg-green-50 border border-green-100 rounded-2xl p-6 animate-fade-in shadow-sm">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="text-lg font-bold text-green-900 text-center">Your Launch Plan is ready!</p>
+            <button (click)="downloadConversationAsPDF()"
+              class="px-8 py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-gray-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 w-full justify-center sm:w-auto">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download PDF
+            </button>
+          </div>
+          }
+
+          <div class="flex gap-4 items-center">
+            <!-- Microphone Button -->
+            @if (speechSupported()) {
+            <button (click)="isListening() ? stopListening() : startListening()"
+              [class.bg-red-600]="!isListening() && !isSpeaking()" [class.bg-black]="isSpeaking()"
+              [class.bg-red-700]="isListening()" [class.animate-pulse]="isListening()"
+              class="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex-shrink-0">
+              @if (isListening()) {
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                <path
+                  d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+              </svg>
+              } @else {
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              }
+            </button>
+            }
+
+            <div class="flex-1 relative">
+              <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
+                [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
+                [placeholder]="isWaitingForEmail() ? 'Enter your email...' : 'Type a message...'"
+                class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-black/10 transition-all text-lg font-medium placeholder:text-gray-400 disabled:opacity-50" />
+              <button (click)="sendMessage()"
+                [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-black text-white rounded-xl hover:bg-gray-800 transition-all disabled:opacity-0 disabled:pointer-events-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     }
 
-    <!-- Chat Mode View -->
+    <!-- Chat Mode View (Fallback/Alternative) -->
     @if (conversationMode() === 'chat') {
     <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden"
       (click)="$event.stopPropagation()">
       <!-- Header -->
-      <div
-        class="flex items-center justify-between p-5 border-b border-black/10 bg-gradient-to-r from-white to-red-50/30">
+      <div class="flex items-center justify-between p-5 border-b border-black/5 bg-white">
         <div class="flex items-center gap-4 flex-1">
           <div class="relative">
             <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-              class="w-14 h-14 rounded-full object-cover border-2 border-red-600 shadow-lg" />
+              class="w-12 h-12 rounded-full object-cover border-2 border-red-600 shadow-sm" />
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-bold text-black">Jim's Avatar</h3>
-            <p class="text-xs text-black/60 flex items-center gap-2">
+            <h3 class="text-lg font-bold text-black">Jim</h3>
+            <p class="text-xs text-black/60 flex items-center gap-2 font-medium">
               @if (isThinking()) {
-              <span class="flex items-center gap-1">
-                <span class="w-2 h-2 bg-black/40 rounded-full animate-pulse"></span>
+              <span class="flex items-center gap-1 text-black">
+                <span class="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></span>
                 Thinking...
               </span>
               } @else {
               <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              Ready to chat
+              Online
               }
             </p>
           </div>
         </div>
+
         <!-- Mode Toggle -->
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-white/80 rounded-lg border border-black/10">
-          <button (click)="conversationMode.set('voice')" [class.bg-red-600]="conversationMode() === 'voice'"
-            [class.text-white]="conversationMode() === 'voice'" [class.text-black/60]="conversationMode() !== 'voice'"
-            class="px-3 py-1 text-xs font-semibold rounded transition-all duration-200 hover:bg-red-50">
-            🎤 Voice
+        <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-lg mr-4">
+          <button (click)="conversationMode.set('voice')"
+            class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 text-black/60 hover:text-black hover:bg-white/50">
+            Voice
           </button>
-          <button (click)="conversationMode.set('chat')" [class.bg-red-600]="conversationMode() === 'chat'"
-            [class.text-white]="conversationMode() === 'chat'" [class.text-black/60]="conversationMode() !== 'chat'"
-            class="px-3 py-1 text-xs font-semibold rounded transition-all duration-200 hover:bg-red-50">
-            💬 Chat
+          <button (click)="conversationMode.set('chat')"
+            class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 bg-white text-black shadow-sm">
+            Chat
           </button>
         </div>
-        <!-- Action buttons -->
-        <div class="flex items-center gap-2">
-          @if (conversationHistory.length > 0) {
-          <div class="relative group">
-            <button (click)="copyConversation()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-red-600 hover:scale-110 transition-all duration-200 active:scale-95">
-              <svg class="w-5 h-5 text-black/60 group-hover:text-white transition-colors" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <div
-              class="absolute right-0 top-full mt-2 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg">
-              Copy conversation
-              <div class="absolute -top-1 right-3 w-2 h-2 bg-red-600 transform rotate-45"></div>
-            </div>
-          </div>
-          <div class="relative group">
-            <button (click)="downloadConversationAsPDF()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-red-600 hover:scale-110 transition-all duration-200 active:scale-95">
-              <svg class="w-5 h-5 text-black/60 group-hover:text-white transition-colors" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </button>
-            <div
-              class="absolute right-0 top-full mt-2 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg">
-              Download as PDF
-              <div class="absolute -top-1 right-3 w-2 h-2 bg-red-600 transform rotate-45"></div>
-            </div>
-          </div>
-          }
-          <div class="relative group">
-            <button (click)="closeConversation()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-red-600 hover:scale-110 transition-all duration-200 active:scale-95">
-              <svg class="w-5 h-5 text-black/60 group-hover:text-white transition-colors" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div
-              class="absolute right-0 top-full mt-2 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg">
-              Close conversation
-              <div class="absolute -top-1 right-3 w-2 h-2 bg-red-600 transform rotate-45"></div>
-            </div>
-          </div>
-        </div>
+
+        <!-- Close button -->
+        <button (click)="closeConversation()"
+          class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200">
+          <svg class="w-5 h-5 text-black/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <!-- Conversation History -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-white to-black/5">
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
         @if (errorMessage()) {
-        <div [class]="errorMessage()?.startsWith('✓') 
-              ? 'bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-4 animate-fade-in' 
-              : 'bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4 animate-fade-in'">
-          <div class="flex items-start gap-3">
-            @if (errorMessage()?.startsWith('✓')) {
-            <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            } @else {
-            <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            }
-            <div class="flex-1">
-              @if (!errorMessage()?.startsWith('✓')) {
-              <h4 class="font-bold text-red-800 mb-1">API Key Error</h4>
-              }
-              <p [class]="errorMessage()?.startsWith('✓') 
-                    ? 'text-sm text-green-700 whitespace-pre-line' 
-                    : 'text-sm text-red-700 whitespace-pre-line'">{{ errorMessage() }}</p>
-            </div>
-          </div>
+        <div class="bg-red-50 border border-red-100 rounded-xl p-4 mb-4 animate-fade-in">
+          <p class="text-sm text-red-600 font-medium">{{ errorMessage() }}</p>
         </div>
         }
+
         @if (conversationHistory.length === 0) {
-        <div class="flex items-center justify-center h-full py-12">
+        <div class="flex items-center justify-center h-full py-12 opacity-50">
           <div class="text-center space-y-3">
-            <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-16 h-16 mx-auto bg-black/5 rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-black/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p class="text-black/60 text-sm">Start a conversation to see messages here</p>
+            <p class="text-black/40 text-sm font-medium">Start chatting with Jim</p>
           </div>
         </div>
         }
+
         @for (item of conversationHistory; track $index) {
-        <div class="flex gap-3" [class.justify-end]="item.role === 'user'"
+        <div class="flex gap-4" [class.justify-end]="item.role === 'user'"
           [class.flex-row-reverse]="item.role === 'user'">
           @if (item.role === 'avatar') {
           <div class="flex-shrink-0">
-            <img src="/assets/jim-pic.png" alt="Jim" class="w-8 h-8 rounded-full object-cover border border-red-200" />
+            <img src="/assets/jim-pic.png" alt="Jim"
+              class="w-10 h-10 rounded-full object-cover border border-black/5 shadow-sm" />
           </div>
           }
           <div
             [class]="item.role === 'user' 
-                ? 'bg-red-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] shadow-md' 
-                : 'bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] shadow-sm border border-black/5'">
-            <p class="text-sm leading-relaxed" [innerHTML]="item.role === 'avatar' 
+                ? 'bg-black text-white rounded-2xl rounded-tr-sm px-6 py-4 max-w-[80%] shadow-lg' 
+                : 'bg-white text-black rounded-2xl rounded-tl-sm px-6 py-4 max-w-[80%] shadow-sm border border-black/5'">
+            <p class="text-base leading-relaxed font-medium" [innerHTML]="item.role === 'avatar' 
               ? formatMessage(item.displayedMessage !== undefined ? item.displayedMessage : item.message) 
               : item.message"></p>
-            @if (item.role === 'avatar' && item.displayedMessage !== undefined && item.displayedMessage.length <
-              item.message.length) { <span class="inline-block w-0.5 h-4 bg-red-600 ml-1 animate-pulse"></span>
-              }
           </div>
-          @if (item.role === 'user') {
-          <div class="flex-shrink-0">
-            <div
-              class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-semibold text-xs">
-              You
-            </div>
-          </div>
-          }
         </div>
         }
+
         @if (isThinking()) {
-        <div class="flex gap-3">
+        <div class="flex gap-4">
           <div class="flex-shrink-0">
-            <img src="/assets/jim-pic.png" alt="Jim" class="w-8 h-8 rounded-full object-cover border border-red-200" />
+            <img src="/assets/jim-pic.png" alt="Jim"
+              class="w-10 h-10 rounded-full object-cover border border-black/5 shadow-sm" />
           </div>
-          <div
-            class="bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] shadow-sm border border-black/5">
-            <div class="flex items-center gap-2">
-              <div class="flex gap-1">
-                <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
-              </div>
-              <span class="text-sm text-black/60">Thinking...</span>
+          <div class="bg-white text-black rounded-2xl rounded-tl-sm px-6 py-4 shadow-sm border border-black/5">
+            <div class="flex gap-1.5">
+              <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+              <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+              <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
             </div>
           </div>
         </div>
@@ -615,117 +513,18 @@
       </div>
 
       <!-- Input Area -->
-      <div class="p-5 border-t border-black/10 bg-white">
-        <!-- Listening Indicator -->
-        @if (isListening()) {
-        <div class="mb-4 flex items-center gap-3 bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-fade-in">
-          <div class="relative">
-            <div class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
-            <div class="absolute inset-0 w-3 h-3 bg-red-600 rounded-full animate-ping opacity-75"></div>
-          </div>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-red-800">Listening...</p>
-            <p class="text-xs text-red-600">Speak now, or click the microphone to stop</p>
-          </div>
-          <button (click)="stopListening()"
-            class="px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-            Stop
-          </button>
-        </div>
-        }
-
-        <!-- Conversation State Indicators -->
-        @if (isSpeaking()) {
-        <div
-          class="mb-3 flex items-center gap-2 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-3 animate-fade-in">
-          <svg class="w-4 h-4 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p class="text-xs text-yellow-800 font-medium">You can interrupt Jim by clicking the mic or typing a message
-          </p>
-        </div>
-        }
-        @if (isWaitingForUser() && !isSpeaking() && !isThinking()) {
-        <div class="mb-3 flex items-center gap-2 bg-blue-50 border-2 border-blue-200 rounded-xl p-3 animate-fade-in">
-          <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          <p class="text-xs text-blue-800 font-medium">Microphone is on - speak naturally or type your message</p>
-        </div>
-        }
-        <!-- Email Input Indicator -->
-        @if (isWaitingForEmail()) {
-        <div class="mb-3 flex items-center gap-2 bg-blue-50 border-2 border-blue-200 rounded-xl p-3 animate-fade-in">
-          <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          <p class="text-xs text-blue-800 font-medium">Please enter your email address to receive your Rocket Goals
-            Launch Plan</p>
-        </div>
-        }
-        <!-- Download Button (after email capture) -->
-        @if (userEmail() && !isWaitingForEmail()) {
-        <div
-          class="mb-4 flex flex-col items-center gap-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p class="text-sm font-semibold text-green-800 text-center">Your Rocket Goals Launch Plan is ready!</p>
-          <button (click)="downloadConversationAsPDF()"
-            class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-xl hover:bg-red-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download Your Plan (PDF)
-          </button>
-        </div>
-        }
-
+      <div class="p-5 border-t border-black/5 bg-white">
         <div class="flex gap-3">
-          <!-- Microphone Button -->
-          @if (speechSupported()) {
-          <button (click)="isListening() ? stopListening() : startListening()"
-            [class.bg-red-600]="!isListening() && !isSpeaking()" [class.bg-orange-600]="isSpeaking()"
-            [class.bg-red-700]="isListening()" [class.animate-pulse]="isListening()"
-            [title]="isSpeaking() ? 'Click to interrupt and speak' : (isListening() ? 'Stop listening' : 'Start speaking')"
-            class="px-4 py-3 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[60px] shadow-md hover:shadow-lg">
-            @if (isListening()) {
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path
-                d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-            </svg>
-            } @else {
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            }
-          </button>
-          }
-
           <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
             [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
-            [placeholder]="isWaitingForEmail() ? 'Enter your email address (e.g., yourname@example.com)' : (isSpeaking() ? 'Type to interrupt Jim...' : (speechSupported() && isConversationActive() ? 'Microphone is on - speak or type...' : (speechSupported() ? 'Type or click mic to speak...' : 'Type your message...')))"
-            [class.border-blue-400]="isWaitingForEmail()"
-            class="flex-1 px-4 py-3 border-2 border-black/10 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white" />
+            [placeholder]="isWaitingForEmail() ? 'Enter your email...' : 'Type your message...'"
+            class="flex-1 px-5 py-4 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-black/10 transition-all font-medium" />
           <button (click)="sendMessage()"
             [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
-            class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
+            class="px-6 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
             Send
           </button>
         </div>
-
-        @if (!speechSupported()) {
-        <p class="text-xs text-black/50 mt-2 text-center">
-          Voice input not supported in this browser. Please use Chrome, Edge, or Safari.
-        </p>
-        }
       </div>
     </div>
     }
@@ -733,60 +532,68 @@
   }
 
   <!-- Features Section -->
-  <section id="features" class="py-8 md:py-12 bg-white">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-black text-black mb-4">
-          Everything You Need to
-          <span class="text-red-600">Succeed</span>
+  <section id="features" class="py-24 bg-white relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-black/10 to-transparent">
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="text-center mb-20">
+        <h2 class="text-4xl md:text-5xl font-black text-black mb-6 tracking-tight">
+          EVERYTHING YOU NEED TO
+          <span class="text-red-600 block mt-2">DOMINATE</span>
         </h2>
-        <p class="text-xl text-black/60 max-w-2xl mx-auto">
-          Powerful tools designed to help you achieve your goals faster and more effectively.
+        <p class="text-xl text-black/60 max-w-2xl mx-auto font-medium">
+          Powerful tools designed to help you achieve your goals faster and more effectively than ever before.
         </p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-8">
-        <div
-          class="group bg-white border-2 border-black/10 rounded-2xl p-8 hover:border-red-600 transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2">
+        <!-- Feature 1 -->
+        <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
           <div
-            class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
+            <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 class="text-2xl font-bold text-black mb-3">Track Progress</h3>
-          <p class="text-black/70 leading-relaxed">
-            Monitor your goals with beautiful visualizations, detailed analytics, and real-time progress tracking.
+          <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Track Progress</h3>
+          <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
+            Monitor your goals with beautiful visualizations, detailed analytics, and real-time progress tracking that
+            keeps you honest.
           </p>
         </div>
 
-        <div
-          class="group bg-white border-2 border-black/10 rounded-2xl p-8 hover:border-red-600 transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2">
+        <!-- Feature 2 -->
+        <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
           <div
-            class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
+            <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 class="text-2xl font-bold text-black mb-3">Stay Motivated</h3>
-          <p class="text-black/70 leading-relaxed">
-            Get smart reminders, celebrate milestones, and stay inspired with personalized motivation tools.
+          <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Stay Motivated</h3>
+          <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
+            Get smart reminders, celebrate milestones, and stay inspired with personalized motivation tools powered by
+            AI.
           </p>
         </div>
 
-        <div
-          class="group bg-white border-2 border-black/10 rounded-2xl p-8 hover:border-red-600 transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2">
+        <!-- Feature 3 -->
+        <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
           <div
-            class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
+            <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <h3 class="text-2xl font-bold text-black mb-3">Achieve Faster</h3>
-          <p class="text-black/70 leading-relaxed">
-            Break down big goals into manageable tasks, set priorities, and accelerate your path to success.
+          <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Achieve Faster</h3>
+          <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
+            Break down big goals into manageable tasks, set priorities, and accelerate your path to success with
+            proven
+            frameworks.
           </p>
         </div>
       </div>
@@ -794,7 +601,7 @@
   </section>
 
   <!-- Social Proof Section -->
-  <section class="py-8 md:py-12 bg-white">
+  <section class="py-20 md:py-32 bg-white">
     <div class="container mx-auto px-4">
       <div class="text-center mb-16">
         <h2 class="text-4xl md:text-5xl font-black text-black mb-4">
@@ -805,56 +612,59 @@
         </p>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Testimonial 1 -->
         <div
-          class="bg-black/5 border-2 border-black/10 rounded-2xl p-8 hover:border-red-600 transition-all duration-300">
-          <div class="flex items-center mb-4">
+          class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
+          <div class="flex items-center mb-6">
             <div
-              class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+              class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
               JD
             </div>
             <div>
-              <div class="font-bold text-black">John Doe</div>
-              <div class="text-black/60 text-sm">Entrepreneur</div>
+              <div class="font-bold text-black text-lg">John Doe</div>
+              <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Entrepreneur</div>
             </div>
           </div>
-          <p class="text-black/80 leading-relaxed italic">
+          <p class="text-black/80 leading-relaxed text-lg font-medium">
             "RocketGoals transformed how I approach my business goals. I've achieved more in 3 months than I did in the
             previous year."
           </p>
         </div>
 
+        <!-- Testimonial 2 -->
         <div
-          class="bg-black/5 border-2 border-black/10 rounded-2xl p-8 hover:border-red-600 transition-all duration-300">
-          <div class="flex items-center mb-4">
+          class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
+          <div class="flex items-center mb-6">
             <div
-              class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+              class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
               SM
             </div>
             <div>
-              <div class="font-bold text-black">Sarah Miller</div>
-              <div class="text-black/60 text-sm">Fitness Coach</div>
+              <div class="font-bold text-black text-lg">Sarah Miller</div>
+              <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Fitness Coach</div>
             </div>
           </div>
-          <p class="text-black/80 leading-relaxed italic">
+          <p class="text-black/80 leading-relaxed text-lg font-medium">
             "The progress tracking features are incredible. I can see exactly where I'm succeeding and where I need to
             focus more."
           </p>
         </div>
 
+        <!-- Testimonial 3 -->
         <div
-          class="bg-black/5 border-2 border-black/10 rounded-2xl p-8 hover:border-red-600 transition-all duration-300">
-          <div class="flex items-center mb-4">
+          class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
+          <div class="flex items-center mb-6">
             <div
-              class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+              class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
               MC
             </div>
             <div>
-              <div class="font-bold text-black">Mike Chen</div>
-              <div class="text-black/60 text-sm">Software Developer</div>
+              <div class="font-bold text-black text-lg">Mike Chen</div>
+              <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Software Developer</div>
             </div>
           </div>
-          <p class="text-black/80 leading-relaxed italic">
+          <p class="text-black/80 leading-relaxed text-lg font-medium">
             "Best goal-setting platform I've used. Clean interface, powerful features, and it actually helps me stay
             accountable."
           </p>
@@ -864,27 +674,32 @@
   </section>
 
   <!-- CTA Section -->
-  <section class="py-8 md:py-12 bg-gradient-to-br from-red-600 to-red-700 text-white relative overflow-hidden">
-    <div class="absolute inset-0 opacity-10">
-      <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-      <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+  <section class="py-24 md:py-32 bg-black text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+      <div
+        class="absolute top-0 left-0 w-[800px] h-[800px] bg-red-600 rounded-full blur-[120px] transform -translate-x-1/2 -translate-y-1/2">
+      </div>
+      <div
+        class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-[100px] transform translate-x-1/3 translate-y-1/3">
+      </div>
     </div>
 
     <div class="container mx-auto px-4 relative z-10">
-      <div class="max-w-3xl mx-auto text-center">
-        <h2 class="text-4xl md:text-5xl lg:text-6xl font-black mb-6">
-          Ready to Launch Your Success?
+      <div class="max-w-4xl mx-auto text-center space-y-10">
+        <h2 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none">
+          Ready to Launch <br />
+          <span class="text-red-600">Your Success?</span>
         </h2>
-        <p class="text-xl md:text-2xl text-white/90 mb-10 leading-relaxed">
+        <p class="text-xl md:text-2xl text-white/80 leading-relaxed max-w-2xl mx-auto">
           Join thousands of achievers who are already transforming their dreams into reality. Start your journey today.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="flex flex-col sm:flex-row gap-6 justify-center pt-4">
           <button
-            class="px-10 py-5 bg-white text-red-600 font-bold text-lg rounded-lg hover:bg-black hover:text-white transition-all duration-200 shadow-2xl transform hover:scale-105">
+            class="px-12 py-6 bg-red-600 text-white font-bold text-xl rounded-full hover:bg-white hover:text-black transition-all duration-300 shadow-[0_0_40px_rgba(220,38,38,0.5)] hover:shadow-white/20 hover:-translate-y-1">
             Get Started Free
           </button>
           <button
-            class="px-10 py-5 bg-transparent text-white font-bold text-lg rounded-lg border-2 border-white hover:bg-white hover:text-red-600 transition-all duration-200">
+            class="px-12 py-6 bg-transparent text-white font-bold text-xl rounded-full border-2 border-white/20 hover:bg-white hover:text-black transition-all duration-300 hover:-translate-y-1">
             Watch Demo
           </button>
         </div>
@@ -893,42 +708,65 @@
   </section>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-black/10 py-12">
+  <footer class="bg-white border-t border-black/5 py-20">
     <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-4 gap-8 mb-8">
-        <div>
-          <img src="/assets/rocket-goals.png" alt="RocketGoals Logo" class="w-20 h-20 object-contain mb-4" />
-          <p class="text-black/60 text-sm">
-            Power your impossible. Transform your goals into achievements.
+      <div class="grid md:grid-cols-4 gap-12 mb-16">
+        <div class="col-span-1 md:col-span-1">
+          <a href="#" class="block mb-6">
+            <img src="/assets/rocket-goals.png" alt="RocketGoals Logo" class="w-16 h-16 object-contain" />
+          </a>
+          <p class="text-black/60 text-sm leading-relaxed font-medium">
+            Power your impossible. <br />Transform your goals into achievements with the world's most advanced
+            goal-tracking platform.
           </p>
         </div>
         <div>
-          <h4 class="font-bold text-black mb-4">Product</h4>
-          <ul class="space-y-2 text-black/60 text-sm">
+          <h4 class="font-bold text-black text-lg mb-6">Product</h4>
+          <ul class="space-y-4 text-black/60 font-medium">
             <li><a href="#" class="hover:text-red-600 transition-colors">Features</a></li>
             <li><a href="#" class="hover:text-red-600 transition-colors">Pricing</a></li>
             <li><a href="#" class="hover:text-red-600 transition-colors">Updates</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Beta Access</a></li>
           </ul>
         </div>
         <div>
-          <h4 class="font-bold text-black mb-4">Company</h4>
-          <ul class="space-y-2 text-black/60 text-sm">
-            <li><a href="#" class="hover:text-red-600 transition-colors">About</a></li>
-            <li><a href="#" class="hover:text-red-600 transition-colors">Blog</a></li>
+          <h4 class="font-bold text-black text-lg mb-6">Company</h4>
+          <ul class="space-y-4 text-black/60 font-medium">
+            <li><a href="#" class="hover:text-red-600 transition-colors">About Us</a></li>
             <li><a href="#" class="hover:text-red-600 transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Press Kit</a></li>
           </ul>
         </div>
         <div>
-          <h4 class="font-bold text-black mb-4">Support</h4>
-          <ul class="space-y-2 text-black/60 text-sm">
+          <h4 class="font-bold text-black text-lg mb-6">Support</h4>
+          <ul class="space-y-4 text-black/60 font-medium">
             <li><a href="#" class="hover:text-red-600 transition-colors">Help Center</a></li>
-            <li><a href="#" class="hover:text-red-600 transition-colors">Contact</a></li>
-            <li><a href="#" class="hover:text-red-600 transition-colors">Privacy</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Contact Us</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Terms of Service</a></li>
           </ul>
         </div>
       </div>
-      <div class="border-t border-black/10 pt-8 text-center text-black/60 text-sm">
-        <p>&copy; 2024 RocketGoals. All rights reserved.</p>
+      <div class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-black/40 text-sm font-medium">&copy; 2024 RocketGoals. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="text-black/40 hover:text-black transition-colors">
+            <span class="sr-only">Twitter</span>
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+            </svg>
+          </a>
+          <a href="#" class="text-black/40 hover:text-black transition-colors">
+            <span class="sr-only">GitHub</span>
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd" />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   </footer>
