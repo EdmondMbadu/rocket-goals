@@ -768,10 +768,98 @@ body {
   }
 }
 
-.star {
-  position: absolute;
+/* White Theme ("NASA Clean Room") */
+.bg-clean-room {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: #000000;
+}
+
+.btn-clean {
   background: white;
-  border-radius: 50%;
-  animation: twinkle var(--duration, 3s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
+  border: 1px solid #e5e5e5;
+  color: #000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.btn-clean:hover {
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-clean-selected {
+  background: #fff1f2;
+  /* Red-50 */
+  border-color: #dc2626;
+  color: #dc2626;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+/* Space Cockpit Dashboard */
+.cockpit-view {
+  perspective: 1000px;
+  overflow: hidden;
+}
+
+.cockpit-window {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.8);
+  background: radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.4) 80%, rgba(0, 0, 0, 0.9) 100%);
+  border: 20px solid #1a1a1a;
+  border-radius: 40px;
+}
+
+/* Floating Animation for Dashboard Cards */
+@keyframes float-card {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(0.5deg);
+  }
+}
+
+.float-animation {
+  animation: float-card 6s ease-in-out infinite;
+}
+
+.float-animation-delay-1 {
+  animation-delay: 1s;
+}
+
+.float-animation-delay-2 {
+  animation-delay: 2s;
+}
+
+/* Drifting Stars Background */
+@keyframes stars-drift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: -1000px 500px;
+  }
+}
+
+.bg-deep-space {
+  background-color: #000;
+  background-image:
+    radial-gradient(white, rgba(255, 255, 255, .2) 2px, transparent 3px),
+    radial-gradient(white, rgba(255, 255, 255, .15) 1px, transparent 2px),
+    radial-gradient(white, rgba(255, 255, 255, .1) 2px, transparent 3px);
+  background-size: 550px 550px, 350px 350px, 250px 250px;
+  background-position: 0 0, 40px 60px, 130px 270px;
+  animation: stars-drift 120s linear infinite;
 }
