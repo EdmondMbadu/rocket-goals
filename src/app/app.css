@@ -863,3 +863,160 @@ body {
   background-position: 0 0, 40px 60px, 130px 270px;
   animation: stars-drift 120s linear infinite;
 }
+
+/* White Sci-Fi Theme (White Space + Dark Stars) */
+.bg-white-space {
+  background-color: #ffffff;
+  /* Pure White */
+  background-image:
+    radial-gradient(#1e293b 1.5px, transparent 1.5px),
+    radial-gradient(#334155 1px, transparent 1px);
+  background-size: 550px 550px, 350px 350px;
+  background-position: 0 0, 40px 60px;
+  animation: stars-drift 120s linear infinite;
+}
+
+.star-dark {
+  position: absolute;
+  background: #0f172a;
+  /* Slate-900 */
+  border-radius: 50%;
+  animation: twinkle-dark var(--duration, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes twinkle-dark {
+
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.5);
+  }
+}
+
+/* Deep Space Rich Theme */
+.bg-deep-space-rich {
+  background-color: #020617;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(76, 29, 149, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 30%),
+    radial-gradient(white, rgba(255, 255, 255, 0.2) 1px, transparent 2px),
+    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 2px);
+  background-size: 100% 100%, 100% 100%, 550px 550px, 350px 350px;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  animation: deep-space-drift 60s linear infinite;
+}
+
+@keyframes deep-space-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 0 0, 0 0, -100px 100px, -50px 50px;
+  }
+}
+
+/* Dark Glass Panel */
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+}
+
+/* Neon Accents */
+.text-neon-blue {
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.text-neon-red {
+  color: #f87171;
+  text-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+}
+
+/* Terminal Widget (Light Mode) */
+.terminal-window-white {
+  font-family: 'Courier New', Courier, monospace;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.terminal-line {
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: terminal-type 0.5s forwards;
+}
+
+@keyframes terminal-type {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Gauge Widget (Light Mode) */
+.gauge-arc-white {
+  fill: none;
+  stroke: #f1f5f9;
+  /* Slate-100 */
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.gauge-value-white {
+  fill: none;
+  stroke: #dc2626;
+  /* Red-600 */
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: gauge-fill 1.5s ease-out forwards 0.5s;
+}
+
+/* Timeline Widget (Light Mode) */
+.timeline-node-white {
+  position: relative;
+  z-index: 10;
+}
+
+.timeline-node-white::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 100%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: -1;
+}
+
+.timeline-node-white:last-child::after {
+  display: none;
+}
+
+.timeline-active .timeline-node-white::after {
+  background: #dc2626;
+  box-shadow: none;
+}
+
+/* Tech Decoration: Barcode */
+.barcode {
+  height: 20px;
+  width: 100%;
+  background: repeating-linear-gradient(90deg,
+      #000 0px,
+      #000 2px,
+      transparent 2px,
+      transparent 4px);
+  opacity: 0.2;
+}
