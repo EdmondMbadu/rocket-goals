@@ -800,6 +800,221 @@ export class App implements AfterViewInit, OnDestroy {
     console.log('✅ Conversation closed and all activity stopped');
   }
 
+  // --- Launch Challenge Feature ---
+
+  isChallengeActive = signal(false);
+  currentChallengeStep = signal(0);
+  isDashboardActive = signal(false);
+
+  // Challenge Data State
+  challengeAnswers = signal<Record<string, any>>({});
+
+  // Final User Info
+  userInfo = signal({
+    name: '',
+    email: '',
+    password: ''
+  });
+
+  readonly challengeQuestions = [
+    {
+      id: 'future_self',
+      type: 'multi-select',
+      maxSelect: 2,
+      title: 'Your Future Self (R)',
+      subtitle: 'What do you want to feel at the end of this week?',
+      options: [
+        { id: 'motivated', label: '🔥 Motivated' },
+        { id: 'calm', label: '😌 Calm' },
+        { id: 'confident', label: '💪 Confident' },
+        { id: 'proud', label: '🌟 Proud' },
+        { id: 'focused', label: '🎯 Focused' }
+      ]
+    },
+    {
+      id: 'one_goal',
+      type: 'single-select',
+      title: 'Your ONE Goal (O)',
+      subtitle: 'Choose your ONE focus for this 7-day challenge:',
+      options: [
+        { id: 'career', label: '💼 Career / projects' },
+        { id: 'learning', label: '📚 Learning / skills' },
+        { id: 'finance', label: '💰 Finance' },
+        { id: 'mental', label: '🧠 Mental clarity' },
+        { id: 'health', label: '🏋️ Health / fitness' },
+        { id: 'habits', label: '🔄 Habits & discipline' },
+        { id: 'growth', label: '🚀 Personal growth' }
+      ]
+    },
+    {
+      id: 'importance',
+      type: 'single-select',
+      title: 'What matters most? (O)',
+      subtitle: 'Why is this goal important right now?',
+      options: [
+        { id: 'momentum', label: 'I need momentum' },
+        { id: 'stuck', label: 'I feel stuck' },
+        { id: 'level_up', label: 'I want to level up' },
+        { id: 'clarity', label: 'I need clarity' },
+        { id: 'consistency', label: 'I want consistency' },
+        { id: 'change', label: 'It’s time for a change' }
+      ]
+    },
+    {
+      id: 'tracking',
+      type: 'multi-select',
+      maxSelect: 2,
+      title: 'Make it real (C)',
+      subtitle: 'What progress will you track daily?',
+      options: [
+        { id: 'time', label: '⏱ Time spent' },
+        { id: 'tasks', label: '✔ Tasks done' },
+        { id: 'energy', label: '🔋 Energy / mood' },
+        { id: 'percentage', label: '📈 Percentage progress' },
+        { id: 'habit', label: '🧘 Habit performed' },
+        { id: 'reflection', label: '✍️ Reflection (very short)' }
+      ]
+    },
+    {
+      id: 'vibe',
+      type: 'single-select',
+      title: 'Your vibe this week (K)',
+      subtitle: 'Which intention fits your week?',
+      options: [
+        { id: 'kind', label: 'Be kind to myself' },
+        { id: 'consistent', label: 'Stay consistent' },
+        { id: 'small_steps', label: 'Do small steps' },
+        { id: 'focus', label: 'Focus deeply' },
+        { id: 'curious', label: 'Stay curious' }
+      ]
+    },
+    {
+      id: 'daily_effort',
+      type: 'single-select',
+      title: 'Your daily effort (E)',
+      subtitle: 'How much time can you commit each day?',
+      options: [
+        { id: '5min', label: '5 minutes' },
+        { id: '10min', label: '10 minutes' },
+        { id: '20min', label: '20 minutes' },
+        { id: '30min', label: '30 minutes' },
+        { id: '1hour', label: '1 hour' }
+      ]
+    },
+    {
+      id: 'reminder',
+      type: 'single-select',
+      title: 'Your reminder style (T)',
+      subtitle: 'How should we motivate you?',
+      options: [
+        { id: 'morning', label: '🔔 Morning reminder' },
+        { id: 'evening', label: '🌙 Evening reminder' },
+        { id: 'motivational', label: '🔥 Motivational style' },
+        { id: 'celebration', label: '🎉 Celebration style' },
+        { id: 'accountability', label: '🤝 Accountability buddy style' },
+        { id: 'calm', label: '😌 Calm & supportive' }
+      ]
+    },
+    {
+      id: 'dashboard_style',
+      type: 'single-select',
+      title: 'Quick Build Setup',
+      subtitle: 'Dashboard style:',
+      options: [
+        { id: 'minimal', label: 'Minimal & clean' },
+        { id: 'colorful', label: 'Colorful & fun' },
+        { id: 'dark', label: 'Dark mode' },
+        { id: 'gamified', label: 'Gamified / badges' }
+      ]
+    }
+  ];
+
+  startChallenge() {
+    this.isChallengeActive.set(true);
+    this.currentChallengeStep.set(0);
+    this.challengeAnswers.set({});
+    this.isDashboardActive.set(false);
+    // Prevent scrolling on body
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeChallenge() {
+    this.isChallengeActive.set(false);
+    document.body.style.overflow = '';
+  }
+
+  selectOption(questionId: string, optionId: string, type: string, maxSelect?: number) {
+    const currentAnswers = { ...this.challengeAnswers() };
+
+    if (type === 'single-select') {
+      currentAnswers[questionId] = optionId;
+    } else {
+      // Multi-select
+      const currentSelection = (currentAnswers[questionId] as string[]) || [];
+
+      if (currentSelection.includes(optionId)) {
+        // Deselect
+        currentAnswers[questionId] = currentSelection.filter(id => id !== optionId);
+      } else {
+        // Select if under max
+        if (!maxSelect || currentSelection.length < maxSelect) {
+          currentAnswers[questionId] = [...currentSelection, optionId];
+        }
+      }
+    }
+
+    this.challengeAnswers.set(currentAnswers);
+
+    // Auto-advance for single select after a short delay
+    if (type === 'single-select') {
+      setTimeout(() => {
+        this.nextStep();
+      }, 400);
+    }
+  }
+
+  isOptionSelected(questionId: string, optionId: string): boolean {
+    const answer = this.challengeAnswers()[questionId];
+    if (Array.isArray(answer)) {
+      return answer.includes(optionId);
+    }
+    return answer === optionId;
+  }
+
+  nextStep() {
+    // Validate current step
+    const currentQ = this.challengeQuestions[this.currentChallengeStep()];
+    if (currentQ) {
+      const answer = this.challengeAnswers()[currentQ.id];
+      if (!answer || (Array.isArray(answer) && answer.length === 0)) {
+        return; // Cannot proceed without answer
+      }
+    }
+
+    if (this.currentChallengeStep() < this.challengeQuestions.length) {
+      this.currentChallengeStep.update(v => v + 1);
+    }
+  }
+
+  prevStep() {
+    if (this.currentChallengeStep() > 0) {
+      this.currentChallengeStep.update(v => v - 1);
+    }
+  }
+
+  submitUserInfo() {
+    if (this.userInfo().name && this.userInfo().email && this.userInfo().password) {
+      this.isChallengeActive.set(false);
+      this.isDashboardActive.set(true);
+    }
+  }
+
+  closeDashboard() {
+    this.isDashboardActive.set(false);
+    document.body.style.overflow = '';
+  }
+
+
   /**
    * Start typewriter effect for a message
    */
