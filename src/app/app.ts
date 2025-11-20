@@ -170,8 +170,7 @@ export class App implements AfterViewInit, OnDestroy {
     // --- 2. Create Low-Poly Rocket Model ---
     const rocketGroup = new THREE.Group();
 
-    // Body (Cylinder) - White with Black outline feel (using wireframe or just shading)
-    // Actually, let's make it Red and Black to pop against White
+    // Body (Cylinder) - White with Black outline feel
     const bodyGeometry = new THREE.CylinderGeometry(1, 1, 8, 8);
     const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White body
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -223,7 +222,7 @@ export class App implements AfterViewInit, OnDestroy {
     engine.position.y = -4.5;
     rocketGroup.add(engine);
 
-    // Rotate rocket to fly "forward" (along Z) or just float
+    // Orientation
     rocketGroup.rotation.x = Math.PI / 3;
     rocketGroup.rotation.z = -Math.PI / 6;
 

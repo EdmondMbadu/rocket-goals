@@ -18,13 +18,13 @@
         </div>
 
         <div class="hidden md:flex items-center space-x-8">
-          <a href="#"
-            class="text-sm font-bold text-black/70 hover:text-red-600 transition-colors uppercase tracking-wide">Features</a>
-          <a href="#"
-            class="text-sm font-bold text-black/70 hover:text-red-600 transition-colors uppercase tracking-wide">How
-            it Works</a>
-          <a href="#"
-            class="text-sm font-bold text-black/70 hover:text-red-600 transition-colors uppercase tracking-wide">Pricing</a>
+          <button (click)="scrollToSection('features')"
+            class="text-sm font-bold text-black/70 hover:text-red-600 transition-colors uppercase tracking-wide">Features</button>
+          <button (click)="scrollToSection('video-avatar')"
+            class="text-sm font-bold text-black/70 hover:text-red-600 transition-colors uppercase tracking-wide">How it
+            Works</button>
+          <button (click)="scrollToSection('pricing')"
+            class="text-sm font-bold text-black/70 hover:text-red-600 transition-colors uppercase tracking-wide">Pricing</button>
         </div>
 
         <div class="flex items-center gap-4">
@@ -670,7 +670,7 @@
   </section>
 
   <!-- CTA Section -->
-  <section class="py-24 md:py-32 bg-black text-white relative overflow-hidden">
+  <section id="pricing" class="py-24 md:py-32 bg-black text-white relative overflow-hidden">
     <div class="absolute inset-0 opacity-20 pointer-events-none">
       <div
         class="absolute top-0 left-0 w-[800px] h-[800px] bg-red-600 rounded-full blur-[120px] transform -translate-x-1/2 -translate-y-1/2">
