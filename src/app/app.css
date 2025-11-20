@@ -1020,3 +1020,17 @@ body {
       transparent 4px);
   opacity: 0.2;
 }
+
+/* Badass Countdown Timer */
+.countdown-timer {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  letter-spacing: -2px;
+  text-shadow: 2px 2px 0px rgba(220, 38, 38, 0.2);
+}
+
+.countdown-label {
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}

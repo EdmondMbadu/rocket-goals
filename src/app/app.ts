@@ -89,6 +89,9 @@ export class App implements AfterViewInit, OnDestroy {
     this.firestoreAIService.preload().catch(error => {
       console.warn('Firestore preload skipped:', error);
     });
+
+    // Initialize countdown for dashboard
+    this.startCountdown();
   }
 
   private ngZone = inject(NgZone);
@@ -802,19 +805,41 @@ export class App implements AfterViewInit, OnDestroy {
 
   // --- Launch Challenge Feature ---
 
+  // Challenge State
   isChallengeActive = signal(false);
   currentChallengeStep = signal(0);
   isDashboardActive = signal(false);
-
-  // Challenge Data State
   challengeAnswers = signal<Record<string, any>>({});
-
   // Final User Info
   userInfo = signal({
     name: '',
     email: '',
     password: ''
   });
+
+  // Countdown State
+  countdown = signal('23:59:59');
+  private countdownInterval: any;
+
+  startCountdown() {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+
+    // Set target time to 24 hours from now (or just a fixed countdown)
+    let totalSeconds = 24 * 60 * 60; // 24 hours
+
+    this.countdownInterval = setInterval(() => {
+      totalSeconds--;
+      if (totalSeconds < 0) totalSeconds = 24 * 60 * 60;
+
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      this.countdown.set(
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      );
+    }, 1000);
+  }
 
   readonly challengeQuestions = [
     {

@@ -400,8 +400,13 @@
       <div class="md:col-span-4 hud-card-white p-8">
         <div class="scanline"></div>
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest">Mission Timeline: T-Minus 7 Days</h3>
-          <div class="barcode w-32"></div>
+          <div class="flex items-center gap-4">
+            <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest">Mission Timeline</h3>
+            <div class="countdown-timer text-3xl md:text-4xl text-black tracking-tighter">
+              T-MINUS <span class="text-red-600">{{ countdown() }}</span>
+            </div>
+          </div>
+          <div class="barcode w-32 opacity-50"></div>
         </div>
 
         <div class="flex items-center justify-between relative z-10">
@@ -434,12 +439,12 @@
 }
 
 <!-- Video & Avatar Section -->
-<section id="video-avatar" class="py-24 bg-black text-white relative overflow-hidden">
+<section id="video-avatar" class="py-24 bg-white text-black relative overflow-hidden border-t border-black/5">
   <!-- Decorative Elements -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-[120px] opacity-50">
+    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-[120px] opacity-50">
     </div>
-    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] opacity-30"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-black/5 rounded-full blur-[100px] opacity-30"></div>
   </div>
 
   <div class="container mx-auto px-4 relative z-10">
@@ -447,27 +452,27 @@
       <!-- Left Column - Video Placeholder -->
       <div class="relative order-2 lg:order-1 space-y-8">
         <div
-          class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 group cursor-pointer bg-white/5 backdrop-blur-sm hover:border-red-600/50 transition-all duration-500">
+          class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-black/10 group cursor-pointer bg-gray-50 hover:border-red-600/50 transition-all duration-500">
           <!-- Video Placeholder -->
           <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center space-y-6 px-8">
               <div
-                class="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                class="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)]">
                 <svg class="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
               <div class="space-y-2">
-                <h3 class="text-3xl font-bold text-white tracking-tight">
+                <h3 class="text-3xl font-bold text-black tracking-tight">
                   Meet <span class="text-red-600">RocketGoals</span>
                 </h3>
-                <p class="text-white/60 font-medium text-lg">Watch the introduction</p>
+                <p class="text-gray-500 font-medium text-lg">Watch the introduction</p>
               </div>
             </div>
           </div>
           <!-- Decorative overlay -->
           <div
-            class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300">
+            class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300">
           </div>
         </div>
       </div>
@@ -476,18 +481,18 @@
       <div class="relative order-1 lg:order-2 flex flex-col items-center lg:items-start space-y-10">
         <div class="relative group w-full max-w-md mx-auto lg:mx-0">
           <!-- Pod Container -->
-          <div class="relative bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-md shadow-2xl">
+          <div class="relative bg-white border border-black/10 rounded-[2.5rem] p-8 shadow-xl">
             <!-- Avatar Image -->
             <div class="relative z-10 flex justify-center mb-8">
               <div class="relative">
-                <div class="absolute -inset-4 bg-red-600/20 rounded-full blur-xl animate-pulse"></div>
+                <div class="absolute -inset-4 bg-red-600/10 rounded-full blur-xl animate-pulse"></div>
                 <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-                  class="relative z-10 w-48 h-48 rounded-full object-cover border-4 border-white/10 shadow-2xl" />
+                  class="relative z-10 w-48 h-48 rounded-full object-cover border-4 border-white shadow-2xl" />
                 <!-- Status Indicator Badge -->
                 <div class="absolute bottom-2 right-2 z-20">
                   @if (isSpeaking()) {
                   <div
-                    class="flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full shadow-lg border border-white/10">
+                    class="flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full shadow-lg border border-white">
                     <div class="flex gap-1 h-3 items-center">
                       <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></div>
                       <div class="w-1 h-2 bg-white rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></div>
@@ -497,7 +502,7 @@
                   </div>
                   } @else {
                   <div
-                    class="flex items-center gap-2 px-3 py-1.5 bg-green-500 rounded-full shadow-lg border border-white/10">
+                    class="flex items-center gap-2 px-3 py-1.5 bg-green-500 rounded-full shadow-lg border border-white">
                     <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                     <span class="text-xs font-bold text-white uppercase tracking-wider">Online</span>
                   </div>
@@ -509,16 +514,16 @@
             <!-- Text Content -->
             <div class="text-center space-y-6">
               <div>
-                <h3 class="text-3xl font-black text-white mb-2">
+                <h3 class="text-3xl font-black text-black mb-2">
                   Talk to <span class="text-red-600">Jim</span>
                 </h3>
-                <p class="text-white/60 font-medium text-lg leading-relaxed">
+                <p class="text-gray-500 font-medium text-lg leading-relaxed">
                   Get your instant Rocket Goals Launch Plan. It's free and takes less than 3 minutes.
                 </p>
               </div>
 
               <button (click)="startConversation()" [disabled]="isConversationActive()"
-                class="w-full py-4 bg-white text-black font-bold text-lg rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg hover:shadow-red-600/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group">
+                class="w-full py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group">
                 <span>{{ isConversationActive() ? 'Conversation Active' : 'Start Conversation' }}</span>
                 @if (!isConversationActive()) {
                 <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
@@ -539,7 +544,7 @@
 
 <!-- Conversation Modal -->
 @if (isConversationActive()) {
-<div class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+<div class="fixed inset-0 bg-white/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
   (click)="closeConversation()">
 
   <!-- Voice Mode View -->
