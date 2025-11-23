@@ -78,7 +78,7 @@
         </div>
       </div>
       <div class="flex items-center gap-4">
-        <button routerLink="/" 
+        <button routerLink="/goals" 
           class="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -156,9 +156,41 @@
         <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
           <span class="w-1.5 h-1.5 bg-red-600 rounded-full"></span> Primary Directive
         </h3>
-        <h2 class="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
-          {{ getGoalTitleDisplay() }}
-        </h2>
+        <div class="flex items-start gap-2 mb-2">
+          @if (isEditingGoalTitle()) {
+          <div class="flex-1 flex items-center gap-2">
+            <input type="text" 
+              [ngModel]="editingGoalTitleValue()" 
+              (ngModelChange)="editingGoalTitleValue.set($event)"
+              (keyup.enter)="saveGoalTitle()" 
+              (keyup.escape)="cancelEditingGoalTitle()"
+              class="goal-title-input text-4xl md:text-5xl font-bold text-black bg-transparent border-b-2 border-red-600 focus:outline-none focus:border-red-700 w-full"
+              #goalTitleInput />
+            <button (click)="saveGoalTitle()" 
+              class="text-green-600 hover:text-green-700 transition-colors p-1 shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+            <button (click)="cancelEditingGoalTitle()" 
+              class="text-gray-400 hover:text-red-600 transition-colors p-1 shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          } @else {
+          <h2 class="text-4xl md:text-5xl font-bold text-black tracking-tight flex-1">
+            {{ getGoalTitleDisplay() }}
+          </h2>
+          <button (click)="startEditingGoalTitle()" 
+            class="text-gray-400 hover:text-red-600 transition-colors p-1 ml-2 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          }
+        </div>
         <p class="text-sm font-mono uppercase tracking-[0.3em] text-gray-500">
           Theme: {{ getGoalThemeDisplay() }}
         </p>

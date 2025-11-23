@@ -85,7 +85,7 @@ export class App implements AfterViewInit, OnDestroy {
   private elevenLabsService = inject(ElevenLabsService);
   private speechRecognitionService = inject(SpeechRecognitionService);
   private firestoreAIService = inject(FirestoreAIService);
-  private authService = inject(AuthService);
+  protected authService = inject(AuthService);
   private rocketGoalsService = inject(RocketGoalsService);
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
@@ -121,16 +121,38 @@ export class App implements AfterViewInit, OnDestroy {
       this.dashboardTitle.set(savedTitle);
     }
 
+    // Check initial URL for startChallenge param
+    this.checkAndStartChallenge(this.router.url);
+
+    // Listen for custom startChallenge event (for same-route navigation)
+    window.addEventListener('startChallenge', (event: any) => {
+      console.log('startChallenge event received', event);
+      this.checkAndStartChallenge(this.router.url);
+    });
+
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
         this.currentRoute.set(event.urlAfterRedirects || event.url);
-        // Auto-start challenge if coming from goals page
+        // Auto-start challenge if query param is present (works on any route)
         const urlString = event.urlAfterRedirects || event.url;
-        if (urlString.includes('startChallenge=true')) {
-          setTimeout(() => this.startChallenge(), 100);
-        }
+        this.checkAndStartChallenge(urlString);
       });
+  }
+
+  private checkAndStartChallenge(urlString: string) {
+    if (urlString.includes('startChallenge=true')) {
+      console.log('checkAndStartChallenge: URL contains startChallenge=true', urlString);
+      // Use a small delay to ensure the component is ready
+      setTimeout(() => {
+        if (!this.isChallengeActive()) {
+          console.log('Starting challenge...');
+          this.startChallenge();
+        } else {
+          console.log('Challenge already active');
+        }
+      }, 100);
+    }
   }
 
   private ngZone = inject(NgZone);
@@ -1219,8 +1241,23 @@ export class App implements AfterViewInit, OnDestroy {
       }
     }
 
-    if (this.currentChallengeStep() < this.challengeQuestions.length) {
+    const currentStep = this.currentChallengeStep();
+    if (currentStep < this.challengeQuestions.length - 1) {
+      // Move to next question
       this.currentChallengeStep.update(v => v + 1);
+    } else {
+      // We're on the last question, moving to completion
+      this.currentChallengeStep.update(v => v + 1);
+      
+      // Check if user is logged in - if so, skip auth and save directly
+      const profile = this.authService.profile();
+      if (profile?.userId) {
+        // User is already logged in, skip auth and save directly
+        setTimeout(() => {
+          this.completeChallengeAndSaveGoal();
+        }, 100);
+      }
+      // If not logged in, the auth stage will be shown in the template
     }
   }
 
@@ -1501,8 +1538,8 @@ export class App implements AfterViewInit, OnDestroy {
       });
       this.isChallengeActive.set(false);
       document.body.style.overflow = '';
-      // Redirect to the goal page
-      await this.router.navigateByUrl(`/rocketgoal/${goalId}`);
+      // Redirect to goals list (home page) instead of individual goal
+      await this.router.navigateByUrl('/goals');
     } catch (error) {
       console.error('Failed to save RocketGoal', error);
       this.challengeAuthError.set('We could not save your RocketGoal. Please try again.');

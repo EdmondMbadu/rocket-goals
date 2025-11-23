@@ -91,4 +91,11 @@ export class RocketGoalsService {
       throw error;
     }
   }
+
+  async updateRocketGoal(goalId: string, updates: Partial<{ primaryGoal: string; answers: Record<string, any> }>) {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId);
+    await firestoreModule.updateDoc(docRef, updates);
+  }
 }

@@ -25,6 +25,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy {
   dashboardTitle = signal<string>('MISSION CONTROL');
   isEditingTitle = signal(false);
   editingTitleValue = signal<string>('');
+  isEditingGoalTitle = signal(false);
+  editingGoalTitleValue = signal<string>('');
   showAvatarDropdown = signal(false);
   userGoals = signal<any[]>([]);
   loadingGoals = signal(false);
@@ -194,7 +196,69 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy {
   }
 
   goHome() {
-    this.router.navigateByUrl('/');
+    this.router.navigateByUrl('/goals');
+  }
+
+  startEditingGoalTitle() {
+    const currentTitle = this.getGoalTitleDisplay();
+    this.editingGoalTitleValue.set(currentTitle);
+    this.isEditingGoalTitle.set(true);
+    setTimeout(() => {
+      const input = document.querySelector('input.goal-title-input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  async saveGoalTitle() {
+    const goal = this.goal();
+    if (!goal) return;
+
+    const newTitle = this.editingGoalTitleValue().trim();
+    if (!newTitle) {
+      // Don't save empty title
+      this.cancelEditingGoalTitle();
+      return;
+    }
+
+    try {
+      // Update the goal in Firestore
+      // We'll update both primaryGoal and the answers to keep them in sync
+      const updates: any = {
+        primaryGoal: newTitle
+      };
+
+      // Also update the custom_goal_title in answers if it exists, or set it
+      const currentAnswers = { ...goal.answers };
+      if (currentAnswers['custom_goal_title']) {
+        currentAnswers['custom_goal_title'] = newTitle;
+        currentAnswers['goal_title_label'] = newTitle;
+      } else {
+        // If no custom title was set, create one
+        currentAnswers['custom_goal_title'] = newTitle;
+        currentAnswers['goal_title_label'] = newTitle;
+      }
+      updates.answers = currentAnswers;
+
+      await this.rocketGoalsService.updateRocketGoal(goal.id, updates);
+
+      // Update local state
+      const updatedGoal = { ...goal, primaryGoal: newTitle, answers: currentAnswers };
+      this.goal.set(updatedGoal as RocketGoal);
+
+      this.isEditingGoalTitle.set(false);
+      this.editingGoalTitleValue.set('');
+    } catch (error) {
+      console.error('Error updating goal title:', error);
+      this.error.set('Failed to update goal title. Please try again.');
+    }
+  }
+
+  cancelEditingGoalTitle() {
+    this.isEditingGoalTitle.set(false);
+    this.editingGoalTitleValue.set('');
   }
 }
 

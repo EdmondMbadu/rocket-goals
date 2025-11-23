@@ -5,35 +5,44 @@ import { AuthService } from './auth.service';
 @Component({
   selector: 'app-landing-bridge',
   standalone: true,
-  template: '<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-red-50 flex items-center justify-center"><div class="text-center"><div class="w-16 h-16 border-4 border-red-100 border-t-red-600 rounded-full animate-spin mx-auto mb-6"></div><p class="text-gray-600 font-semibold text-lg">Loading...</p></div></div>'
+  template: '' // Empty template to prevent any flicker
 })
 export class LandingBridgeComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
 
   ngOnInit() {
-    // Check if user is authenticated and redirect appropriately
-    // Wait for auth to initialize (try multiple times)
-    let attempts = 0;
-    const maxAttempts = 10;
-    
+    // Immediately check auth and redirect without rendering anything
+    // This prevents flicker by redirecting before Angular renders the component
     const checkAuthAndRedirect = () => {
-      attempts++;
       const profile = this.authService.profile();
       
       if (profile?.userId) {
         // User is authenticated, redirect to goals list (home page)
-        this.router.navigateByUrl('/goals');
-      } else if (attempts >= maxAttempts) {
-        // After max attempts, assume not authenticated and redirect to login
-        this.router.navigateByUrl('/login');
+        this.router.navigateByUrl('/goals', { replaceUrl: true });
       } else {
-        // Wait a bit more and try again
-        setTimeout(checkAuthAndRedirect, 200);
+        // User is not authenticated, redirect to login
+        this.router.navigateByUrl('/login', { replaceUrl: true });
       }
     };
     
-    // Start checking after a short delay
-    setTimeout(checkAuthAndRedirect, 100);
+    // Try immediately, then retry if profile not ready yet
+    checkAuthAndRedirect();
+    
+    // If profile not ready, wait a bit and try again (max 5 attempts)
+    let attempts = 0;
+    const maxAttempts = 5;
+    const retryInterval = setInterval(() => {
+      attempts++;
+      const profile = this.authService.profile();
+      
+      if (profile?.userId) {
+        clearInterval(retryInterval);
+        this.router.navigateByUrl('/goals', { replaceUrl: true });
+      } else if (attempts >= maxAttempts) {
+        clearInterval(retryInterval);
+        this.router.navigateByUrl('/login', { replaceUrl: true });
+      }
+    }, 100);
   }
 }

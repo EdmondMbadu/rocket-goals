@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, signal, HostListener } from '@angular/core';
+import { Component, inject, OnInit, signal, HostListener, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AuthService } from './auth.service';
 import type { RocketGoal } from './models/rocket-goal';
@@ -13,8 +13,9 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './goals-list.component.html',
   styleUrl: './goals-list.component.css'
 })
-export class GoalsListComponent implements OnInit {
+export class GoalsListComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private rocketGoalsService = inject(RocketGoalsService);
   // Expose authService for template access
   authService = inject(AuthService);
@@ -36,6 +37,29 @@ export class GoalsListComponent implements OnInit {
 
     // Wait for auth to initialize, then load goals
     this.waitForAuthAndLoadGoals();
+  }
+
+  ngAfterViewInit() {
+    // Check for startChallenge query param immediately and on changes
+    // This handles the case where we navigate to the same route with different query params
+    const checkParams = () => {
+      const params = this.route.snapshot.queryParams;
+      if (params['startChallenge'] === 'true') {
+        // Dispatch a custom event that the app component can listen to
+        // This handles same-route navigation where NavigationEnd might not fire
+        window.dispatchEvent(new CustomEvent('startChallenge', { detail: { source: 'goals-list' } }));
+      }
+    };
+    
+    // Check immediately
+    checkParams();
+    
+    // Also subscribe to changes
+    this.route.queryParams.subscribe(params => {
+      if (params['startChallenge'] === 'true') {
+        window.dispatchEvent(new CustomEvent('startChallenge', { detail: { source: 'goals-list' } }));
+      }
+    });
   }
 
   private async waitForAuthAndLoadGoals() {
@@ -170,12 +194,20 @@ export class GoalsListComponent implements OnInit {
   }
 
   goHome() {
-    this.router.navigateByUrl('/');
+    this.router.navigateByUrl('/goals');
   }
 
   startChallenge() {
-    // Navigate to home page with query param to auto-start challenge
-    this.router.navigateByUrl('/?startChallenge=true');
+    console.log('startChallenge called in goals-list component');
+    // Navigate to goals page with query param to auto-start challenge
+    // Use navigate instead of navigateByUrl to ensure NavigationEnd event fires
+    this.router.navigate(['/goals'], { queryParams: { startChallenge: 'true' } }).then(() => {
+      console.log('Navigation completed, checking for startChallenge param');
+      // Also dispatch event immediately after navigation
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('startChallenge', { detail: { source: 'goals-list-navigate' } }));
+      }, 50);
+    });
   }
 
   @HostListener('document:click', ['$event'])
