@@ -1,10 +1,12 @@
-import { Component, inject, OnInit, signal, HostListener, AfterViewInit } from '@angular/core';
+import { Component, inject, OnInit, signal, HostListener, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AuthService } from './auth.service';
 import type { RocketGoal } from './models/rocket-goal';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-goals-list',
@@ -13,12 +15,13 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './goals-list.component.html',
   styleUrl: './goals-list.component.css'
 })
-export class GoalsListComponent implements OnInit, AfterViewInit {
+export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private rocketGoalsService = inject(RocketGoalsService);
   // Expose authService for template access
   authService = inject(AuthService);
+  private routerSubscription?: Subscription;
 
   goals = signal<RocketGoal[]>([]);
   loading = signal(true);
@@ -56,17 +59,50 @@ export class GoalsListComponent implements OnInit, AfterViewInit {
         // This handles same-route navigation where NavigationEnd might not fire
         window.dispatchEvent(new CustomEvent('startChallenge', { detail: { source: 'goals-list' } }));
       }
+      if (params['refresh'] === 'true') {
+        // Reload goals when refresh param is present
+        this.loadGoals();
+        // Remove the refresh param from URL
+        this.router.navigate(['/goals'], { replaceUrl: true, queryParams: {} });
+      }
     };
     
     // Check immediately
     checkParams();
     
-    // Also subscribe to changes
+    // Subscribe to query param changes
     this.route.queryParams.subscribe(params => {
       if (params['startChallenge'] === 'true') {
         window.dispatchEvent(new CustomEvent('startChallenge', { detail: { source: 'goals-list' } }));
       }
+      if (params['refresh'] === 'true') {
+        // Reload goals when refresh param is present
+        this.loadGoals();
+        // Remove the refresh param from URL
+        this.router.navigate(['/goals'], { replaceUrl: true, queryParams: {} });
+      }
     });
+
+    // Also listen to navigation events to reload when navigating to /goals
+    this.routerSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        if (event.url === '/goals' || event.url.startsWith('/goals?')) {
+          // Check if we have a refresh param
+          const urlParams = new URLSearchParams(event.url.split('?')[1] || '');
+          if (urlParams.get('refresh') === 'true') {
+            this.loadGoals();
+            // Remove the refresh param
+            this.router.navigate(['/goals'], { replaceUrl: true, queryParams: {} });
+          }
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
   }
 
   private async waitForAuthAndLoadGoals() {

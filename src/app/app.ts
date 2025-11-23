@@ -1616,8 +1616,8 @@ export class App implements AfterViewInit, OnDestroy {
       });
       this.isChallengeActive.set(false);
       document.body.style.overflow = '';
-      // Redirect to goals list (home page) instead of individual goal
-      await this.router.navigateByUrl('/goals');
+      // Redirect to goals list (home page) with refresh param to trigger reload
+      await this.router.navigateByUrl('/goals?refresh=true');
     } catch (error) {
       console.error('Failed to save RocketGoal', error);
       this.challengeAuthError.set('We could not save your RocketGoal. Please try again.');
