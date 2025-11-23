@@ -69,7 +69,7 @@ export class LoginComponent {
     this.sendingReset.set(true);
     try {
       await this.authService.sendPasswordResetEmail(emailControl.value);
-      this.resetSuccess.set('Password reset link sent. Check your inbox.');
+      this.resetSuccess.set('Password reset link sent. Check your inbox (and spam folder just in case).');
     } catch (error: any) {
       this.resetError.set(error?.message || 'Unable to send reset email.');
     } finally {
