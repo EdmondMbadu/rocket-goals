@@ -208,7 +208,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   async handleLogout() {
     try {
       await this.authService.signOut();
-      this.router.navigateByUrl('/login');
+      this.router.navigateByUrl('/');
     } catch (error) {
       console.error('Error logging out:', error);
     }

@@ -7,8 +7,8 @@
     class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-black/5">
     <div class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="relative group">
+        <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'" class="flex items-center gap-3 group cursor-pointer">
+          <div class="relative">
             <div
               class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500">
             </div>
@@ -18,7 +18,7 @@
           <span class="text-2xl font-black tracking-tighter text-black hidden sm:block">
             ROCKET<span class="text-red-600">GOALS</span>
           </span>
-        </div>
+        </a>
 
         <div class="hidden md:flex items-center space-x-8">
           <button (click)="scrollToSection('features')"

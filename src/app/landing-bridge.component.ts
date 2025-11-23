@@ -12,18 +12,16 @@ export class LandingBridgeComponent implements OnInit {
   private authService = inject(AuthService);
 
   ngOnInit() {
-    // Immediately check auth and redirect without rendering anything
-    // This prevents flicker by redirecting before Angular renders the component
+    // Immediately check auth and redirect authenticated users to goals
+    // Unauthenticated users will see the landing page (app.html)
     const checkAuthAndRedirect = () => {
       const profile = this.authService.profile();
       
       if (profile?.userId) {
         // User is authenticated, redirect to goals list (home page)
         this.router.navigateByUrl('/goals', { replaceUrl: true });
-      } else {
-        // User is not authenticated, redirect to login
-        this.router.navigateByUrl('/login', { replaceUrl: true });
       }
+      // If not authenticated, do nothing - let the app component show the landing page
     };
     
     // Try immediately, then retry if profile not ready yet
@@ -41,7 +39,7 @@ export class LandingBridgeComponent implements OnInit {
         this.router.navigateByUrl('/goals', { replaceUrl: true });
       } else if (attempts >= maxAttempts) {
         clearInterval(retryInterval);
-        this.router.navigateByUrl('/login', { replaceUrl: true });
+        // Don't redirect - let landing page show
       }
     }, 100);
   }
