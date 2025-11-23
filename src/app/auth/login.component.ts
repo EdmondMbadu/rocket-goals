@@ -23,6 +23,9 @@ export class LoginComponent {
 
   readonly submitting = computed(() => this.authService.authLoading());
   readonly serverError = signal<string | null>(null);
+  readonly resetSuccess = signal<string | null>(null);
+  readonly resetError = signal<string | null>(null);
+  readonly sendingReset = signal(false);
 
   async handleSubmit() {
     if (this.loginForm.invalid || this.submitting()) {
@@ -51,6 +54,26 @@ export class LoginComponent {
       await this.router.navigateByUrl('/welcome');
     } catch (error) {
       this.serverError.set(this.authService.authError());
+    }
+  }
+
+  async handleForgotPassword() {
+    const emailControl = this.loginForm.controls.email;
+    emailControl.markAsTouched();
+    this.resetError.set(null);
+    this.resetSuccess.set(null);
+    if (emailControl.invalid || this.sendingReset()) {
+      this.resetError.set(this.emailError || 'Enter your email to reset your password.');
+      return;
+    }
+    this.sendingReset.set(true);
+    try {
+      await this.authService.sendPasswordResetEmail(emailControl.value);
+      this.resetSuccess.set('Password reset link sent. Check your inbox.');
+    } catch (error: any) {
+      this.resetError.set(error?.message || 'Unable to send reset email.');
+    } finally {
+      this.sendingReset.set(false);
     }
   }
 

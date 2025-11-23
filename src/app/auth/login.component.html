@@ -62,6 +62,20 @@
             }
           </label>
 
+          <div class="flex justify-end text-sm">
+            <button type="button" (click)="handleForgotPassword()" [disabled]="sendingReset()"
+              class="font-semibold text-red-600 hover:text-red-500 disabled:text-red-300 transition-colors">
+              @if (sendingReset()) { Sending reset link... } @else { Forgot password? }
+            </button>
+          </div>
+
+          @if (resetError()) {
+          <p class="text-sm text-red-600 font-semibold">{{ resetError() }}</p>
+          }
+          @if (resetSuccess()) {
+          <p class="text-sm text-green-600 font-semibold">{{ resetSuccess() }}</p>
+          }
+
           @if (serverError()) {
           <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
             {{ serverError() }}

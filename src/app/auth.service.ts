@@ -99,6 +99,21 @@ export class AuthService {
     this.profile.set(null);
   }
 
+  async sendPasswordResetEmail(email: string) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      throw new Error('Enter your email to receive a reset link.');
+    }
+    try {
+      await this.executeWithAuth(async (authModule, auth) => {
+        const { sendPasswordResetEmail } = authModule;
+        await sendPasswordResetEmail(auth, trimmedEmail);
+      });
+    } catch (error: any) {
+      throw new Error(this.mapPasswordResetError(error));
+    }
+  }
+
   private async ensureFirebase(): Promise<FirebaseHandles> {
     if (!this.firebaseHandles) {
       this.firebaseHandles = (async () => {
@@ -215,5 +230,19 @@ export class AuthService {
       return 'The Google sign-in popup was closed before finishing.';
     }
     return error.message || 'Something went wrong. Please try again.';
+  }
+
+  private mapPasswordResetError(error: any) {
+    if (!error?.code) {
+      return 'Unable to send reset email. Please try again in a moment.';
+    }
+    const code = String(error.code);
+    if (code.includes('auth/invalid-email')) {
+      return 'Enter a valid email address to reset your password.';
+    }
+    if (code.includes('auth/user-not-found')) {
+      return 'We could not find an account with that email.';
+    }
+    return 'Unable to send reset email. Please try again soon.';
   }
 }
