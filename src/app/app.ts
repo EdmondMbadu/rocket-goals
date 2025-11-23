@@ -5,10 +5,14 @@ import { CommonModule } from '@angular/common';
 import { ElevenLabsService } from './elevenlabs.service';
 import { SpeechRecognitionService } from './speech-recognition.service';
 import { FirestoreAIService } from './firestore-ai.service';
+import { AuthService } from './auth.service';
+import { RocketGoalsService } from './rocket-goals.service';
 import { stripMarkdownForTTS } from './text-utils';
 import * as THREE from 'three';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+
+type ChallengeAuthStage = 'email' | 'existing-login' | 'new-profile' | 'verify' | 'saving';
 
 @Component({
   selector: 'app-root',
@@ -81,6 +85,8 @@ export class App implements AfterViewInit, OnDestroy {
   private elevenLabsService = inject(ElevenLabsService);
   private speechRecognitionService = inject(SpeechRecognitionService);
   private firestoreAIService = inject(FirestoreAIService);
+  private authService = inject(AuthService);
+  private rocketGoalsService = inject(RocketGoalsService);
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
@@ -824,6 +830,16 @@ export class App implements AfterViewInit, OnDestroy {
   currentChallengeStep = signal(0);
   isDashboardActive = signal(false);
   challengeAnswers = signal<Record<string, any>>({});
+  challengeAuthStage = signal<ChallengeAuthStage>('email');
+  challengeAuthError = signal<string | null>(null);
+  challengeInfoMessage = signal<string | null>(null);
+  challengeLoading = signal(false);
+  challengeEmail = signal('');
+  challengePassword = signal('');
+  challengeFirstName = signal('');
+  challengeLastName = signal('');
+  private lastStageBeforeSaving: ChallengeAuthStage = 'email';
+  isSavingGoal = signal(false);
   // Final User Info
   userInfo = signal({
     name: '',
@@ -973,12 +989,15 @@ export class App implements AfterViewInit, OnDestroy {
     this.currentChallengeStep.set(0);
     this.challengeAnswers.set({});
     this.isDashboardActive.set(false);
+    this.resetChallengeAuthFlow();
+    this.userInfo.set({ name: '', email: '', password: '' });
     // Prevent scrolling on body
     document.body.style.overflow = 'hidden';
   }
 
   closeChallenge() {
     this.isChallengeActive.set(false);
+    this.resetChallengeAuthFlow();
     document.body.style.overflow = '';
   }
 
@@ -1041,11 +1060,134 @@ export class App implements AfterViewInit, OnDestroy {
     }
   }
 
-  submitUserInfo() {
-    if (this.userInfo().name && this.userInfo().email && this.userInfo().password) {
-      this.isChallengeActive.set(false);
-      this.isDashboardActive.set(true);
+  updateChallengeEmail(value: string) {
+    this.challengeEmail.set(value);
+  }
+
+  updateChallengePassword(value: string) {
+    this.challengePassword.set(value);
+  }
+
+  updateChallengeFirstName(value: string) {
+    this.challengeFirstName.set(value);
+  }
+
+  updateChallengeLastName(value: string) {
+    this.challengeLastName.set(value);
+  }
+
+  async handleChallengeEmailContinue() {
+    const email = this.challengeEmail()
+      .trim()
+      .toLowerCase();
+    if (!this.isValidEmail(email)) {
+      this.challengeAuthError.set('Enter a valid email to continue.');
+      return;
     }
+
+    this.challengeAuthError.set(null);
+    this.challengeLoading.set(true);
+    try {
+      const exists = await this.authService.emailExists(email);
+      this.challengeEmail.set(email);
+      this.challengePassword.set('');
+      this.challengeFirstName.set('');
+      this.challengeLastName.set('');
+      if (exists) {
+        this.challengeAuthStage.set('existing-login');
+        this.challengeInfoMessage.set('Welcome back! Enter your password to resume your mission.');
+      } else {
+        this.challengeAuthStage.set('new-profile');
+        this.challengeInfoMessage.set('Create your RocketGoals profile to generate your dashboard.');
+      }
+    } catch (error) {
+      console.error('Email lookup failed', error);
+      this.challengeAuthError.set('Unable to check this email right now. Please try again.');
+    } finally {
+      this.challengeLoading.set(false);
+    }
+  }
+
+  async handleChallengeExistingLogin() {
+    const email = this.challengeEmail();
+    const password = this.challengePassword();
+    if (!password.trim()) {
+      this.challengeAuthError.set('Enter your password to continue.');
+      return;
+    }
+
+    this.challengeAuthError.set(null);
+    this.challengeLoading.set(true);
+    try {
+      await this.authService.signInWithEmail(email, password);
+      await this.completeChallengeAndSaveGoal();
+    } catch (error) {
+      console.error('Challenge login failed', error);
+      this.challengeAuthError.set(this.authService.authError() || 'Invalid credentials. Try again.');
+    } finally {
+      this.challengeLoading.set(false);
+    }
+  }
+
+  async handleChallengeSignup() {
+    const email = this.challengeEmail();
+    const firstName = this.challengeFirstName().trim();
+    const lastName = this.challengeLastName().trim();
+    const password = this.challengePassword().trim();
+
+    if (!firstName || !lastName || password.length < 6) {
+      this.challengeAuthError.set('Add your full name and a 6+ character password.');
+      return;
+    }
+
+    this.challengeAuthError.set(null);
+    this.challengeLoading.set(true);
+    try {
+      await this.authService.signUpWithEmail({ firstName, lastName, email, password });
+      await this.authService.sendEmailVerification().catch(error => {
+        console.warn('Verification email could not be sent immediately', error);
+      });
+      this.challengeAuthStage.set('verify');
+      this.challengeInfoMessage.set(`Verification email sent to ${email}. Confirm it to continue.`);
+    } catch (error) {
+      console.error('Challenge signup failed', error);
+      this.challengeAuthError.set(this.authService.authError() || 'Unable to create your account. Please try again.');
+    } finally {
+      this.challengeLoading.set(false);
+    }
+  }
+
+  async confirmChallengeVerification() {
+    this.challengeAuthError.set(null);
+    this.challengeLoading.set(true);
+    try {
+      const user = await this.authService.reloadCurrentUser();
+      if (user?.emailVerified) {
+        await this.completeChallengeAndSaveGoal();
+      } else {
+        this.challengeAuthError.set('We have not detected the verification yet. Refresh your inbox and retry.');
+      }
+    } catch (error) {
+      console.error('Verification check failed', error);
+      this.challengeAuthError.set('Unable to verify your account at the moment. Please retry.');
+    } finally {
+      this.challengeLoading.set(false);
+    }
+  }
+
+  async resendVerificationEmail() {
+    this.challengeAuthError.set(null);
+    try {
+      await this.authService.sendEmailVerification();
+      this.challengeInfoMessage.set(`Verification email re-sent to ${this.challengeEmail()}.`);
+    } catch (error) {
+      console.error('Resend verification failed', error);
+      this.challengeAuthError.set('Unable to send another verification email right now.');
+    }
+  }
+
+  restartChallengeAuthFlow() {
+    this.resetChallengeAuthFlow();
   }
 
   closeDashboard() {
@@ -1053,6 +1195,76 @@ export class App implements AfterViewInit, OnDestroy {
     document.body.style.overflow = '';
   }
 
+  private resetChallengeAuthFlow() {
+    this.challengeAuthStage.set('email');
+    this.challengeAuthError.set(null);
+    this.challengeInfoMessage.set(null);
+    this.challengeLoading.set(false);
+    this.challengeEmail.set('');
+    this.challengePassword.set('');
+    this.challengeFirstName.set('');
+    this.challengeLastName.set('');
+    this.lastStageBeforeSaving = 'email';
+    this.isSavingGoal.set(false);
+  }
+
+  private async completeChallengeAndSaveGoal() {
+    const profile = this.authService.profile();
+    if (!profile) {
+      this.challengeAuthError.set('We need your profile before generating the dashboard.');
+      return;
+    }
+    const previousStage = this.challengeAuthStage();
+    this.lastStageBeforeSaving = previousStage;
+    this.challengeAuthStage.set('saving');
+    this.challengeAuthError.set(null);
+    this.isSavingGoal.set(true);
+
+    try {
+      const answers = this.challengeAnswers();
+      const participant = {
+        firstName: profile.firstName || 'Rocketeer',
+        lastName: profile.lastName || '',
+        email: profile.email || this.challengeEmail()
+      };
+
+      await this.rocketGoalsService.createRocketGoal({
+        userId: profile.userId,
+        participant,
+        primaryGoal: this.extractPrimaryGoal(answers),
+        answers,
+        status: 'active',
+        entryPoint: 'launch_challenge'
+      });
+
+      const participantName = `${participant.firstName} ${participant.lastName}`.trim() || participant.firstName;
+      this.userInfo.set({
+        name: participantName,
+        email: participant.email,
+        password: ''
+      });
+      this.isChallengeActive.set(false);
+      this.isDashboardActive.set(true);
+      document.body.style.overflow = '';
+    } catch (error) {
+      console.error('Failed to save RocketGoal', error);
+      this.challengeAuthError.set('We could not save your RocketGoal. Please try again.');
+      this.challengeAuthStage.set(this.lastStageBeforeSaving);
+    } finally {
+      this.isSavingGoal.set(false);
+    }
+  }
+
+  private extractPrimaryGoal(answers: Record<string, any>) {
+    const priorityKeys = ['mission', 'goal', 'vision', 'focus', 'north_star'];
+    for (const key of priorityKeys) {
+      const value = answers[key];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+    return '';
+  }
 
   /**
    * Start typewriter effect for a message

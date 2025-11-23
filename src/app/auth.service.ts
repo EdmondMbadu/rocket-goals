@@ -99,6 +99,41 @@ export class AuthService {
     this.profile.set(null);
   }
 
+  async emailExists(email: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return false;
+    }
+    const existingProfile = await this.findProfileByEmail(normalizedEmail);
+    if (existingProfile) {
+      return true;
+    }
+    return this.executeWithAuth(async (authModule, auth) => {
+      const { fetchSignInMethodsForEmail } = authModule;
+      const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+      return methods.length > 0;
+    });
+  }
+
+  async sendEmailVerification() {
+    const { auth } = await this.ensureFirebase();
+    if (!auth.currentUser) {
+      throw new Error('No authenticated user to verify.');
+    }
+    const { sendEmailVerification } = await import('firebase/auth');
+    await sendEmailVerification(auth.currentUser);
+  }
+
+  async reloadCurrentUser() {
+    const { auth } = await this.ensureFirebase();
+    if (!auth.currentUser) {
+      return null;
+    }
+    const { reload } = await import('firebase/auth');
+    await reload(auth.currentUser);
+    return auth.currentUser;
+  }
+
   async sendPasswordResetEmail(email: string) {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
@@ -202,6 +237,22 @@ export class AuthService {
       return null;
     }
     return snapshot.data() as UserProfile;
+  }
+
+  private async findProfileByEmail(email: string) {
+    const { firestore } = await this.ensureFirebase();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'userProfiles');
+    const q = firestoreModule.query(
+      collectionRef,
+      firestoreModule.where('email', '==', email),
+      firestoreModule.limit(1)
+    );
+    const snapshot = await firestoreModule.getDocs(q);
+    if (snapshot.empty) {
+      return null;
+    }
+    return snapshot.docs[0].data() as UserProfile;
   }
 
   private async createOrUpdateUserProfile(userId: string, profile: UserProfile) {

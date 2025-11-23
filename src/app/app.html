@@ -221,45 +221,160 @@
           </div>
       </div>
       } @else {
-      <!-- Final Form Step -->
+      <!-- Final Auth + Save Step -->
       <div
-        class="max-w-lg mx-auto space-y-10 animate-slide-up text-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl">
-        <div class="w-24 h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-8">
+        class="max-w-xl mx-auto space-y-8 animate-slide-up text-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl">
+        <div class="w-24 h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center">
           <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
 
+        @if (challengeAuthStage() === 'email') {
         <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Ready for Launch</h3>
-          <p class="text-gray-500 text-lg font-light">Enter your details to generate your mission dashboard.</p>
+          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Confirm your cockpit</h3>
+          <p class="text-gray-500 text-lg font-light">Use your RocketPrompt email so we can sync your missions.</p>
         </div>
+        } @else if (challengeAuthStage() === 'existing-login') {
+        <div>
+          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Welcome back</h3>
+          <p class="text-gray-500 text-lg font-light">Enter your password for <span class="font-semibold text-black">{{
+              challengeEmail() }}</span>.</p>
+        </div>
+        } @else if (challengeAuthStage() === 'new-profile') {
+        <div>
+          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Create your command profile</h3>
+          <p class="text-gray-500 text-lg font-light">No account for <span class="font-semibold text-black">{{
+              challengeEmail() }}</span>. Let's create one and save your RocketGoal.</p>
+        </div>
+        } @else if (challengeAuthStage() === 'verify') {
+        <div>
+          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Verify & Ignite</h3>
+          <p class="text-gray-500 text-lg font-light">Check <span class="font-semibold text-black">{{ challengeEmail()
+              }}</span> for the verification link. We'll unlock the dashboard once it's confirmed.</p>
+        </div>
+        } @else {
+        <div>
+          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Building your dashboard</h3>
+          <p class="text-gray-500 text-lg font-light">Hang tight while we store your RocketGoal and prep your mission
+            control.</p>
+        </div>
+        }
 
+        @if (challengeInfoMessage()) {
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          {{ challengeInfoMessage() }}
+        </div>
+        }
+
+        @if (challengeAuthError()) {
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {{ challengeAuthError() }}
+        </div>
+        }
+
+        @switch (challengeAuthStage()) {
+        @case ('email') {
         <div class="space-y-5 text-left">
-          <div class="group">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Full Name</label>
-            <input type="text" [(ngModel)]="userInfo().name"
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+          <input type="email" [ngModel]="challengeEmail()" (ngModelChange)="updateChallengeEmail($event)"
+            class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
+            placeholder="you@rocketprompt.io">
+        </div>
+        <button (click)="handleChallengeEmailContinue()" [disabled]="challengeLoading()"
+          class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+          @if (challengeLoading()) {
+          <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>Checking...</span>
+          } @else {
+          <span>Continue</span>
+          }
+        </button>
+        }
+        @case ('existing-login') {
+        <div class="space-y-5 text-left">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
+          <input type="password" [ngModel]="challengePassword()" (ngModelChange)="updateChallengePassword($event)"
+            class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
+            placeholder="••••••••">
+        </div>
+        <button (click)="handleChallengeExistingLogin()" [disabled]="challengeLoading()"
+          class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+          @if (challengeLoading()) {
+          <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>Signing In...</span>
+          } @else {
+          <span>Launch Dashboard 🚀</span>
+          }
+        </button>
+        <button type="button" (click)="restartChallengeAuthFlow()"
+          class="text-sm font-semibold text-red-600 hover:text-red-500 mt-3">Use a different email</button>
+        }
+        @case ('new-profile') {
+        <div class="space-y-5 text-left">
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">First Name</label>
+            <input type="text" [ngModel]="challengeFirstName()" (ngModelChange)="updateChallengeFirstName($event)"
               class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-              placeholder="Elon Musk">
+              placeholder="Commander">
           </div>
-          <div class="group">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
-            <input type="email" [(ngModel)]="userInfo().email"
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Last Name</label>
+            <input type="text" [ngModel]="challengeLastName()" (ngModelChange)="updateChallengeLastName($event)"
               class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-              placeholder="elon@spacex.com">
+              placeholder="Nova">
           </div>
-          <div class="group">
+          <div>
             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
-            <input type="password" [(ngModel)]="userInfo().password"
+            <input type="password" [ngModel]="challengePassword()" (ngModelChange)="updateChallengePassword($event)"
               class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-              placeholder="••••••••">
+              placeholder="Minimum 6 characters">
           </div>
         </div>
-
-        <button (click)="submitUserInfo()" [disabled]="!userInfo().name || !userInfo().email || !userInfo().password"
-          class="w-full py-5 bg-red-600 text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest">
-          Launch Dashboard 🚀
+        <button (click)="handleChallengeSignup()" [disabled]="challengeLoading()"
+          class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+          @if (challengeLoading()) {
+          <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>Creating...</span>
+          } @else {
+          <span>Create & Verify</span>
+          }
         </button>
+        <button type="button" (click)="restartChallengeAuthFlow()"
+          class="text-sm font-semibold text-red-600 hover:text-red-500 mt-3">Use a different email</button>
+        }
+        @case ('verify') {
+        <div class="space-y-4 text-left">
+          <p class="text-gray-600 font-medium text-base leading-relaxed">
+            We've sent a verification link to <span class="font-semibold text-black">{{ challengeEmail() }}</span>.
+            Click the link, then hit the button below. This keeps every RocketGoal secure.
+          </p>
+        </div>
+        <div class="space-y-3">
+          <button (click)="confirmChallengeVerification()" [disabled]="challengeLoading()"
+            class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+            @if (challengeLoading()) {
+            <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>Checking...</span>
+            } @else {
+            <span>I've Verified</span>
+            }
+          </button>
+          <button type="button" (click)="resendVerificationEmail()"
+            class="w-full py-4 border border-black/10 rounded-xl font-semibold text-black hover:bg-black hover:text-white transition">
+            Resend Verification Email
+          </button>
+          <button type="button" (click)="restartChallengeAuthFlow()"
+            class="text-sm font-semibold text-red-600 hover:text-red-500 mt-2">Use a different email</button>
+        </div>
+        }
+        @case ('saving') {
+        <div class="flex flex-col items-center gap-4 py-8">
+          <div class="w-12 h-12 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
+          <p class="text-lg text-gray-600 font-medium">Saving your RocketGoal to mission control...</p>
+        </div>
+        }
+        }
       </div>
       }
     </div>
