@@ -27,9 +27,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   success = signal<string | null>(null);
   
-  editingName = signal(false);
-  firstName = signal('');
-  lastName = signal('');
   
   profileImageFile: File | null = null;
   headerImageFile: File | null = null;
@@ -57,8 +54,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
     
     this.profile.set(profile);
-    this.firstName.set(profile.firstName);
-    this.lastName.set(profile.lastName);
     
     // Set profile image - check both preview and profile
     const profileImageUrl = profile.profilePictureUrl;
@@ -244,44 +239,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  startEditingName() {
-    this.editingName.set(true);
-  }
-
-  cancelEditingName() {
-    this.editingName.set(false);
-    const profile = this.profile();
-    if (profile) {
-      this.firstName.set(profile.firstName);
-      this.lastName.set(profile.lastName);
-    }
-  }
-
-  async saveName() {
-    const firstName = this.firstName().trim();
-    const lastName = this.lastName().trim();
-    
-    if (!firstName) {
-      this.error.set('First name is required');
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set(null);
-    this.success.set(null);
-
-    try {
-      await this.updateProfile({ firstName, lastName });
-      this.editingName.set(false);
-      this.success.set('Name updated successfully!');
-      setTimeout(() => this.success.set(null), 5000);
-    } catch (error: any) {
-      console.error('Error updating name', error);
-      this.error.set('Failed to update name. Please try again.');
-    } finally {
-      this.loading.set(false);
-    }
-  }
 
   private async updateProfile(updates: Partial<UserProfile>) {
     const updatedProfile = await this.authService.updateUserProfile(updates);
