@@ -38,7 +38,7 @@ export class LoginComponent {
         this.loginForm.controls.email.value,
         this.loginForm.controls.password.value
       );
-      await this.router.navigateByUrl('/welcome');
+      await this.router.navigateByUrl('/goals');
     } catch (error) {
       this.serverError.set(this.authService.authError());
     }
@@ -51,7 +51,7 @@ export class LoginComponent {
     this.serverError.set(null);
     try {
       await this.authService.signInWithGoogle();
-      await this.router.navigateByUrl('/welcome');
+      await this.router.navigateByUrl('/goals');
     } catch (error) {
       this.serverError.set(this.authService.authError());
     }

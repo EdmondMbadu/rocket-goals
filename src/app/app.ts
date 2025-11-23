@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -90,8 +90,17 @@ export class App implements AfterViewInit, OnDestroy {
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal']);
   protected currentRoute = signal<string>(this.router.url || '/');
-  protected readonly isAuthRoute = computed(() => this.authOnlyRoutes.has(this.currentRoute()));
+  protected readonly isAuthRoute = computed(() => {
+    const route = this.currentRoute();
+    // Show router outlet for auth routes and component routes (goals, rocketgoal)
+    // Remove query params for matching
+    const routePath = route.split('?')[0];
+    return this.authOnlyRoutes.has(routePath) || 
+           this.componentRoutes.has(routePath) || 
+           routePath.startsWith('/rocketgoal/');
+  });
 
   constructor() {
     // Check speech support without initializing the full service
@@ -116,6 +125,11 @@ export class App implements AfterViewInit, OnDestroy {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
         this.currentRoute.set(event.urlAfterRedirects || event.url);
+        // Auto-start challenge if coming from goals page
+        const urlString = event.urlAfterRedirects || event.url;
+        if (urlString.includes('startChallenge=true')) {
+          setTimeout(() => this.startChallenge(), 100);
+        }
       });
   }
 
@@ -857,6 +871,11 @@ export class App implements AfterViewInit, OnDestroy {
   dashboardTitle = signal<string>('MISSION CONTROL');
   isEditingTitle = signal(false);
   editingTitleValue = signal<string>('');
+  // Avatar dropdown
+  showAvatarDropdown = signal(false);
+  userGoals = signal<any[]>([]);
+  loadingGoals = signal(false);
+  currentGoalId = signal<string | null>(null);
 
   private readonly goalThemeOptions = [
     { id: 'career', label: '💼 Career / Project' },
@@ -1371,6 +1390,60 @@ export class App implements AfterViewInit, OnDestroy {
     this.editingTitleValue.set('');
   }
 
+  toggleAvatarDropdown() {
+    this.showAvatarDropdown.set(!this.showAvatarDropdown());
+    // Load goals when opening dropdown
+    if (this.showAvatarDropdown() && this.userGoals().length === 0) {
+      this.loadUserGoals();
+    }
+  }
+
+  closeAvatarDropdown() {
+    this.showAvatarDropdown.set(false);
+  }
+
+  async loadUserGoals() {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return;
+    
+    this.loadingGoals.set(true);
+    try {
+      const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
+      this.userGoals.set(goals);
+    } catch (err) {
+      console.error('Error loading user goals:', err);
+    } finally {
+      this.loadingGoals.set(false);
+    }
+  }
+
+  navigateToGoal(goalId: string) {
+    this.router.navigateByUrl(`/rocketgoal/${goalId}`);
+    this.closeAvatarDropdown();
+  }
+
+  navigateToProfile() {
+    // TODO: Navigate to profile page when created
+    this.closeAvatarDropdown();
+  }
+
+  async handleLogout() {
+    try {
+      await this.authService.signOut();
+      this.router.navigateByUrl('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.avatar-dropdown-container')) {
+      this.closeAvatarDropdown();
+    }
+  }
+
   private resetChallengeAuthFlow() {
     this.challengeAuthStage.set('email');
     this.challengeAuthError.set(null);
@@ -1411,7 +1484,7 @@ export class App implements AfterViewInit, OnDestroy {
         email: profile.email || this.challengeEmail()
       };
 
-      await this.rocketGoalsService.createRocketGoal({
+      const goalId = await this.rocketGoalsService.createRocketGoal({
         userId: profile.userId,
         participant,
         primaryGoal: this.extractPrimaryGoal(answers),
@@ -1427,8 +1500,9 @@ export class App implements AfterViewInit, OnDestroy {
         password: ''
       });
       this.isChallengeActive.set(false);
-      this.isDashboardActive.set(true);
       document.body.style.overflow = '';
+      // Redirect to the goal page
+      await this.router.navigateByUrl(`/rocketgoal/${goalId}`);
     } catch (error) {
       console.error('Failed to save RocketGoal', error);
       this.challengeAuthError.set('We could not save your RocketGoal. Please try again.');

@@ -33,6 +33,37 @@ export class RocketGoalsService {
       ...payload,
       createdAt: payload.createdAt || firestoreModule.serverTimestamp()
     });
+    // Save the ID in the document for ease of tracking
+    await firestoreModule.updateDoc(docRef, {
+      id: docRef.id
+    });
     return docRef.id;
+  }
+
+  async getRocketGoalById(goalId: string) {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId);
+    const docSnap = await firestoreModule.getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as any;
+    }
+    return null;
+  }
+
+  async getRocketGoalsByUserId(userId: string) {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals');
+    const q = firestoreModule.query(
+      collectionRef,
+      firestoreModule.where('userId', '==', userId),
+      firestoreModule.orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await firestoreModule.getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as any[];
   }
 }
