@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone, HostListener } from '@angular/core';
+import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone, HostListener, effect } from '@angular/core';
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -138,6 +138,25 @@ export class App implements AfterViewInit, OnDestroy {
         const urlString = event.urlAfterRedirects || event.url;
         this.checkAndStartChallenge(urlString);
       });
+
+    // Watch for when landing page becomes visible and re-initialize animation if needed
+    effect(() => {
+      const isAuth = this.isAuthRoute();
+      // When navigating away from landing page, clean up animation
+      if (isAuth && this.animationInitialized) {
+        this.cleanupAnimation();
+      }
+      // When landing page becomes visible (isAuthRoute becomes false)
+      // Use setTimeout to ensure the canvas is fully rendered in the DOM after Angular updates
+      if (!isAuth && !this.animationInitialized) {
+        setTimeout(() => {
+          // Check if canvas exists in DOM and animation hasn't been initialized yet
+          if (this.rocketCanvas?.nativeElement && !this.animationInitialized) {
+            this.initThreeJs();
+          }
+        }, 150);
+      }
+    });
   }
 
   private checkAndStartChallenge(urlString: string) {
@@ -167,24 +186,42 @@ export class App implements AfterViewInit, OnDestroy {
   }
 
   private ngZone = inject(NgZone);
+  private animationInitialized = false;
 
   ngAfterViewInit() {
-    if (this.rocketCanvas) {
+    // Only initialize if landing page is visible
+    if (this.rocketCanvas?.nativeElement && !this.isAuthRoute() && !this.animationInitialized) {
       this.initThreeJs();
     }
   }
 
   ngOnDestroy() {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
-    if (this.renderer) {
-      this.renderer.dispose();
-    }
+    this.cleanupAnimation();
     this.routerSubscription?.unsubscribe();
   }
 
+  private cleanupAnimation() {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer = null as any;
+    }
+    if (this.scene) {
+      // Clear scene
+      while (this.scene.children.length > 0) {
+        this.scene.remove(this.scene.children[0]);
+      }
+    }
+    this.animationInitialized = false;
+  }
+
   private initThreeJs() {
+    // Clean up any existing animation first
+    this.cleanupAnimation();
+    
     const canvas = this.rocketCanvas.nativeElement;
     // Ensure we have dimensions
     let width = canvas.clientWidth || window.innerWidth;
@@ -357,6 +394,8 @@ export class App implements AfterViewInit, OnDestroy {
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(newWidth, newHeight);
     });
+
+    this.animationInitialized = true;
   }
 
   public scrollToSection(sectionId: string): void {
