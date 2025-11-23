@@ -31,6 +31,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   isEditingTitle = signal(false);
   editingTitleValue = signal<string>('');
   workOnTitle = signal<string>('Work on Life Balance');
+  isEditingWorkOnTitle = signal(false);
+  editingWorkOnTitleValue = signal<string>('');
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -234,6 +236,31 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   cancelEditingTitle() {
     this.isEditingTitle.set(false);
     this.editingTitleValue.set('');
+  }
+
+  startEditingWorkOnTitle() {
+    this.editingWorkOnTitleValue.set(this.workOnTitle());
+    this.isEditingWorkOnTitle.set(true);
+    setTimeout(() => {
+      const input = document.querySelector('input.work-on-title-input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  saveWorkOnTitle() {
+    const newTitle = this.editingWorkOnTitleValue().trim() || 'Work on Life Balance';
+    this.workOnTitle.set(newTitle);
+    localStorage.setItem('workOnTitle', newTitle);
+    this.isEditingWorkOnTitle.set(false);
+    this.editingWorkOnTitleValue.set('');
+  }
+
+  cancelEditingWorkOnTitle() {
+    this.isEditingWorkOnTitle.set(false);
+    this.editingWorkOnTitleValue.set('');
   }
 
   goHome() {
