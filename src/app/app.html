@@ -82,8 +82,8 @@
 
         <!-- CTA Buttons -->
         <div class="flex flex-col sm:flex-row gap-5 justify-center items-center">
-          <button (click)="scrollToSection('conversation-section')"
-            class="group relative px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full overflow-hidden shadow-[0_10px_20px_rgba(220,38,38,0.3)] hover:shadow-[0_15px_30px_rgba(220,38,38,0.5)] transition-all duration-300 hover:-translate-y-1">
+          <a [routerLink]="['/']" [queryParams]="{startChallenge: 'true'}"
+            class="group relative px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full overflow-hidden shadow-[0_10px_20px_rgba(220,38,38,0.3)] hover:shadow-[0_15px_30px_rgba(220,38,38,0.5)] transition-all duration-300 hover:-translate-y-1 inline-flex items-center justify-center">
             <span class="relative z-10 flex items-center gap-2">
               Launch Your Goals
               <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
@@ -94,7 +94,7 @@
             <div
               class="absolute inset-0 bg-gradient-to-r from-red-700 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
             </div>
-          </button>
+          </a>
 
           <button
             class="px-8 py-4 bg-white text-black font-bold text-lg rounded-full border-2 border-black/10 hover:border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center gap-2">
@@ -977,10 +977,10 @@
         today.
       </p>
       <div class="flex flex-col sm:flex-row gap-6 justify-center pt-4">
-        <button
-          class="px-12 py-6 bg-red-600 text-white font-bold text-xl rounded-full hover:bg-black transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)] hover:shadow-black/20 hover:-translate-y-1">
+        <a routerLink="/signup"
+          class="px-12 py-6 bg-red-600 text-white font-bold text-xl rounded-full hover:bg-black transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)] hover:shadow-black/20 hover:-translate-y-1 inline-flex items-center justify-center">
           Get Started Free
-        </button>
+        </a>
         <button
           class="px-12 py-6 bg-white text-black font-bold text-xl rounded-full border-2 border-black/10 hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1">
           Watch Demo
@@ -1032,9 +1032,9 @@
       </div>
     </div>
     <div class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="text-black/40 text-sm font-medium">&copy; 2024 RocketGoals. All rights reserved.</p>
+      <p class="text-black/40 text-sm font-medium">&copy; 2025 RocketGoals. All rights reserved.</p>
       <div class="flex gap-6">
-        <a href="#" class="text-black/40 hover:text-black transition-colors">
+        <a href="https://x.com/RocketGoals" target="_blank" rel="noopener noreferrer" class="text-black/40 hover:text-black transition-colors">
           <span class="sr-only">Twitter</span>
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path
