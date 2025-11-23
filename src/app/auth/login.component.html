@@ -1,0 +1,103 @@
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-red-50 flex flex-col">
+  <header class="px-6 pt-6 flex items-center justify-between">
+    <a routerLink="/" class="flex items-center gap-3 group">
+      <div class="relative">
+        <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-25"></div>
+        <img src="/assets/rocket-goals.png" alt="Rocket Goals"
+          class="relative w-14 h-14 object-contain transform group-hover:scale-105 transition-transform" />
+      </div>
+      <span class="text-2xl font-black tracking-tight">
+        ROCKET<span class="text-red-600">GOALS</span>
+      </span>
+    </a>
+    <a routerLink="/signup" class="text-sm font-semibold text-black hover:text-red-600 transition-colors">
+      Need an account?
+    </a>
+  </header>
+
+  <main class="flex-1 flex items-center justify-center px-6 py-12">
+    <div
+      class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white/90 backdrop-blur-xl rounded-[32px] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border border-black/5 overflow-hidden">
+      <section class="bg-black text-white p-10 flex flex-col gap-6">
+        <p class="text-sm uppercase tracking-[0.3em] text-white/70 font-semibold">Mission Control</p>
+        <h1 class="text-4xl font-black leading-tight">
+          Welcome back, <br />
+          let's relaunch your goals.
+        </h1>
+        <p class="text-base text-white/80 leading-relaxed">
+          Sign in to pick up where you left off, tap into your personal AI strategist, and keep the momentum alive.
+        </p>
+        <div class="mt-auto">
+          <p class="text-xs font-semibold text-white/40 uppercase tracking-widest">Secure Login</p>
+          <div class="flex items-center gap-2 mt-3">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-white/40"></span>
+            <span class="w-2 h-2 rounded-full bg-white/40"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="p-10 space-y-8">
+        <header>
+          <p class="text-sm font-semibold text-black/60 uppercase tracking-[0.3em]">Log In</p>
+          <h2 class="text-3xl font-black mt-2">Access your Rocket Goals cockpit</h2>
+        </header>
+
+        <form [formGroup]="loginForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+          <label class="block space-y-2">
+            <span class="text-sm font-semibold text-black/70 uppercase tracking-widest">Email</span>
+            <input type="email" formControlName="email" placeholder="you@rocketprompt.io"
+              class="w-full px-4 py-3 rounded-2xl border border-black/10 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition" />
+            @if (emailError) {
+            <p class="text-sm text-red-600 font-medium">{{ emailError }}</p>
+            }
+          </label>
+
+          <label class="block space-y-2">
+            <span class="text-sm font-semibold text-black/70 uppercase tracking-widest">Password</span>
+            <input type="password" formControlName="password" placeholder="••••••••"
+              class="w-full px-4 py-3 rounded-2xl border border-black/10 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition" />
+            @if (passwordError) {
+            <p class="text-sm text-red-600 font-medium">{{ passwordError }}</p>
+            }
+          </label>
+
+          @if (serverError()) {
+          <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {{ serverError() }}
+          </div>
+          }
+
+          <button type="submit" [disabled]="submitting()"
+            class="w-full px-6 py-4 rounded-2xl font-black text-white bg-black hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-widest">
+            @if (submitting()) {
+            <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>Logging In</span>
+            } @else {
+            <span>Launch Now</span>
+            }
+          </button>
+        </form>
+
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 text-black/40 text-xs uppercase tracking-[0.5em] font-semibold">
+            <span class="h-px flex-1 bg-black/10"></span>
+            <span>Or</span>
+            <span class="h-px flex-1 bg-black/10"></span>
+          </div>
+
+          <button type="button" (click)="handleGoogleLogin()" [disabled]="submitting()"
+            class="w-full px-6 py-4 rounded-2xl border border-black/10 font-semibold text-black flex items-center justify-center gap-3 hover:border-black hover:bg-black hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <img src="/assets/google-logo.svg" alt="Google" class="w-5 h-5" />
+            Continue with Google
+          </button>
+        </div>
+
+        <p class="text-sm text-black/60 text-center">
+          New to Rocket Goals?
+          <a routerLink="/signup" class="font-semibold text-red-600 hover:underline">Create a free account</a>
+        </p>
+      </section>
+    </div>
+  </main>
+</div>

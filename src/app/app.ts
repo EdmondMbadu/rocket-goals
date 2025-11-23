@@ -1,5 +1,5 @@
 import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ElevenLabsService } from './elevenlabs.service';
@@ -7,10 +7,12 @@ import { SpeechRecognitionService } from './speech-recognition.service';
 import { FirestoreAIService } from './firestore-ai.service';
 import { stripMarkdownForTTS } from './text-utils';
 import * as THREE from 'three';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, FormsModule, CommonModule],
+  imports: [RouterOutlet, RouterLink, FormsModule, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -79,6 +81,11 @@ export class App implements AfterViewInit, OnDestroy {
   private elevenLabsService = inject(ElevenLabsService);
   private speechRecognitionService = inject(SpeechRecognitionService);
   private firestoreAIService = inject(FirestoreAIService);
+  private router = inject(Router);
+  private routerSubscription: Subscription | null = null;
+  private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
+  protected currentRoute = signal<string>(this.router.url || '/');
+  protected readonly isAuthRoute = computed(() => this.authOnlyRoutes.has(this.currentRoute()));
 
   constructor() {
     // Check speech support without initializing the full service
@@ -92,6 +99,12 @@ export class App implements AfterViewInit, OnDestroy {
 
     // Initialize countdown for dashboard
     this.startCountdown();
+
+    this.routerSubscription = this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(event => {
+        this.currentRoute.set(event.urlAfterRedirects || event.url);
+      });
   }
 
   private ngZone = inject(NgZone);
@@ -109,6 +122,7 @@ export class App implements AfterViewInit, OnDestroy {
     if (this.renderer) {
       this.renderer.dispose();
     }
+    this.routerSubscription?.unsubscribe();
   }
 
   private initThreeJs() {

@@ -1,3 +1,6 @@
+@if (isAuthRoute()) {
+<router-outlet />
+} @else {
 <div class="min-h-screen bg-white font-sans selection:bg-red-600 selection:text-white">
   <!-- Navigation -->
   <nav
@@ -28,14 +31,14 @@
         </div>
 
         <div class="flex items-center gap-4">
-          <button
+          <a routerLink="/login"
             class="hidden md:block px-6 py-2.5 text-sm font-bold text-black bg-white border-2 border-black/10 rounded-full hover:border-black hover:bg-black hover:text-white transition-all duration-300">
             Log in
-          </button>
-          <button
+          </a>
+          <a routerLink="/signup"
             class="px-6 py-2.5 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/30 transform hover:-translate-y-0.5">
             Start Free
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -1098,4 +1101,5 @@
 </footer>
 </div>
 
-<router-outlet />
+<router-outlet class="hidden" />
+}

@@ -1,3 +1,13 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './auth/login.component';
+import { SignupComponent } from './auth/signup.component';
+import { WelcomeComponent } from './auth/welcome.component';
+import { LandingBridgeComponent } from './landing-bridge.component';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  { path: '', component: LandingBridgeComponent, pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'signup', component: SignupComponent },
+  { path: 'welcome', component: WelcomeComponent },
+  { path: '**', redirectTo: '' }
+];
