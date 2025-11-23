@@ -106,6 +106,12 @@ export class App implements AfterViewInit, OnDestroy {
     // Initialize countdown for dashboard
     this.startCountdown();
 
+    // Load custom dashboard title from localStorage
+    const savedTitle = localStorage.getItem('dashboardTitle');
+    if (savedTitle) {
+      this.dashboardTitle.set(savedTitle);
+    }
+
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
@@ -847,6 +853,10 @@ export class App implements AfterViewInit, OnDestroy {
     email: '',
     password: ''
   });
+  // Dashboard title customization
+  dashboardTitle = signal<string>('MISSION CONTROL');
+  isEditingTitle = signal(false);
+  editingTitleValue = signal<string>('');
 
   private readonly goalThemeOptions = [
     { id: 'career', label: '💼 Career / Project' },
@@ -1334,6 +1344,31 @@ export class App implements AfterViewInit, OnDestroy {
   closeDashboard() {
     this.isDashboardActive.set(false);
     document.body.style.overflow = '';
+  }
+
+  startEditingTitle() {
+    this.editingTitleValue.set(this.dashboardTitle());
+    this.isEditingTitle.set(true);
+    // Focus the input after Angular updates the view
+    setTimeout(() => {
+      const input = document.querySelector('input[type="text"][ngModel]') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  saveTitle() {
+    const newTitle = this.editingTitleValue().trim() || 'MISSION CONTROL';
+    this.dashboardTitle.set(newTitle);
+    localStorage.setItem('dashboardTitle', newTitle);
+    this.isEditingTitle.set(false);
+  }
+
+  cancelEditingTitle() {
+    this.isEditingTitle.set(false);
+    this.editingTitleValue.set('');
   }
 
   private resetChallengeAuthFlow() {
