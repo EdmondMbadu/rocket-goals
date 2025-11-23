@@ -16,7 +16,8 @@ import type { RocketGoal } from './models/rocket-goal';
 export class GoalsListComponent implements OnInit {
   private router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
-  private authService = inject(AuthService);
+  // Expose authService for template access
+  authService = inject(AuthService);
 
   goals = signal<RocketGoal[]>([]);
   loading = signal(true);
@@ -33,7 +34,34 @@ export class GoalsListComponent implements OnInit {
       this.dashboardTitle.set(savedTitle);
     }
 
-    this.loadGoals();
+    // Wait for auth to initialize, then load goals
+    this.waitForAuthAndLoadGoals();
+  }
+
+  private async waitForAuthAndLoadGoals() {
+    // Try multiple times to wait for profile to be ready
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryLoad = async () => {
+      attempts++;
+      const profile = this.authService.profile();
+      
+      if (profile?.userId) {
+        // Profile is ready, load goals
+        await this.loadGoals();
+      } else if (attempts < maxAttempts) {
+        // Wait a bit more and try again
+        setTimeout(tryLoad, 200);
+      } else {
+        // Give up after max attempts
+        this.error.set('Please log in to view your goals');
+        this.loading.set(false);
+      }
+    };
+    
+    // Start trying after a short delay
+    setTimeout(tryLoad, 100);
   }
 
   async loadGoals() {
@@ -47,11 +75,16 @@ export class GoalsListComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     try {
+      console.log('Loading goals for userId:', profile.userId);
       const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
+      console.log('Loaded goals:', goals);
       this.goals.set(goals as RocketGoal[]);
+      if (goals.length === 0) {
+        console.log('No goals found for user - showing empty state');
+      }
     } catch (err) {
       console.error('Error loading goals:', err);
-      this.error.set('Failed to load goals');
+      this.error.set('Failed to load goals. Please try again.');
     } finally {
       this.loading.set(false);
     }

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, HostListener } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,7 +13,7 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
-export class RocketGoalViewComponent implements OnInit {
+export class RocketGoalViewComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
@@ -28,6 +28,8 @@ export class RocketGoalViewComponent implements OnInit {
   showAvatarDropdown = signal(false);
   userGoals = signal<any[]>([]);
   loadingGoals = signal(false);
+  countdown = signal('23:59:59');
+  private countdownInterval: any;
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -36,6 +38,9 @@ export class RocketGoalViewComponent implements OnInit {
       this.dashboardTitle.set(savedTitle);
     }
 
+    // Start countdown timer
+    this.startCountdown();
+
     const goalId = this.route.snapshot.paramMap.get('id');
     if (goalId) {
       this.loadGoal(goalId);
@@ -43,6 +48,32 @@ export class RocketGoalViewComponent implements OnInit {
       this.error.set('Goal ID not found');
       this.loading.set(false);
     }
+  }
+
+  ngOnDestroy() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  startCountdown() {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+
+    // Set target time to 24 hours from now (or just a fixed countdown)
+    let totalSeconds = 24 * 60 * 60; // 24 hours
+
+    this.countdownInterval = setInterval(() => {
+      totalSeconds--;
+      if (totalSeconds < 0) totalSeconds = 24 * 60 * 60;
+
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      this.countdown.set(
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      );
+    }, 1000);
   }
 
   async loadGoal(goalId: string) {

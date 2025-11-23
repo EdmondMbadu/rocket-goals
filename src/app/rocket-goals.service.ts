@@ -55,15 +55,40 @@ export class RocketGoalsService {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const collectionRef = firestoreModule.collection(firestore, 'rocketGoals');
-    const q = firestoreModule.query(
-      collectionRef,
-      firestoreModule.where('userId', '==', userId),
-      firestoreModule.orderBy('createdAt', 'desc')
-    );
-    const querySnapshot = await firestoreModule.getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as any[];
+    
+    try {
+      // Try with orderBy first
+      const q = firestoreModule.query(
+        collectionRef,
+        firestoreModule.where('userId', '==', userId),
+        firestoreModule.orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await firestoreModule.getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+    } catch (error: any) {
+      // If orderBy fails (missing index), try without it
+      if (error.code === 'failed-precondition') {
+        console.warn('Firestore index missing, fetching without orderBy');
+        const q = firestoreModule.query(
+          collectionRef,
+          firestoreModule.where('userId', '==', userId)
+        );
+        const querySnapshot = await firestoreModule.getDocs(q);
+        const goals = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as any[];
+        // Sort manually by createdAt if available
+        return goals.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0;
+          const bTime = b.createdAt?.toMillis?.() || 0;
+          return bTime - aTime;
+        });
+      }
+      throw error;
+    }
   }
 }

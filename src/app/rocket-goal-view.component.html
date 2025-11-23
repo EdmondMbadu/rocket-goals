@@ -230,6 +230,43 @@
           <div class="animate-pulse mt-2">_</div>
         </div>
       </div>
+
+      <!-- Row 2: Mission Timeline -->
+      <div class="md:col-span-4 hud-card-white p-8">
+        <div class="scanline"></div>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-4">
+            <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest">Mission Timeline</h3>
+            <div class="countdown-timer text-3xl md:text-4xl text-black tracking-tighter">
+              T-MINUS <span class="text-red-600">{{ countdown() }}</span>
+            </div>
+          </div>
+          <div class="barcode w-32 opacity-50"></div>
+        </div>
+
+        <div class="flex items-center justify-between relative z-10">
+          <!-- Line Background -->
+          <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -z-10"></div>
+
+          @for (day of [1,2,3,4,5,6,7]; track day) {
+          <div class="flex flex-col items-center gap-3 timeline-node-white" [class.timeline-active]="day <= 1">
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-white"
+              [class.border-red-600]="day === 1" [class.border-gray-200]="day > 1">
+              @if(day === 1) {
+              <div class="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+              } @else {
+              <span class="text-[10px] text-gray-400">{{ day }}</span>
+              }
+            </div>
+            <span class="text-[10px] font-mono uppercase tracking-wider" [class.text-black]="day === 1"
+              [class.font-bold]="day === 1" [class.text-gray-400]="day > 1">
+              Day {{ day }}
+            </span>
+          </div>
+          }
+        </div>
+      </div>
       }
     </div>
   </div>

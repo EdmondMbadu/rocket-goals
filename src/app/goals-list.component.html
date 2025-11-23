@@ -126,6 +126,15 @@
   <!-- Main Content -->
   <div class="flex-1 overflow-y-auto p-6 md:p-8 relative z-30">
     <div class="max-w-7xl mx-auto">
+      <!-- Debug info (remove in production) -->
+      @if (false) {
+      <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
+        <p>Loading: {{ loading() }}</p>
+        <p>Error: {{ error() }}</p>
+        <p>Goals count: {{ goals().length }}</p>
+        <p>Profile: {{ authService.profile()?.userId || 'No profile' }}</p>
+      </div>
+      }
       @if (error()) {
       <div class="text-center py-16">
         <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-6">
