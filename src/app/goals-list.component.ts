@@ -201,8 +201,19 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToProfile() {
-    // TODO: Navigate to profile page when created
+    this.router.navigateByUrl('/profile');
     this.closeAvatarDropdown();
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+      const fallback = img.nextElementSibling as HTMLElement;
+      if (fallback) {
+        fallback.style.display = 'flex';
+      }
+    }
   }
 
   async handleLogout() {

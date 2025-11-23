@@ -133,8 +133,16 @@
         <!-- Avatar Dropdown -->
         <div class="relative avatar-dropdown-container">
           <button (click)="toggleAvatarDropdown()" 
-            class="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-gray-200 shadow-sm hover:bg-gray-800 transition-colors">
+            class="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-gray-200 shadow-sm hover:bg-gray-800 transition-colors overflow-hidden">
+            @if (authService.profile()?.profilePictureUrl) {
+            <img [src]="authService.profile()!.profilePictureUrl" 
+              [alt]="getUserFirstName()"
+              class="w-full h-full object-cover"
+              (error)="onImageError($event)" />
+            <span class="text-white font-bold text-sm hidden">{{ getUserFirstName().charAt(0).toUpperCase() }}</span>
+            } @else {
             <span class="text-white font-bold text-sm">{{ getUserFirstName().charAt(0).toUpperCase() }}</span>
+            }
           </button>
           @if (showAvatarDropdown()) {
           <div class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50">

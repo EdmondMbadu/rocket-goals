@@ -149,6 +149,27 @@ export class AuthService {
     }
   }
 
+  async updateUserProfile(updates: Partial<UserProfile>) {
+    const currentProfile = this.profile();
+    if (!currentProfile) {
+      throw new Error('No profile found');
+    }
+    const { firestore } = await this.ensureFirebase();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'userProfiles', currentProfile.userId);
+    await firestoreModule.updateDoc(docRef, updates);
+    // Fetch the updated profile from Firestore to ensure we have the latest data
+    const updatedProfile = await this.fetchUserProfile(currentProfile.userId);
+    if (updatedProfile) {
+      this.profile.set(updatedProfile);
+      return updatedProfile;
+    }
+    // Fallback to merging updates if fetch fails
+    const mergedProfile = { ...currentProfile, ...updates };
+    this.profile.set(mergedProfile);
+    return mergedProfile;
+  }
+
   private async ensureFirebase(): Promise<FirebaseHandles> {
     if (!this.firebaseHandles) {
       this.firebaseHandles = (async () => {

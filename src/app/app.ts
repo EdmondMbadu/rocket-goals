@@ -90,11 +90,11 @@ export class App implements AfterViewInit, OnDestroy {
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected readonly isAuthRoute = computed(() => {
     const route = this.currentRoute();
-    // Show router outlet for auth routes and component routes (goals, rocketgoal)
+    // Show router outlet for auth routes and component routes (goals, rocketgoal, profile)
     // Remove query params for matching
     const routePath = route.split('?')[0];
     return this.authOnlyRoutes.has(routePath) || 
@@ -1558,8 +1558,19 @@ export class App implements AfterViewInit, OnDestroy {
   }
 
   navigateToProfile() {
-    // TODO: Navigate to profile page when created
+    this.router.navigateByUrl('/profile');
     this.closeAvatarDropdown();
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+      const fallback = img.nextElementSibling as HTMLElement;
+      if (fallback) {
+        fallback.style.display = 'flex';
+      }
+    }
   }
 
   async handleLogout() {

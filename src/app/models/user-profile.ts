@@ -13,6 +13,7 @@ export interface UserProfile {
   email: string;
   username?: string;
   profilePictureUrl?: string;
+  headerImageUrl?: string;
   createdAt?: unknown;
   preferences?: UserPreferences;
   admin?: boolean;
