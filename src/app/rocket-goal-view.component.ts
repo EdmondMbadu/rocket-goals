@@ -43,9 +43,6 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       this.dashboardTitle.set(savedTitle);
     }
 
-    // Start countdown timer
-    this.startCountdown();
-
     const goalId = this.route.snapshot.paramMap.get('id');
     if (goalId) {
       this.loadGoal(goalId);
@@ -68,21 +65,39 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   startCountdown() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
 
-    // Set target time to 24 hours from now (or just a fixed countdown)
-    let totalSeconds = 24 * 60 * 60; // 24 hours
+    const goal = this.goal();
+    if (!goal) return;
 
-    this.countdownInterval = setInterval(() => {
-      totalSeconds--;
-      if (totalSeconds < 0) totalSeconds = 24 * 60 * 60;
+    // Use startTime from goal, or default to now if not set
+    const startTime = goal.startTime || Date.now();
+    const challengeDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    const endTime = startTime + challengeDuration;
 
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
+    const updateCountdown = () => {
+      const now = Date.now();
+      const remaining = endTime - now;
+
+      if (remaining <= 0) {
+        // Challenge completed
+        this.countdown.set('00:00:00:00');
+        return;
+      }
+
+      const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
 
       this.countdown.set(
-        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
       );
-    }, 1000);
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Update every second
+    this.countdownInterval = setInterval(updateCountdown, 1000);
   }
 
   async loadGoal(goalId: string) {
@@ -91,10 +106,29 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     try {
       const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
       if (goal) {
-        this.goal.set(goal as RocketGoal);
+        // Initialize startTime if it doesn't exist (for old goals created before this feature)
+        if (!goal.startTime) {
+          // Set startTime to now for existing goals without it
+          await this.rocketGoalsService.updateRocketGoal(goalId, {
+            startTime: Date.now()
+          });
+          // Reload goal to get updated startTime
+          const updatedGoal = await this.rocketGoalsService.getRocketGoalById(goalId);
+          if (updatedGoal) {
+            this.goal.set(updatedGoal as RocketGoal);
+            // Start countdown timer with updated goal's startTime
+            this.startCountdown();
+          }
+        } else {
+          this.goal.set(goal as RocketGoal);
+          // Start countdown timer with goal's existing startTime
+          this.startCountdown();
+        }
+        
         // Load user goals for dropdown
-        if (goal.userId) {
-          this.loadUserGoals(goal.userId);
+        const currentGoal = this.goal();
+        if (currentGoal?.userId) {
+          this.loadUserGoals(currentGoal.userId);
         }
       } else {
         this.error.set('Goal not found');

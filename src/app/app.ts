@@ -1590,21 +1590,22 @@ export class App implements AfterViewInit, OnDestroy {
       let goalId: string;
       
       if (editingGoalId) {
-        // Update existing goal
+        // Update existing goal (don't reset startTime)
         await this.rocketGoalsService.updateRocketGoal(editingGoalId, {
           primaryGoal: this.extractPrimaryGoal(answers),
           answers
         });
         goalId = editingGoalId;
       } else {
-        // Create new goal
+        // Create new goal with startTime set to now
         goalId = await this.rocketGoalsService.createRocketGoal({
           userId: profile.userId,
           participant,
           primaryGoal: this.extractPrimaryGoal(answers),
           answers,
           status: 'active',
-          entryPoint: 'launch_challenge'
+          entryPoint: 'launch_challenge',
+          startTime: Date.now() // Set start time when goal is created
         });
       }
 

@@ -15,6 +15,7 @@ export interface RocketGoal {
   status: RocketGoalStatus;
   entryPoint: 'launch_challenge';
   createdAt: unknown;
+  startTime?: number; // Timestamp in milliseconds when the 7-day challenge started
 }
 
 export type CreateRocketGoalInput = Omit<RocketGoal, 'id' | 'createdAt'> & {
