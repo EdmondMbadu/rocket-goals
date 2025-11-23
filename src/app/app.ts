@@ -152,6 +152,17 @@ export class App implements AfterViewInit, OnDestroy {
           console.log('Challenge already active');
         }
       }, 100);
+    } else if (urlString.includes('editGoal=')) {
+      const match = urlString.match(/editGoal=([^&]+)/);
+      if (match && match[1]) {
+        const goalId = match[1];
+        console.log('checkAndStartChallenge: URL contains editGoal=', goalId);
+        setTimeout(async () => {
+          if (!this.isChallengeActive()) {
+            await this.startChallengeWithGoal(goalId);
+          }
+        }, 100);
+      }
     }
   }
 
@@ -1174,6 +1185,54 @@ export class App implements AfterViewInit, OnDestroy {
     document.body.style.overflow = 'hidden';
   }
 
+  async startChallengeWithGoal(goalId: string) {
+    try {
+      // Load the goal data
+      const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
+      if (!goal) {
+        console.error('Goal not found:', goalId);
+        return;
+      }
+
+      // Map goal answers to challenge answers
+      const preFilledAnswers: Record<string, any> = {};
+      
+      // Map the goal's answers to challenge format
+      if (goal.answers) {
+        // Copy relevant answer fields
+        if (goal.answers['goal_theme']) preFilledAnswers['goal_theme'] = goal.answers['goal_theme'];
+        if (goal.answers['goal_title']) preFilledAnswers['goal_title'] = goal.answers['goal_title'];
+        if (goal.answers['custom_goal_title']) {
+          preFilledAnswers['goal_title'] = 'custom';
+          preFilledAnswers['custom_goal_title'] = goal.answers['custom_goal_title'];
+        }
+        if (goal.answers['daily_effort']) preFilledAnswers['daily_effort'] = goal.answers['daily_effort'];
+        if (goal.answers['support']) preFilledAnswers['support'] = goal.answers['support'];
+        if (goal.answers['future_result']) preFilledAnswers['future_result'] = goal.answers['future_result'];
+        // Copy any other relevant fields
+        Object.keys(goal.answers).forEach(key => {
+          if (!preFilledAnswers[key] && key !== 'goal_title_label' && key !== 'goal_theme_label' && key !== 'goal_support_label') {
+            preFilledAnswers[key] = goal.answers[key];
+          }
+        });
+      }
+
+      // Store the goal ID for updating later
+      preFilledAnswers['_editingGoalId'] = goalId;
+
+      // Start challenge with pre-filled answers
+      this.isChallengeActive.set(true);
+      this.currentChallengeStep.set(0);
+      this.challengeAnswers.set(preFilledAnswers);
+      this.isDashboardActive.set(false);
+      this.resetChallengeAuthFlow();
+      this.userInfo.set({ name: '', email: '', password: '' });
+      document.body.style.overflow = 'hidden';
+    } catch (error) {
+      console.error('Error loading goal for editing:', error);
+    }
+  }
+
   closeChallenge() {
     this.isChallengeActive.set(false);
     this.resetChallengeAuthFlow();
@@ -1508,27 +1567,46 @@ export class App implements AfterViewInit, OnDestroy {
     this.isSavingGoal.set(true);
 
     try {
-      const answers = {
-        ...this.challengeAnswers(),
+      const challengeAnswers = this.challengeAnswers();
+      const editingGoalId = challengeAnswers['_editingGoalId'] as string | undefined;
+      
+      const answers: Record<string, any> = {
+        ...challengeAnswers,
         goal_title_label: this.getGoalTitleDisplay(),
         goal_theme_label: this.getGoalThemeDisplay(),
         goal_support_label: this.getSupportDisplay(),
         custom_goal_title: this.challengeCustomGoalTitle()
       };
+      
+      // Remove the editing flag from answers
+      delete answers['_editingGoalId'];
+      
       const participant = {
         firstName: profile.firstName || 'Rocketeer',
         lastName: profile.lastName || '',
         email: profile.email || this.challengeEmail()
       };
 
-      const goalId = await this.rocketGoalsService.createRocketGoal({
-        userId: profile.userId,
-        participant,
-        primaryGoal: this.extractPrimaryGoal(answers),
-        answers,
-        status: 'active',
-        entryPoint: 'launch_challenge'
-      });
+      let goalId: string;
+      
+      if (editingGoalId) {
+        // Update existing goal
+        await this.rocketGoalsService.updateRocketGoal(editingGoalId, {
+          primaryGoal: this.extractPrimaryGoal(answers),
+          answers
+        });
+        goalId = editingGoalId;
+      } else {
+        // Create new goal
+        goalId = await this.rocketGoalsService.createRocketGoal({
+          userId: profile.userId,
+          participant,
+          primaryGoal: this.extractPrimaryGoal(answers),
+          answers,
+          status: 'active',
+          entryPoint: 'launch_challenge'
+        });
+      }
 
       const participantName = `${participant.firstName} ${participant.lastName}`.trim() || participant.firstName;
       this.userInfo.set({

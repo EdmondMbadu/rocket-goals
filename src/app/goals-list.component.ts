@@ -217,6 +217,27 @@ export class GoalsListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  async deleteGoal(goalId: string) {
+    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await this.rocketGoalsService.deleteRocketGoal(goalId);
+      // Reload goals after deletion
+      await this.loadGoals();
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      alert('Failed to delete goal. Please try again.');
+    }
+  }
+
+  editGoal(goalId: string) {
+    // Navigate to landing page with editGoal query param
+    // The app component will handle pre-filling the challenge with goal data
+    this.router.navigate(['/'], { queryParams: { editGoal: goalId } });
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;

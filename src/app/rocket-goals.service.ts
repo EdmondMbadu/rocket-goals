@@ -98,4 +98,11 @@ export class RocketGoalsService {
     const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId);
     await firestoreModule.updateDoc(docRef, updates);
   }
+
+  async deleteRocketGoal(goalId: string) {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId);
+    await firestoreModule.deleteDoc(docRef);
+  }
 }
