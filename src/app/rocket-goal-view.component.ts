@@ -17,7 +17,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
-  private authService = inject(AuthService);
+  authService = inject(AuthService); // Make public for template access
 
   @ViewChild('titleInput') titleInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('goalTitleInput') goalTitleInputRef?: ElementRef<HTMLInputElement>;
@@ -31,9 +31,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   isEditingGoalTitle = signal(false);
   editingGoalTitleValue = signal<string>('');
   showAvatarDropdown = signal(false);
+  showShareDropdown = signal(false);
   userGoals = signal<any[]>([]);
   loadingGoals = signal(false);
   countdown = signal('23:59:59');
+  copyLinkSuccess = signal(false);
+  emailShareSuccess = signal(false);
   private countdownInterval: any;
 
   ngOnInit() {
@@ -121,15 +124,16 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
           }
         } else {
           this.goal.set(goal as RocketGoal);
-          // Start countdown timer with goal's existing startTime
-          this.startCountdown();
-        }
-        
-        // Load user goals for dropdown
-        const currentGoal = this.goal();
-        if (currentGoal?.userId) {
-          this.loadUserGoals(currentGoal.userId);
-        }
+        // Start countdown timer with goal's existing startTime
+        this.startCountdown();
+      }
+      
+      // Load user goals for dropdown only if user is logged in and it's their goal
+      const currentGoal = this.goal();
+      const currentUser = this.authService.profile();
+      if (currentGoal?.userId && currentUser?.userId && currentGoal.userId === currentUser.userId) {
+        this.loadUserGoals(currentGoal.userId);
+      }
       } else {
         this.error.set('Goal not found');
       }
@@ -186,6 +190,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     if (!target.closest('.avatar-dropdown-container')) {
       this.closeAvatarDropdown();
     }
+    if (!target.closest('.share-dropdown-container')) {
+      this.closeShareDropdown();
+    }
   }
 
   getGoalTitleDisplay(): string {
@@ -209,7 +216,83 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   getUserFirstName(): string {
     const goal = this.goal();
     if (!goal) return 'Commander';
-    return goal.participant.firstName || 'Commander';
+    return goal.participant?.firstName || 'Commander';
+  }
+
+  toggleShareDropdown() {
+    this.showShareDropdown.set(!this.showShareDropdown());
+  }
+
+  closeShareDropdown() {
+    this.showShareDropdown.set(false);
+  }
+
+  async copyLink() {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copyLinkSuccess.set(true);
+      setTimeout(() => {
+        this.copyLinkSuccess.set(false);
+        this.closeShareDropdown();
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+      alert('Failed to copy URL. Please copy it manually: ' + url);
+    }
+  }
+
+  shareOnTwitter() {
+    const goal = this.goal();
+    if (!goal) return;
+    
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(this.getGoalTitleDisplay());
+    const text = encodeURIComponent(`Check out my Rocket Goal: ${title}`);
+    const twitterUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+    window.open(twitterUrl, '_blank', 'width=550,height=420');
+    this.closeShareDropdown();
+  }
+
+  shareOnFacebook() {
+    const url = encodeURIComponent(window.location.href);
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    window.open(facebookUrl, '_blank', 'width=550,height=420');
+    this.closeShareDropdown();
+  }
+
+  shareOnLinkedIn() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(this.getGoalTitleDisplay());
+    const summary = encodeURIComponent(`Check out my Rocket Goal: ${title}`);
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+    window.open(linkedInUrl, '_blank', 'width=550,height=420');
+    this.closeShareDropdown();
+  }
+
+  shareOnWhatsApp() {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`Check out my Rocket Goal: ${this.getGoalTitleDisplay()}`);
+    const whatsappUrl = `https://wa.me/?text=${text}%20${url}`;
+    window.open(whatsappUrl, '_blank');
+    this.closeShareDropdown();
+  }
+
+  shareViaEmail() {
+    const goal = this.goal();
+    if (!goal) return;
+    
+    const url = window.location.href;
+    const title = this.getGoalTitleDisplay();
+    const subject = encodeURIComponent(`Check out my Rocket Goal: ${title}`);
+    const body = encodeURIComponent(`I wanted to share my Rocket Goal with you:\n\n${title}\n\nView it here: ${url}`);
+    const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+    this.emailShareSuccess.set(true);
+    setTimeout(() => {
+      this.emailShareSuccess.set(false);
+      this.closeShareDropdown();
+    }, 2000);
   }
 
   startEditingTitle() {
