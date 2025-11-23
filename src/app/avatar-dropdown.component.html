@@ -1,0 +1,57 @@
+<div class="relative avatar-dropdown-container">
+  <button (click)="toggleDropdown()" 
+    class="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-gray-200 shadow-sm hover:bg-gray-800 transition-colors overflow-hidden">
+    @if (getProfilePictureUrl()) {
+    <img [src]="getProfilePictureUrl()!" 
+      [alt]="getUserDisplayName()"
+      class="w-full h-full object-cover"
+      loading="eager"
+      (error)="onImageError($event)" />
+    <span class="text-white font-bold text-sm hidden">{{ getUserInitial() }}</span>
+    } @else {
+    <span class="text-white font-bold text-sm">{{ getUserInitial() }}</span>
+    }
+  </button>
+  @if (showDropdown()) {
+  <div class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
+    <div class="p-4 border-b border-gray-200">
+      <div class="font-semibold text-black">{{ getUserDisplayName() }}</div>
+      <div class="text-sm text-gray-500">{{ getUserEmail() }}</div>
+    </div>
+    <div class="py-2">
+      <button (click)="navigateToProfile()" 
+        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        Profile
+      </button>
+      <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">My Goals</div>
+      @if (loadingGoals()) {
+      <div class="px-4 py-2 text-sm text-gray-400">Loading...</div>
+      } @else if (userGoals().length === 0) {
+      <div class="px-4 py-2 text-sm text-gray-400">No goals yet</div>
+      } @else {
+      <div class="max-h-64 overflow-y-auto">
+        @for (userGoal of userGoals(); track userGoal.id) {
+        <button (click)="navigateToGoal(userGoal.id)" 
+          class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-between">
+          <span class="truncate">{{ getGoalTitle(userGoal) }}</span>
+        </button>
+        }
+      </div>
+      }
+      <div class="border-t border-gray-200 mt-2 pt-2">
+        <button (click)="handleLogout()" 
+          class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>
+

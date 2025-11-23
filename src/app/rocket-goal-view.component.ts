@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AuthService } from './auth.service';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
 
 @Component({
   selector: 'app-rocket-goal-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent],
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
@@ -198,9 +199,6 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.avatar-dropdown-container')) {
-      this.closeAvatarDropdown();
-    }
     if (!target.closest('.share-dropdown-container')) {
       this.closeShareDropdown();
     }

@@ -5,12 +5,13 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { UserProfile } from './models/user-profile';
 import { RocketGoalsService } from './rocket-goals.service';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AvatarDropdownComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })

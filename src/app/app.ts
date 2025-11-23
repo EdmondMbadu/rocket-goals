@@ -7,6 +7,7 @@ import { SpeechRecognitionService } from './speech-recognition.service';
 import { FirestoreAIService } from './firestore-ai.service';
 import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { stripMarkdownForTTS } from './text-utils';
 import * as THREE from 'three';
 import { Subscription } from 'rxjs';
@@ -16,7 +17,7 @@ type ChallengeAuthStage = 'email' | 'existing-login' | 'new-profile' | 'verify' 
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, FormsModule, CommonModule],
+  imports: [RouterOutlet, RouterLink, FormsModule, CommonModule, AvatarDropdownComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -1582,13 +1583,6 @@ export class App implements AfterViewInit, OnDestroy {
     }
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.avatar-dropdown-container')) {
-      this.closeAvatarDropdown();
-    }
-  }
 
   private resetChallengeAuthFlow() {
     this.challengeAuthStage.set('email');
