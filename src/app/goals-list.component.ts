@@ -27,12 +27,19 @@ export class GoalsListComponent implements OnInit, AfterViewInit {
   dashboardTitle = signal<string>('MISSION CONTROL');
   isEditingTitle = signal(false);
   editingTitleValue = signal<string>('');
+  workOnTitle = signal<string>('Work on Life Balance');
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
     if (savedTitle) {
       this.dashboardTitle.set(savedTitle);
+    }
+
+    // Load work on title from localStorage
+    const savedWorkOnTitle = localStorage.getItem('workOnTitle');
+    if (savedWorkOnTitle) {
+      this.workOnTitle.set(savedWorkOnTitle);
     }
 
     // Wait for auth to initialize, then load goals

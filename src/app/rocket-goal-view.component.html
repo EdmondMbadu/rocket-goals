@@ -31,52 +31,16 @@
   <!-- Dashboard Header -->
   <header class="relative z-40 px-8 py-6 flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm">
     <div class="flex items-center justify-between max-w-7xl mx-auto w-full">
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-gray-200 shadow-sm">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
+      <a routerLink="/goals" class="flex items-center gap-3 group">
+        <div class="relative">
+          <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+          <img src="/assets/rocket-goals.png" alt="Rocket Goals"
+            class="relative w-14 h-14 md:w-16 md:h-16 object-contain transform group-hover:scale-105 transition-transform" />
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            @if (isEditingTitle()) {
-            <input type="text" [ngModel]="editingTitleValue()" 
-              (ngModelChange)="editingTitleValue.set($event)"
-              (keyup.enter)="saveTitle()" 
-              (keyup.escape)="cancelEditingTitle()"
-              class="text-2xl font-black tracking-tighter text-black bg-transparent border-b-2 border-red-600 focus:outline-none focus:border-red-700"
-              #titleInput />
-            <button (click)="saveTitle()" 
-              class="text-green-600 hover:text-green-700 transition-colors p-1">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-            <button (click)="cancelEditingTitle()" 
-              class="text-gray-400 hover:text-red-600 transition-colors p-1">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            } @else {
-            <h1 class="text-2xl font-black tracking-tighter text-black">
-              {{ dashboardTitle() }}
-            </h1>
-            <button (click)="startEditingTitle()" 
-              class="text-gray-400 hover:text-red-600 transition-colors p-1 ml-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-            }
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.4)]"></div>
-            <span class="text-base font-semibold text-gray-700 uppercase tracking-wider">Systems Nominal • Commander {{
-              getUserFirstName() }}</span>
-          </div>
-        </div>
-      </div>
+        <span class="text-2xl md:text-3xl font-black tracking-tighter text-black hidden sm:block">
+          ROCKET<span class="text-red-600">GOALS</span>
+        </span>
+      </a>
       <div class="flex items-center gap-4">
         <button routerLink="/goals" 
           class="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full">

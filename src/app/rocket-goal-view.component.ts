@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, HostListener } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,11 +13,14 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
-export class RocketGoalViewComponent implements OnInit, OnDestroy {
+export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
   private authService = inject(AuthService);
+
+  @ViewChild('titleInput') titleInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('goalTitleInput') goalTitleInputRef?: ElementRef<HTMLInputElement>;
 
   goal = signal<RocketGoal | null>(null);
   loading = signal(true);
@@ -50,6 +53,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy {
       this.error.set('Goal ID not found');
       this.loading.set(false);
     }
+  }
+
+  ngAfterViewInit() {
+    // This lifecycle hook ensures ViewChild is available
   }
 
   ngOnDestroy() {
@@ -175,7 +182,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy {
     this.editingTitleValue.set(this.dashboardTitle());
     this.isEditingTitle.set(true);
     setTimeout(() => {
-      const input = document.querySelector('input[type="text"][ngModel]') as HTMLInputElement;
+      // Use ViewChild reference if available, otherwise fall back to querySelector
+      const input = this.titleInputRef?.nativeElement || 
+        document.querySelector('input[type="text"][ngModel].dashboard-title-input') as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
@@ -204,7 +213,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy {
     this.editingGoalTitleValue.set(currentTitle);
     this.isEditingGoalTitle.set(true);
     setTimeout(() => {
-      const input = document.querySelector('input.goal-title-input') as HTMLInputElement;
+      // Use ViewChild reference if available, otherwise fall back to querySelector
+      const input = this.goalTitleInputRef?.nativeElement || 
+        document.querySelector('input.goal-title-input') as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
