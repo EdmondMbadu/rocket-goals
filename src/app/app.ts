@@ -838,6 +838,7 @@ export class App implements AfterViewInit, OnDestroy {
   challengePassword = signal('');
   challengeFirstName = signal('');
   challengeLastName = signal('');
+  challengeCustomGoalTitle = signal('');
   private lastStageBeforeSaving: ChallengeAuthStage = 'email';
   isSavingGoal = signal(false);
   // Final User Info
@@ -846,6 +847,119 @@ export class App implements AfterViewInit, OnDestroy {
     email: '',
     password: ''
   });
+
+  private readonly goalThemeOptions = [
+    { id: 'career', label: '💼 Career / Project' },
+    { id: 'health', label: '🏋️‍♂️ Health / Fitness' },
+    { id: 'learning', label: '📚 Learning / Skills' },
+    { id: 'finance', label: '💰 Finance' },
+    { id: 'mindset', label: '🧠 Mindset / Clarity' },
+    { id: 'habit', label: '🔄 Habit / Discipline' },
+    { id: 'growth', label: '🚀 Personal Growth' }
+  ];
+
+  private readonly goalTitleOptionsMap: Record<string, Array<{ id: string; label: string }>> = {
+    health: [
+      { id: 'health_energy_boost', label: '🔥 7-Day Energy Boost' },
+      { id: 'health_stronger_me', label: '🏋️ Operation Stronger Me' },
+      { id: 'health_reset', label: '✨ My Health Reset' },
+      { id: 'health_fitness_push', label: '⚡ One Week Fitness Push' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    career: [
+      { id: 'career_project_momentum', label: '🚀 Project Momentum' },
+      { id: 'career_upgrade', label: '📈 One Week Career Upgrade' },
+      { id: 'career_focus', label: '🧭 Focus My Work Week' },
+      { id: 'career_finish', label: '💼 Finish My Key Task' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    learning: [
+      { id: 'learning_skill_sprint', label: '📚 Skill Sprint' },
+      { id: 'learning_brain_upgrade', label: '🧠 Quick Brain Upgrade' },
+      { id: 'learning_project', label: '💡 7-Day Learning Project' },
+      { id: 'learning_focus', label: '🎯 Focused Study Mission' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    finance: [
+      { id: 'finance_reset', label: '💰 7-Day Money Reset' },
+      { id: 'finance_push', label: '📊 Focused Finance Push' },
+      { id: 'finance_expense', label: '🔍 Expense Control Sprint' },
+      { id: 'finance_invest', label: '💵 Build Wealth Week' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    mindset: [
+      { id: 'mindset_clarity', label: '🧠 Clarity Week' },
+      { id: 'mindset_calming', label: '🌊 Calm & Clear Mission' },
+      { id: 'mindset_focus', label: '🎯 Mental Focus Reset' },
+      { id: 'mindset_refresh', label: '✨ Mindset Refresh' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    habit: [
+      { id: 'habit_builder', label: '🔄 Habit Builder Week' },
+      { id: 'habit_discipline', label: '⚙️ Discipline Sprint' },
+      { id: 'habit_launch', label: '🚦 Habit Launchpad' },
+      { id: 'habit_consistency', label: '📆 Consistency Charge' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    growth: [
+      { id: 'growth_launch', label: '🚀 Personal Growth Launch' },
+      { id: 'growth_reset', label: '✨ One Week Reset' },
+      { id: 'growth_upgrade', label: '📈 Upgrade Myself Week' },
+      { id: 'growth_focus', label: '🧭 Mission Focus' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ],
+    default: [
+      { id: 'goal_momentum', label: '🚀 Project Momentum' },
+      { id: 'goal_reset', label: '✨ My Goal Reset' },
+      { id: 'goal_focus', label: '🧭 Focus Sprint' },
+      { id: 'goal_push', label: '⚡ One Week Push' },
+      { id: 'custom', label: '✏️ Custom name…' }
+    ]
+  };
+
+  private readonly objectiveOptions = [
+    { id: 'momentum', label: 'Build momentum' },
+    { id: 'finish', label: 'Finish something' },
+    { id: 'habit', label: 'Create a new habit' },
+    { id: 'consistency', label: 'Improve consistency' },
+    { id: 'skill', label: 'Level up a skill' },
+    { id: 'clear_mind', label: 'Clear mental space' },
+    { id: 'healthier', label: 'Get healthier' },
+    { id: 'reduce_stress', label: 'Reduce stress' }
+  ];
+
+  private readonly futureResultOptions = [
+    { id: 'motivated', label: 'Motivated' },
+    { id: 'proud', label: 'Proud' },
+    { id: 'calm', label: 'Calm' },
+    { id: 'confident', label: 'Confident' },
+    { id: 'focused', label: 'Focused' }
+  ];
+
+  private readonly progressOptions = [
+    { id: 'time', label: '⏱ Time spent' },
+    { id: 'tasks', label: '✔ Tasks completed' },
+    { id: 'energy', label: '🔋 Mood / energy' },
+    { id: 'percentage', label: '📈 % Progress' },
+    { id: 'habit', label: '🧘 Habit performed' },
+    { id: 'reflection', label: '✍️ Small reflection' }
+  ];
+
+  private readonly supportOptions = [
+    { id: 'morning', label: '🔔 Morning reminder' },
+    { id: 'evening', label: '🌙 Evening reminder' },
+    { id: 'motivational', label: '🔥 Motivational tone' },
+    { id: 'celebration', label: '🎉 Celebration tone' },
+    { id: 'accountability', label: '🤝 Accountability tone' },
+    { id: 'calm', label: '😌 Calm supportive tone' }
+  ];
+
+  private readonly dashboardStyleOptions = [
+    { id: 'minimal', label: 'Minimal + Clean' },
+    { id: 'colorful', label: 'Colorful + Fun' },
+    { id: 'dark', label: 'Dark Mode' },
+    { id: 'gamified', label: 'Gamified (badges, levels)' }
+  ];
 
   // Countdown State
   countdown = signal('23:59:59');
@@ -873,81 +987,47 @@ export class App implements AfterViewInit, OnDestroy {
 
   readonly challengeQuestions = [
     {
-      id: 'future_self',
+      id: 'goal_theme',
+      type: 'single-select',
+      title: 'QUESTION 1 — Choose Your Goal Theme (O)',
+      subtitle: 'Which type of goal are you launching?',
+      options: this.goalThemeOptions
+    },
+    {
+      id: 'goal_title',
+      type: 'single-select',
+      title: 'QUESTION 2 — Auto-Generate Your Goal Title',
+      subtitle: 'Pick a name for your goal (options auto-match your theme). Tap to choose or enter your own.',
+      options: []
+    },
+    {
+      id: 'objective',
+      type: 'single-select',
+      title: 'QUESTION 3 — Your ONE Objective (O)',
+      subtitle: 'What is your specific objective for this goal?',
+      options: this.objectiveOptions
+    },
+    {
+      id: 'future_result',
       type: 'multi-select',
       maxSelect: 2,
-      title: 'Your Future Self (R)',
-      subtitle: 'What do you want to feel at the end of this week?',
-      options: [
-        { id: 'motivated', label: '🔥 Motivated' },
-        { id: 'calm', label: '😌 Calm' },
-        { id: 'confident', label: '💪 Confident' },
-        { id: 'proud', label: '🌟 Proud' },
-        { id: 'focused', label: '🎯 Focused' }
-      ]
+      title: 'QUESTION 4 — Your Future Result (R)',
+      subtitle: 'At the end of 7 days, you want to feel:',
+      options: this.futureResultOptions
     },
     {
-      id: 'one_goal',
-      type: 'single-select',
-      title: 'Your ONE Goal (O)',
-      subtitle: 'Choose your ONE focus for this 7-day challenge:',
-      options: [
-        { id: 'career', label: '💼 Career / projects' },
-        { id: 'learning', label: '📚 Learning / skills' },
-        { id: 'finance', label: '💰 Finance' },
-        { id: 'mental', label: '🧠 Mental clarity' },
-        { id: 'health', label: '🏋️ Health / fitness' },
-        { id: 'habits', label: '🔄 Habits & discipline' },
-        { id: 'growth', label: '🚀 Personal growth' }
-      ]
-    },
-    {
-      id: 'importance',
-      type: 'single-select',
-      title: 'What matters most? (O)',
-      subtitle: 'Why is this goal important right now?',
-      options: [
-        { id: 'momentum', label: 'I need momentum' },
-        { id: 'stuck', label: 'I feel stuck' },
-        { id: 'level_up', label: 'I want to level up' },
-        { id: 'clarity', label: 'I need clarity' },
-        { id: 'consistency', label: 'I want consistency' },
-        { id: 'change', label: 'It’s time for a change' }
-      ]
-    },
-    {
-      id: 'tracking',
+      id: 'progress',
       type: 'multi-select',
       maxSelect: 2,
-      title: 'Make it real (C)',
-      subtitle: 'What progress will you track daily?',
-      options: [
-        { id: 'time', label: '⏱ Time spent' },
-        { id: 'tasks', label: '✔ Tasks done' },
-        { id: 'energy', label: '🔋 Energy / mood' },
-        { id: 'percentage', label: '📈 Percentage progress' },
-        { id: 'habit', label: '🧘 Habit performed' },
-        { id: 'reflection', label: '✍️ Reflection (very short)' }
-      ]
-    },
-    {
-      id: 'vibe',
-      type: 'single-select',
-      title: 'Your vibe this week (K)',
-      subtitle: 'Which intention fits your week?',
-      options: [
-        { id: 'kind', label: 'Be kind to myself' },
-        { id: 'consistent', label: 'Stay consistent' },
-        { id: 'small_steps', label: 'Do small steps' },
-        { id: 'focus', label: 'Focus deeply' },
-        { id: 'curious', label: 'Stay curious' }
-      ]
+      title: 'QUESTION 5 — Daily Progress Type (C + E)',
+      subtitle: 'What will you track each day?',
+      options: this.progressOptions
     },
     {
       id: 'daily_effort',
       type: 'single-select',
-      title: 'Your daily effort (E)',
-      subtitle: 'How much time can you commit each day?',
+      title: 'QUESTION 6 — Daily Effort Level (E)',
+      subtitle: 'How much time will you commit each day?',
       options: [
         { id: '5min', label: '5 minutes' },
         { id: '10min', label: '10 minutes' },
@@ -957,32 +1037,80 @@ export class App implements AfterViewInit, OnDestroy {
       ]
     },
     {
-      id: 'reminder',
+      id: 'support',
       type: 'single-select',
-      title: 'Your reminder style (T)',
-      subtitle: 'How should we motivate you?',
-      options: [
-        { id: 'morning', label: '🔔 Morning reminder' },
-        { id: 'evening', label: '🌙 Evening reminder' },
-        { id: 'motivational', label: '🔥 Motivational style' },
-        { id: 'celebration', label: '🎉 Celebration style' },
-        { id: 'accountability', label: '🤝 Accountability buddy style' },
-        { id: 'calm', label: '😌 Calm & supportive' }
-      ]
+      title: 'QUESTION 7 — Motivational Support (K + T)',
+      subtitle: 'How should we support you during the 7 days?',
+      options: this.supportOptions
     },
     {
       id: 'dashboard_style',
       type: 'single-select',
-      title: 'Quick Build Setup',
-      subtitle: 'Dashboard style:',
-      options: [
-        { id: 'minimal', label: 'Minimal & clean' },
-        { id: 'colorful', label: 'Colorful & fun' },
-        { id: 'dark', label: 'Dark mode' },
-        { id: 'gamified', label: 'Gamified / badges' }
-      ]
+      title: 'QUESTION 8 — Dashboard Style (Final Setup)',
+      subtitle: 'Choose your dashboard style:',
+      options: this.dashboardStyleOptions
     }
   ];
+
+  goalTitleOptions() {
+    const theme = this.challengeAnswers()['goal_theme'] as keyof typeof this.goalTitleOptionsMap | undefined;
+    return this.goalTitleOptionsMap[theme || 'default'] || this.goalTitleOptionsMap['default'];
+  }
+
+  isGoalTitleCustomSelected() {
+    return this.challengeAnswers()['goal_title'] === 'custom';
+  }
+
+  updateCustomGoalTitle(value: string) {
+    this.challengeCustomGoalTitle.set(value);
+  }
+
+  getGoalTitleDisplay() {
+    const selection = this.challengeAnswers()['goal_title'];
+    if (!selection) {
+      return '';
+    }
+    if (selection === 'custom') {
+      return this.challengeCustomGoalTitle().trim();
+    }
+    return this.getGoalTitleLabel(selection) || '';
+  }
+
+  getGoalThemeDisplay() {
+    const theme = this.challengeAnswers()['goal_theme'];
+    const option = this.goalThemeOptions.find(opt => opt.id === theme);
+    return option?.label || 'Personal Growth Mission';
+  }
+
+  getSupportDisplay() {
+    const support = this.challengeAnswers()['support'];
+    const option = this.supportOptions.find(opt => opt.id === support);
+    return option?.label || '🔥 Motivational tone';
+  }
+
+  shouldShowConfirmButton(questionId: string, type: string) {
+    if (type === 'multi-select') {
+      return true;
+    }
+    return questionId === 'goal_title' && this.isGoalTitleCustomSelected();
+  }
+
+  canConfirmQuestion(questionId: string) {
+    if (questionId === 'goal_title' && this.isGoalTitleCustomSelected()) {
+      return this.challengeCustomGoalTitle().trim().length > 0;
+    }
+    return true;
+  }
+
+  private getGoalTitleLabel(optionId: string) {
+    for (const options of Object.values(this.goalTitleOptionsMap)) {
+      const match = options.find(opt => opt.id === optionId && opt.id !== 'custom');
+      if (match) {
+        return match.label;
+      }
+    }
+    return undefined;
+  }
 
   startChallenge() {
     this.isChallengeActive.set(true);
@@ -1006,6 +1134,13 @@ export class App implements AfterViewInit, OnDestroy {
 
     if (type === 'single-select') {
       currentAnswers[questionId] = optionId;
+      if (questionId === 'goal_theme') {
+        delete currentAnswers['goal_title'];
+        this.challengeCustomGoalTitle.set('');
+      }
+      if (questionId === 'goal_title' && optionId !== 'custom') {
+        this.challengeCustomGoalTitle.set('');
+      }
     } else {
       // Multi-select
       const currentSelection = (currentAnswers[questionId] as string[]) || [];
@@ -1025,6 +1160,9 @@ export class App implements AfterViewInit, OnDestroy {
 
     // Auto-advance for single select after a short delay
     if (type === 'single-select') {
+      if (questionId === 'goal_title' && optionId === 'custom') {
+        return;
+      }
       setTimeout(() => {
         this.nextStep();
       }, 400);
@@ -1046,6 +1184,9 @@ export class App implements AfterViewInit, OnDestroy {
       const answer = this.challengeAnswers()[currentQ.id];
       if (!answer || (Array.isArray(answer) && answer.length === 0)) {
         return; // Cannot proceed without answer
+      }
+      if (currentQ.id === 'goal_title' && answer === 'custom' && !this.challengeCustomGoalTitle().trim()) {
+        return;
       }
     }
 
@@ -1204,6 +1345,7 @@ export class App implements AfterViewInit, OnDestroy {
     this.challengePassword.set('');
     this.challengeFirstName.set('');
     this.challengeLastName.set('');
+    this.challengeCustomGoalTitle.set('');
     this.lastStageBeforeSaving = 'email';
     this.isSavingGoal.set(false);
   }
@@ -1221,7 +1363,13 @@ export class App implements AfterViewInit, OnDestroy {
     this.isSavingGoal.set(true);
 
     try {
-      const answers = this.challengeAnswers();
+      const answers = {
+        ...this.challengeAnswers(),
+        goal_title_label: this.getGoalTitleDisplay(),
+        goal_theme_label: this.getGoalThemeDisplay(),
+        goal_support_label: this.getSupportDisplay(),
+        custom_goal_title: this.challengeCustomGoalTitle()
+      };
       const participant = {
         firstName: profile.firstName || 'Rocketeer',
         lastName: profile.lastName || '',
@@ -1256,14 +1404,25 @@ export class App implements AfterViewInit, OnDestroy {
   }
 
   private extractPrimaryGoal(answers: Record<string, any>) {
-    const priorityKeys = ['mission', 'goal', 'vision', 'focus', 'north_star'];
-    for (const key of priorityKeys) {
-      const value = answers[key];
-      if (typeof value === 'string' && value.trim().length > 0) {
-        return value.trim();
-      }
+    const label = typeof answers['goal_title_label'] === 'string' ? answers['goal_title_label'].trim() : '';
+    if (label) {
+      return label;
     }
-    return '';
+    const custom = typeof answers['custom_goal_title'] === 'string' ? answers['custom_goal_title'].trim() : '';
+    if (custom) {
+      return custom;
+    }
+    const selection =
+      typeof answers['goal_title'] === 'string' ? this.getGoalTitleLabel(answers['goal_title']) : '';
+    if (selection) {
+      return selection;
+    }
+    const theme =
+      typeof answers['goal_theme_label'] === 'string' ? answers['goal_theme_label'].trim() : '';
+    if (theme) {
+      return theme;
+    }
+    return 'Rocket Goal';
   }
 
   /**

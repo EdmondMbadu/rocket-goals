@@ -186,9 +186,9 @@
             </p>
           </div>
 
-          <div class="grid gap-6" [class.md:grid-cols-2]="question.options.length > 4"
-            [class.md:grid-cols-1]="question.options.length <= 4">
-            @for (option of question.options; track option.id) {
+          @let options = question.id === 'goal_title' ? goalTitleOptions() : question.options;
+          <div class="grid gap-6" [class.md:grid-cols-2]="options.length > 4" [class.md:grid-cols-1]="options.length <= 4">
+            @for (option of options; track option.id) {
             <button (click)="selectOption(question.id, option.id, question.type, question.maxSelect)"
               [class.btn-clean-selected]="isOptionSelected(question.id, option.id)"
               class="btn-clean group p-8 rounded-xl text-left flex items-center justify-between bg-white">
@@ -207,15 +207,25 @@
             }
           </div>
 
+          @if (question.id === 'goal_title' && isGoalTitleCustomSelected()) {
+          <div class="bg-white p-6 rounded-2xl border border-black/5 space-y-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Custom goal name</label>
+            <input type="text" [ngModel]="challengeCustomGoalTitle()" (ngModelChange)="updateCustomGoalTitle($event)"
+              class="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-red-600 focus:ring-2 focus:ring-red-500 bg-gray-50 focus:bg-white transition"
+              placeholder="Describe your mission...">
+            <p class="text-sm text-gray-500">Keep it short and punchy. This will be the name of your RocketGoal.</p>
+          </div>
+          }
+
           <div class="flex justify-between pt-12 items-center">
             <button (click)="prevStep()" [disabled]="currentChallengeStep() === 0"
               class="px-6 py-3 text-gray-400 font-bold hover:text-black disabled:opacity-0 transition-colors uppercase tracking-widest text-sm hover:underline decoration-red-500 underline-offset-8">
               < Back </button>
 
-                @if (question.type === 'multi-select') {
-                <button (click)="nextStep()"
-                  class="px-10 py-4 bg-black text-white font-black rounded-full hover:bg-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 uppercase tracking-wider text-sm">
-                  Confirm Selection
+                @if (shouldShowConfirmButton(question.id, question.type)) {
+                <button (click)="nextStep()" [disabled]="!canConfirmQuestion(question.id)"
+                  class="px-10 py-4 bg-black text-white font-black rounded-full hover:bg-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 uppercase tracking-wider text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                  {{ question.id === 'goal_title' ? 'Use this name' : 'Confirm Selection' }}
                 </button>
                 }
           </div>
@@ -440,14 +450,12 @@
         <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
           <span class="w-1.5 h-1.5 bg-red-600 rounded-full"></span> Primary Directive
         </h3>
-        <h2 class="text-4xl md:text-5xl font-bold text-black mb-6 tracking-tight">
-          {{ challengeAnswers()['one_goal'] === 'career' ? 'Career & Projects' :
-          challengeAnswers()['one_goal'] === 'learning' ? 'Learning & Skills' :
-          challengeAnswers()['one_goal'] === 'finance' ? 'Financial Freedom' :
-          challengeAnswers()['one_goal'] === 'mental' ? 'Mental Clarity' :
-          challengeAnswers()['one_goal'] === 'health' ? 'Health & Fitness' :
-          challengeAnswers()['one_goal'] === 'habits' ? 'Habits & Discipline' : 'Personal Growth' }}
+        <h2 class="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
+          {{ getGoalTitleDisplay() || 'Your 7-Day Mission' }}
         </h2>
+        <p class="text-sm font-mono uppercase tracking-[0.3em] text-gray-500">
+          Theme: {{ getGoalThemeDisplay() }}
+        </p>
         <div class="grid grid-cols-2 gap-4 mt-8 relative z-10">
           <div class="bg-gray-50 p-4 border-l-2 border-red-600">
             <div class="text-[10px] text-gray-400 uppercase font-mono mb-1">Daily Thrust</div>
@@ -458,8 +466,7 @@
           </div>
           <div class="bg-gray-50 p-4 border-l-2 border-red-600">
             <div class="text-[10px] text-gray-400 uppercase font-mono mb-1">Support</div>
-            <div class="text-xl font-bold text-black capitalize truncate">{{ challengeAnswers()['reminder']?.split('
-              ')[0] }}</div>
+            <div class="text-xl font-bold text-black capitalize truncate">{{ getSupportDisplay() }}</div>
           </div>
         </div>
       </div>
@@ -481,7 +488,8 @@
         </div>
         <div class="mt-4 text-center relative z-10">
           <div class="text-sm text-gray-400">Driving Emotion</div>
-          <div class="text-lg font-bold text-black capitalize">{{ challengeAnswers()['future_self']?.[0] || 'Motivated'
+          <div class="text-lg font-bold text-black capitalize">{{ challengeAnswers()['future_result']?.[0] ||
+            'Motivated'
             }}</div>
         </div>
       </div>
@@ -499,11 +507,11 @@
           <div class="terminal-line" style="animation-delay: 0.2s"><span>></span> <span>User identity verified: {{
               userInfo().name }}</span></div>
           <div class="terminal-line" style="animation-delay: 0.4s"><span>></span> <span>Target locked: {{
-              challengeAnswers()['one_goal'] }}</span></div>
+              getGoalTitleDisplay() || 'Rocket Goal' }}</span></div>
           <div class="terminal-line" style="animation-delay: 0.6s"><span>></span> <span class="text-blue-600">Analyzing
               vibe frequency...</span></div>
           <div class="terminal-line" style="animation-delay: 0.8s"><span>></span> <span>Vibe detected: {{
-              challengeAnswers()['vibe'] }}</span></div>
+              (challengeAnswers()['future_result'] || []).join(', ') }}</span></div>
           <div class="terminal-line" style="animation-delay: 1.0s"><span>></span> <span
               class="text-orange-500">Calibrating daily effort...</span></div>
           <div class="terminal-line" style="animation-delay: 1.2s"><span>></span> <span>Allocating {{
