@@ -21,9 +21,9 @@
   class="fixed bottom-6 right-6 z-[60] flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-black/10 transition-all duration-300"
   [class.translate-y-full]="!isOpen()" [class.opacity-0]="!isOpen()" [class.pointer-events-none]="!isOpen()"
   [class.translate-y-0]="isOpen()" [class.opacity-100]="isOpen()"
-  style="width: 400px; height: 560px; max-height: calc(100vh - 120px); max-width: calc(100vw - 48px);">
+  style="width: 420px; height: 75vh; max-height: calc(100vh - 80px); max-width: calc(100vw - 48px); min-height: 600px;">
   <!-- Header -->
-  <header class="flex items-center justify-between border-b border-gray-100 bg-black px-5 py-4">
+  <header class="flex items-center justify-between border-b border-gray-100 bg-black px-6 py-5">
     <div class="flex items-center gap-3">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg shadow-red-600/20">
         <svg viewBox="0 0 24 24" class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2">
@@ -56,7 +56,7 @@
   </header>
 
   <!-- Messages -->
-  <div #messagesContainer class="flex-1 overflow-y-auto bg-gray-50 px-5 py-5">
+  <div #messagesContainer class="flex-1 overflow-y-auto bg-gray-50 px-6 py-6">
     <!-- Empty State -->
     <div *ngIf="messages().length === 0 && !isLoading()"
       class="flex h-full flex-col items-center justify-center text-center">
@@ -157,12 +157,12 @@
   </div>
 
   <!-- Error Message -->
-  <div *ngIf="error()" class="border-t border-red-100 bg-red-50 px-5 py-3">
+  <div *ngIf="error()" class="border-t border-red-100 bg-red-50 px-6 py-4">
     <p class="text-xs text-red-600">{{ error() }}</p>
   </div>
 
   <!-- Input Area -->
-  <div class="border-t border-gray-100 bg-white p-4">
+  <div class="border-t border-gray-100 bg-white p-5">
     <div class="flex items-end gap-3">
       <div class="relative flex-1">
         <textarea #messageInput
