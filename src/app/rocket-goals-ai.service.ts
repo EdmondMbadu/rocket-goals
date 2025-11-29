@@ -3,6 +3,7 @@ import { Functions, getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
+import type { RocketGoal } from './models/rocket-goal';
 
 export interface ChatMessage {
   role: 'user' | 'model';
@@ -13,6 +14,12 @@ export interface ChatMessage {
 interface AIRequest {
   message: string;
   conversationHistory?: { role: 'user' | 'model'; content: string }[];
+  goalContext?: {
+    title: string;
+    primaryGoal: string;
+    answers: Record<string, any>;
+    status: string;
+  };
 }
 
 interface AIResponse {
@@ -69,7 +76,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isOpen.set(false);
   }
 
-  async sendMessage(userMessage: string): Promise<string> {
+  async sendMessage(userMessage: string, goalContext?: RocketGoal | null): Promise<string> {
     if (!userMessage.trim()) {
       throw new Error('Message cannot be empty');
     }
@@ -102,7 +109,13 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
 
       const result = await callable({
         message: userMessage.trim(),
-        conversationHistory: conversationHistory.slice(0, -1) // Exclude the current message we just added
+        conversationHistory: conversationHistory.slice(0, -1), // Exclude the current message we just added
+        goalContext: goalContext ? {
+          title: this.getGoalTitle(goalContext),
+          primaryGoal: goalContext.primaryGoal || '',
+          answers: goalContext.answers || {},
+          status: goalContext.status
+        } : undefined
       });
 
       // Add AI response to conversation
@@ -161,5 +174,12 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     };
 
     this.messages.update(msgs => [...msgs, message]);
+  }
+
+  private getGoalTitle(goal: RocketGoal): string {
+    return goal.answers?.['goal_title_label'] ||
+           goal.answers?.['custom_goal_title'] ||
+           goal.primaryGoal ||
+           'Untitled Goal';
   }
 }

@@ -41,6 +41,7 @@ export const processAIPrompt = functions.runWith({
         const conversationHistory = data.conversationHistory || [];
         const mode = data.mode || 'voice'; // Default to 'voice' if not specified
         const generatePlan = data.generatePlan || false; // Check if this is a plan generation request
+        const goalContext = data.goalContext; // Goal-specific context when available
         console.log(`🚀 Processing prompt for document ${documentId} (${mode} mode, generatePlan: ${generatePlan})`);
         console.log(`💬 Conversation history: ${conversationHistory.length} messages`);
 
@@ -135,7 +136,31 @@ Requirements:
 - Format professionally with clear structure
 - Do NOT ask questions or continue conversation - just provide the complete plan`;
             } else {
-                systemInstruction = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.
+                // Base system prompt
+                let contextualPrompt = `${baseIdentity}
+
+${conversationGuidelines}`;
+
+                // Add goal-specific context if available
+                if (goalContext) {
+                    const goalTitle = goalContext.title || 'this goal';
+                    const primaryGoal = goalContext.primaryGoal || '';
+                    const goalStatus = goalContext.status || 'active';
+                    const answers = goalContext.answers || {};
+
+                    contextualPrompt += `
+
+GOAL-SPECIFIC CONTEXT:
+You are currently helping a user with their specific goal: "${goalTitle}"
+${primaryGoal ? `Primary Goal: ${primaryGoal}` : ''}
+Goal Status: ${goalStatus}
+${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ''}
+${answers.future_result ? `Motivation Driver: ${answers.future_result.join(', ')}` : ''}
+
+IMPORTANT: Use this goal context to provide personalized, insightful advice. Reference their specific goal details when relevant, but don't force it if their question is unrelated to goal achievement.`;
+                }
+
+                systemInstruction = contextualPrompt + `
 
 Using the ROCKET framework, you help users:
 - Remember their Future Self: Envision the person they are becoming and fuel that vision with passion.

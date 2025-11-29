@@ -69,25 +69,16 @@
       </div>
       <h3 class="mb-2 text-base font-semibold text-black">How can I help you?</h3>
       <p class="max-w-[240px] text-sm text-gray-600">
-        Ask me about goal setting, motivation, or anything related to achieving your dreams.
+        {{ goalContext ? 'Ask me about your goal, motivation, or strategies to succeed.' : 'Ask me about goal setting, motivation, or anything related to achieving your dreams.' }}
       </p>
 
       <!-- Quick prompts -->
       <div class="mt-6 flex flex-wrap justify-center gap-2">
         <button type="button"
+          *ngFor="let prompt of getGoalSpecificPrompts(); let i = index; trackBy: trackByIndex"
           class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-          (click)="sendQuickPrompt('How do I set better goals?')">
-          Better goals
-        </button>
-        <button type="button"
-          class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-          (click)="sendQuickPrompt('How do I stay motivated?')">
-          Stay motivated
-        </button>
-        <button type="button"
-          class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-          (click)="sendQuickPrompt('What is the 7-day challenge?')">
-          7-day challenge
+          (click)="sendQuickPrompt(prompt)">
+          {{ i === 0 ? 'Goal motivation' : i === 1 ? 'Daily practice' : 'Overcome obstacles' }}
         </button>
       </div>
     </div>

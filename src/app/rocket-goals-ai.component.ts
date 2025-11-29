@@ -1,7 +1,8 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
+import type { RocketGoal } from './models/rocket-goal';
 
 @Component({
   selector: 'app-rocket-goals-ai',
@@ -11,6 +12,7 @@ import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
   styleUrl: './rocket-goals-ai.component.css'
 })
 export class RocketGoalsAIComponent implements AfterViewChecked {
+  @Input() goalContext: RocketGoal | null = null;
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
 
@@ -51,7 +53,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked {
     this.shouldScrollToBottom = true;
 
     try {
-      await this.aiService.sendMessage(message);
+      await this.aiService.sendMessage(message, this.goalContext);
       this.shouldScrollToBottom = true;
     } catch {
       // Error is already handled in service
@@ -86,6 +88,36 @@ export class RocketGoalsAIComponent implements AfterViewChecked {
 
   trackByTimestamp(_index: number, message: ChatMessage): number {
     return message.timestamp.getTime();
+  }
+
+  getGoalSpecificPrompts(): string[] {
+    if (!this.goalContext) {
+      return [
+        'How do I set better goals?',
+        'How do I stay motivated?',
+        'What is the 7-day challenge?'
+      ];
+    }
+
+    const goalTitle = this.getGoalTitle(this.goalContext);
+    const dailyEffort = this.goalContext.answers?.['daily_effort'];
+
+    return [
+      `How can I stay motivated with ${goalTitle}?`,
+      `What strategies work for ${dailyEffort || 'daily'} practice?`,
+      `How do I overcome obstacles in ${goalTitle}?`
+    ];
+  }
+
+  private getGoalTitle(goal: any): string {
+    return goal.answers?.goal_title_label ||
+           goal.answers?.custom_goal_title ||
+           goal.primaryGoal ||
+           'my goal';
+  }
+
+  trackByIndex(index: number): number {
+    return index;
   }
 
   async copyMessage(message: ChatMessage): Promise<void> {
