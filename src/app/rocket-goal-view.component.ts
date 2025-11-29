@@ -5,12 +5,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
+import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import type { RocketGoal } from './models/rocket-goal';
 
 @Component({
   selector: 'app-rocket-goal-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent],
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })

@@ -7,12 +7,17 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Initialize Firebase Admin
 admin.initializeApp();
 
+// Define secrets
+const geminiApiKey = functions.params.defineSecret('GEMINI_API_KEY');
+
 /**
  * Cloud Function that processes AI prompts using Google AI (Gemini)
  * Optimized for speed - uses fastest model and direct API calls
  * This replaces the Firebase Extension for better performance
  */
-export const processAIPrompt = functions.firestore
+export const processAIPrompt = functions.runWith({
+    secrets: [geminiApiKey]
+}).firestore
     .document("public/{documentId}")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .onCreate(async (snap: { data: () => any; ref: { update: (arg0: { status: string; updateTime: admin.firestore.FieldValue; response?: any; error?: any; }) => any; }; }, context: { params: { documentId: any; }; }) => {
@@ -49,11 +54,10 @@ export const processAIPrompt = functions.firestore
             const processingStartTime = Date.now();
             console.log(`⏱️ Status updated to PROCESSING in ${processingStartTime - startTime}ms`);
 
-            // Initialize Google AI with API key
-            const apiKey = functions.config().google_ai?.api_key ||
-                process.env.GOOGLE_AI_API_KEY;
+            // Initialize Google AI with API key from secret
+            const apiKey = geminiApiKey.value();
             if (!apiKey) {
-                throw new Error("Google AI API key is not set. Please set it using: firebase functions:config:set google_ai.api_key=\"YOUR_KEY\"");
+                throw new Error("Google AI API key is not set. Please set it using: firebase functions:secrets:set GEMINI_API_KEY");
             }
 
             const aiStartTime = Date.now();
