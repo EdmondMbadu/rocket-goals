@@ -1,13 +1,13 @@
 import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
 
 @Component({
   selector: 'app-avatar-dropdown',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './avatar-dropdown.component.html',
   styleUrl: './avatar-dropdown.component.css'
 })
