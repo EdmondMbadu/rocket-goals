@@ -83,7 +83,8 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     this.typewriterDisplayedText.set('');
     
     let charIndex = 0;
-    const typingSpeed = 18; // ms per character (slightly faster)
+    const charsPerTick = 3; // Characters to type per interval tick
+    const tickInterval = 1; // ms between ticks (1ms = max speed)
     
     // Clear any existing interval
     if (this.typewriterInterval) {
@@ -95,7 +96,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     
     this.typewriterInterval = setInterval(() => {
       if (charIndex < text.length) {
-        charIndex++;
+        charIndex = Math.min(charIndex + charsPerTick, text.length);
         this.typewriterDisplayedText.set(text.substring(0, charIndex));
         // Update the actual message in service
         this.aiService.updateMessageContent(timestamp, text.substring(0, charIndex));
@@ -110,7 +111,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
         // Finalize the message in service (adds to conversation history)
         this.aiService.finalizeMessage(timestamp, text);
       }
-    }, typingSpeed);
+    }, tickInterval);
   }
 
   private startContinuousScroll(): void {
