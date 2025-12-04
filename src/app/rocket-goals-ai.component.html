@@ -78,8 +78,10 @@
           </div>
           <div class="ai-message-bubble relative rounded-2xl rounded-tl-md px-4 py-3 text-sm leading-relaxed">
             <span [innerHTML]="formatMessage(message.content)"></span>
-            <!-- Copy Button -->
-            <button type="button"
+            <!-- Blinking cursor during typewriter -->
+            <span *ngIf="isTypewriting(message)" class="typewriter-cursor"></span>
+            <!-- Copy Button (only show when not typing) -->
+            <button type="button" *ngIf="!isTypewriting(message)"
               class="copy-button absolute -left-2 -bottom-2 flex h-7 w-7 items-center justify-center rounded-lg opacity-0 transition-all duration-200 hover:scale-110 group-hover:opacity-100"
               [class.opacity-100]="isCopied(message)"
               (click)="copyMessage(message)"

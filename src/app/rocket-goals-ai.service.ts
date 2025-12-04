@@ -155,6 +155,74 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
   }
 
+  // Send message but don't add the AI response (let component handle with typewriter)
+  async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string> {
+    if (!userMessage.trim()) {
+      throw new Error('Message cannot be empty');
+    }
+
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    // Add user message to conversation
+    const userChatMessage: ChatMessage = {
+      role: 'user',
+      content: userMessage.trim(),
+      timestamp: new Date()
+    };
+    this.messages.update(msgs => [...msgs, userChatMessage]);
+
+    try {
+      // Prepare conversation history for context (last 10 messages for efficiency)
+      const conversationHistory = this.messages()
+        .slice(-10)
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+
+      // Call the Cloud Function
+      const callable = httpsCallable<AIRequest, AIResponse>(
+        this.functions,
+        'rocketGoalsAI'
+      );
+
+      const result = await callable({
+        message: userMessage.trim(),
+        conversationHistory: conversationHistory.slice(0, -1),
+        goalContext: goalContext ? {
+          title: this.getGoalTitle(goalContext),
+          primaryGoal: goalContext.primaryGoal || '',
+          answers: goalContext.answers || {},
+          status: goalContext.status
+        } : undefined
+      });
+
+      // Add user message to conversation history (AI will be added when typewriter finishes)
+      this.conversationHistory.push({
+        role: 'user',
+        content: userMessage.trim()
+      });
+
+      // Keep only last 20 messages in history to manage context
+      if (this.conversationHistory.length > 20) {
+        this.conversationHistory = this.conversationHistory.slice(-20);
+      }
+
+      return result.data.response;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get AI response';
+      this.error.set(errorMessage);
+
+      // Remove the user message if we failed
+      this.messages.update(msgs => msgs.slice(0, -1));
+
+      throw new Error(errorMessage);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
   clearConversation(): void {
     this.messages.set([]);
     this.conversationHistory = [];
@@ -194,6 +262,35 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.conversationHistory.push({
       role: 'model',
       content: cleanContent
+    });
+  }
+
+  addAIMessageWithTimestamp(content: string, timestamp: number): void {
+    const message: ChatMessage = {
+      role: 'model',
+      content: content,
+      timestamp: new Date(timestamp),
+    };
+
+    this.messages.update(msgs => [...msgs, message]);
+  }
+
+  updateMessageContent(timestamp: number, content: string): void {
+    this.messages.update(msgs => 
+      msgs.map(msg => 
+        msg.timestamp.getTime() === timestamp 
+          ? { ...msg, content } 
+          : msg
+      )
+    );
+  }
+
+  finalizeMessage(timestamp: number, content: string): void {
+    // Update the message content and add to conversation history
+    this.updateMessageContent(timestamp, content);
+    this.conversationHistory.push({
+      role: 'model',
+      content: content
     });
   }
 

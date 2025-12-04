@@ -1,4 +1,4 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
@@ -11,7 +11,7 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './rocket-goals-ai.component.html',
   styleUrl: './rocket-goals-ai.component.css'
 })
-export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
+export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDestroy {
   @Input() goalContext: RocketGoal | null = null;
   @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
@@ -26,8 +26,14 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
   readonly error = this.aiService.error;
   readonly copiedMessageId = signal<number | null>(null);
   readonly hasGreeted = signal(false);
+  
+  // Typewriter effect state
+  readonly typewriterMessageId = signal<number | null>(null);
+  readonly typewriterDisplayedText = signal<string>('');
+  private typewriterInterval: any = null;
 
   private shouldScrollToBottom = false;
+  private scrollInterval: any = null;
 
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
@@ -38,13 +44,14 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     // When embedded and goal context becomes available, trigger a greeting
-    if (changes['goalContext'] && this.embedded && this.goalContext && !this.hasGreeted()) {
+    // Only if we haven't greeted AND there are no existing messages
+    if (changes['goalContext'] && this.embedded && this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
       this.triggerGreeting();
     }
   }
 
   private async triggerGreeting(): Promise<void> {
-    if (this.hasGreeted() || !this.goalContext) return;
+    if (this.hasGreeted() || !this.goalContext || this.messages().length > 0) return;
     this.hasGreeted.set(true);
 
     // Wait a moment for the UI to settle
@@ -62,9 +69,66 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
     
     const greeting = greetings[Math.floor(Math.random() * greetings.length)];
     
-    // Add the AI greeting as a message
-    this.aiService.addAIMessage(greeting);
-    this.shouldScrollToBottom = true;
+    // Add the AI greeting with typewriter effect
+    this.addMessageWithTypewriter(greeting);
+  }
+
+  private addMessageWithTypewriter(text: string): void {
+    // Add an empty message first
+    const timestamp = Date.now();
+    this.aiService.addAIMessageWithTimestamp('', timestamp);
+    
+    // Start typewriter effect
+    this.typewriterMessageId.set(timestamp);
+    this.typewriterDisplayedText.set('');
+    
+    let charIndex = 0;
+    const typingSpeed = 18; // ms per character (slightly faster)
+    
+    // Clear any existing interval
+    if (this.typewriterInterval) {
+      clearInterval(this.typewriterInterval);
+    }
+    
+    // Start continuous scrolling during typewriter
+    this.startContinuousScroll();
+    
+    this.typewriterInterval = setInterval(() => {
+      if (charIndex < text.length) {
+        charIndex++;
+        this.typewriterDisplayedText.set(text.substring(0, charIndex));
+        // Update the actual message in service
+        this.aiService.updateMessageContent(timestamp, text.substring(0, charIndex));
+      } else {
+        // Finished typing
+        clearInterval(this.typewriterInterval);
+        this.typewriterInterval = null;
+        this.typewriterMessageId.set(null);
+        this.stopContinuousScroll();
+        this.shouldScrollToBottom = true;
+        
+        // Finalize the message in service (adds to conversation history)
+        this.aiService.finalizeMessage(timestamp, text);
+      }
+    }, typingSpeed);
+  }
+
+  private startContinuousScroll(): void {
+    if (this.scrollInterval) return;
+    this.scrollInterval = setInterval(() => {
+      this.scrollToBottom();
+    }, 50);
+  }
+
+  private stopContinuousScroll(): void {
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+      this.scrollInterval = null;
+    }
+  }
+
+  isTypewriting(message: ChatMessage): boolean {
+    return this.typewriterMessageId() === message.timestamp.getTime();
   }
 
   toggle(): void {
@@ -78,6 +142,16 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
     this.aiService.closePanel();
   }
 
+  ngOnDestroy(): void {
+    // Cleanup intervals
+    if (this.typewriterInterval) {
+      clearInterval(this.typewriterInterval);
+    }
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+    }
+  }
+
   async sendMessage(): Promise<void> {
     const message = this.inputMessage().trim();
     if (!message || this.isLoading()) return;
@@ -86,8 +160,9 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
     this.shouldScrollToBottom = true;
 
     try {
-      await this.aiService.sendMessage(message, this.goalContext);
-      this.shouldScrollToBottom = true;
+      const response = await this.aiService.sendMessageWithoutAddingResponse(message, this.goalContext);
+      // Add response with typewriter effect
+      this.addMessageWithTypewriter(response);
     } catch {
       // Error is already handled in service
     }
