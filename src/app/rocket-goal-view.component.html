@@ -340,6 +340,12 @@
               </div>
             </div>
           </div>
+
+          <!-- MISSION CALENDAR -->
+          <app-mission-calendar 
+            [events]="[]"
+            (dateSelected)="onCalendarDateSelected($event)">
+          </app-mission-calendar>
         </div>
 
         <!-- RIGHT COLUMN: AI Co-Pilot (2 cols on lg) -->

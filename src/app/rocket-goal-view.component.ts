@@ -6,12 +6,13 @@ import { RocketGoalsService } from './rocket-goals.service';
 import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
+import { MissionCalendarComponent } from './mission-calendar.component';
 import type { RocketGoal } from './models/rocket-goal';
 
 @Component({
   selector: 'app-rocket-goal-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent],
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
@@ -397,6 +398,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   cancelEditingGoalTitle() {
     this.isEditingGoalTitle.set(false);
     this.editingGoalTitleValue.set('');
+  }
+
+  onCalendarDateSelected(date: Date) {
+    // This will be used later for adding tasks/events to specific dates
+    console.log('Calendar date selected:', date);
+    // Future: Open a modal to add tasks for this date
   }
 }
 

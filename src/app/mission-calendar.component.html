@@ -1,0 +1,181 @@
+<div class="mission-calendar">
+  <!-- Calendar Header -->
+  <div class="calendar-header">
+    <div class="header-left">
+      <h3 class="calendar-title">
+        <span class="title-icon">📅</span>
+        MISSION CALENDAR
+      </h3>
+      <button (click)="navigateToToday()" class="today-btn">
+        <span class="pulse-dot"></span>
+        TODAY
+      </button>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="view-toggle">
+      @for (view of views; track view.id) {
+        <button 
+          (click)="setView(view.id)"
+          [class.active]="currentView() === view.id"
+          class="view-btn">
+          {{ view.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="calendar-nav">
+    <button (click)="navigatePrev()" class="nav-btn">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h4 class="nav-title">{{ getHeaderTitle() }}</h4>
+    <button (click)="navigateNext()" class="nav-btn">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Calendar Body -->
+  <div class="calendar-body">
+    
+    <!-- DAY VIEW -->
+    @if (currentView() === 'day') {
+      <div class="day-view">
+        <div class="day-header">
+          <div class="day-date-display">
+            <span class="day-number">{{ currentDate().getDate() }}</span>
+            <div class="day-info">
+              <span class="day-name">{{ weekDays[currentDate().getDay()] }}</span>
+              <span class="month-name">{{ months[currentDate().getMonth()] }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hours-grid">
+          @for (hour of hours; track trackByHour($index, hour)) {
+            <div class="hour-row">
+              <div class="hour-label">{{ formatHour(hour) }}</div>
+              <div class="hour-slot">
+                @for (event of getEventsForHour(currentDate(), hour); track event.id) {
+                  <div class="event-chip" [style.background]="event.color || 'rgba(220, 38, 38, 0.3)'">
+                    {{ event.title }}
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- WEEK VIEW -->
+    @if (currentView() === 'week') {
+      <div class="week-view">
+        <div class="week-header">
+          @for (day of weekDaysData(); track trackByDate($index, day)) {
+            <div class="week-day-header" 
+                 [class.today]="day.isToday"
+                 [class.selected]="day.isSelected"
+                 (click)="selectDate(day.date)">
+              <span class="week-day-name">{{ weekDays[day.date.getDay()] }}</span>
+              <span class="week-day-number" [class.today-number]="day.isToday">
+                {{ day.date.getDate() }}
+              </span>
+            </div>
+          }
+        </div>
+        
+        <div class="week-grid">
+          @for (hour of hours; track trackByHour($index, hour)) {
+            <div class="week-hour-row">
+              <div class="hour-label">{{ formatHour(hour) }}</div>
+              <div class="week-slots">
+                @for (day of weekDaysData(); track trackByDate($index, day)) {
+                  <div class="week-slot" 
+                       [class.today]="day.isToday"
+                       (click)="selectDate(day.date)">
+                    @for (event of getEventsForHour(day.date, hour); track event.id) {
+                      <div class="event-chip-sm">{{ event.title }}</div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- MONTH VIEW -->
+    @if (currentView() === 'month') {
+      <div class="month-view">
+        <div class="weekday-headers">
+          @for (day of weekDays; track $index) {
+            <div class="weekday-header">{{ day }}</div>
+          }
+        </div>
+        
+        <div class="days-grid">
+          @for (day of calendarDays(); track trackByDate($index, day)) {
+            <div class="day-cell"
+                 [class.other-month]="!day.isCurrentMonth"
+                 [class.today]="day.isToday"
+                 [class.selected]="day.isSelected"
+                 (click)="selectDate(day.date)">
+              <span class="day-cell-number" [class.today-highlight]="day.isToday">
+                {{ day.date.getDate() }}
+              </span>
+              <div class="day-events">
+                @for (event of getEventsForDate(day.date).slice(0, 2); track event.id) {
+                  <div class="event-dot" [style.background]="event.color || '#dc2626'"></div>
+                }
+                @if (getEventsForDate(day.date).length > 2) {
+                  <span class="more-events">+{{ getEventsForDate(day.date).length - 2 }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- YEAR VIEW -->
+    @if (currentView() === 'year') {
+      <div class="year-view">
+        <div class="months-grid">
+          @for (month of yearMonths(); track trackByMonth($index, month)) {
+            <div class="month-cell"
+                 [class.current-month]="month.isCurrentMonth"
+                 (click)="selectMonth(month.index)">
+              <span class="month-cell-name">{{ month.name }}</span>
+              <div class="month-mini-grid">
+                @for (week of [0,1,2,3,4]; track week) {
+                  <div class="mini-week">
+                    @for (day of [0,1,2,3,4,5,6]; track day) {
+                      <div class="mini-day"></div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer Status -->
+  <div class="calendar-footer">
+    <div class="status-indicator">
+      <span class="status-dot"></span>
+      <span class="status-text">CALENDAR SYNC ACTIVE</span>
+    </div>
+    <div class="timezone">{{ getTimezoneString() }}</div>
+  </div>
+</div>
+
