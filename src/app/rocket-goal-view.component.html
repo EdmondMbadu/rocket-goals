@@ -165,14 +165,14 @@
 
   <!-- Main Dashboard Content - NEW TWO-COLUMN LAYOUT -->
   <div class="flex-1 overflow-y-auto relative z-30">
-    <div class="max-w-7xl mx-auto p-4 md:p-6 h-full">
+    <div class="dashboard-container p-4 md:p-6 md:pr-3 lg:pr-4 h-full">
       @if (goal()) {
       
       <!-- Two Column Layout: Mission Info (Left) + AI (Right) -->
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 md:gap-6 h-full" style="min-height: calc(100vh - 140px);">
+      <div class="dashboard-grid gap-5 md:gap-6" style="min-height: calc(100vh - 140px);">
         
-        <!-- LEFT COLUMN: Mission Info (3 cols on lg) -->
-        <div class="lg:col-span-3 flex flex-col gap-5 md:gap-6">
+        <!-- LEFT COLUMN: Mission Info -->
+        <div class="left-column flex flex-col gap-5 md:gap-6 overflow-y-auto pb-4">
           
           <!-- Top Row: Primary Directive + Stats -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
@@ -348,9 +348,9 @@
           </app-mission-calendar>
         </div>
 
-        <!-- RIGHT COLUMN: AI Co-Pilot (2 cols on lg) -->
-        <div class="lg:col-span-2 flex flex-col" style="min-height: 500px;">
-          <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" class="flex-1 flex"></app-rocket-goals-ai>
+        <!-- RIGHT COLUMN: AI Co-Pilot (Fixed width on desktop) -->
+        <div class="right-column flex flex-col">
+          <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
         </div>
 
       </div>

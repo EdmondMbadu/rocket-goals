@@ -19,6 +19,9 @@
     inset -4px 0 20px rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
+  /* Ensure it fits in viewport without requiring scroll to see input */
+  max-height: calc(100vh - 160px);
+  min-height: 400px;
 }
 
 .ai-panel-embedded::before {
