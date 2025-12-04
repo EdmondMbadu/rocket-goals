@@ -3,12 +3,14 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import * as sgMail from "@sendgrid/mail";
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
 // Define secrets
 const geminiApiKey = functions.params.defineSecret('GEMINI_API_KEY');
+const sendgridApiKey = functions.params.defineSecret('SENDGRID_API_KEY');
 
 /**
  * Cloud Function that processes AI prompts using Google AI (Gemini)
@@ -425,4 +427,113 @@ This blueprint embodies your unique approach to achieving opulence through both 
             return null;
         }
     });
+
+/**
+ * Cloud Function to send test emails via SendGrid
+ * Only accessible by admin users
+ */
+export const sendTestEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: { to: string; subject: string; message: string }, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send emails.'
+        );
+    }
+
+    // Check if user is admin
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+    
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can send test emails.'
+        );
+    }
+
+    // Validate input
+    const { to, subject, message } = data;
+    if (!to || !subject || !message) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: to, subject, message'
+        );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid email address format'
+        );
+    }
+
+    try {
+        // Initialize SendGrid with API key
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set. Please set it using: firebase functions:secrets:set SENDGRID_API_KEY');
+        }
+        sgMail.setApiKey(apiKey);
+
+        // Create email message
+        const msg = {
+            to: to,
+            from: 'support@rocketgoals.co', // Verified sender email
+            subject: subject,
+            text: message,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+                    </div>
+                    <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                        <h2 style="color: #111827; margin: 0 0 20px 0; font-size: 22px;">${subject}</h2>
+                        <div style="color: #374151; font-size: 16px; line-height: 1.6;">
+                            ${message.replace(/\n/g, '<br>')}
+                        </div>
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #9ca3af; font-size: 14px; margin: 0;">
+                                This is a test email from Rocket Goals Admin Panel.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `,
+        };
+
+        // Send the email
+        await sgMail.send(msg);
+        
+        console.log(`✅ Test email sent successfully to ${to}`);
+        
+        return {
+            success: true,
+            message: `Email sent successfully to ${to}`
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending email:', error);
+        
+        // Handle SendGrid specific errors
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+        
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send email: ${error.message}`
+        );
+    }
+});
 

@@ -65,6 +65,16 @@ export class AvatarDropdownComponent implements OnInit {
     this.closeDropdown();
   }
 
+  navigateToAdmin() {
+    this.router.navigateByUrl('/admin');
+    this.closeDropdown();
+  }
+
+  isAdmin(): boolean {
+    const profile = this.authService.profile();
+    return profile?.role === 'admin' || profile?.admin === true;
+  }
+
   async handleLogout() {
     try {
       await this.authService.signOut();
