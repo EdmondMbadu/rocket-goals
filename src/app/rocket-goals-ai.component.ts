@@ -1,4 +1,4 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
@@ -11,8 +11,9 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './rocket-goals-ai.component.html',
   styleUrl: './rocket-goals-ai.component.css'
 })
-export class RocketGoalsAIComponent implements AfterViewChecked {
+export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges {
   @Input() goalContext: RocketGoal | null = null;
+  @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
 
@@ -24,6 +25,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked {
   readonly isLoading = this.aiService.isLoading;
   readonly error = this.aiService.error;
   readonly copiedMessageId = signal<number | null>(null);
+  readonly hasGreeted = signal(false);
 
   private shouldScrollToBottom = false;
 
@@ -32,6 +34,37 @@ export class RocketGoalsAIComponent implements AfterViewChecked {
       this.scrollToBottom();
       this.shouldScrollToBottom = false;
     }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // When embedded and goal context becomes available, trigger a greeting
+    if (changes['goalContext'] && this.embedded && this.goalContext && !this.hasGreeted()) {
+      this.triggerGreeting();
+    }
+  }
+
+  private async triggerGreeting(): Promise<void> {
+    if (this.hasGreeted() || !this.goalContext) return;
+    this.hasGreeted.set(true);
+
+    // Wait a moment for the UI to settle
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const firstName = this.goalContext.participant?.firstName || 'there';
+    const goalTitle = this.getGoalTitle(this.goalContext);
+    
+    // Create personalized greeting messages based on goal context
+    const greetings = [
+      `Hey ${firstName}! 🚀 I see you're working on "${goalTitle}". What's the one thing you want to accomplish with this today?`,
+      `Welcome back, ${firstName}! Ready to make progress on "${goalTitle}"? What's on your mind?`,
+      `${firstName}, your mission "${goalTitle}" awaits! What would help you most right now - strategy, motivation, or tracking your progress?`,
+    ];
+    
+    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    
+    // Add the AI greeting as a message
+    this.aiService.addAIMessage(greeting);
+    this.shouldScrollToBottom = true;
   }
 
   toggle(): void {

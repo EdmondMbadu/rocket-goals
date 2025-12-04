@@ -486,7 +486,7 @@ export const sendTestEmail = functions.runWith({
         // Create email message
         const msg = {
             to: to,
-            from: 'support@rocketgoals.co', // Verified sender email
+            from: 'support@rocketgoals.com', // Verified sender email
             subject: subject,
             text: message,
             html: `

@@ -1,3 +1,292 @@
+/* ============================================
+   ROCKET GOALS AI - SPACE THEME STYLES
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Exo+2:wght@400;600;700;800&display=swap');
+
+/* ===== EMBEDDED MODE STYLES ===== */
+
+.ai-panel-embedded {
+  background: linear-gradient(135deg, rgba(20, 20, 35, 0.98) 0%, rgba(10, 10, 20, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-left: 4px solid rgba(255, 255, 255, 0.5);
+  border-right: 4px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(220, 38, 38, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 4px 0 20px rgba(255, 255, 255, 0.08),
+    inset -4px 0 20px rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-panel-embedded::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(220, 38, 38, 0.2) 30%, transparent 60%);
+  pointer-events: none;
+  border-radius: 20px 0 0 0;
+}
+
+/* AI Header */
+.ai-header {
+  background: linear-gradient(180deg, rgba(25, 25, 40, 0.95) 0%, rgba(20, 20, 35, 0.9) 100%);
+  border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+  position: relative;
+}
+
+.ai-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(220, 38, 38, 0.5) 50%, transparent 100%);
+}
+
+.ai-avatar {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 
+    0 4px 20px rgba(220, 38, 38, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.ai-pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 2px solid rgba(20, 20, 35, 1);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    transform: scale(1.05);
+  }
+}
+
+.ai-title {
+  font-family: 'Exo 2', sans-serif;
+  color: #f1f5f9;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.ai-subtitle {
+  font-family: 'Orbitron', monospace;
+  color: #22c55e;
+  letter-spacing: 0.05em;
+}
+
+.ai-action-btn {
+  color: #64748b;
+  background: transparent;
+}
+
+.ai-action-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #ef4444;
+}
+
+/* Messages Container */
+.ai-messages-container {
+  background: linear-gradient(180deg, rgba(15, 15, 25, 0.5) 0%, rgba(10, 10, 18, 0.8) 100%);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 38, 38, 0.3) transparent;
+}
+
+.ai-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-messages-container::-webkit-scrollbar-thumb {
+  background: rgba(220, 38, 38, 0.3);
+  border-radius: 3px;
+}
+
+.ai-messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 38, 38, 0.5);
+}
+
+/* Welcome Icon */
+.ai-welcome-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Quick Prompts */
+.ai-quick-prompt {
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.9) 0%, rgba(20, 20, 35, 0.95) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.ai-quick-prompt:hover {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.1);
+  color: #f1f5f9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.2);
+}
+
+/* AI Message Bubble */
+.ai-message-avatar {
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.9) 0%, rgba(20, 20, 35, 0.95) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #ef4444;
+}
+
+.ai-message-bubble {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(25, 25, 40, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.ai-message-bubble::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(220, 38, 38, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* User Message */
+.ai-user-message {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(153, 27, 27, 0.15) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #f1f5f9;
+}
+
+/* Loading Bubble */
+.ai-loading-bubble {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(25, 25, 40, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Copy Button for Embedded */
+.ai-panel-embedded .copy-button {
+  background: rgba(30, 30, 50, 0.95);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #94a3b8;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ai-panel-embedded .copy-button:hover {
+  background: rgba(220, 38, 38, 0.2);
+  color: #ef4444;
+}
+
+/* Error Bar */
+.ai-error-bar {
+  background: linear-gradient(90deg, rgba(220, 38, 38, 0.15) 0%, transparent 100%);
+  border-top: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+/* Input Area */
+.ai-input-area {
+  background: linear-gradient(180deg, rgba(20, 20, 35, 0.95) 0%, rgba(15, 15, 25, 1) 100%);
+  border-top: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.ai-textarea {
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.9) 0%, rgba(20, 20, 35, 0.95) 100%);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  color: #f1f5f9;
+  font-family: 'Exo 2', sans-serif;
+  min-height: 48px;
+  max-height: 120px;
+  field-sizing: content;
+}
+
+.ai-textarea::placeholder {
+  color: #64748b;
+}
+
+.ai-textarea:focus {
+  border-color: rgba(220, 38, 38, 0.5);
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1), 0 0 20px rgba(220, 38, 38, 0.1);
+}
+
+.ai-send-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: white;
+  box-shadow: 
+    0 4px 20px rgba(220, 38, 38, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ai-send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 30px rgba(220, 38, 38, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ai-send-btn:disabled {
+  background: rgba(100, 116, 139, 0.3);
+  box-shadow: none;
+}
+
+/* ===== MESSAGE FORMATTING ===== */
+
+:host ::ng-deep .ai-message-bubble code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+:host ::ng-deep .ai-message-bubble .ai-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0.75rem 0 0.25rem;
+  font-family: 'Exo 2', sans-serif;
+}
+
+:host ::ng-deep .ai-message-bubble strong {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+:host ::ng-deep .ai-message-bubble em {
+  color: #22c55e;
+}
+
+/* ===== FLOATING MODE STYLES (Original) ===== */
+
 /* Custom scrollbar for messages */
 :host ::ng-deep .overflow-y-auto::-webkit-scrollbar {
   width: 5px;
@@ -21,7 +310,7 @@ textarea {
   field-sizing: content;
 }
 
-/* Code block styling in messages */
+/* Code block styling in messages (floating mode) */
 :host ::ng-deep code {
   background-color: #f5f5f5;
   padding: 0.125rem 0.375rem;
@@ -111,3 +400,41 @@ textarea:focus-visible {
   pointer-events: auto;
 }
 
+/* ===== ENTRANCE ANIMATION FOR EMBEDDED ===== */
+.ai-panel-embedded {
+  animation: aiPanelEntrance 0.5s ease-out;
+}
+
+@keyframes aiPanelEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== SHIMMER EFFECT ===== */
+.ai-panel-embedded::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    transparent 100%
+  );
+  animation: shimmer 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { left: -150%; }
+  50%, 100% { left: 150%; }
+}

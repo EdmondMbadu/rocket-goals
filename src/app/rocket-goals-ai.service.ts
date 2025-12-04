@@ -176,6 +176,27 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.messages.update(msgs => [...msgs, message]);
   }
 
+  addAIMessage(content: string): void {
+    const cleanContent = content.trim();
+    if (!cleanContent) {
+      return;
+    }
+
+    const message: ChatMessage = {
+      role: 'model',
+      content: cleanContent,
+      timestamp: new Date(),
+    };
+
+    this.messages.update(msgs => [...msgs, message]);
+    
+    // Also add to conversation history so context is maintained
+    this.conversationHistory.push({
+      role: 'model',
+      content: cleanContent
+    });
+  }
+
   private getGoalTitle(goal: RocketGoal): string {
     return goal.answers?.['goal_title_label'] ||
            goal.answers?.['custom_goal_title'] ||
