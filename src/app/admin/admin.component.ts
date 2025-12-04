@@ -29,6 +29,8 @@ export class AdminComponent implements OnInit {
   checkingAuth = signal(true);
 
   async ngOnInit() {
+    console.log('🔐 Admin component initializing...');
+    
     // Wait for auth to load
     let attempts = 0;
     while (!this.authService.profile() && attempts < 20) {
@@ -37,18 +39,26 @@ export class AdminComponent implements OnInit {
     }
 
     const profile = this.authService.profile();
+    console.log('🔐 Profile loaded:', profile);
+    console.log('🔐 Role:', profile?.role, 'Admin flag:', profile?.admin);
     
     if (!profile) {
+      console.log('🔐 No profile, redirecting to login');
       this.router.navigate(['/login']);
       return;
     }
 
-    // Check if user is admin
-    if (profile.role !== 'admin' && !profile.admin) {
+    // Check if user is admin - check both role and admin fields
+    const isUserAdmin = profile.role === 'admin' || profile.admin === true;
+    console.log('🔐 Is admin?', isUserAdmin);
+    
+    if (!isUserAdmin) {
+      console.log('🔐 Not admin, redirecting to goals');
       this.router.navigate(['/goals']);
       return;
     }
 
+    console.log('🔐 Admin access granted!');
     this.isAdmin.set(true);
     this.checkingAuth.set(false);
   }

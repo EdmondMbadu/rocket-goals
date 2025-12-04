@@ -91,7 +91,7 @@ export class App implements AfterViewInit, OnDestroy {
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected readonly isAuthRoute = computed(() => {
     const route = this.currentRoute();
