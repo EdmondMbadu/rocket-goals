@@ -206,6 +206,16 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeAvatarDropdown();
   }
 
+  navigateToAdmin() {
+    this.router.navigateByUrl('/admin');
+    this.closeAvatarDropdown();
+  }
+
+  isAdmin(): boolean {
+    const profile = this.authService.profile();
+    return profile?.role === 'admin' || profile?.admin === true;
+  }
+
   onImageError(event: Event) {
     const img = event.target as HTMLImageElement;
     if (img) {
