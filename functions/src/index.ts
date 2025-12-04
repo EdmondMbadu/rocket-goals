@@ -3,7 +3,7 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import * as sgMail from "@sendgrid/mail";
+import sgMail = require("@sendgrid/mail");
 
 // Initialize Firebase Admin
 admin.initializeApp();
