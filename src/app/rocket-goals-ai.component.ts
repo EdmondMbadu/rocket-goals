@@ -1,7 +1,9 @@
 import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
+import { AuthService } from './auth.service';
 import type { RocketGoal } from './models/rocket-goal';
 
 @Component({
@@ -18,6 +20,8 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
   @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
 
   private readonly aiService = inject(RocketGoalsAIService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly isOpen = this.aiService.isOpen;
   readonly inputMessage = signal('');
@@ -57,17 +61,40 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     // Wait a moment for the UI to settle
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const firstName = this.goalContext.participant?.firstName || 'there';
+    // Check if user is signed in
+    const currentUser = this.authService.profile();
+    const isSignedIn = !!currentUser;
+    
+    // Get name: use signed-in user's name, or goal participant's name, or just "hello"
+    let firstName = '';
+    if (isSignedIn && currentUser?.firstName) {
+      firstName = currentUser.firstName;
+    } else if (this.goalContext.participant?.firstName) {
+      // If not signed in but goal has participant name, just use generic greeting
+      firstName = '';
+    }
+    
     const goalTitle = this.getGoalTitle(this.goalContext);
     
-    // Create personalized greeting messages based on goal context
-    const greetings = [
-      `Hey ${firstName}! 🚀 I see you're working on "${goalTitle}". What's the one thing you want to accomplish with this today?`,
-      `Welcome back, ${firstName}! Ready to make progress on "${goalTitle}"? What's on your mind?`,
-      `${firstName}, your mission "${goalTitle}" awaits! What would help you most right now - strategy, motivation, or tracking your progress?`,
-    ];
-    
-    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    // Create personalized greeting messages
+    let greeting = '';
+    if (isSignedIn && firstName) {
+      // Signed in with name
+      const greetings = [
+        `Hey ${firstName}! 🚀 I see you're working on "${goalTitle}". What's the one thing you want to accomplish with this today?`,
+        `Welcome back, ${firstName}! Ready to make progress on "${goalTitle}"? What's on your mind?`,
+        `${firstName}, your mission "${goalTitle}" awaits! What would help you most right now - strategy, motivation, or tracking your progress?`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    } else {
+      // Not signed in - generic greeting
+      const greetings = [
+        `Hello! 🚀 I see you're viewing "${goalTitle}". Sign in to get personalized help with your goals!`,
+        `Hi there! Ready to make progress on "${goalTitle}"? Sign in to chat with me about your mission!`,
+        `Welcome! Your mission "${goalTitle}" awaits! Sign in to get started with personalized guidance.`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    }
     
     // Add the AI greeting with typewriter effect
     this.addMessageWithTypewriter(greeting);
@@ -156,6 +183,18 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
   async sendMessage(): Promise<void> {
     const message = this.inputMessage().trim();
     if (!message || this.isLoading()) return;
+
+    // Check if user is signed in
+    const currentUser = this.authService.profile();
+    if (!currentUser) {
+      // Not signed in - redirect to login
+      this.router.navigate(['/login'], { 
+        queryParams: { 
+          returnUrl: this.router.url 
+        } 
+      });
+      return;
+    }
 
     this.inputMessage.set('');
     this.shouldScrollToBottom = true;
