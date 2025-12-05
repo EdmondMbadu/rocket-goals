@@ -448,7 +448,7 @@ export const sendTestEmail = functions.runWith({
         .collection('userProfiles')
         .doc(context.auth.uid)
         .get();
-    
+
     const userData = userDoc.data();
     if (!userData || (userData.role !== 'admin' && !userData.admin)) {
         throw new functions.https.HttpsError(
@@ -486,7 +486,7 @@ export const sendTestEmail = functions.runWith({
         // Create email message
         const msg = {
             to: to,
-            from: 'support@rocketgoals.com', // Verified sender email
+            from: 'missioncontrol@rocketgoals.com', // Verified sender email
             subject: subject,
             text: message,
             html: `
@@ -511,16 +511,16 @@ export const sendTestEmail = functions.runWith({
 
         // Send the email
         await sgMail.send(msg);
-        
+
         console.log(`✅ Test email sent successfully to ${to}`);
-        
+
         return {
             success: true,
             message: `Email sent successfully to ${to}`
         };
     } catch (error: any) {
         console.error('❌ Error sending email:', error);
-        
+
         // Handle SendGrid specific errors
         if (error.response) {
             const { body } = error.response;
@@ -529,7 +529,7 @@ export const sendTestEmail = functions.runWith({
                 `SendGrid error: ${JSON.stringify(body)}`
             );
         }
-        
+
         throw new functions.https.HttpsError(
             'internal',
             `Failed to send email: ${error.message}`

@@ -40,6 +40,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   countdown = signal('23:59:59');
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
+  isDarkMode = signal(true); // Default to dark mode
   private countdownInterval: any;
 
   ngOnInit() {
@@ -47,6 +48,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const savedTitle = localStorage.getItem('dashboardTitle');
     if (savedTitle) {
       this.dashboardTitle.set(savedTitle);
+    }
+
+    // Load dark mode preference from localStorage (default to true/dark)
+    const savedDarkMode = localStorage.getItem('rocketGoalDarkMode');
+    if (savedDarkMode !== null) {
+      this.isDarkMode.set(savedDarkMode === 'true');
     }
 
     const goalId = this.route.snapshot.paramMap.get('id');
@@ -334,6 +341,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   goHome() {
     this.router.navigateByUrl('/goals');
+  }
+
+  toggleDarkMode() {
+    const newValue = !this.isDarkMode();
+    this.isDarkMode.set(newValue);
+    localStorage.setItem('rocketGoalDarkMode', String(newValue));
   }
 
   startEditingGoalTitle() {
