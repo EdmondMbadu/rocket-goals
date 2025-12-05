@@ -3,8 +3,8 @@
    Premium Space-Themed Experience
    ============================================ */
 
-/* Import Space-Age Typography - Optimized weights only */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@400;600;700;800&display=swap');
+/* Import Space-Age Typography - Minimal weights for performance */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Exo+2:wght@700;800&display=swap');
 
 /* ===== CORE DASHBOARD THEME ===== */
 .mission-control-dashboard {
@@ -196,8 +196,9 @@
 }
 
 .light-mode .logo-text {
-  color: #1e293b;
+  color: #0f172a;
   text-shadow: none;
+  font-weight: 900;
 }
 
 /* ===== THEME TOGGLE BUTTON ===== */
@@ -397,7 +398,7 @@
 }
 
 .light-mode .directive-title {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -415,7 +416,8 @@
 }
 
 .light-mode .directive-theme {
-  color: #64748b;
+  color: #475569;
+  font-weight: 600;
 }
 
 /* Stats boxes */
@@ -618,8 +620,9 @@
 }
 
 .light-mode .countdown-timer {
-  color: #1e293b;
+  color: #0f172a;
   text-shadow: none;
+  font-weight: 900;
 }
 
 .timeline-badge {
@@ -947,7 +950,7 @@
 }
 
 .light-mode .icon-btn {
-  color: #64748b;
+  color: #334155;
 }
 
 .icon-btn:hover {
@@ -981,7 +984,7 @@
 }
 
 .light-mode .edit-btn {
-  color: #64748b;
+  color: #334155;
 }
 
 .edit-btn:hover {
@@ -1004,7 +1007,8 @@
 }
 
 .light-mode .goal-title-input {
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .goal-title-input:focus {
@@ -1067,7 +1071,8 @@
 }
 
 .light-mode .stat-label-sm {
-  color: #64748b;
+  color: #334155;
+  font-weight: 700;
 }
 
 .stat-value-sm {
@@ -1082,7 +1087,8 @@
 }
 
 .light-mode .stat-value-sm {
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 /* ===== COMPACT FUEL BAR ===== */
@@ -1123,7 +1129,8 @@
 }
 
 .light-mode .fuel-percentage-sm {
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 .fuel-status-sm {
@@ -1153,7 +1160,8 @@
 }
 
 .light-mode .terminal-mini {
-  color: #475569;
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .terminal-line-mini {
@@ -1240,7 +1248,8 @@
 }
 
 .light-mode .timeline-day-label-sm {
-  color: #64748b;
+  color: #334155;
+  font-weight: 700;
 }
 
 /* ===== DASHBOARD GRID LAYOUT ===== */

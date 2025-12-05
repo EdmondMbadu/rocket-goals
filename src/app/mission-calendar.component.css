@@ -3,7 +3,7 @@
    Matches Rocket Goals Dashboard Aesthetic
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Exo+2:wght@700;800&display=swap');
 
 .mission-calendar {
   border-radius: 20px;
@@ -191,7 +191,8 @@
 }
 
 :host-context(.light-mode) .view-btn {
-  color: #64748b;
+  color: #334155;
+  font-weight: 700;
 }
 
 :host-context(.dark-mode) .view-btn {
@@ -239,8 +240,8 @@
 
 :host-context(.light-mode) .nav-btn {
   background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(203, 213, 225, 0.6);
-  color: #64748b;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  color: #334155;
 }
 
 :host-context(.dark-mode) .nav-btn {
@@ -274,7 +275,8 @@
 }
 
 :host-context(.light-mode) .nav-title {
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 :host-context(.dark-mode) .nav-title {
@@ -310,7 +312,8 @@
 }
 
 :host-context(.light-mode) .weekday-header {
-  color: #64748b;
+  color: #1e293b;
+  font-weight: 700;
 }
 
 :host-context(.dark-mode) .weekday-header {
@@ -385,7 +388,8 @@
 }
 
 :host-context(.light-mode) .day-cell-number {
-  color: #475569;
+  color: #1e293b;
+  font-weight: 700;
 }
 
 :host-context(.dark-mode) .day-cell-number {

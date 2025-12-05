@@ -2,7 +2,7 @@
    ROCKET GOALS AI - SPACE THEME STYLES
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Exo+2:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Exo+2:wght@700;800&display=swap');
 
 /* ===== EMBEDDED MODE STYLES ===== */
 
@@ -110,7 +110,8 @@
 }
 
 :host-context(.light-mode) .ai-title {
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 :host-context(.dark-mode) .ai-title {
@@ -211,7 +212,8 @@
 :host-context(.light-mode) .ai-message-bubble {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
   border: 1px solid rgba(226, 232, 240, 0.8);
-  color: #334155;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 :host-context(.dark-mode) .ai-message-bubble {
@@ -240,7 +242,8 @@
 }
 
 :host-context(.light-mode) .ai-user-message {
-  color: #1e293b;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 :host-context(.dark-mode) .ai-user-message {
@@ -295,8 +298,9 @@
 
 :host-context(.light-mode) .ai-textarea {
   background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.98) 100%);
-  border: 1px solid rgba(203, 213, 225, 0.6);
-  color: #1e293b;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  color: #0f172a;
+  font-weight: 500;
 }
 
 :host-context(.dark-mode) .ai-textarea {
