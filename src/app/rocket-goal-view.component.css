@@ -1011,6 +1011,32 @@
   font-weight: 700;
 }
 
+/* ===== LIGHT MODE TEXT OVERRIDES ===== */
+/* Override gray text colors that are too light on white background */
+.light-mode .text-gray-500 {
+  color: #334155 !important;
+}
+
+.light-mode .text-gray-600 {
+  color: #1e293b !important;
+}
+
+/* Fuel Status header */
+.light-mode .timeline-badge.text-gray-500 {
+  color: #475569 !important;
+  font-weight: 700;
+}
+
+/* Driving Force label */
+.light-mode .hud-card .text-gray-500 {
+  color: #475569 !important;
+}
+
+/* Timeline day numbers in circles */
+.light-mode .timeline-node-inactive .text-gray-500 {
+  color: #334155 !important;
+}
+
 .goal-title-input:focus {
   border-bottom-color: #ef4444;
   box-shadow: 0 2px 20px rgba(220, 38, 38, 0.3);
