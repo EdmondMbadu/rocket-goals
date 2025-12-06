@@ -3,6 +3,7 @@ import { Functions, getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
+import { CalendarEventsService, type CalendarEventData } from './calendar-events.service';
 import type { RocketGoal } from './models/rocket-goal';
 
 export interface ChatMessage {
@@ -20,6 +21,16 @@ interface AIRequest {
     answers: Record<string, any>;
     status: string;
   };
+  calendarEvents?: Array<{
+    id: string;
+    title: string;
+    date: string; // ISO string
+    time?: string;
+    duration?: number;
+    color?: string;
+    completed?: boolean;
+    description?: string;
+  }>;
 }
 
 interface AIResponse {
@@ -34,6 +45,7 @@ export class RocketGoalsAIService {
   private readonly functions = getFunctions(getApp(), 'us-central1');
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);
+  private readonly calendarEventsService = inject(CalendarEventsService);
 
   readonly messages = signal<ChatMessage[]>([]);
   readonly isLoading = signal(false);
@@ -101,6 +113,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           content: msg.content
         }));
 
+      // Fetch calendar events if goal context is provided
+      let calendarEvents: CalendarEventData[] = [];
+      if (goalContext?.id) {
+        try {
+          calendarEvents = await this.calendarEventsService.getEventsByGoalId(goalContext.id);
+        } catch (error) {
+          console.warn('Failed to fetch calendar events:', error);
+          // Continue without calendar events if fetch fails
+        }
+      }
+
       // Call the Cloud Function
       const callable = httpsCallable<AIRequest, AIResponse>(
         this.functions,
@@ -115,7 +138,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           primaryGoal: goalContext.primaryGoal || '',
           answers: goalContext.answers || {},
           status: goalContext.status
-        } : undefined
+        } : undefined,
+        calendarEvents: calendarEvents.length > 0 ? calendarEvents.map(event => ({
+          id: event.id,
+          title: event.title,
+          date: event.date.toISOString(),
+          time: event.time,
+          duration: event.duration,
+          color: event.color,
+          completed: event.completed,
+          description: event.description
+        })) : undefined
       });
 
       // Add AI response to conversation
@@ -181,6 +214,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           content: msg.content
         }));
 
+      // Fetch calendar events if goal context is provided
+      let calendarEvents: CalendarEventData[] = [];
+      if (goalContext?.id) {
+        try {
+          calendarEvents = await this.calendarEventsService.getEventsByGoalId(goalContext.id);
+        } catch (error) {
+          console.warn('Failed to fetch calendar events:', error);
+          // Continue without calendar events if fetch fails
+        }
+      }
+
       // Call the Cloud Function
       const callable = httpsCallable<AIRequest, AIResponse>(
         this.functions,
@@ -195,7 +239,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           primaryGoal: goalContext.primaryGoal || '',
           answers: goalContext.answers || {},
           status: goalContext.status
-        } : undefined
+        } : undefined,
+        calendarEvents: calendarEvents.length > 0 ? calendarEvents.map(event => ({
+          id: event.id,
+          title: event.title,
+          date: event.date.toISOString(),
+          time: event.time,
+          duration: event.duration,
+          color: event.color,
+          completed: event.completed,
+          description: event.description
+        })) : undefined
       });
 
       // Add user message to conversation history (AI will be added when typewriter finishes)

@@ -452,6 +452,7 @@ export const rocketGoalsAI = onCall({
         const userMessage = (data?.message || "").toString().trim();
         const conversationHistory = Array.isArray(data?.conversationHistory) ? data.conversationHistory : [];
         const goalContext = data?.goalContext;
+        const calendarEvents = Array.isArray(data?.calendarEvents) ? data.calendarEvents : [];
 
         if (!userMessage) {
             throw new HttpsError(
@@ -496,6 +497,108 @@ ${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ""}
 ${answers.future_result ? `Motivation Driver: ${answers.future_result.join(", ")}` : ""}
 
 IMPORTANT: Use this goal context to provide personalized, insightful advice. Reference their specific goal details when relevant, but don't force it if their question is unrelated to goal achievement.`;
+        }
+
+        // Add calendar events context if available
+        if (calendarEvents.length > 0) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Parse and categorize events
+            const eventsByDate: { [key: string]: any[] } = {
+                today: [],
+                yesterday: [],
+                tomorrow: [],
+                upcoming: [],
+                past: []
+            };
+
+            calendarEvents.forEach((event: any) => {
+                const eventDate = new Date(event.date);
+                const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+                if (eventDateOnly.getTime() === today.getTime()) {
+                    eventsByDate.today.push(event);
+                } else if (eventDateOnly.getTime() === yesterday.getTime()) {
+                    eventsByDate.yesterday.push(event);
+                } else if (eventDateOnly.getTime() === tomorrow.getTime()) {
+                    eventsByDate.tomorrow.push(event);
+                } else if (eventDateOnly < today) {
+                    eventsByDate.past.push(event);
+                } else {
+                    eventsByDate.upcoming.push(event);
+                }
+            });
+
+            // Format events for AI context
+            let eventsContext = "\n\nCALENDAR EVENTS CONTEXT:\n";
+            eventsContext += "You have access to the user's calendar events for this goal. You can answer questions about:\n";
+            eventsContext += "- Events planned for today, yesterday, tomorrow, or any specific date\n";
+            eventsContext += "- Upcoming events and past events\n";
+            eventsContext += "- Event details like time, duration, completion status, and descriptions\n\n";
+
+            if (eventsByDate.today.length > 0) {
+                eventsContext += `TODAY'S EVENTS (${eventsByDate.today.length}):\n`;
+                eventsByDate.today.forEach((event: any) => {
+                    eventsContext += `- ${event.title}`;
+                    if (event.time) eventsContext += ` at ${event.time}`;
+                    if (event.duration) eventsContext += ` (${event.duration} min)`;
+                    if (event.completed) eventsContext += ` [COMPLETED]`;
+                    if (event.description) eventsContext += ` - ${event.description}`;
+                    eventsContext += "\n";
+                });
+                eventsContext += "\n";
+            }
+
+            if (eventsByDate.yesterday.length > 0) {
+                eventsContext += `YESTERDAY'S EVENTS (${eventsByDate.yesterday.length}):\n`;
+                eventsByDate.yesterday.forEach((event: any) => {
+                    eventsContext += `- ${event.title}`;
+                    if (event.time) eventsContext += ` at ${event.time}`;
+                    if (event.completed) eventsContext += ` [COMPLETED]`;
+                    eventsContext += "\n";
+                });
+                eventsContext += "\n";
+            }
+
+            if (eventsByDate.tomorrow.length > 0) {
+                eventsContext += `TOMORROW'S EVENTS (${eventsByDate.tomorrow.length}):\n`;
+                eventsByDate.tomorrow.forEach((event: any) => {
+                    eventsContext += `- ${event.title}`;
+                    if (event.time) eventsContext += ` at ${event.time}`;
+                    if (event.duration) eventsContext += ` (${event.duration} min)`;
+                    eventsContext += "\n";
+                });
+                eventsContext += "\n";
+            }
+
+            if (eventsByDate.upcoming.length > 0) {
+                eventsContext += `UPCOMING EVENTS (${eventsByDate.upcoming.length}):\n`;
+                // Show next 5 upcoming events
+                eventsByDate.upcoming.slice(0, 5).forEach((event: any) => {
+                    const eventDate = new Date(event.date);
+                    const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    eventsContext += `- ${event.title} on ${dateStr}`;
+                    if (event.time) eventsContext += ` at ${event.time}`;
+                    eventsContext += "\n";
+                });
+                if (eventsByDate.upcoming.length > 5) {
+                    eventsContext += `... and ${eventsByDate.upcoming.length - 5} more upcoming events\n`;
+                }
+                eventsContext += "\n";
+            }
+
+            eventsContext += "When users ask about their calendar events, provide specific, helpful information. For example:\n";
+            eventsContext += "- 'What do I have today?' → List today's events with times\n";
+            eventsContext += "- 'What did I do yesterday?' → List yesterday's events\n";
+            eventsContext += "- 'What's coming up?' → List upcoming events\n";
+            eventsContext += "- Be natural and conversational when discussing their schedule\n";
+
+            contextualPrompt += eventsContext;
         }
 
         const systemInstruction = contextualPrompt;
