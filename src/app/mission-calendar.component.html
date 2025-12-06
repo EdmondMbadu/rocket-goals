@@ -144,8 +144,8 @@
               <div class="day-events">
                 @for (event of getEventsForDate(day.date).slice(0, 3); track event.id) {
                   <div class="event-bar" 
-                       [style.background]="event.color || '#dc2626'"
-                       [style.border-left-color]="event.color || '#dc2626'"
+                       [style.background]="getEventBarBackground(event.color)"
+                       [style.border-left-color]="getEventBarBorderColor(event.color)"
                        (click)="onEventClick(event, $event)"
                        [title]="event.title">
                     <span class="event-bar-text">{{ event.title }}</span>

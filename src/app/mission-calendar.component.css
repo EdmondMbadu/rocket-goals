@@ -475,8 +475,6 @@
   padding: 2px 6px;
   border-radius: 4px;
   border-left: 3px solid;
-  background: rgba(220, 38, 38, 0.15);
-  border-left-color: #dc2626;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -485,34 +483,23 @@
   position: relative;
 }
 
-:host-context(.light-mode) .event-bar {
-  background: rgba(220, 38, 38, 0.1);
-}
-
 .event-bar:hover {
-  background: rgba(220, 38, 38, 0.25);
+  opacity: 0.9;
   transform: translateX(2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-:host-context(.light-mode) .event-bar:hover {
-  background: rgba(220, 38, 38, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .event-bar-text {
   font-family: 'Exo 2', sans-serif;
   font-size: 9px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
   flex: 1;
-}
-
-:host-context(.light-mode) .event-bar-text {
-  color: #1e293b;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .more-events-bar {

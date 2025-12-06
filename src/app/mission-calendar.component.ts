@@ -288,5 +288,27 @@ export class MissionCalendarComponent {
     const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
     return `UTC ${sign}${hours}:00`;
   }
+
+  // Convert hex color to rgba with opacity for event bars
+  getEventBarBackground(color: string | undefined): string {
+    const eventColor = color || '#dc2626';
+    // For event bars, use a more opaque version (70-80% opacity) so white text is visible
+    if (eventColor.startsWith('#')) {
+      const hex = eventColor.slice(1);
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.75)`;
+    }
+    // If already rgba, increase opacity
+    if (eventColor.startsWith('rgba')) {
+      return eventColor.replace(/[\d\.]+\)$/g, '0.75)');
+    }
+    return `rgba(220, 38, 38, 0.75)`;
+  }
+
+  getEventBarBorderColor(color: string | undefined): string {
+    return color || '#dc2626';
+  }
 }
 
