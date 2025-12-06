@@ -69,7 +69,8 @@
               <div class="hour-slot" (click)="onCreateEventClick(createDateWithHour(currentDate(), hour), $event)">
                 @for (event of getEventsForHour(currentDate(), hour); track event.id) {
                   <div class="event-chip" 
-                       [style.background]="event.color || 'rgba(220, 38, 38, 0.3)'"
+                       [style.background]="getEventBarBackground(event.color)"
+                       [style.border-left-color]="getEventBarBorderColor(event.color)"
                        (click)="onEventClick(event, $event)">
                     {{ event.title }}
                   </div>
@@ -109,6 +110,8 @@
                        (click)="onCreateEventClick(createDateWithHour(day.date, hour), $event)">
                     @for (event of getEventsForHour(day.date, hour); track event.id) {
                       <div class="event-chip-sm" 
+                           [style.background]="getEventBarBackground(event.color)"
+                           [style.border-left-color]="getEventBarBorderColor(event.color)"
                            (click)="onEventClick(event, $event)">
                         {{ event.title }}
                       </div>

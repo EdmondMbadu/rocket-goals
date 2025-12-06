@@ -289,22 +289,23 @@ export class MissionCalendarComponent {
     return `UTC ${sign}${hours}:00`;
   }
 
-  // Convert hex color to rgba with opacity for event bars
+  // Convert hex color to solid rgba for event bars (fully opaque for white text visibility)
   getEventBarBackground(color: string | undefined): string {
     const eventColor = color || '#dc2626';
-    // For event bars, use a more opaque version (70-80% opacity) so white text is visible
+    // Use fully opaque (solid) background so white text is always visible
     if (eventColor.startsWith('#')) {
       const hex = eventColor.slice(1);
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
       const b = parseInt(hex.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, 0.75)`;
+      return `rgba(${r}, ${g}, ${b}, 1)`;
     }
-    // If already rgba, increase opacity
+    // If already rgba, make it fully opaque
     if (eventColor.startsWith('rgba')) {
-      return eventColor.replace(/[\d\.]+\)$/g, '0.75)');
+      return eventColor.replace(/[\d\.]+\)$/g, '1)');
     }
-    return `rgba(220, 38, 38, 0.75)`;
+    // Default to solid red
+    return `rgba(220, 38, 38, 1)`;
   }
 
   getEventBarBorderColor(color: string | undefined): string {
