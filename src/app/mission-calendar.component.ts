@@ -24,6 +24,7 @@ export class MissionCalendarComponent {
   @Input() events: CalendarEvent[] = [];
   @Output() dateSelected = new EventEmitter<Date>();
   @Output() eventClicked = new EventEmitter<CalendarEvent>();
+  @Output() createEvent = new EventEmitter<Date>();
 
   currentView = signal<CalendarView>('month');
   currentDate = signal<Date>(new Date());
@@ -197,6 +198,22 @@ export class MissionCalendarComponent {
     this.selectedDate.set(date);
     this.currentDate.set(date);
     this.dateSelected.emit(date);
+  }
+
+  onEventClick(event: CalendarEvent, e: Event) {
+    e.stopPropagation();
+    this.eventClicked.emit(event);
+  }
+
+  onCreateEventClick(date: Date, e: Event) {
+    e.stopPropagation();
+    this.createEvent.emit(date);
+  }
+
+  createDateWithHour(date: Date, hour: number): Date {
+    const newDate = new Date(date);
+    newDate.setHours(hour, 0, 0, 0);
+    return newDate;
   }
 
   selectMonth(monthIndex: number) {

@@ -1,0 +1,147 @@
+@if (isOpen()) {
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        @if (event) {
+          EDIT EVENT
+        } @else {
+          NEW EVENT
+        }
+      </h3>
+      <button (click)="closeModal()" class="close-btn">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (!isDeleteConfirm()) {
+        <!-- Event Form -->
+        <div class="form-group">
+          <label class="form-label">Event Title *</label>
+          <input 
+            type="text" 
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            class="form-input"
+            placeholder="Enter event title..."
+            maxlength="100">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label">Date *</label>
+            <input 
+              type="date" 
+              [ngModel]="date()"
+              (ngModelChange)="date.set($event)"
+              class="form-input">
+          </div>
+
+          <div class="form-group flex-1">
+            <label class="form-label">Time *</label>
+            <input 
+              type="time" 
+              [ngModel]="time()"
+              (ngModelChange)="time.set($event)"
+              class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label">Duration</label>
+            <select [ngModel]="duration()" (ngModelChange)="duration.set($event)" class="form-input">
+              @for (option of durationOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group flex-1">
+            <label class="form-label">Color</label>
+            <div class="color-picker">
+              @for (colorOption of colorOptions; track colorOption.value) {
+                <button
+                  type="button"
+                  (click)="color.set(colorOption.value)"
+                  class="color-option"
+                  [class.active]="color() === colorOption.value"
+                  [style.background]="colorOption.value"
+                  [title]="colorOption.label">
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea 
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            class="form-textarea"
+            placeholder="Add notes or description..."
+            rows="3"
+            maxlength="500"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [ngModel]="completed()"
+              (ngModelChange)="completed.set($event)"
+              class="checkbox-input">
+            <span>Mark as completed</span>
+          </label>
+        </div>
+      } @else {
+        <!-- Delete Confirmation -->
+        <div class="delete-confirm">
+          <div class="delete-icon">⚠️</div>
+          <h4 class="delete-title">Delete Event?</h4>
+          <p class="delete-message">Are you sure you want to delete "{{ title() }}"? This action cannot be undone.</p>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      @if (!isDeleteConfirm()) {
+        <div class="footer-left">
+          @if (event) {
+            <button (click)="handleDelete()" class="btn btn-danger">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete
+            </button>
+          }
+        </div>
+        <div class="footer-right">
+          <button (click)="closeModal()" class="btn btn-secondary">Cancel</button>
+          <button (click)="handleSave()" class="btn btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Save
+          </button>
+        </div>
+      } @else {
+        <div class="footer-right">
+          <button (click)="cancelDelete()" class="btn btn-secondary">Cancel</button>
+          <button (click)="handleDelete()" class="btn btn-danger">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete Forever
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}
+

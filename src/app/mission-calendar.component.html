@@ -10,6 +10,12 @@
         <span class="pulse-dot"></span>
         TODAY
       </button>
+      <button (click)="createEvent.emit(selectedDate() || currentDate())" class="new-event-btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        NEW EVENT
+      </button>
     </div>
 
     <!-- View Toggle -->
@@ -60,9 +66,11 @@
           @for (hour of hours; track trackByHour($index, hour)) {
             <div class="hour-row">
               <div class="hour-label">{{ formatHour(hour) }}</div>
-              <div class="hour-slot">
+              <div class="hour-slot" (click)="onCreateEventClick(createDateWithHour(currentDate(), hour), $event)">
                 @for (event of getEventsForHour(currentDate(), hour); track event.id) {
-                  <div class="event-chip" [style.background]="event.color || 'rgba(220, 38, 38, 0.3)'">
+                  <div class="event-chip" 
+                       [style.background]="event.color || 'rgba(220, 38, 38, 0.3)'"
+                       (click)="onEventClick(event, $event)">
                     {{ event.title }}
                   </div>
                 }
@@ -98,9 +106,12 @@
                 @for (day of weekDaysData(); track trackByDate($index, day)) {
                   <div class="week-slot" 
                        [class.today]="day.isToday"
-                       (click)="selectDate(day.date)">
+                       (click)="onCreateEventClick(createDateWithHour(day.date, hour), $event)">
                     @for (event of getEventsForHour(day.date, hour); track event.id) {
-                      <div class="event-chip-sm">{{ event.title }}</div>
+                      <div class="event-chip-sm" 
+                           (click)="onEventClick(event, $event)">
+                        {{ event.title }}
+                      </div>
                     }
                   </div>
                 }
@@ -131,11 +142,21 @@
                 {{ day.date.getDate() }}
               </span>
               <div class="day-events">
-                @for (event of getEventsForDate(day.date).slice(0, 2); track event.id) {
-                  <div class="event-dot" [style.background]="event.color || '#dc2626'"></div>
+                @for (event of getEventsForDate(day.date).slice(0, 3); track event.id) {
+                  <div class="event-bar" 
+                       [style.background]="event.color || '#dc2626'"
+                       [style.border-left-color]="event.color || '#dc2626'"
+                       (click)="onEventClick(event, $event)"
+                       [title]="event.title">
+                    <span class="event-bar-text">{{ event.title }}</span>
+                  </div>
                 }
-                @if (getEventsForDate(day.date).length > 2) {
-                  <span class="more-events">+{{ getEventsForDate(day.date).length - 2 }}</span>
+                @if (getEventsForDate(day.date).length > 3) {
+                  <div class="more-events-bar" 
+                       (click)="selectDate(day.date)"
+                       [title]="getEventsForDate(day.date).length + ' events'">
+                    +{{ getEventsForDate(day.date).length - 3 }} more
+                  </div>
                 }
               </div>
             </div>

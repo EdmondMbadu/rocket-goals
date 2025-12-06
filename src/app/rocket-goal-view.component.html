@@ -358,8 +358,10 @@
 
           <!-- MISSION CALENDAR -->
           <app-mission-calendar 
-            [events]="[]"
-            (dateSelected)="onCalendarDateSelected($event)">
+            [events]="calendarEvents()"
+            (dateSelected)="onCalendarDateSelected($event)"
+            (eventClicked)="onCalendarEventClicked($event)"
+            (createEvent)="onCalendarCreateEvent($event)">
           </app-mission-calendar>
         </div>
 
@@ -387,4 +389,16 @@
     </div>
   </div>
 </div>
+
+<!-- Event Modal -->
+@if (showEventModal()) {
+  <app-event-modal
+    [event]="selectedEvent()"
+    [defaultDate]="eventModalDate()"
+    [goalId]="goal()?.id || ''"
+    (close)="onEventModalClose()"
+    (save)="onEventSave($event)"
+    (delete)="onEventDelete($event)">
+  </app-event-modal>
+}
 }

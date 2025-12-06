@@ -7,12 +7,16 @@ import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { MissionCalendarComponent } from './mission-calendar.component';
+import { EventModalComponent } from './event-modal.component';
+import { CalendarEventsService } from './calendar-events.service';
 import type { RocketGoal } from './models/rocket-goal';
+import type { CalendarEvent } from './mission-calendar.component';
+import type { CalendarEventData } from './calendar-events.service';
 
 @Component({
   selector: 'app-rocket-goal-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent, EventModalComponent],
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
@@ -20,6 +24,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
+  private calendarEventsService = inject(CalendarEventsService);
   authService = inject(AuthService); // Make public for template access
 
   @ViewChild('titleInput') titleInputRef?: ElementRef<HTMLInputElement>;
@@ -41,6 +46,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
   isDarkMode = signal(true); // Default to dark mode
+  calendarEvents = signal<CalendarEvent[]>([]);
+  selectedEvent = signal<CalendarEvent | null>(null);
+  showEventModal = signal(false);
+  eventModalDate = signal<Date>(new Date());
   private countdownInterval: any;
 
   ngOnInit() {
@@ -143,6 +152,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       const currentUser = this.authService.profile();
       if (currentGoal?.userId && currentUser?.userId && currentGoal.userId === currentUser.userId) {
         this.loadUserGoals(currentGoal.userId);
+      }
+      
+      // Load calendar events
+      if (currentGoal?.id) {
+        await this.loadCalendarEvents(currentGoal.id);
       }
       } else {
         this.error.set('Goal not found');
@@ -413,10 +427,77 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     this.editingGoalTitleValue.set('');
   }
 
+  async loadCalendarEvents(goalId: string) {
+    try {
+      const eventsData = await this.calendarEventsService.getEventsByGoalId(goalId);
+      const events = eventsData.map(eventData => this.calendarEventsService.toCalendarEvent(eventData));
+      this.calendarEvents.set(events);
+    } catch (error) {
+      console.error('Error loading calendar events:', error);
+    }
+  }
+
   onCalendarDateSelected(date: Date) {
-    // This will be used later for adding tasks/events to specific dates
-    console.log('Calendar date selected:', date);
-    // Future: Open a modal to add tasks for this date
+    this.eventModalDate.set(new Date(date)); // Create new date object to trigger change detection
+    this.selectedEvent.set(null);
+    this.showEventModal.set(true);
+  }
+
+  onCalendarEventClicked(event: CalendarEvent) {
+    this.selectedEvent.set({ ...event }); // Create new object to trigger change detection
+    this.eventModalDate.set(new Date(event.date));
+    this.showEventModal.set(true);
+  }
+
+  onCalendarCreateEvent(date: Date) {
+    this.eventModalDate.set(new Date(date)); // Create new date object to trigger change detection
+    this.selectedEvent.set(null);
+    this.showEventModal.set(true);
+  }
+
+  async onEventSave(eventData: Partial<CalendarEventData>) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    try {
+      if (this.selectedEvent()) {
+        // Update existing event
+        await this.calendarEventsService.updateEvent(goal.id, this.selectedEvent()!.id, eventData);
+      } else {
+        // Create new event
+        await this.calendarEventsService.createEvent(goal.id, eventData as any);
+      }
+      
+      // Reload events
+      await this.loadCalendarEvents(goal.id);
+      this.showEventModal.set(false);
+      this.selectedEvent.set(null);
+    } catch (error) {
+      console.error('Error saving event:', error);
+      alert('Failed to save event. Please try again.');
+    }
+  }
+
+  async onEventDelete(eventId: string) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    try {
+      await this.calendarEventsService.deleteEvent(goal.id, eventId);
+      
+      // Reload events
+      await this.loadCalendarEvents(goal.id);
+      this.showEventModal.set(false);
+      this.selectedEvent.set(null);
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    }
+  }
+
+  onEventModalClose() {
+    this.showEventModal.set(false);
+    this.selectedEvent.set(null);
   }
 }
 
