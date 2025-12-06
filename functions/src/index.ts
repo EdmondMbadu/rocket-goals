@@ -1,6 +1,8 @@
 /* eslint-disable */
 // @ts-nocheck
 import * as functions from "firebase-functions/v1";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import sgMail = require("@sendgrid/mail");
@@ -9,8 +11,8 @@ import sgMail = require("@sendgrid/mail");
 admin.initializeApp();
 
 // Define secrets
-const geminiApiKey = functions.params.defineSecret('GEMINI_API_KEY');
-const sendgridApiKey = functions.params.defineSecret('SENDGRID_API_KEY');
+const geminiApiKey = defineSecret('GEMINI_API_KEY');
+const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 
 /**
  * Cloud Function that processes AI prompts using Google AI (Gemini)
@@ -427,6 +429,134 @@ This blueprint embodies your unique approach to achieving opulence through both 
             return null;
         }
     });
+
+/**
+ * HTTPS callable function for chat-based AI responses (used by frontend)
+ * Using onCall automatically handles CORS for allowed Firebase origins.
+ */
+export const rocketGoalsAI = onCall({
+    region: "us-central1",
+    secrets: [geminiApiKey],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}, async (request: any) => {
+    try {
+        const apiKey = geminiApiKey.value();
+        if (!apiKey) {
+            throw new HttpsError(
+                "failed-precondition",
+                "Google AI API key is not configured"
+            );
+        }
+
+        const data = request?.data || {};
+        const userMessage = (data?.message || "").toString().trim();
+        const conversationHistory = Array.isArray(data?.conversationHistory) ? data.conversationHistory : [];
+        const goalContext = data?.goalContext;
+
+        if (!userMessage) {
+            throw new HttpsError(
+                "invalid-argument",
+                "Message is required"
+            );
+        }
+
+        const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.`;
+
+        const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (CHAT MODE):
+- BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
+- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-4 sentences, 60-90 words)
+- Complete your thoughts fully - don't cut off mid-sentence or mid-thought
+- If you need clarification, ask ONE SHORT probing question (5-10 words) like "What's your biggest challenge?" or "What does success look like?"
+- After asking a probing question, wait for their response before providing your answer
+- Talk like a REAL HUMAN having a friendly chat - use contractions (I'm, you're, it's, don't, can't, etc.)
+- Be curious and genuinely interested - ask probing questions when you need clarity, but don't overdo it
+- Use natural, everyday language - avoid sounding like a textbook or corporate coach
+- Show empathy and understanding - acknowledge their feelings before jumping to solutions
+- Be conversational and warm - like talking to a friend who's also a great coach
+- Build on the conversation - don't restart from scratch each time
+- Keep it meaningful and substantial - quality over quantity`;
+
+        let contextualPrompt = `${baseIdentity}
+
+${conversationGuidelines}`;
+
+        if (goalContext) {
+            const goalTitle = goalContext.title || "this goal";
+            const primaryGoal = goalContext.primaryGoal || "";
+            const goalStatus = goalContext.status || "active";
+            const answers = goalContext.answers || {};
+
+            contextualPrompt += `
+
+GOAL-SPECIFIC CONTEXT:
+You are currently helping a user with their specific goal: "${goalTitle}"
+${primaryGoal ? `Primary Goal: ${primaryGoal}` : ""}
+Goal Status: ${goalStatus}
+${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ""}
+${answers.future_result ? `Motivation Driver: ${answers.future_result.join(", ")}` : ""}
+
+IMPORTANT: Use this goal context to provide personalized, insightful advice. Reference their specific goal details when relevant, but don't force it if their question is unrelated to goal achievement.`;
+        }
+
+        const systemInstruction = contextualPrompt;
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const modelName = "gemini-2.0-flash-exp";
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction,
+            generationConfig: {
+                temperature: 0.9,
+                topP: 0.95,
+                topK: 40,
+                maxOutputTokens: 200,
+            },
+        });
+
+        // Build conversation history for Gemini
+        const history: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+        conversationHistory.forEach((msg: any) => {
+            if (!msg || !msg.role || !msg.content) return;
+            history.push({
+                role: msg.role === "user" ? "user" : "model",
+                parts: [{ text: msg.content }],
+            });
+        });
+
+        // Add current user message
+        history.push({
+            role: "user",
+            parts: [{ text: userMessage }],
+        });
+
+        const result = await model.generateContent({
+            contents: history,
+        });
+
+        const responseText = result.response?.text?.() || "";
+
+        if (!responseText) {
+            throw new HttpsError(
+                "internal",
+                "Empty response from AI model"
+            );
+        }
+
+        return {
+            response: responseText,
+            model: modelName,
+        };
+    } catch (error: any) {
+        console.error("rocketGoalsAI error:", error);
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        throw new HttpsError(
+            "internal",
+            error?.message || "Unknown error"
+        );
+    }
+});
 
 /**
  * Cloud Function to send test emails via SendGrid
