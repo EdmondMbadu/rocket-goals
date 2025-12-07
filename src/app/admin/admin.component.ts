@@ -40,6 +40,10 @@ export class AdminComponent implements OnInit {
     email: false,
     quickActions: true
   });
+  totalUsers = signal<number | null>(null);
+  totalGoals = signal<number | null>(null);
+  statsLoading = signal(false);
+  statsError = signal<string | null>(null);
 
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
 
@@ -76,6 +80,7 @@ export class AdminComponent implements OnInit {
     console.log('🔐 Admin access granted!');
     this.isAdmin.set(true);
     this.checkingAuth.set(false);
+    this.loadStats();
     this.loadUsers();
   }
 
@@ -186,6 +191,30 @@ export class AdminComponent implements OnInit {
       })();
     }
     return this.firestorePromise;
+  }
+
+  private async loadStats() {
+    this.statsLoading.set(true);
+    this.statsError.set(null);
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const usersCollection = firestoreModule.collection(firestore, 'userProfiles');
+      const goalsCollection = firestoreModule.collection(firestore, 'rocketGoals');
+
+      const [usersCount, goalsCount] = await Promise.all([
+        firestoreModule.getCountFromServer(usersCollection),
+        firestoreModule.getCountFromServer(goalsCollection)
+      ]);
+
+      this.totalUsers.set(usersCount.data().count);
+      this.totalGoals.set(goalsCount.data().count);
+    } catch (err: any) {
+      console.error('Failed to load stats', err);
+      this.statsError.set('Unable to load summary stats.');
+    } finally {
+      this.statsLoading.set(false);
+    }
   }
 
   private async loadUsers() {
