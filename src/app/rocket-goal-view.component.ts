@@ -429,9 +429,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   async loadCalendarEvents(goalId: string) {
     try {
+      console.log('Loading calendar events for goal:', goalId);
       const eventsData = await this.calendarEventsService.getEventsByGoalId(goalId);
+      console.log('Loaded events data:', eventsData.length, 'events');
       const events = eventsData.map(eventData => this.calendarEventsService.toCalendarEvent(eventData));
       this.calendarEvents.set(events);
+      console.log('Calendar events set:', events.length, 'events');
     } catch (error) {
       console.error('Error loading calendar events:', error);
     }
@@ -498,6 +501,18 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   onEventModalClose() {
     this.showEventModal.set(false);
     this.selectedEvent.set(null);
+  }
+
+  async onAICalendarAction() {
+    // Refresh calendar events when AI performs an action
+    console.log('Refreshing calendar after AI action...');
+    const goal = this.goal();
+    if (goal?.id) {
+      // Add a small delay to ensure Firestore has propagated the changes
+      await new Promise(resolve => setTimeout(resolve, 300));
+      await this.loadCalendarEvents(goal.id);
+      console.log('Calendar refreshed');
+    }
   }
 }
 

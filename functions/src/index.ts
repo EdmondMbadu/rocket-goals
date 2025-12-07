@@ -431,6 +431,51 @@ This blueprint embodies your unique approach to achieving opulence through both 
     });
 
 /**
+ * Helper function to parse natural language dates to YYYY-MM-DD format
+ */
+function parseNaturalDate(dateStr: string): string | null {
+    if (!dateStr) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lowerDateStr = dateStr.toLowerCase().trim();
+
+    // Check for common natural language patterns
+    if (lowerDateStr === 'today' || lowerDateStr === 'now') {
+        return formatDate(today);
+    } else if (lowerDateStr === 'tomorrow') {
+        return formatDate(tomorrow);
+    } else if (lowerDateStr === 'yesterday') {
+        return formatDate(yesterday);
+    }
+
+    // Try to parse as ISO date or standard date format
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) {
+        return formatDate(parsedDate);
+    }
+
+    // If already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+    }
+
+    return null;
+}
+
+function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
  * HTTPS callable function for chat-based AI responses (used by frontend)
  * Using onCall automatically handles CORS for allowed Firebase origins.
  */
@@ -596,7 +641,40 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
             eventsContext += "- 'What do I have today?' → List today's events with times\n";
             eventsContext += "- 'What did I do yesterday?' → List yesterday's events\n";
             eventsContext += "- 'What's coming up?' → List upcoming events\n";
-            eventsContext += "- Be natural and conversational when discussing their schedule\n";
+            eventsContext += "- Be natural and conversational when discussing their schedule\n\n";
+
+            eventsContext += "EVENT MANAGEMENT CAPABILITIES:\n";
+            eventsContext += "You can help users ADD, EDIT, and DELETE calendar events through conversation.\n\n";
+            eventsContext += "When a user wants to ADD an event:\n";
+            eventsContext += "1. Ask for the event title (required)\n";
+            eventsContext += "2. Ask for the date (required) - accept natural language like 'today', 'tomorrow', 'next Monday', or specific dates\n";
+            eventsContext += "3. Ask for the time (optional but recommended) - format as HH:MM (24-hour) or accept natural language\n";
+            eventsContext += "4. Ask for duration in minutes (optional, default 60)\n";
+            eventsContext += "5. Ask for description (optional)\n";
+            eventsContext += "6. Once you have title and date, confirm the details before creating\n";
+            eventsContext += "7. When ready to create, include this EXACT format at the end of your response:\n";
+            eventsContext += "   [ACTION:CREATE_EVENT]{\"title\":\"Event Title\",\"date\":\"YYYY-MM-DD\",\"time\":\"HH:MM\",\"duration\":60,\"description\":\"Optional description\"}[/ACTION]\n\n";
+
+            eventsContext += "When a user wants to EDIT an event:\n";
+            eventsContext += "1. Ask which event they want to edit (use the event list to help them identify it)\n";
+            eventsContext += "2. Ask what they want to change (title, date, time, duration, description, completion status)\n";
+            eventsContext += "3. Confirm the changes\n";
+            eventsContext += "4. When ready to update, include this EXACT format at the end of your response:\n";
+            eventsContext += "   [ACTION:UPDATE_EVENT]{\"eventId\":\"event-id-here\",\"title\":\"New Title\",\"date\":\"YYYY-MM-DD\",\"time\":\"HH:MM\",\"duration\":60,\"description\":\"New description\",\"completed\":false}[/ACTION]\n\n";
+
+            eventsContext += "When a user wants to DELETE an event:\n";
+            eventsContext += "1. Ask which event they want to delete (use the event list to help them identify it)\n";
+            eventsContext += "2. Confirm the deletion\n";
+            eventsContext += "3. When ready to delete, include this EXACT format at the end of your response:\n";
+            eventsContext += "   [ACTION:DELETE_EVENT]{\"eventId\":\"event-id-here\"}[/ACTION]\n\n";
+
+            eventsContext += "IMPORTANT RULES:\n";
+            eventsContext += "- Always ask for confirmation before performing any action\n";
+            eventsContext += "- Only include action tags when you're ready to execute (after confirmation)\n";
+            eventsContext += "- For dates, convert natural language to YYYY-MM-DD format\n";
+            eventsContext += "- For times, convert to HH:MM format (24-hour)\n";
+            eventsContext += "- Include only the fields that are being changed in UPDATE_EVENT\n";
+            eventsContext += "- Be conversational and helpful throughout the process\n";
 
             contextualPrompt += eventsContext;
         }
@@ -636,7 +714,7 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
             contents: history,
         });
 
-        const responseText = result.response?.text?.() || "";
+        let responseText = result.response?.text?.() || "";
 
         if (!responseText) {
             throw new HttpsError(
@@ -645,9 +723,173 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
             );
         }
 
+        // Parse action instructions from response
+        let action: any = null;
+        const actionRegex = /\[ACTION:(CREATE_EVENT|UPDATE_EVENT|DELETE_EVENT)\](.*?)\[\/ACTION\]/s;
+        const actionMatch = responseText.match(actionRegex);
+
+        if (actionMatch && goalContext?.id) {
+            const actionType = actionMatch[1];
+            const actionDataStr = actionMatch[2].trim();
+
+            try {
+                const actionData = JSON.parse(actionDataStr);
+
+                // Remove action tags from response text
+                responseText = responseText.replace(actionRegex, "").trim();
+
+                if (actionType === "CREATE_EVENT") {
+                    // Validate required fields
+                    if (!actionData.title || !actionData.date) {
+                        console.warn("Missing required fields for CREATE_EVENT");
+                    } else {
+                        // Parse date - try natural language first, then standard parsing
+                        const parsedDateStr = parseNaturalDate(actionData.date);
+                        const dateStrToUse = parsedDateStr || actionData.date;
+                        const eventDate = new Date(dateStrToUse);
+
+                        if (isNaN(eventDate.getTime())) {
+                            console.warn("Invalid date format for CREATE_EVENT:", actionData.date);
+                        } else {
+                            // Set time if provided
+                            if (actionData.time) {
+                                const [hours, minutes] = actionData.time.split(':').map(Number);
+                                eventDate.setHours(hours || 0, minutes || 0, 0, 0);
+                            } else {
+                                // If no time provided, set to start of day
+                                eventDate.setHours(0, 0, 0, 0);
+                            }
+
+                            // Create event in Firestore
+                            const eventRef = admin.firestore()
+                                .collection('rocketGoals')
+                                .doc(goalContext.id)
+                                .collection('calendarEvents')
+                                .doc();
+
+                            const eventData = {
+                                id: eventRef.id,
+                                goalId: goalContext.id,
+                                title: actionData.title,
+                                date: admin.firestore.Timestamp.fromDate(eventDate),
+                                time: actionData.time || null,
+                                duration: actionData.duration || 60,
+                                color: actionData.color || '#dc2626',
+                                description: actionData.description || '',
+                                completed: actionData.completed || false,
+                                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                            };
+
+                            await eventRef.set(eventData);
+
+                            // Update the document with its own ID (as per the service pattern)
+                            await eventRef.update({ id: eventRef.id });
+
+                            action = {
+                                type: 'createEvent',
+                                eventData: {
+                                    title: actionData.title,
+                                    date: eventDate.toISOString(),
+                                    time: actionData.time,
+                                    duration: actionData.duration || 60,
+                                    color: actionData.color || '#dc2626',
+                                    description: actionData.description,
+                                    completed: actionData.completed || false
+                                }
+                            };
+
+                            console.log(`✅ Created event: ${actionData.title} for goal ${goalContext.id} at ${eventDate.toISOString()}`);
+                            console.log(`Event ID: ${eventRef.id}, Date: ${eventDate.toISOString()}, Time: ${actionData.time || 'none'}`);
+                        }
+                    }
+                } else if (actionType === "UPDATE_EVENT") {
+                    if (!actionData.eventId) {
+                        console.warn("Missing eventId for UPDATE_EVENT");
+                    } else {
+                        const eventRef = admin.firestore()
+                            .collection('rocketGoals')
+                            .doc(goalContext.id)
+                            .collection('calendarEvents')
+                            .doc(actionData.eventId);
+
+                        const eventDoc = await eventRef.get();
+                        if (!eventDoc.exists) {
+                            console.warn(`Event ${actionData.eventId} not found`);
+                        } else {
+                            const updateData: any = {
+                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                            };
+
+                            if (actionData.title !== undefined) updateData.title = actionData.title;
+                            if (actionData.date !== undefined) {
+                                const eventDate = new Date(actionData.date);
+                                if (actionData.time) {
+                                    const [hours, minutes] = actionData.time.split(':').map(Number);
+                                    eventDate.setHours(hours || 0, minutes || 0, 0, 0);
+                                }
+                                updateData.date = admin.firestore.Timestamp.fromDate(eventDate);
+                            }
+                            if (actionData.time !== undefined) updateData.time = actionData.time;
+                            if (actionData.duration !== undefined) updateData.duration = actionData.duration;
+                            if (actionData.color !== undefined) updateData.color = actionData.color;
+                            if (actionData.description !== undefined) updateData.description = actionData.description;
+                            if (actionData.completed !== undefined) updateData.completed = actionData.completed;
+
+                            await eventRef.update(updateData);
+
+                            action = {
+                                type: 'updateEvent',
+                                eventId: actionData.eventId,
+                                eventData: {
+                                    title: actionData.title,
+                                    date: actionData.date ? new Date(actionData.date).toISOString() : undefined,
+                                    time: actionData.time,
+                                    duration: actionData.duration,
+                                    color: actionData.color,
+                                    description: actionData.description,
+                                    completed: actionData.completed
+                                }
+                            };
+
+                            console.log(`✅ Updated event: ${actionData.eventId} for goal ${goalContext.id}`);
+                        }
+                    }
+                } else if (actionType === "DELETE_EVENT") {
+                    if (!actionData.eventId) {
+                        console.warn("Missing eventId for DELETE_EVENT");
+                    } else {
+                        const eventRef = admin.firestore()
+                            .collection('rocketGoals')
+                            .doc(goalContext.id)
+                            .collection('calendarEvents')
+                            .doc(actionData.eventId);
+
+                        const eventDoc = await eventRef.get();
+                        if (!eventDoc.exists) {
+                            console.warn(`Event ${actionData.eventId} not found`);
+                        } else {
+                            await eventRef.delete();
+
+                            action = {
+                                type: 'deleteEvent',
+                                eventId: actionData.eventId
+                            };
+
+                            console.log(`✅ Deleted event: ${actionData.eventId} for goal ${goalContext.id}`);
+                        }
+                    }
+                }
+            } catch (parseError) {
+                console.error("Error parsing action data:", parseError);
+                // Continue without action if parsing fails
+            }
+        }
+
         return {
             response: responseText,
             model: modelName,
+            action: action || undefined
         };
     } catch (error: any) {
         console.error("rocketGoalsAI error:", error);

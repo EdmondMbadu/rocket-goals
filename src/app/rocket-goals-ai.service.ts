@@ -16,6 +16,7 @@ interface AIRequest {
   message: string;
   conversationHistory?: { role: 'user' | 'model'; content: string }[];
   goalContext?: {
+    id: string;
     title: string;
     primaryGoal: string;
     answers: Record<string, any>;
@@ -36,6 +37,19 @@ interface AIRequest {
 interface AIResponse {
   response: string;
   model: string;
+  action?: {
+    type: 'createEvent' | 'updateEvent' | 'deleteEvent';
+    eventId?: string;
+    eventData?: {
+      title: string;
+      date: string;
+      time?: string;
+      duration?: number;
+      color?: string;
+      description?: string;
+      completed?: boolean;
+    };
+  };
 }
 
 @Injectable({
@@ -134,6 +148,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
         message: userMessage.trim(),
         conversationHistory: conversationHistory.slice(0, -1), // Exclude the current message we just added
         goalContext: goalContext ? {
+          id: goalContext.id,
           title: this.getGoalTitle(goalContext),
           primaryGoal: goalContext.primaryGoal || '',
           answers: goalContext.answers || {},
@@ -189,7 +204,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   // Send message but don't add the AI response (let component handle with typewriter)
-  async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string> {
+  async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string | { response: string; action?: any }> {
     if (!userMessage.trim()) {
       throw new Error('Message cannot be empty');
     }
@@ -235,6 +250,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
         message: userMessage.trim(),
         conversationHistory: conversationHistory.slice(0, -1),
         goalContext: goalContext ? {
+          id: goalContext.id,
           title: this.getGoalTitle(goalContext),
           primaryGoal: goalContext.primaryGoal || '',
           answers: goalContext.answers || {},
@@ -263,6 +279,13 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
         this.conversationHistory = this.conversationHistory.slice(-20);
       }
 
+      // Return response with action if present
+      if (result.data.action) {
+        return {
+          response: result.data.response,
+          action: result.data.action
+        };
+      }
       return result.data.response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get AI response';

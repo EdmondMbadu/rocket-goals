@@ -1,4 +1,4 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,6 +16,7 @@ import type { RocketGoal } from './models/rocket-goal';
 export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDestroy {
   @Input() goalContext: RocketGoal | null = null;
   @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
+  @Output() eventAction = new EventEmitter<'refresh'>(); // Emit when calendar events are modified
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
 
@@ -200,9 +201,23 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     this.shouldScrollToBottom = true;
 
     try {
-      const response = await this.aiService.sendMessageWithoutAddingResponse(message, this.goalContext);
-      // Add response with typewriter effect
-      this.addMessageWithTypewriter(response);
+      const result = await this.aiService.sendMessageWithoutAddingResponse(message, this.goalContext);
+      // Check if result contains action information
+      if (typeof result === 'object' && result !== null && 'response' in result) {
+        // Add response with typewriter effect
+        this.addMessageWithTypewriter(result.response);
+        // If action was performed, notify parent to refresh calendar
+        if (result.action) {
+          console.log('AI performed action:', result.action);
+          // Small delay to ensure Firestore write is complete
+          setTimeout(() => {
+            this.eventAction.emit('refresh');
+          }, 500);
+        }
+      } else {
+        // Legacy: result is just a string
+        this.addMessageWithTypewriter(result);
+      }
     } catch {
       // Error is already handled in service
     }
