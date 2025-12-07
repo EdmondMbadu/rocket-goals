@@ -6,6 +6,7 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import sgMail = require("@sendgrid/mail");
+import { getToolRegistry, type AgentResponse, type SideEffect } from "./tools";
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -431,229 +432,133 @@ This blueprint embodies your unique approach to achieving opulence through both 
     });
 
 /**
- * Helper function to parse natural language dates to YYYY-MM-DD format
+ * Build system prompt for the AI with calendar context
  */
-function parseNaturalDate(dateStr: string): string | null {
-    if (!dateStr) return null;
+function buildSystemPrompt(goalContext: any, calendarEvents: any[]): string {
+    const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework. You also help users manage their calendar and schedule for achieving their goals.`;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES:
+- Be helpful, concise, and action-oriented
+- When users want to manage their calendar (add, edit, delete events), USE THE PROVIDED TOOLS IMMEDIATELY
+- For creating events: use create_calendar_event with title and date
+- For updating events: use update_calendar_event with the event's ID from the calendar list
+- For deleting events: use delete_calendar_event with the event's ID. Match event names to IDs from the calendar list above.
+- When the user says "delete X" or "remove X" or "cancel X", find the matching event by title and call delete_calendar_event with its ID
+- Be conversational and natural - don't be robotic
+- If there are multiple events with similar names and it's ambiguous, ask which one
+- After taking an action, briefly confirm what was done
 
-    const lowerDateStr = dateStr.toLowerCase().trim();
+IMPORTANT FOR DELETE/UPDATE: You MUST use the event ID (like "abc123xyz") from the CALENDAR EVENTS section above, not the event title.`;
 
-    // Check for common natural language patterns
-    if (lowerDateStr === 'today' || lowerDateStr === 'now') {
-        return formatDate(today);
-    } else if (lowerDateStr === 'tomorrow') {
-        return formatDate(tomorrow);
-    } else if (lowerDateStr === 'yesterday') {
-        return formatDate(yesterday);
+    let contextualPrompt = `${baseIdentity}\n\n${conversationGuidelines}`;
+
+    // Add goal context
+    if (goalContext) {
+        const goalTitle = goalContext.title || 'this goal';
+        const primaryGoal = goalContext.primaryGoal || '';
+        const goalStatus = goalContext.status || 'active';
+        const answers = goalContext.answers || {};
+
+        contextualPrompt += `\n\nGOAL CONTEXT:
+Goal: "${goalTitle}"
+${primaryGoal ? `Primary Goal: ${primaryGoal}` : ''}
+Status: ${goalStatus}
+${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ''}`;
     }
 
-    // Try to parse as ISO date or standard date format
-    const parsedDate = new Date(dateStr);
-    if (!isNaN(parsedDate.getTime())) {
-        return formatDate(parsedDate);
-    }
+    // Add calendar events context
+    if (calendarEvents && calendarEvents.length > 0) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // If already in YYYY-MM-DD format, return as is
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        return dateStr;
-    }
+        // Categorize events
+        const todayEvents: any[] = [];
+        const tomorrowEvents: any[] = [];
+        const upcomingEvents: any[] = [];
+        const pastEvents: any[] = [];
 
-    return null;
-}
+        calendarEvents.forEach((event: any) => {
+            const eventDate = new Date(event.date);
+            const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
 
-function formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
+            const eventInfo = {
+                id: event.id,
+                title: event.title,
+                date: eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                time: event.time || null,
+                duration: event.duration || 60,
+                completed: event.completed || false,
+                description: event.description || ''
+            };
 
-type ActionResult =
-    | { type: 'createEvent'; eventId: string; eventData: any }
-    | { type: 'updateEvent'; eventId: string; eventData: any }
-    | { type: 'deleteEvent'; eventId: string };
-
-type ActionHandler = (args: {
-    goalId: string;
-    actionData: any;
-}) => Promise<ActionResult | null>;
-
-const actionHandlers: Record<string, ActionHandler> = {
-    async CREATE_EVENT({ goalId, actionData }) {
-        if (!actionData.title || !actionData.date) {
-            console.warn('Missing required fields for CREATE_EVENT', actionData);
-            return null;
-        }
-
-        // Parse date - try natural language first, then standard parsing
-        const parsedDateStr = parseNaturalDate(actionData.date);
-        const dateStrToUse = parsedDateStr || actionData.date;
-        const eventDate = new Date(dateStrToUse);
-
-        if (isNaN(eventDate.getTime())) {
-            console.warn('Invalid date format for CREATE_EVENT:', actionData.date);
-            return null;
-        }
-
-        // Set time if provided or default to start of day
-        if (actionData.time) {
-            const [hours, minutes] = actionData.time.split(':').map(Number);
-            eventDate.setHours(hours || 0, minutes || 0, 0, 0);
-        } else {
-            eventDate.setHours(0, 0, 0, 0);
-        }
-
-        const eventRef = admin
-            .firestore()
-            .collection('rocketGoals')
-            .doc(goalId)
-            .collection('calendarEvents')
-            .doc();
-
-        const eventData = {
-            id: eventRef.id,
-            goalId,
-            title: actionData.title,
-            date: admin.firestore.Timestamp.fromDate(eventDate),
-            time: actionData.time || null,
-            duration: actionData.duration || 60,
-            color: actionData.color || '#dc2626',
-            description: actionData.description || '',
-            completed: actionData.completed || false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
-
-        await eventRef.set(eventData);
-        await eventRef.update({ id: eventRef.id }); // keep id in document for consistency
-
-        console.log(
-            `✅ Created event: ${actionData.title} for goal ${goalId} at ${eventDate.toISOString()}`
-        );
-
-        return {
-            type: 'createEvent',
-            eventId: eventRef.id,
-            eventData: {
-                title: actionData.title,
-                date: eventDate.toISOString(),
-                time: actionData.time,
-                duration: actionData.duration || 60,
-                color: actionData.color || '#dc2626',
-                description: actionData.description,
-                completed: actionData.completed || false,
-            },
-        };
-    },
-
-    async UPDATE_EVENT({ goalId, actionData }) {
-        if (!actionData.eventId) {
-            console.warn('Missing eventId for UPDATE_EVENT');
-            return null;
-        }
-
-        const eventRef = admin
-            .firestore()
-            .collection('rocketGoals')
-            .doc(goalId)
-            .collection('calendarEvents')
-            .doc(actionData.eventId);
-
-        const eventDoc = await eventRef.get();
-        if (!eventDoc.exists) {
-            console.warn(`Event ${actionData.eventId} not found`);
-            return null;
-        }
-
-        const updateData: any = {
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
-
-        if (actionData.title !== undefined) updateData.title = actionData.title;
-        if (actionData.date !== undefined) {
-            const parsedDateStr = parseNaturalDate(actionData.date);
-            const dateStrToUse = parsedDateStr || actionData.date;
-            const eventDate = new Date(dateStrToUse);
-            if (!isNaN(eventDate.getTime())) {
-                if (actionData.time) {
-                    const [hours, minutes] = actionData.time.split(':').map(Number);
-                    eventDate.setHours(hours || 0, minutes || 0, 0, 0);
-                }
-                updateData.date = admin.firestore.Timestamp.fromDate(eventDate);
+            if (eventDateOnly.getTime() === today.getTime()) {
+                todayEvents.push(eventInfo);
+            } else if (eventDateOnly.getTime() === tomorrow.getTime()) {
+                tomorrowEvents.push(eventInfo);
+            } else if (eventDateOnly < today) {
+                pastEvents.push(eventInfo);
             } else {
-                console.warn('Invalid date in UPDATE_EVENT:', actionData.date);
+                upcomingEvents.push(eventInfo);
+            }
+        });
+
+        contextualPrompt += `\n\nCALENDAR EVENTS:`;
+
+        if (todayEvents.length > 0) {
+            contextualPrompt += `\n\nToday's Events:`;
+            todayEvents.forEach(e => {
+                contextualPrompt += `\n- "${e.title}" (ID: ${e.id})${e.time ? ` at ${e.time}` : ''}${e.completed ? ' ✓ completed' : ''}`;
+            });
+        }
+
+        if (tomorrowEvents.length > 0) {
+            contextualPrompt += `\n\nTomorrow's Events:`;
+            tomorrowEvents.forEach(e => {
+                contextualPrompt += `\n- "${e.title}" (ID: ${e.id})${e.time ? ` at ${e.time}` : ''}`;
+            });
+        }
+
+        if (upcomingEvents.length > 0) {
+            contextualPrompt += `\n\nUpcoming Events:`;
+            upcomingEvents.slice(0, 7).forEach(e => {
+                contextualPrompt += `\n- "${e.title}" on ${e.date} (ID: ${e.id})${e.time ? ` at ${e.time}` : ''}`;
+            });
+            if (upcomingEvents.length > 7) {
+                contextualPrompt += `\n... and ${upcomingEvents.length - 7} more`;
             }
         }
-        if (actionData.time !== undefined) updateData.time = actionData.time;
-        if (actionData.duration !== undefined) updateData.duration = actionData.duration;
-        if (actionData.color !== undefined) updateData.color = actionData.color;
-        if (actionData.description !== undefined) updateData.description = actionData.description;
-        if (actionData.completed !== undefined) updateData.completed = actionData.completed;
 
-        await eventRef.update(updateData);
-
-        console.log(`✅ Updated event: ${actionData.eventId} for goal ${goalId}`);
-
-        return {
-            type: 'updateEvent',
-            eventId: actionData.eventId,
-            eventData: {
-                title: actionData.title,
-                date: actionData.date ? new Date(actionData.date).toISOString() : undefined,
-                time: actionData.time,
-                duration: actionData.duration,
-                color: actionData.color,
-                description: actionData.description,
-                completed: actionData.completed,
-            },
-        };
-    },
-
-    async DELETE_EVENT({ goalId, actionData }) {
-        if (!actionData.eventId) {
-            console.warn('Missing eventId for DELETE_EVENT');
-            return null;
+        if (pastEvents.length > 0) {
+            contextualPrompt += `\n\nRecent Past Events:`;
+            pastEvents.slice(-3).forEach(e => {
+                contextualPrompt += `\n- "${e.title}" on ${e.date} (ID: ${e.id})${e.completed ? ' ✓ completed' : ''}`;
+            });
         }
 
-        const eventRef = admin
-            .firestore()
-            .collection('rocketGoals')
-            .doc(goalId)
-            .collection('calendarEvents')
-            .doc(actionData.eventId);
+        contextualPrompt += `\n\nIMPORTANT INSTRUCTIONS FOR TOOLS:
+- To DELETE an event: Call delete_calendar_event with eventId set to the ID shown in parentheses above (e.g., if event shows "(ID: abc123)", use eventId: "abc123")
+- To UPDATE an event: Call update_calendar_event with the eventId plus any fields to change
+- To CREATE an event: Call create_calendar_event with title and date (natural language like "tomorrow" works)
+- ALWAYS use the exact ID string from the calendar list - do not make up IDs`;
+    } else {
+        contextualPrompt += `\n\nCALENDAR: No events scheduled yet. The user can ask you to add events to help track their goal progress.`;
+    }
 
-        const eventDoc = await eventRef.get();
-        if (!eventDoc.exists) {
-            console.warn(`Event ${actionData.eventId} not found`);
-            return null;
-        }
-
-        await eventRef.delete();
-        console.log(`✅ Deleted event: ${actionData.eventId} for goal ${goalId}`);
-
-        return {
-            type: 'deleteEvent',
-            eventId: actionData.eventId,
-        };
-    },
-};
+    return contextualPrompt;
+}
 
 /**
- * HTTPS callable function for chat-based AI responses (used by frontend)
- * Using onCall automatically handles CORS for allowed Firebase origins.
+ * HTTPS callable function for chat-based AI responses with native function calling
+ * Uses Gemini's tool/function calling for reliable calendar operations
  */
 export const rocketGoalsAI = onCall({
     region: "us-central1",
     secrets: [geminiApiKey],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }, async (request: any) => {
+    const startTime = Date.now();
+
     try {
         const apiKey = geminiApiKey.value();
         if (!apiKey) {
@@ -676,192 +581,33 @@ export const rocketGoalsAI = onCall({
             );
         }
 
-        const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.`;
+        console.log(`🚀 rocketGoalsAI called with message: "${userMessage.substring(0, 50)}..."`);
+        console.log(`📅 Calendar events: ${calendarEvents.length}, Goal ID: ${goalContext?.id || 'none'}`);
 
-        const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES (CHAT MODE):
-- BE INTELLIGENT ABOUT WHEN TO PROBE: Only ask a probing question if you genuinely need more context to give a helpful answer
-- If the user's question is clear and you have enough context from the conversation, provide a SUBSTANTIAL but CONCISE answer (2-4 sentences, 60-90 words)
-- Complete your thoughts fully - don't cut off mid-sentence or mid-thought
-- If you need clarification, ask ONE SHORT probing question (5-10 words) like "What's your biggest challenge?" or "What does success look like?"
-- After asking a probing question, wait for their response before providing your answer
-- Talk like a REAL HUMAN having a friendly chat - use contractions (I'm, you're, it's, don't, can't, etc.)
-- Be curious and genuinely interested - ask probing questions when you need clarity, but don't overdo it
-- Use natural, everyday language - avoid sounding like a textbook or corporate coach
-- Show empathy and understanding - acknowledge their feelings before jumping to solutions
-- Be conversational and warm - like talking to a friend who's also a great coach
-- Build on the conversation - don't restart from scratch each time
-- Keep it meaningful and substantial - quality over quantity`;
+        // Get tool registry
+        const toolRegistry = getToolRegistry();
+        const toolDeclarations = toolRegistry.getFunctionDeclarations();
+        console.log(`🔧 Available tools: ${toolRegistry.getToolNames().join(', ')}`);
 
-        let contextualPrompt = `${baseIdentity}
+        // Build system prompt with context
+        const systemInstruction = buildSystemPrompt(goalContext, calendarEvents);
 
-${conversationGuidelines}`;
-
-        if (goalContext) {
-            const goalTitle = goalContext.title || "this goal";
-            const primaryGoal = goalContext.primaryGoal || "";
-            const goalStatus = goalContext.status || "active";
-            const answers = goalContext.answers || {};
-
-            contextualPrompt += `
-
-GOAL-SPECIFIC CONTEXT:
-You are currently helping a user with their specific goal: "${goalTitle}"
-${primaryGoal ? `Primary Goal: ${primaryGoal}` : ""}
-Goal Status: ${goalStatus}
-${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ""}
-${answers.future_result ? `Motivation Driver: ${answers.future_result.join(", ")}` : ""}
-
-IMPORTANT: Use this goal context to provide personalized, insightful advice. Reference their specific goal details when relevant, but don't force it if their question is unrelated to goal achievement.`;
-        }
-
-        // Add calendar events context if available
-        if (calendarEvents.length > 0) {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            // Parse and categorize events
-            const eventsByDate: { [key: string]: any[] } = {
-                today: [],
-                yesterday: [],
-                tomorrow: [],
-                upcoming: [],
-                past: []
-            };
-
-            calendarEvents.forEach((event: any) => {
-                const eventDate = new Date(event.date);
-                const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-
-                if (eventDateOnly.getTime() === today.getTime()) {
-                    eventsByDate.today.push(event);
-                } else if (eventDateOnly.getTime() === yesterday.getTime()) {
-                    eventsByDate.yesterday.push(event);
-                } else if (eventDateOnly.getTime() === tomorrow.getTime()) {
-                    eventsByDate.tomorrow.push(event);
-                } else if (eventDateOnly < today) {
-                    eventsByDate.past.push(event);
-                } else {
-                    eventsByDate.upcoming.push(event);
-                }
-            });
-
-            // Format events for AI context
-            let eventsContext = "\n\nCALENDAR EVENTS CONTEXT:\n";
-            eventsContext += "You have access to the user's calendar events for this goal. You can answer questions about:\n";
-            eventsContext += "- Events planned for today, yesterday, tomorrow, or any specific date\n";
-            eventsContext += "- Upcoming events and past events\n";
-            eventsContext += "- Event details like time, duration, completion status, and descriptions\n\n";
-
-            if (eventsByDate.today.length > 0) {
-                eventsContext += `TODAY'S EVENTS (${eventsByDate.today.length}):\n`;
-                eventsByDate.today.forEach((event: any) => {
-                    eventsContext += `- ${event.title}`;
-                    if (event.time) eventsContext += ` at ${event.time}`;
-                    if (event.duration) eventsContext += ` (${event.duration} min)`;
-                    if (event.completed) eventsContext += ` [COMPLETED]`;
-                    if (event.description) eventsContext += ` - ${event.description}`;
-                    eventsContext += "\n";
-                });
-                eventsContext += "\n";
-            }
-
-            if (eventsByDate.yesterday.length > 0) {
-                eventsContext += `YESTERDAY'S EVENTS (${eventsByDate.yesterday.length}):\n`;
-                eventsByDate.yesterday.forEach((event: any) => {
-                    eventsContext += `- ${event.title}`;
-                    if (event.time) eventsContext += ` at ${event.time}`;
-                    if (event.completed) eventsContext += ` [COMPLETED]`;
-                    eventsContext += "\n";
-                });
-                eventsContext += "\n";
-            }
-
-            if (eventsByDate.tomorrow.length > 0) {
-                eventsContext += `TOMORROW'S EVENTS (${eventsByDate.tomorrow.length}):\n`;
-                eventsByDate.tomorrow.forEach((event: any) => {
-                    eventsContext += `- ${event.title}`;
-                    if (event.time) eventsContext += ` at ${event.time}`;
-                    if (event.duration) eventsContext += ` (${event.duration} min)`;
-                    eventsContext += "\n";
-                });
-                eventsContext += "\n";
-            }
-
-            if (eventsByDate.upcoming.length > 0) {
-                eventsContext += `UPCOMING EVENTS (${eventsByDate.upcoming.length}):\n`;
-                // Show next 5 upcoming events
-                eventsByDate.upcoming.slice(0, 5).forEach((event: any) => {
-                    const eventDate = new Date(event.date);
-                    const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    eventsContext += `- ${event.title} on ${dateStr}`;
-                    if (event.time) eventsContext += ` at ${event.time}`;
-                    eventsContext += "\n";
-                });
-                if (eventsByDate.upcoming.length > 5) {
-                    eventsContext += `... and ${eventsByDate.upcoming.length - 5} more upcoming events\n`;
-                }
-                eventsContext += "\n";
-            }
-
-            eventsContext += "When users ask about their calendar events, provide specific, helpful information. For example:\n";
-            eventsContext += "- 'What do I have today?' → List today's events with times\n";
-            eventsContext += "- 'What did I do yesterday?' → List yesterday's events\n";
-            eventsContext += "- 'What's coming up?' → List upcoming events\n";
-            eventsContext += "- Be natural and conversational when discussing their schedule\n\n";
-
-            eventsContext += "EVENT MANAGEMENT CAPABILITIES:\n";
-            eventsContext += "You can help users ADD, EDIT, and DELETE calendar events through conversation.\n\n";
-            eventsContext += "When a user wants to ADD an event:\n";
-            eventsContext += "1. Ask for the event title (required)\n";
-            eventsContext += "2. Ask for the date (required) - accept natural language like 'today', 'tomorrow', 'next Monday', or specific dates\n";
-            eventsContext += "3. Ask for the time (optional but recommended) - format as HH:MM (24-hour) or accept natural language\n";
-            eventsContext += "4. Ask for duration in minutes (optional, default 60)\n";
-            eventsContext += "5. Ask for description (optional)\n";
-            eventsContext += "6. Once you have title and date, confirm the details before creating\n";
-            eventsContext += "7. When ready to create, include this EXACT format at the end of your response:\n";
-            eventsContext += "   [ACTION:CREATE_EVENT]{\"title\":\"Event Title\",\"date\":\"YYYY-MM-DD\",\"time\":\"HH:MM\",\"duration\":60,\"description\":\"Optional description\"}[/ACTION]\n\n";
-
-            eventsContext += "When a user wants to EDIT an event:\n";
-            eventsContext += "1. Ask which event they want to edit (use the event list to help them identify it)\n";
-            eventsContext += "2. Ask what they want to change (title, date, time, duration, description, completion status)\n";
-            eventsContext += "3. Confirm the changes\n";
-            eventsContext += "4. When ready to update, include this EXACT format at the end of your response:\n";
-            eventsContext += "   [ACTION:UPDATE_EVENT]{\"eventId\":\"event-id-here\",\"title\":\"New Title\",\"date\":\"YYYY-MM-DD\",\"time\":\"HH:MM\",\"duration\":60,\"description\":\"New description\",\"completed\":false}[/ACTION]\n\n";
-
-            eventsContext += "When a user wants to DELETE an event:\n";
-            eventsContext += "1. Ask which event they want to delete (use the event list to help them identify it)\n";
-            eventsContext += "2. Confirm the deletion\n";
-            eventsContext += "3. When ready to delete, include this EXACT format at the end of your response:\n";
-            eventsContext += "   [ACTION:DELETE_EVENT]{\"eventId\":\"event-id-here\"}[/ACTION]\n\n";
-
-            eventsContext += "IMPORTANT RULES:\n";
-            eventsContext += "- Always ask for confirmation before performing any action\n";
-            eventsContext += "- Only include action tags when you're ready to execute (after confirmation)\n";
-            eventsContext += "- For dates, convert natural language to YYYY-MM-DD format\n";
-            eventsContext += "- For times, convert to HH:MM format (24-hour)\n";
-            eventsContext += "- Include only the fields that are being changed in UPDATE_EVENT\n";
-            eventsContext += "- Be conversational and helpful throughout the process\n";
-
-            contextualPrompt += eventsContext;
-        }
-
-        const systemInstruction = contextualPrompt;
-
+        // Initialize Gemini with function calling
         const genAI = new GoogleGenerativeAI(apiKey);
         const modelName = "gemini-2.0-flash-exp";
+
         const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction,
             generationConfig: {
-                temperature: 0.9,
+                temperature: 0.8,
                 topP: 0.95,
                 topK: 40,
-                maxOutputTokens: 200,
+                maxOutputTokens: 300,
             },
+            tools: [{
+                functionDeclarations: toolDeclarations
+            }]
         });
 
         // Build conversation history for Gemini
@@ -880,11 +626,89 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
             parts: [{ text: userMessage }],
         });
 
-        const result = await model.generateContent({
+        console.log(`📝 Sending ${history.length} messages to AI`);
+
+        // Generate content (may include function calls)
+        let result = await model.generateContent({
             contents: history,
         });
 
-        let responseText = result.response?.text?.() || "";
+        let response = result.response;
+        let responseText = response.text?.() || "";
+        const allSideEffects: SideEffect[] = [];
+        const allToolCalls: Array<{ name: string; args: any; result: any }> = [];
+
+        // Check for function calls and execute them
+        let functionCalls = response.functionCalls?.() || [];
+        let loopCount = 0;
+        const MAX_LOOPS = 3; // Prevent infinite loops
+
+        while (functionCalls.length > 0 && loopCount < MAX_LOOPS) {
+            loopCount++;
+            console.log(`🔄 Processing ${functionCalls.length} function call(s) (loop ${loopCount})`);
+
+            // Execute all function calls
+            const functionResults = [];
+            for (const fc of functionCalls) {
+                console.log(`🔧 Executing: ${fc.name}`, fc.args);
+
+                const toolResult = await toolRegistry.execute(
+                    fc.name,
+                    fc.args as Record<string, any>,
+                    {
+                        userId: request.auth?.uid,
+                        goalId: goalContext?.id
+                    }
+                );
+
+                allToolCalls.push({
+                    name: fc.name,
+                    args: fc.args,
+                    result: toolResult
+                });
+
+                if (toolResult.sideEffects) {
+                    allSideEffects.push(...toolResult.sideEffects);
+                }
+
+                functionResults.push({
+                    functionResponse: {
+                        name: fc.name,
+                        response: {
+                            success: toolResult.success,
+                            message: toolResult.message,
+                            data: toolResult.data
+                        }
+                    }
+                });
+            }
+
+            // Send function results back to model
+            history.push({
+                role: "model",
+                parts: functionCalls.map(fc => ({ functionCall: fc })) as any
+            });
+
+            history.push({
+                role: "user",
+                parts: functionResults as any
+            });
+
+            // Get next response
+            result = await model.generateContent({
+                contents: history,
+            });
+
+            response = result.response;
+            responseText = response.text?.() || "";
+            functionCalls = response.functionCalls?.() || [];
+        }
+
+        if (!responseText && allToolCalls.length > 0) {
+            // If no text response but we had tool calls, generate a summary
+            const lastResult = allToolCalls[allToolCalls.length - 1].result;
+            responseText = lastResult.message || "Done!";
+        }
 
         if (!responseText) {
             throw new HttpsError(
@@ -893,39 +717,19 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
             );
         }
 
-        // Parse action instructions from response
-        let action: ActionResult | null = null;
-        const actionRegex = /\[ACTION:(CREATE_EVENT|UPDATE_EVENT|DELETE_EVENT)\](.*?)\[\/ACTION\]/s;
-        const actionMatch = responseText.match(actionRegex);
+        const totalTime = Date.now() - startTime;
+        console.log(`✅ rocketGoalsAI completed in ${totalTime}ms`);
+        console.log(`📊 Tool calls: ${allToolCalls.length}, Side effects: ${allSideEffects.length}`);
 
-        if (actionMatch && goalContext?.id) {
-            const actionType = actionMatch[1];
-            const actionDataStr = actionMatch[2].trim();
-
-            // Remove action tags from response text shown to user
-            responseText = responseText.replace(actionRegex, "").trim();
-
-            try {
-                const actionData = JSON.parse(actionDataStr);
-                const handler = actionHandlers[actionType];
-                if (handler) {
-                    action = await handler({ goalId: goalContext.id, actionData });
-                } else {
-                    console.warn('No handler found for action type', actionType);
-                }
-            } catch (parseError) {
-                console.error("Error parsing action data:", parseError);
-                // Continue without action if parsing fails
-            }
-        }
-
+        // Return structured response
         return {
             response: responseText,
             model: modelName,
-            action: action || undefined
+            toolCalls: allToolCalls,
+            sideEffects: allSideEffects
         };
     } catch (error: any) {
-        console.error("rocketGoalsAI error:", error);
+        console.error("❌ rocketGoalsAI error:", error);
         if (error instanceof HttpsError) {
             throw error;
         }
@@ -1044,4 +848,3 @@ export const sendTestEmail = functions.runWith({
         );
     }
 });
-

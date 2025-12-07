@@ -202,20 +202,20 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
 
     try {
       const result = await this.aiService.sendMessageWithoutAddingResponse(message, this.goalContext);
-      // Check if result contains action information
+      // Check if result contains side effects (calendar actions, etc.)
       if (typeof result === 'object' && result !== null && 'response' in result) {
         // Add response with typewriter effect
         this.addMessageWithTypewriter(result.response);
-        // If action was performed, notify parent to refresh calendar
-        if (result.action) {
-          console.log('AI performed action:', result.action);
+        // If side effects occurred, notify parent to refresh calendar
+        if (result.sideEffects && result.sideEffects.length > 0) {
+          console.log('AI actions completed:', result.sideEffects);
           // Small delay to ensure Firestore write is complete
           setTimeout(() => {
             this.eventAction.emit('refresh');
           }, 500);
         }
       } else {
-        // Legacy: result is just a string
+        // Result is just a string (no side effects)
         this.addMessageWithTypewriter(result);
       }
     } catch {

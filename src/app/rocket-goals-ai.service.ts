@@ -34,22 +34,39 @@ interface AIRequest {
   }>;
 }
 
+/**
+ * Side effects represent changes made to the world by AI tools
+ */
+type SideEffect =
+  | { type: 'event_created'; eventId: string; title: string }
+  | { type: 'event_updated'; eventId: string; title?: string }
+  | { type: 'event_deleted'; eventId: string }
+  | { type: 'email_sent'; to: string; subject: string }
+  | { type: 'sms_sent'; to: string }
+  | { type: 'reminder_scheduled'; reminderId: string; scheduledFor: string }
+  | { type: 'goal_updated'; goalId: string };
+
+/**
+ * Result from a tool execution
+ */
+interface ToolCallResult {
+  name: string;
+  args: Record<string, any>;
+  result: {
+    success: boolean;
+    message: string;
+    data?: Record<string, any>;
+  };
+}
+
+/**
+ * Response from the AI backend
+ */
 interface AIResponse {
   response: string;
   model: string;
-  action?: {
-    type: 'createEvent' | 'updateEvent' | 'deleteEvent';
-    eventId?: string;
-    eventData?: {
-      title: string;
-      date: string;
-      time?: string;
-      duration?: number;
-      color?: string;
-      description?: string;
-      completed?: boolean;
-    };
-  };
+  toolCalls?: ToolCallResult[];
+  sideEffects?: SideEffect[];
 }
 
 @Injectable({
@@ -204,7 +221,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   // Send message but don't add the AI response (let component handle with typewriter)
-  async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string | { response: string; action?: any }> {
+  async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string | { response: string; sideEffects?: SideEffect[] }> {
     if (!userMessage.trim()) {
       throw new Error('Message cannot be empty');
     }
@@ -279,11 +296,11 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
         this.conversationHistory = this.conversationHistory.slice(-20);
       }
 
-      // Return response with action if present
-      if (result.data.action) {
+      // Return response with side effects if present (calendar actions, etc.)
+      if (result.data.sideEffects && result.data.sideEffects.length > 0) {
         return {
           response: result.data.response,
-          action: result.data.action
+          sideEffects: result.data.sideEffects
         };
       }
       return result.data.response;
