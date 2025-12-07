@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { AvatarDropdownComponent } from '../avatar-dropdown.component';
+import { UserProfile } from '../models/user-profile';
+import { firebaseConfig } from '../../../environments/environment';
+
+type SectionKey = 'users' | 'email' | 'quickActions';
 
 @Component({
   selector: 'app-admin',
@@ -27,6 +31,16 @@ export class AdminComponent implements OnInit {
   error = signal<string | null>(null);
   isAdmin = signal(false);
   checkingAuth = signal(true);
+  users = signal<UserProfile[]>([]);
+  usersLoading = signal(false);
+  usersError = signal<string | null>(null);
+  sections = signal<Record<SectionKey, boolean>>({
+    users: true,
+    email: true,
+    quickActions: true
+  });
+
+  private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
 
   async ngOnInit() {
     console.log('🔐 Admin component initializing...');
@@ -61,6 +75,7 @@ export class AdminComponent implements OnInit {
     console.log('🔐 Admin access granted!');
     this.isAdmin.set(true);
     this.checkingAuth.set(false);
+    this.loadUsers();
   }
 
   async sendTestEmail() {
@@ -132,6 +147,53 @@ export class AdminComponent implements OnInit {
 
   getProfile() {
     return this.authService.profile();
+  }
+
+  sectionOpen(key: SectionKey) {
+    return this.sections()[key];
+  }
+
+  toggleSection(key: SectionKey) {
+    this.sections.update((state) => ({ ...state, [key]: !state[key] }));
+  }
+
+  private async ensureFirestore() {
+    if (!this.firestorePromise) {
+      this.firestorePromise = (async () => {
+        const appModule = await import('firebase/app');
+        const firestoreModule = await import('firebase/firestore');
+        const app =
+          appModule.getApps().length === 0
+            ? appModule.initializeApp(firebaseConfig)
+            : appModule.getApp();
+        return firestoreModule.getFirestore(app);
+      })();
+    }
+    return this.firestorePromise;
+  }
+
+  private async loadUsers() {
+    this.usersLoading.set(true);
+    this.usersError.set(null);
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const collectionRef = firestoreModule.collection(firestore, 'userProfiles');
+      const snapshot = await firestoreModule.getDocs(collectionRef);
+      const data = snapshot.docs.map((doc) => {
+        const payload = doc.data() as UserProfile;
+        return { ...payload, id: doc.id, userId: payload.userId || doc.id };
+      });
+      data.sort((a, b) =>
+        (a.firstName || '').localeCompare(b.firstName || '', undefined, { sensitivity: 'base' })
+      );
+      this.users.set(data);
+    } catch (err: any) {
+      console.error('Failed to load users', err);
+      this.usersError.set('Unable to load users right now.');
+    } finally {
+      this.usersLoading.set(false);
+    }
   }
 }
 
