@@ -21,4 +21,6 @@ export interface UserProfile {
   subscriptionStatus?: string;
   subscriptionPaidAt?: unknown;
   subscriptionExpiresAt?: unknown;
+  lastSignInAt?: unknown;
+  lastSignIn?: unknown;
 }

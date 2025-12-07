@@ -9,6 +9,7 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 
 type SectionKey = 'users' | 'email' | 'quickActions';
+type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 
 @Component({
   selector: 'app-admin',
@@ -32,7 +33,7 @@ export class AdminComponent implements OnInit {
   error = signal<string | null>(null);
   isAdmin = signal(false);
   checkingAuth = signal(true);
-  users = signal<UserProfile[]>([]);
+  users = signal<AdminUser[]>([]);
   usersLoading = signal(false);
   usersError = signal<string | null>(null);
   sections = signal<Record<SectionKey, boolean>>({
@@ -226,18 +227,59 @@ export class AdminComponent implements OnInit {
       const collectionRef = firestoreModule.collection(firestore, 'userProfiles');
       const snapshot = await firestoreModule.getDocs(collectionRef);
       const data = snapshot.docs.map((doc) => {
-        const payload = doc.data() as UserProfile;
+        const payload = doc.data() as AdminUser;
         return { ...payload, id: doc.id, userId: payload.userId || doc.id };
       });
       data.sort((a, b) =>
         (a.firstName || '').localeCompare(b.firstName || '', undefined, { sensitivity: 'base' })
       );
-      this.users.set(data);
+      const enriched = await this.enrichWithAuthMetadata(data);
+      this.users.set(enriched);
     } catch (err: any) {
       console.error('Failed to load users', err);
       this.usersError.set('Unable to load users right now.');
     } finally {
       this.usersLoading.set(false);
+    }
+  }
+
+  private async enrichWithAuthMetadata(users: AdminUser[]) {
+    try {
+      const uids = users.map((u) => u.userId).filter(Boolean);
+      if (uids.length === 0) return users;
+
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+      const functions = getFunctions(getApp());
+      const getAuthMetadata = httpsCallable(functions, 'getAuthMetadata');
+
+      // Chunk to avoid exceeding callable payload limits (100 uids per chunk)
+      const chunkSize = 100;
+      const mergedMeta: Record<string, { lastSignInTime: string | null; creationTime: string | null }> = {};
+
+      for (let i = 0; i < uids.length; i += chunkSize) {
+        const chunk = uids.slice(i, i + chunkSize);
+        const result = await getAuthMetadata({ uids: chunk });
+        const data = result.data as { users?: { uid: string; lastSignInTime?: string | null; creationTime?: string | null }[] };
+        data.users?.forEach((u) => {
+          mergedMeta[u.uid] = {
+            lastSignInTime: u.lastSignInTime ?? null,
+            creationTime: u.creationTime ?? null
+          };
+        });
+      }
+
+      return users.map((user) => {
+        const meta = mergedMeta[user.userId];
+        return {
+          ...user,
+          lastSignInAt: meta?.lastSignInTime ?? user.lastSignInAt ?? user.lastSignIn,
+          createdAt: meta?.creationTime ?? user.createdAt
+        };
+      });
+    } catch (err) {
+      console.error('Failed to enrich with auth metadata', err);
+      return users;
     }
   }
 }

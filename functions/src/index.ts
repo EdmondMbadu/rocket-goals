@@ -848,3 +848,39 @@ export const sendTestEmail = functions.runWith({
         );
     }
 });
+
+// Callable: return auth metadata (last sign-in, creation time) for given UIDs
+export const getAuthMetadata = onCall({}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be authenticated to call this function.");
+    }
+    const token = request.auth.token as any;
+    if (!(token?.admin === true || token?.role === "admin")) {
+        throw new HttpsError("permission-denied", "Admin access required.");
+    }
+
+    const uids = Array.isArray(request.data?.uids)
+        ? request.data.uids.filter((u: any) => typeof u === "string" && u.trim())
+        : [];
+
+    if (uids.length === 0) {
+        return { users: [] };
+    }
+
+    const chunkSize = 100;
+    const users: { uid: string; lastSignInTime: string | null; creationTime: string | null }[] = [];
+
+    for (let i = 0; i < uids.length; i += chunkSize) {
+        const chunk = uids.slice(i, i + chunkSize).map((uid: string) => ({ uid }));
+        const res = await admin.auth().getUsers(chunk);
+        res.users.forEach((user) => {
+            users.push({
+                uid: user.uid,
+                lastSignInTime: user.metadata?.lastSignInTime || null,
+                creationTime: user.metadata?.creationTime || null,
+            });
+        });
+    }
+
+    return { users };
+});
