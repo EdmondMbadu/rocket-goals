@@ -82,10 +82,16 @@
             </p>
           </div>
           <button type="button" (click)="toggleSection('users')" class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
-            <span>@if (sectionOpen('users')) { Hide } @else { Show }</span>
-            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="sectionOpen('users')" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+            <span>@if (sectionOpen('users')) { Collapse } @else { Expand }</span>
+            @if (sectionOpen('users')) {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
             </svg>
+            } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            }
           </button>
         </div>
         @if (sectionOpen('users')) {
@@ -133,10 +139,16 @@
             <p class="text-sm text-slate-500">Verify SendGrid integration is working correctly</p>
           </div>
           <button type="button" (click)="toggleSection('email')" class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
-            <span>@if (sectionOpen('email')) { Hide } @else { Show }</span>
-            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="sectionOpen('email')" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+            <span>@if (sectionOpen('email')) { Collapse } @else { Expand }</span>
+            @if (sectionOpen('email')) {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
             </svg>
+            } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            }
           </button>
         </div>
         @if (sectionOpen('email')) {

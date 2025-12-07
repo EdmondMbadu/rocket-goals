@@ -35,8 +35,8 @@ export class AdminComponent implements OnInit {
   usersLoading = signal(false);
   usersError = signal<string | null>(null);
   sections = signal<Record<SectionKey, boolean>>({
-    users: true,
-    email: true,
+    users: false,
+    email: false,
     quickActions: true
   });
 
