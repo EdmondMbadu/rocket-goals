@@ -475,6 +475,176 @@ function formatDate(date: Date): string {
     return `${year}-${month}-${day}`;
 }
 
+type ActionResult =
+    | { type: 'createEvent'; eventId: string; eventData: any }
+    | { type: 'updateEvent'; eventId: string; eventData: any }
+    | { type: 'deleteEvent'; eventId: string };
+
+type ActionHandler = (args: {
+    goalId: string;
+    actionData: any;
+}) => Promise<ActionResult | null>;
+
+const actionHandlers: Record<string, ActionHandler> = {
+    async CREATE_EVENT({ goalId, actionData }) {
+        if (!actionData.title || !actionData.date) {
+            console.warn('Missing required fields for CREATE_EVENT', actionData);
+            return null;
+        }
+
+        // Parse date - try natural language first, then standard parsing
+        const parsedDateStr = parseNaturalDate(actionData.date);
+        const dateStrToUse = parsedDateStr || actionData.date;
+        const eventDate = new Date(dateStrToUse);
+
+        if (isNaN(eventDate.getTime())) {
+            console.warn('Invalid date format for CREATE_EVENT:', actionData.date);
+            return null;
+        }
+
+        // Set time if provided or default to start of day
+        if (actionData.time) {
+            const [hours, minutes] = actionData.time.split(':').map(Number);
+            eventDate.setHours(hours || 0, minutes || 0, 0, 0);
+        } else {
+            eventDate.setHours(0, 0, 0, 0);
+        }
+
+        const eventRef = admin
+            .firestore()
+            .collection('rocketGoals')
+            .doc(goalId)
+            .collection('calendarEvents')
+            .doc();
+
+        const eventData = {
+            id: eventRef.id,
+            goalId,
+            title: actionData.title,
+            date: admin.firestore.Timestamp.fromDate(eventDate),
+            time: actionData.time || null,
+            duration: actionData.duration || 60,
+            color: actionData.color || '#dc2626',
+            description: actionData.description || '',
+            completed: actionData.completed || false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        await eventRef.set(eventData);
+        await eventRef.update({ id: eventRef.id }); // keep id in document for consistency
+
+        console.log(
+            `✅ Created event: ${actionData.title} for goal ${goalId} at ${eventDate.toISOString()}`
+        );
+
+        return {
+            type: 'createEvent',
+            eventId: eventRef.id,
+            eventData: {
+                title: actionData.title,
+                date: eventDate.toISOString(),
+                time: actionData.time,
+                duration: actionData.duration || 60,
+                color: actionData.color || '#dc2626',
+                description: actionData.description,
+                completed: actionData.completed || false,
+            },
+        };
+    },
+
+    async UPDATE_EVENT({ goalId, actionData }) {
+        if (!actionData.eventId) {
+            console.warn('Missing eventId for UPDATE_EVENT');
+            return null;
+        }
+
+        const eventRef = admin
+            .firestore()
+            .collection('rocketGoals')
+            .doc(goalId)
+            .collection('calendarEvents')
+            .doc(actionData.eventId);
+
+        const eventDoc = await eventRef.get();
+        if (!eventDoc.exists) {
+            console.warn(`Event ${actionData.eventId} not found`);
+            return null;
+        }
+
+        const updateData: any = {
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (actionData.title !== undefined) updateData.title = actionData.title;
+        if (actionData.date !== undefined) {
+            const parsedDateStr = parseNaturalDate(actionData.date);
+            const dateStrToUse = parsedDateStr || actionData.date;
+            const eventDate = new Date(dateStrToUse);
+            if (!isNaN(eventDate.getTime())) {
+                if (actionData.time) {
+                    const [hours, minutes] = actionData.time.split(':').map(Number);
+                    eventDate.setHours(hours || 0, minutes || 0, 0, 0);
+                }
+                updateData.date = admin.firestore.Timestamp.fromDate(eventDate);
+            } else {
+                console.warn('Invalid date in UPDATE_EVENT:', actionData.date);
+            }
+        }
+        if (actionData.time !== undefined) updateData.time = actionData.time;
+        if (actionData.duration !== undefined) updateData.duration = actionData.duration;
+        if (actionData.color !== undefined) updateData.color = actionData.color;
+        if (actionData.description !== undefined) updateData.description = actionData.description;
+        if (actionData.completed !== undefined) updateData.completed = actionData.completed;
+
+        await eventRef.update(updateData);
+
+        console.log(`✅ Updated event: ${actionData.eventId} for goal ${goalId}`);
+
+        return {
+            type: 'updateEvent',
+            eventId: actionData.eventId,
+            eventData: {
+                title: actionData.title,
+                date: actionData.date ? new Date(actionData.date).toISOString() : undefined,
+                time: actionData.time,
+                duration: actionData.duration,
+                color: actionData.color,
+                description: actionData.description,
+                completed: actionData.completed,
+            },
+        };
+    },
+
+    async DELETE_EVENT({ goalId, actionData }) {
+        if (!actionData.eventId) {
+            console.warn('Missing eventId for DELETE_EVENT');
+            return null;
+        }
+
+        const eventRef = admin
+            .firestore()
+            .collection('rocketGoals')
+            .doc(goalId)
+            .collection('calendarEvents')
+            .doc(actionData.eventId);
+
+        const eventDoc = await eventRef.get();
+        if (!eventDoc.exists) {
+            console.warn(`Event ${actionData.eventId} not found`);
+            return null;
+        }
+
+        await eventRef.delete();
+        console.log(`✅ Deleted event: ${actionData.eventId} for goal ${goalId}`);
+
+        return {
+            type: 'deleteEvent',
+            eventId: actionData.eventId,
+        };
+    },
+};
+
 /**
  * HTTPS callable function for chat-based AI responses (used by frontend)
  * Using onCall automatically handles CORS for allowed Firebase origins.
@@ -724,7 +894,7 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
         }
 
         // Parse action instructions from response
-        let action: any = null;
+        let action: ActionResult | null = null;
         const actionRegex = /\[ACTION:(CREATE_EVENT|UPDATE_EVENT|DELETE_EVENT)\](.*?)\[\/ACTION\]/s;
         const actionMatch = responseText.match(actionRegex);
 
@@ -732,153 +902,16 @@ IMPORTANT: Use this goal context to provide personalized, insightful advice. Ref
             const actionType = actionMatch[1];
             const actionDataStr = actionMatch[2].trim();
 
+            // Remove action tags from response text shown to user
+            responseText = responseText.replace(actionRegex, "").trim();
+
             try {
                 const actionData = JSON.parse(actionDataStr);
-
-                // Remove action tags from response text
-                responseText = responseText.replace(actionRegex, "").trim();
-
-                if (actionType === "CREATE_EVENT") {
-                    // Validate required fields
-                    if (!actionData.title || !actionData.date) {
-                        console.warn("Missing required fields for CREATE_EVENT");
-                    } else {
-                        // Parse date - try natural language first, then standard parsing
-                        const parsedDateStr = parseNaturalDate(actionData.date);
-                        const dateStrToUse = parsedDateStr || actionData.date;
-                        const eventDate = new Date(dateStrToUse);
-
-                        if (isNaN(eventDate.getTime())) {
-                            console.warn("Invalid date format for CREATE_EVENT:", actionData.date);
-                        } else {
-                            // Set time if provided
-                            if (actionData.time) {
-                                const [hours, minutes] = actionData.time.split(':').map(Number);
-                                eventDate.setHours(hours || 0, minutes || 0, 0, 0);
-                            } else {
-                                // If no time provided, set to start of day
-                                eventDate.setHours(0, 0, 0, 0);
-                            }
-
-                            // Create event in Firestore
-                            const eventRef = admin.firestore()
-                                .collection('rocketGoals')
-                                .doc(goalContext.id)
-                                .collection('calendarEvents')
-                                .doc();
-
-                            const eventData = {
-                                id: eventRef.id,
-                                goalId: goalContext.id,
-                                title: actionData.title,
-                                date: admin.firestore.Timestamp.fromDate(eventDate),
-                                time: actionData.time || null,
-                                duration: actionData.duration || 60,
-                                color: actionData.color || '#dc2626',
-                                description: actionData.description || '',
-                                completed: actionData.completed || false,
-                                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                            };
-
-                            await eventRef.set(eventData);
-
-                            // Update the document with its own ID (as per the service pattern)
-                            await eventRef.update({ id: eventRef.id });
-
-                            action = {
-                                type: 'createEvent',
-                                eventData: {
-                                    title: actionData.title,
-                                    date: eventDate.toISOString(),
-                                    time: actionData.time,
-                                    duration: actionData.duration || 60,
-                                    color: actionData.color || '#dc2626',
-                                    description: actionData.description,
-                                    completed: actionData.completed || false
-                                }
-                            };
-
-                            console.log(`✅ Created event: ${actionData.title} for goal ${goalContext.id} at ${eventDate.toISOString()}`);
-                            console.log(`Event ID: ${eventRef.id}, Date: ${eventDate.toISOString()}, Time: ${actionData.time || 'none'}`);
-                        }
-                    }
-                } else if (actionType === "UPDATE_EVENT") {
-                    if (!actionData.eventId) {
-                        console.warn("Missing eventId for UPDATE_EVENT");
-                    } else {
-                        const eventRef = admin.firestore()
-                            .collection('rocketGoals')
-                            .doc(goalContext.id)
-                            .collection('calendarEvents')
-                            .doc(actionData.eventId);
-
-                        const eventDoc = await eventRef.get();
-                        if (!eventDoc.exists) {
-                            console.warn(`Event ${actionData.eventId} not found`);
-                        } else {
-                            const updateData: any = {
-                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                            };
-
-                            if (actionData.title !== undefined) updateData.title = actionData.title;
-                            if (actionData.date !== undefined) {
-                                const eventDate = new Date(actionData.date);
-                                if (actionData.time) {
-                                    const [hours, minutes] = actionData.time.split(':').map(Number);
-                                    eventDate.setHours(hours || 0, minutes || 0, 0, 0);
-                                }
-                                updateData.date = admin.firestore.Timestamp.fromDate(eventDate);
-                            }
-                            if (actionData.time !== undefined) updateData.time = actionData.time;
-                            if (actionData.duration !== undefined) updateData.duration = actionData.duration;
-                            if (actionData.color !== undefined) updateData.color = actionData.color;
-                            if (actionData.description !== undefined) updateData.description = actionData.description;
-                            if (actionData.completed !== undefined) updateData.completed = actionData.completed;
-
-                            await eventRef.update(updateData);
-
-                            action = {
-                                type: 'updateEvent',
-                                eventId: actionData.eventId,
-                                eventData: {
-                                    title: actionData.title,
-                                    date: actionData.date ? new Date(actionData.date).toISOString() : undefined,
-                                    time: actionData.time,
-                                    duration: actionData.duration,
-                                    color: actionData.color,
-                                    description: actionData.description,
-                                    completed: actionData.completed
-                                }
-                            };
-
-                            console.log(`✅ Updated event: ${actionData.eventId} for goal ${goalContext.id}`);
-                        }
-                    }
-                } else if (actionType === "DELETE_EVENT") {
-                    if (!actionData.eventId) {
-                        console.warn("Missing eventId for DELETE_EVENT");
-                    } else {
-                        const eventRef = admin.firestore()
-                            .collection('rocketGoals')
-                            .doc(goalContext.id)
-                            .collection('calendarEvents')
-                            .doc(actionData.eventId);
-
-                        const eventDoc = await eventRef.get();
-                        if (!eventDoc.exists) {
-                            console.warn(`Event ${actionData.eventId} not found`);
-                        } else {
-                            await eventRef.delete();
-
-                            action = {
-                                type: 'deleteEvent',
-                                eventId: actionData.eventId
-                            };
-
-                            console.log(`✅ Deleted event: ${actionData.eventId} for goal ${goalContext.id}`);
-                        }
-                    }
+                const handler = actionHandlers[actionType];
+                if (handler) {
+                    action = await handler({ goalId: goalContext.id, actionData });
+                } else {
+                    console.warn('No handler found for action type', actionType);
                 }
             } catch (parseError) {
                 console.error("Error parsing action data:", parseError);
