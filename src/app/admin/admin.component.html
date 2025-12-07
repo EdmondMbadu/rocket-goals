@@ -121,6 +121,10 @@
                 <p class="text-sm text-slate-500 truncate">
                   {{ user.email || 'No email on file' }}
                 </p>
+                <div class="flex flex-wrap gap-4 text-xs text-slate-500 mt-1">
+                  <span>Signed up: {{ formatDate(user.createdAt) }}</span>
+                  <span>Plan: {{ user.subscriptionStatus || '-' }}</span>
+                </div>
               </div>
             </div>
             }

@@ -6,6 +6,7 @@ import { AuthService } from '../auth.service';
 import { AvatarDropdownComponent } from '../avatar-dropdown.component';
 import { UserProfile } from '../models/user-profile';
 import { firebaseConfig } from '../../../environments/environment';
+import type { Timestamp } from 'firebase/firestore';
 
 type SectionKey = 'users' | 'email' | 'quickActions';
 
@@ -155,6 +156,21 @@ export class AdminComponent implements OnInit {
 
   toggleSection(key: SectionKey) {
     this.sections.update((state) => ({ ...state, [key]: !state[key] }));
+  }
+
+  formatDate(value: unknown) {
+    if (!value) return '-';
+    let date: Date | null = null;
+    if (value instanceof Date) {
+      date = value;
+    } else if (typeof value === 'string' || typeof value === 'number') {
+      date = new Date(value);
+    } else if (typeof value === 'object' && value !== null && 'seconds' in value) {
+      const ts = value as Timestamp;
+      date = new Date(ts.seconds * 1000);
+    }
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   private async ensureFirestore() {
