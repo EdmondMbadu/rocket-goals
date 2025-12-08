@@ -1,4 +1,4 @@
-<div class="ai-premium-shell min-h-screen text-white">
+<div class="ai-premium-shell min-h-screen text-white" [class.light-mode]="isLightMode()">
   <div class="ai-gradient-bg"></div>
   <div class="ai-grid-overlay"></div>
 
@@ -14,6 +14,9 @@
       <div class="badge">Premium AI</div>
     </div>
     <div class="nav-right">
+      <button type="button" class="ghost-btn" (click)="toggleTheme()">
+        {{ isLightMode() ? 'Dark mode' : 'Light mode' }}
+      </button>
       <a routerLink="/goals" class="ghost-btn">Mission Control</a>
       <a routerLink="/login" class="outline-btn" *ngIf="!authService.profile()">Log in</a>
       <a routerLink="/signup" class="solid-btn">Start Free</a>

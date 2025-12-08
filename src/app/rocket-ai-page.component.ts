@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, computed, inject } from '@angular/core';
+import { Component, ViewChild, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import type { ChatMessage } from './rocket-goals-ai.service';
@@ -23,6 +23,7 @@ interface InteractionPreview {
 export class RocketAiPageComponent {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
+  protected readonly isLightMode = signal(true); // default to white background
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
 
@@ -68,6 +69,10 @@ export class RocketAiPageComponent {
 
   protected trackByInteraction(_index: number, interaction: InteractionPreview): number {
     return interaction.id;
+  }
+
+  protected toggleTheme(): void {
+    this.isLightMode.update((current) => !current);
   }
 }
 
