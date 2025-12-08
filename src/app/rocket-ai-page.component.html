@@ -30,77 +30,27 @@
     </div>
   </header>
 
-  <main class="ai-layout">
-    <!-- Sidebar -->
-    <section class="sidebar glass">
-      <div class="sidebar-header">
+<main class="chat-main">
+  <section class="chat-card glass">
+    <div class="chat-head">
+      <div>
+        <p class="eyebrow">RocketGoals AI</p>
+        <h1 class="hero-title">Direct answers. No fluff.</h1>
+        <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
         <div>
-          <p class="eyebrow">Conversation History</p>
-          <h2 class="title">Mission Thread</h2>
-        </div>
-        <button type="button" class="pill-btn" (click)="clearConversation()">New chat</button>
-      </div>
-
-      <div class="history">
-        <div *ngIf="interactions().length === 0" class="empty">
-          <p>No history yet. Ask your first question to start a mission log.</p>
-        </div>
-
-        <div *ngFor="let interaction of interactions(); trackBy: trackByInteraction" class="history-item">
-          <div class="dot"></div>
-          <div class="history-body">
-            <p class="history-label">{{ interaction.timestamp | date: 'shortTime' }}</p>
-            <p class="history-question" *ngIf="interaction.user">
-              {{ interaction.user.content | slice:0:140 }}<span *ngIf="(interaction.user.content?.length || 0) > 140">…</span>
-            </p>
-            <p class="history-answer" *ngIf="interaction.ai">
-              {{ interaction.ai.content | slice:0:140 }}<span *ngIf="(interaction.ai.content?.length || 0) > 140">…</span>
-            </p>
-          </div>
+          <p class="status-label">Live</p>
+          <p class="status-text">Gemini-powered</p>
         </div>
       </div>
+    </div>
 
-      <div class="sidebar-card">
-        <p class="eyebrow">Launch faster</p>
-        <h3 class="card-title">Quick prompts</h3>
-        <div class="prompt-grid">
-          <button type="button" class="prompt-chip" *ngFor="let prompt of starterPrompts" (click)="runPrompt(prompt)">
-            {{ prompt }}
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Main chat canvas -->
-    <section class="chat-area">
-      <div class="hero glass">
-        <div>
-          <p class="eyebrow">RocketGoals AI</p>
-          <h1 class="hero-title">Your personal co-pilot for unstoppable momentum.</h1>
-          <p class="hero-subtitle">
-            Ask anything about goals, routines, or motivation. The AI will reply with context-aware guidance,
-            ready to schedule actions and keep you on course.
-          </p>
-          <div class="hero-actions">
-            <button type="button" class="solid-btn" (click)="runPrompt('Plan my next 7 days with milestones and reminders.')">
-              Ask now
-            </button>
-            <button type="button" class="outline-btn" (click)="clearConversation()">Reset thread</button>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-dot"></div>
-          <div>
-            <p class="status-label">Live</p>
-            <p class="status-text">Gemini-powered · Action-ready</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="ai-panel glass">
-        <app-rocket-goals-ai [embedded]="true" />
-      </div>
-    </section>
-  </main>
+    <div class="ai-panel glass inner">
+      <app-rocket-goals-ai [embedded]="true" />
+    </div>
+  </section>
+</main>
 </div>
 
