@@ -20,6 +20,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
   private storage: any = null;
+  isLightMode = signal(true);
   
   profile = signal<UserProfile | null>(null);
   loading = signal(false);
@@ -321,6 +322,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   getGoalTheme(goal: RocketGoal): string {
     return goal.answers?.['goal_theme_label'] || 'Personal Growth';
+  }
+
+  toggleTheme(): void {
+    this.isLightMode.update(v => !v);
   }
 
   startEditingGoal(goal: RocketGoal) {
