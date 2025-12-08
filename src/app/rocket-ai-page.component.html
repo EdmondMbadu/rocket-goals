@@ -1,0 +1,96 @@
+<div class="ai-premium-shell min-h-screen text-white">
+  <div class="ai-gradient-bg"></div>
+  <div class="ai-grid-overlay"></div>
+
+  <!-- Top bar -->
+  <header class="ai-nav">
+    <div class="nav-left">
+      <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'" class="logo-link">
+        <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="logo" />
+        <div class="logo-text">
+          <span>ROCKET</span><span class="accent">GOALS</span>
+        </div>
+      </a>
+      <div class="badge">Premium AI</div>
+    </div>
+    <div class="nav-right">
+      <a routerLink="/goals" class="ghost-btn">Mission Control</a>
+      <a routerLink="/login" class="outline-btn" *ngIf="!authService.profile()">Log in</a>
+      <a routerLink="/signup" class="solid-btn">Start Free</a>
+    </div>
+  </header>
+
+  <main class="ai-layout">
+    <!-- Sidebar -->
+    <section class="sidebar glass">
+      <div class="sidebar-header">
+        <div>
+          <p class="eyebrow">Conversation History</p>
+          <h2 class="title">Mission Thread</h2>
+        </div>
+        <button type="button" class="pill-btn" (click)="clearConversation()">New chat</button>
+      </div>
+
+      <div class="history">
+        <div *ngIf="interactions().length === 0" class="empty">
+          <p>No history yet. Ask your first question to start a mission log.</p>
+        </div>
+
+        <div *ngFor="let interaction of interactions(); trackBy: trackByInteraction" class="history-item">
+          <div class="dot"></div>
+          <div class="history-body">
+            <p class="history-label">{{ interaction.timestamp | date: 'shortTime' }}</p>
+            <p class="history-question" *ngIf="interaction.user">
+              {{ interaction.user.content | slice:0:140 }}<span *ngIf="(interaction.user.content?.length || 0) > 140">…</span>
+            </p>
+            <p class="history-answer" *ngIf="interaction.ai">
+              {{ interaction.ai.content | slice:0:140 }}<span *ngIf="(interaction.ai.content?.length || 0) > 140">…</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <p class="eyebrow">Launch faster</p>
+        <h3 class="card-title">Quick prompts</h3>
+        <div class="prompt-grid">
+          <button type="button" class="prompt-chip" *ngFor="let prompt of starterPrompts" (click)="runPrompt(prompt)">
+            {{ prompt }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main chat canvas -->
+    <section class="chat-area">
+      <div class="hero glass">
+        <div>
+          <p class="eyebrow">RocketGoals AI</p>
+          <h1 class="hero-title">Your personal co-pilot for unstoppable momentum.</h1>
+          <p class="hero-subtitle">
+            Ask anything about goals, routines, or motivation. The AI will reply with context-aware guidance,
+            ready to schedule actions and keep you on course.
+          </p>
+          <div class="hero-actions">
+            <button type="button" class="solid-btn" (click)="runPrompt('Plan my next 7 days with milestones and reminders.')">
+              Ask now
+            </button>
+            <button type="button" class="outline-btn" (click)="clearConversation()">Reset thread</button>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-dot"></div>
+          <div>
+            <p class="status-label">Live</p>
+            <p class="status-text">Gemini-powered · Action-ready</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-panel glass">
+        <app-rocket-goals-ai [embedded]="true" />
+      </div>
+    </section>
+  </main>
+</div>
+

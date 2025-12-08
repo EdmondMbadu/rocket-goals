@@ -7,6 +7,7 @@ import { RocketGoalViewComponent } from './rocket-goal-view.component';
 import { GoalsListComponent } from './goals-list.component';
 import { ProfileComponent } from './profile.component';
 import { AdminComponent } from './admin/admin.component';
+import { RocketAiPageComponent } from './rocket-ai-page.component';
 
 export const routes: Routes = [
   { path: '', component: LandingBridgeComponent, pathMatch: 'full' },
@@ -17,5 +18,7 @@ export const routes: Routes = [
   { path: 'rocketgoal/:id', component: RocketGoalViewComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'admin', component: AdminComponent },
+  { path: 'rocketAi', component: RocketAiPageComponent },
+  { path: 'ai', component: RocketAiPageComponent },
   { path: '**', redirectTo: '' }
 ];
