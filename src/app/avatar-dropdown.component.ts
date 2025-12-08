@@ -65,6 +65,16 @@ export class AvatarDropdownComponent implements OnInit {
     this.closeDropdown();
   }
 
+  navigateToHome() {
+    this.router.navigateByUrl('/goals');
+    this.closeDropdown();
+  }
+
+  navigateToAI() {
+    this.router.navigateByUrl('/rocketAi');
+    this.closeDropdown();
+  }
+
   navigateToAdmin() {
     this.router.navigateByUrl('/admin');
     this.closeDropdown();
