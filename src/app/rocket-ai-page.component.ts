@@ -24,6 +24,7 @@ export class RocketAiPageComponent {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
   protected readonly isLightMode = signal(true); // default to white background
+  protected readonly showHistory = signal(true);
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
 
@@ -73,6 +74,10 @@ export class RocketAiPageComponent {
 
   protected toggleTheme(): void {
     this.isLightMode.update((current) => !current);
+  }
+
+  protected toggleHistory(): void {
+    this.showHistory.update((current) => !current);
   }
 }
 

@@ -14,6 +14,14 @@
       <div class="badge">Premium AI</div>
     </div>
     <div class="nav-right">
+    <button type="button" class="ghost-btn icon-btn" (click)="toggleHistory()" aria-label="Toggle history">
+      <svg *ngIf="showHistory()" viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M5 12h14M5 17h14" />
+      </svg>
+      <svg *ngIf="!showHistory()" viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h6" />
+      </svg>
+    </button>
       <button type="button" class="ghost-btn icon-btn" (click)="toggleTheme()" aria-label="Toggle theme">
         <svg *ngIf="isLightMode()" viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -30,26 +38,55 @@
     </div>
   </header>
 
-<main class="chat-main">
-  <section class="chat-card glass">
-    <div class="chat-head">
+<main class="ai-layout" [class.history-hidden]="!showHistory()">
+  <aside class="history-panel glass" *ngIf="showHistory()">
+    <div class="history-head">
       <div>
-        <p class="eyebrow">RocketGoals AI</p>
-        <h1 class="hero-title">Direct answers. No fluff.</h1>
-        <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
+        <p class="eyebrow">History</p>
+        <h3 class="history-title">Chat log</h3>
       </div>
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <div>
-          <p class="status-label">Live</p>
-          <p class="status-text">Gemini-powered</p>
+      <button type="button" class="ghost-btn small" (click)="clearConversation()">Clear</button>
+    </div>
+    <div class="history-list">
+      <div *ngIf="interactions().length === 0" class="history-empty">
+        <p>No chats yet. Start a conversation.</p>
+      </div>
+      <div *ngFor="let interaction of interactions(); trackBy: trackByInteraction" class="history-item">
+        <div class="dot"></div>
+        <div class="history-body">
+          <p class="history-label">{{ interaction.timestamp | date: 'short' }}</p>
+          <p class="history-question" *ngIf="interaction.user">
+            {{ interaction.user.content | slice:0:120 }}<span *ngIf="(interaction.user.content?.length || 0) > 120">…</span>
+          </p>
+          <p class="history-answer" *ngIf="interaction.ai">
+            {{ interaction.ai.content | slice:0:120 }}<span *ngIf="(interaction.ai.content?.length || 0) > 120">…</span>
+          </p>
         </div>
       </div>
     </div>
+  </aside>
 
-    <div class="ai-panel glass inner">
-      <app-rocket-goals-ai [embedded]="true" />
-    </div>
+  <section class="chat-main">
+    <section class="chat-card glass">
+      <div class="chat-head">
+        <div>
+          <p class="eyebrow">RocketGoals AI</p>
+          <h1 class="hero-title">Direct answers. No fluff.</h1>
+          <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <div>
+            <p class="status-label">Live</p>
+            <p class="status-text">Gemini-powered</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-panel glass inner">
+        <app-rocket-goals-ai [embedded]="true" />
+      </div>
+    </section>
   </section>
 </main>
 </div>
