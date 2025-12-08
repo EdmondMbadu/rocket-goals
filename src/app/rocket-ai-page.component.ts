@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ViewChild, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { ChatMessage } from './rocket-goals-ai.service';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
@@ -16,7 +17,7 @@ interface InteractionPreview {
 @Component({
   selector: 'app-rocket-ai-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, RocketGoalsAIComponent],
+  imports: [CommonModule, RouterLink, RocketGoalsAIComponent, AvatarDropdownComponent],
   templateUrl: './rocket-ai-page.component.html',
   styleUrl: './rocket-ai-page.component.css'
 })
