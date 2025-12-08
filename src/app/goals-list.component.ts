@@ -206,6 +206,16 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeAvatarDropdown();
   }
 
+  navigateToHome() {
+    this.router.navigateByUrl('/goals');
+    this.closeAvatarDropdown();
+  }
+
+  navigateToAI() {
+    this.router.navigateByUrl('/rocketAi');
+    this.closeAvatarDropdown();
+  }
+
   navigateToAdmin() {
     this.router.navigateByUrl('/admin');
     this.closeAvatarDropdown();
