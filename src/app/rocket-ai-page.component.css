@@ -9,6 +9,7 @@
               linear-gradient(135deg, #0b0f1a 0%, #0d111f 60%, #0b0f1a 100%);
   padding: 32px;
   overflow: hidden;
+  color: #e5e7eb;
 }
 
 .ai-gradient-bg {
@@ -75,6 +76,7 @@
   display: flex;
   gap: 4px;
   font-size: 18px;
+  color: #e5e7eb;
 }
 
 .logo-text .accent {
@@ -196,6 +198,7 @@
   font-size: 22px;
   font-weight: 800;
   margin: 0;
+  color: #e5e7eb;
 }
 
 .history {
@@ -333,6 +336,7 @@
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 900;
   letter-spacing: -0.02em;
+  color: #f8fafc;
 }
 
 .hero-subtitle {
@@ -370,6 +374,7 @@
   margin: 0;
   font-weight: 800;
   font-size: 13px;
+  color: #e5e7eb;
 }
 
 .status-text {
