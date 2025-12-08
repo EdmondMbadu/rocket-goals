@@ -98,6 +98,35 @@
   gap: 10px;
 }
 
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: #ef4444;
+}
+
+.nav-links a.nav-active {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
 .solid-btn,
 .outline-btn,
 .ghost-btn,
@@ -381,6 +410,19 @@
 .light-mode .badge {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(59, 130, 246, 0.8));
   color: white;
+}
+
+.light-mode .nav-links a {
+  color: #0f172a;
+}
+
+.light-mode .nav-links a:hover {
+  color: #dc2626;
+}
+
+.light-mode .nav-links a.nav-active {
+  color: #dc2626;
+  border-color: #dc2626;
 }
 
 .light-mode .solid-btn {

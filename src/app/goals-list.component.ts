@@ -5,6 +5,7 @@ import { Router, RouterLink, ActivatedRoute, NavigationEnd } from '@angular/rout
 import { RocketGoalsService } from './rocket-goals.service';
 import { AuthService } from './auth.service';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -12,7 +13,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-goals-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, RocketGoalsAIComponent],
+  imports: [CommonModule, RouterLink, FormsModule, RocketGoalsAIComponent, AvatarDropdownComponent],
   templateUrl: './goals-list.component.html',
   styleUrl: './goals-list.component.css'
 })
