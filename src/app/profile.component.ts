@@ -16,7 +16,7 @@ import type { RocketGoal } from './models/rocket-goal';
   styleUrl: './profile.component.css'
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
   private storage: any = null;
