@@ -8,8 +8,27 @@ import { UserProfile } from '../models/user-profile';
 import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 
-type SectionKey = 'users' | 'email' | 'quickActions';
+type SectionKey = 'users' | 'email' | 'quickActions' | 'aiAnalytics';
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
+type AiAnalytics = {
+  path: string;
+  dateRange: { startDate: string; endDate: string };
+  views: number;
+  activeUsers: number;
+  viewsPerActiveUser: number;
+  avgEngagementPerActiveUserSeconds: number;
+  engagementSeconds: number;
+  eventCount: number;
+  totalRevenue: number;
+  newUsers: number;
+  sessions: number;
+  bounceRate: number;
+  avgSessionDurationSeconds: number;
+  countries: { country: string; activeUsers: number; views: number }[];
+  devices: { device: string; activeUsers: number; views: number }[];
+  browsers: { browser: string; activeUsers: number; views: number }[];
+  trafficSources: { channel: string; activeUsers: number; views: number }[];
+};
 
 @Component({
   selector: 'app-admin',
@@ -21,12 +40,12 @@ type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 export class AdminComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
-  
+
   // Email form state
   emailTo = signal('');
   emailSubject = signal('Test Email from Rocket Goals');
   emailMessage = signal('Hello! This is a test email sent from the Rocket Goals Admin Panel to verify SendGrid integration is working correctly.');
-  
+
   // UI state
   loading = signal(false);
   success = signal<string | null>(null);
@@ -39,18 +58,22 @@ export class AdminComponent implements OnInit {
   sections = signal<Record<SectionKey, boolean>>({
     users: false,
     email: false,
-    quickActions: true
+    quickActions: true,
+    aiAnalytics: true
   });
   totalUsers = signal<number | null>(null);
   totalGoals = signal<number | null>(null);
   statsLoading = signal(false);
   statsError = signal<string | null>(null);
+  aiAnalytics = signal<AiAnalytics | null>(null);
+  aiAnalyticsLoading = signal(false);
+  aiAnalyticsError = signal<string | null>(null);
 
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
 
   async ngOnInit() {
     console.log('🔐 Admin component initializing...');
-    
+
     // Wait for auth to load
     let attempts = 0;
     while (!this.authService.profile() && attempts < 20) {
@@ -61,7 +84,7 @@ export class AdminComponent implements OnInit {
     const profile = this.authService.profile();
     console.log('🔐 Profile loaded:', profile);
     console.log('🔐 Role:', profile?.role, 'Admin flag:', profile?.admin);
-    
+
     if (!profile) {
       console.log('🔐 No profile, redirecting to login');
       this.router.navigate(['/login']);
@@ -71,7 +94,7 @@ export class AdminComponent implements OnInit {
     // Check if user is admin - check both role and admin fields
     const isUserAdmin = profile.role === 'admin' || profile.admin === true;
     console.log('🔐 Is admin?', isUserAdmin);
-    
+
     if (!isUserAdmin) {
       console.log('🔐 Not admin, redirecting to goals');
       this.router.navigate(['/goals']);
@@ -82,6 +105,7 @@ export class AdminComponent implements OnInit {
     this.isAdmin.set(true);
     this.checkingAuth.set(false);
     this.loadStats();
+    this.loadAiAnalytics();
     this.loadUsers();
   }
 
@@ -124,14 +148,14 @@ export class AdminComponent implements OnInit {
       // Import Firebase functions
       const { getFunctions, httpsCallable } = await import('firebase/functions');
       const { getApp } = await import('firebase/app');
-      
+
       const app = getApp();
       const functions = getFunctions(app);
       const sendEmail = httpsCallable(functions, 'sendTestEmail');
 
       const result = await sendEmail({ to, subject, message });
       const data = result.data as { success: boolean; message: string };
-      
+
       if (data.success) {
         this.success.set(`✅ ${data.message}`);
         // Clear form on success
@@ -192,6 +216,33 @@ export class AdminComponent implements OnInit {
       })();
     }
     return this.firestorePromise;
+  }
+
+  async loadAiAnalytics() {
+    this.aiAnalyticsLoading.set(true);
+    this.aiAnalyticsError.set(null);
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+      const functions = getFunctions(getApp());
+      const fetchAnalytics = httpsCallable(functions, 'getAiAnalytics');
+      const result = await fetchAnalytics({});
+      const data = result.data as AiAnalytics;
+      this.aiAnalytics.set(data);
+    } catch (err: any) {
+      console.error('Failed to load AI analytics', err);
+      this.aiAnalyticsError.set('Unable to load AI page analytics.');
+    } finally {
+      this.aiAnalyticsLoading.set(false);
+    }
+  }
+
+  formatDuration(seconds: number) {
+    if (!Number.isFinite(seconds)) return '-';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    if (mins === 0) return `${secs}s`;
+    return `${mins}m ${secs.toString().padStart(2, '0')}s`;
   }
 
   private async loadStats() {

@@ -7,6 +7,7 @@ import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import sgMail = require("@sendgrid/mail");
 import { getToolRegistry, type AgentResponse, type SideEffect } from "./tools";
+import { BetaAnalyticsDataClient } from "@google-analytics/data";
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -14,6 +15,7 @@ admin.initializeApp();
 // Define secrets
 const geminiApiKey = defineSecret('GEMINI_API_KEY');
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
+const gaPropertyId = defineSecret('GA_PROPERTY_ID');
 
 /**
  * Cloud Function that processes AI prompts using Google AI (Gemini)
@@ -741,6 +743,193 @@ export const rocketGoalsAI = onCall({
 });
 
 /**
+ * Cloud Function to fetch GA4 metrics for the /ai path
+ */
+export const getAiAnalytics = functions.runWith({
+    timeoutSeconds: 30,
+    memory: "256MB",
+    secrets: [gaPropertyId]
+}).https.onCall(async (_data: unknown, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to fetch analytics.'
+        );
+    }
+
+    // Check admin status from Firestore userProfiles
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && userData.admin !== true)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can fetch analytics.'
+        );
+    }
+
+    const propertyId = gaPropertyId.value();
+    if (!propertyId) {
+        throw new functions.https.HttpsError(
+            'failed-precondition',
+            'GA_PROPERTY_ID is not set. Configure it before calling this function.'
+        );
+    }
+
+    try {
+        const analyticsDataClient = new BetaAnalyticsDataClient();
+        const startDate = "28daysAgo";
+        const endDate = "today";
+        const aiPageFilter = {
+            filter: {
+                fieldName: "pagePath",
+                stringFilter: {
+                    matchType: "EXACT" as const,
+                    value: "/ai"
+                }
+            }
+        };
+
+        // Main metrics report
+        const [mainReport] = await analyticsDataClient.runReport({
+            property: `properties/${propertyId}`,
+            dateRanges: [{ startDate, endDate }],
+            dimensions: [{ name: "pagePath" }],
+            dimensionFilter: aiPageFilter,
+            metrics: [
+                { name: "screenPageViews" },
+                { name: "activeUsers" },
+                { name: "eventCount" },
+                { name: "totalRevenue" },
+                { name: "userEngagementDuration" },
+                { name: "newUsers" },
+                { name: "sessions" },
+                { name: "bounceRate" },
+                { name: "averageSessionDuration" }
+            ],
+            limit: 1
+        });
+
+        // Countries breakdown
+        const [countryReport] = await analyticsDataClient.runReport({
+            property: `properties/${propertyId}`,
+            dateRanges: [{ startDate, endDate }],
+            dimensions: [{ name: "country" }],
+            dimensionFilter: aiPageFilter,
+            metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }],
+            orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+            limit: 10
+        });
+
+        // Device categories breakdown
+        const [deviceReport] = await analyticsDataClient.runReport({
+            property: `properties/${propertyId}`,
+            dateRanges: [{ startDate, endDate }],
+            dimensions: [{ name: "deviceCategory" }],
+            dimensionFilter: aiPageFilter,
+            metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }],
+            orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+            limit: 5
+        });
+
+        // Browser breakdown
+        const [browserReport] = await analyticsDataClient.runReport({
+            property: `properties/${propertyId}`,
+            dateRanges: [{ startDate, endDate }],
+            dimensions: [{ name: "browser" }],
+            dimensionFilter: aiPageFilter,
+            metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }],
+            orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+            limit: 5
+        });
+
+        // Traffic sources
+        const [sourceReport] = await analyticsDataClient.runReport({
+            property: `properties/${propertyId}`,
+            dateRanges: [{ startDate, endDate }],
+            dimensions: [{ name: "sessionDefaultChannelGroup" }],
+            dimensionFilter: aiPageFilter,
+            metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }],
+            orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+            limit: 10
+        });
+
+        const row = mainReport.rows?.[0];
+        const metrics = row?.metricValues || [];
+
+        const views = Number(metrics[0]?.value || 0);
+        const activeUsers = Number(metrics[1]?.value || 0);
+        const eventCount = Number(metrics[2]?.value || 0);
+        const totalRevenue = Number(metrics[3]?.value || 0);
+        const engagementSeconds = Number(metrics[4]?.value || 0);
+        const newUsers = Number(metrics[5]?.value || 0);
+        const sessions = Number(metrics[6]?.value || 0);
+        const bounceRate = Number(metrics[7]?.value || 0);
+        const avgSessionDuration = Number(metrics[8]?.value || 0);
+
+        const viewsPerActiveUser = activeUsers > 0 ? +(views / activeUsers).toFixed(2) : 0;
+        const avgEngagementPerActiveUserSeconds = activeUsers > 0 ? +(engagementSeconds / activeUsers).toFixed(1) : 0;
+
+        // Parse breakdown reports
+        const countries = (countryReport.rows || []).map(r => ({
+            country: r.dimensionValues?.[0]?.value || 'Unknown',
+            activeUsers: Number(r.metricValues?.[0]?.value || 0),
+            views: Number(r.metricValues?.[1]?.value || 0)
+        }));
+
+        const devices = (deviceReport.rows || []).map(r => ({
+            device: r.dimensionValues?.[0]?.value || 'Unknown',
+            activeUsers: Number(r.metricValues?.[0]?.value || 0),
+            views: Number(r.metricValues?.[1]?.value || 0)
+        }));
+
+        const browsers = (browserReport.rows || []).map(r => ({
+            browser: r.dimensionValues?.[0]?.value || 'Unknown',
+            activeUsers: Number(r.metricValues?.[0]?.value || 0),
+            views: Number(r.metricValues?.[1]?.value || 0)
+        }));
+
+        const trafficSources = (sourceReport.rows || []).map(r => ({
+            channel: r.dimensionValues?.[0]?.value || 'Unknown',
+            activeUsers: Number(r.metricValues?.[0]?.value || 0),
+            views: Number(r.metricValues?.[1]?.value || 0)
+        }));
+
+        return {
+            path: "/ai",
+            propertyId,
+            dateRange: { startDate, endDate },
+            views,
+            activeUsers,
+            viewsPerActiveUser,
+            avgEngagementPerActiveUserSeconds,
+            engagementSeconds,
+            eventCount,
+            totalRevenue,
+            newUsers,
+            sessions,
+            bounceRate: +(bounceRate * 100).toFixed(1),
+            avgSessionDurationSeconds: +avgSessionDuration.toFixed(1),
+            countries,
+            devices,
+            browsers,
+            trafficSources
+        };
+    } catch (error: any) {
+        console.error("❌ getAiAnalytics error:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            "internal",
+            error?.message || "Failed to fetch analytics."
+        );
+    }
+});
+
+/**
  * Cloud Function to send test emails via SendGrid
  * Only accessible by admin users
  */
@@ -854,8 +1043,14 @@ export const getAuthMetadata = onCall({}, async (request) => {
     if (!request.auth) {
         throw new HttpsError("unauthenticated", "You must be authenticated to call this function.");
     }
-    const token = request.auth.token as any;
-    if (!(token?.admin === true || token?.role === "admin")) {
+
+    // Check admin status from Firestore userProfiles
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(request.auth.uid)
+        .get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && userData.admin !== true)) {
         throw new HttpsError("permission-denied", "Admin access required.");
     }
 
