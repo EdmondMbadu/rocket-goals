@@ -781,10 +781,40 @@ export const getAiAnalytics = functions.runWith({
     try {
         const analyticsDataClient = new BetaAnalyticsDataClient();
         // Accept date range from data, default to last 28 days
-        const requestData = data && typeof data === 'object' ? data as { startDate?: string; endDate?: string } : {};
-        const startDate = requestData.startDate || "28daysAgo";
-        const endDate = requestData.endDate || "today";
-        console.log('📊 getAiAnalytics called with:', { startDate, endDate, receivedData: data });
+        console.log('📊 getAiAnalytics received raw data:', JSON.stringify(data));
+        console.log('📊 getAiAnalytics data type:', typeof data, 'is object:', typeof data === 'object', 'is null:', data === null);
+
+        // Extract date parameters more explicitly - handle Firebase callable function data format
+        let startDate = "28daysAgo";
+        let endDate = "today";
+
+        if (data && typeof data === 'object' && data !== null) {
+            // Try direct property access first
+            const requestData = data as any;
+            console.log('📊 requestData keys:', Object.keys(requestData));
+            console.log('📊 requestData.startDate:', requestData.startDate, 'type:', typeof requestData.startDate);
+            console.log('📊 requestData.endDate:', requestData.endDate, 'type:', typeof requestData.endDate);
+
+            // Check for startDate property
+            if ('startDate' in requestData && requestData.startDate) {
+                const sd = String(requestData.startDate).trim();
+                if (sd) {
+                    startDate = sd;
+                    console.log('✅ Using startDate from request:', startDate);
+                }
+            }
+
+            // Check for endDate property
+            if ('endDate' in requestData && requestData.endDate) {
+                const ed = String(requestData.endDate).trim();
+                if (ed) {
+                    endDate = ed;
+                    console.log('✅ Using endDate from request:', endDate);
+                }
+            }
+        }
+
+        console.log('📊 getAiAnalytics FINAL date range:', { startDate, endDate });
         const aiPageFilter = {
             filter: {
                 fieldName: "pagePath",

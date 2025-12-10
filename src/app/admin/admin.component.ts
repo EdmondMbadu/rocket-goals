@@ -223,7 +223,7 @@ export class AdminComponent implements OnInit {
 
   getDateRangeParams() {
     const range = this.dateRange();
-    const today = new Date();
+    console.log('🔍 getDateRangeParams called with range:', range);
     let startDate: string;
     let endDate = 'today';
 
@@ -246,7 +246,9 @@ export class AdminComponent implements OnInit {
       startDate = '30daysAgo';
     }
 
-    return { startDate, endDate };
+    const params = { startDate, endDate };
+    console.log('🔍 getDateRangeParams returning:', params);
+    return params;
   }
 
   async loadAiAnalytics() {
@@ -258,10 +260,11 @@ export class AdminComponent implements OnInit {
       const functions = getFunctions(getApp());
       const fetchAnalytics = httpsCallable(functions, 'getAiAnalytics');
       const dateParams = this.getDateRangeParams();
-      console.log('📊 Loading AI analytics with date range:', dateParams, 'Current range:', this.dateRange());
+      console.log('📊 Loading AI analytics with date range:', dateParams, 'Current range signal:', this.dateRange());
+      console.log('📊 Sending to backend:', JSON.stringify(dateParams));
       const result = await fetchAnalytics(dateParams);
       const data = result.data as AiAnalytics;
-      console.log('📊 Received analytics data:', data);
+      console.log('📊 Received analytics data - dateRange:', data.dateRange, 'views:', data.views);
       this.aiAnalytics.set(data);
     } catch (err: any) {
       console.error('Failed to load AI analytics', err);
@@ -272,8 +275,11 @@ export class AdminComponent implements OnInit {
   }
 
   setDateRange(range: '1day' | '7days' | '30days' | 'custom') {
+    console.log('🔍 setDateRange called with:', range);
     this.dateRange.set(range);
     if (range !== 'custom') {
+      // Immediately load with the new range
+      console.log('🔍 Loading analytics for range:', range);
       this.loadAiAnalytics();
     } else {
       // Pre-populate custom dates with last 30 days if not already set
