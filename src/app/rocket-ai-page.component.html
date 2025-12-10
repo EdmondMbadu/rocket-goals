@@ -3,17 +3,17 @@
   <div class="ai-grid-overlay"></div>
 
   <!-- Top bar -->
-  <header class="ai-nav">
+  <header class="ai-nav" [class.logged-out]="!isLoggedIn()">
     <div class="nav-left">
-      <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'" class="logo-link">
+      <a [routerLink]="isLoggedIn() ? '/goals' : '/'" class="logo-link">
         <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="logo" />
         <div class="logo-text">
           <span>ROCKET</span><span class="accent">GOALS</span>
         </div>
       </a>
-      <div class="badge">Premium AI</div>
+      <div class="badge" *ngIf="isLoggedIn()">Premium AI</div>
     </div>
-    <div class="nav-center">
+    <div class="nav-center" *ngIf="isLoggedIn()">
       <div class="nav-links">
         <a routerLink="/goals" routerLinkActive="nav-active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@
         </a>
       </div>
     </div>
-    <div class="nav-right">
+    <div class="nav-right" *ngIf="isLoggedIn()">
       <button type="button" class="ghost-btn icon-btn" (click)="toggleHistory()" aria-label="Toggle history">
         <svg *ngIf="showHistory()" viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor"
           stroke-width="2">
@@ -64,10 +64,14 @@
       </button>
       <app-avatar-dropdown />
     </div>
+    <div class="nav-right" *ngIf="!isLoggedIn()">
+      <a routerLink="/login" class="ghost-btn">Log in</a>
+      <a routerLink="/signup" class="solid-btn">Sign up</a>
+    </div>
   </header>
 
-  <main class="ai-layout" [class.history-hidden]="!showHistory()">
-    <aside class="history-panel glass" *ngIf="showHistory()">
+  <main class="ai-layout" [class.history-hidden]="!showHistory() || !isLoggedIn()" [class.logged-out]="!isLoggedIn()">
+    <aside class="history-panel glass" *ngIf="showHistory() && isLoggedIn()">
       <div class="history-head">
         <div>
           <p class="eyebrow">History</p>
