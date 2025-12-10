@@ -781,8 +781,10 @@ export const getAiAnalytics = functions.runWith({
     try {
         const analyticsDataClient = new BetaAnalyticsDataClient();
         // Accept date range from data, default to last 28 days
-        const startDate = (data && typeof data === 'object' && 'startDate' in data && data.startDate) || "28daysAgo";
-        const endDate = (data && typeof data === 'object' && 'endDate' in data && data.endDate) || "today";
+        const requestData = data && typeof data === 'object' ? data as { startDate?: string; endDate?: string } : {};
+        const startDate = requestData.startDate || "28daysAgo";
+        const endDate = requestData.endDate || "today";
+        console.log('📊 getAiAnalytics called with:', { startDate, endDate, receivedData: data });
         const aiPageFilter = {
             filter: {
                 fieldName: "pagePath",

@@ -98,9 +98,10 @@ export class App implements AfterViewInit, OnDestroy {
     // Show router outlet for auth routes and component routes (goals, rocketgoal, profile)
     // Remove query params for matching
     const routePath = route.split('?')[0];
-    return this.authOnlyRoutes.has(routePath) || 
-           this.componentRoutes.has(routePath) || 
-           routePath.startsWith('/rocketgoal/');
+    return this.authOnlyRoutes.has(routePath) ||
+      this.componentRoutes.has(routePath) ||
+      routePath.startsWith('/rocketgoal/') ||
+      routePath.startsWith('/admin/');
   });
 
   constructor() {
@@ -222,7 +223,7 @@ export class App implements AfterViewInit, OnDestroy {
   private initThreeJs() {
     // Clean up any existing animation first
     this.cleanupAnimation();
-    
+
     const canvas = this.rocketCanvas.nativeElement;
     // Ensure we have dimensions
     let width = canvas.clientWidth || window.innerWidth;
@@ -1236,7 +1237,7 @@ export class App implements AfterViewInit, OnDestroy {
 
       // Map goal answers to challenge answers
       const preFilledAnswers: Record<string, any> = {};
-      
+
       // Map the goal's answers to challenge format
       if (goal.answers) {
         // Copy relevant answer fields
@@ -1347,7 +1348,7 @@ export class App implements AfterViewInit, OnDestroy {
     } else {
       // We're on the last question, moving to completion
       this.currentChallengeStep.update(v => v + 1);
-      
+
       // Check if user is logged in - if so, skip auth and save directly
       const profile = this.authService.profile();
       if (profile?.userId) {
@@ -1541,7 +1542,7 @@ export class App implements AfterViewInit, OnDestroy {
   async loadUserGoals() {
     const profile = this.authService.profile();
     if (!profile?.userId) return;
-    
+
     this.loadingGoals.set(true);
     try {
       const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
@@ -1613,7 +1614,7 @@ export class App implements AfterViewInit, OnDestroy {
     try {
       const challengeAnswers = this.challengeAnswers();
       const editingGoalId = challengeAnswers['_editingGoalId'] as string | undefined;
-      
+
       const answers: Record<string, any> = {
         ...challengeAnswers,
         goal_title_label: this.getGoalTitleDisplay(),
@@ -1621,10 +1622,10 @@ export class App implements AfterViewInit, OnDestroy {
         goal_support_label: this.getSupportDisplay(),
         custom_goal_title: this.challengeCustomGoalTitle()
       };
-      
+
       // Remove the editing flag from answers
       delete answers['_editingGoalId'];
-      
+
       const participant = {
         firstName: profile.firstName || 'Rocketeer',
         lastName: profile.lastName || '',
@@ -1632,7 +1633,7 @@ export class App implements AfterViewInit, OnDestroy {
       };
 
       let goalId: string;
-      
+
       if (editingGoalId) {
         // Update existing goal (don't reset startTime)
         await this.rocketGoalsService.updateRocketGoal(editingGoalId, {

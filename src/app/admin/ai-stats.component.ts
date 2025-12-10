@@ -117,8 +117,10 @@ export class AiStatsComponent implements OnInit {
       const functions = getFunctions(getApp());
       const fetchAnalytics = httpsCallable(functions, 'getAiAnalytics');
       const dateParams = this.getDateRangeParams();
+      console.log('📊 Loading AI analytics with date range:', dateParams, 'Current range:', this.dateRange());
       const result = await fetchAnalytics(dateParams);
       const data = result.data as AiAnalytics;
+      console.log('📊 Received analytics data:', data);
       this.aiAnalytics.set(data);
     } catch (err: any) {
       console.error('Failed to load AI analytics', err);
