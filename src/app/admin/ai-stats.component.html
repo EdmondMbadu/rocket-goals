@@ -138,175 +138,297 @@
       </div>
       }
 
-      <!-- Core Metrics -->
+      <!-- Core Metrics - Colorful Cards -->
       <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200">
-          <h2 class="text-xl font-bold text-slate-900">Core Metrics</h2>
+        <div class="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-rose-50 to-pink-50">
+          <h2 class="text-xl font-bold text-slate-900">📊 Core Performance Metrics</h2>
+          <p class="text-sm text-slate-600 mt-1">Key indicators showing how your AI page is performing</p>
         </div>
         <div class="p-6">
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Views</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.views | number }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Views Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Views</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.views | number }}</p>
+              <p class="text-xs opacity-75 mt-1">Total page views</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Active users</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.activeUsers | number }}</p>
+
+            <!-- Active Users Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Active Users</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.activeUsers | number }}</p>
+              <p class="text-xs opacity-75 mt-1">Engaged visitors</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">New users</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.newUsers | number }}</p>
+
+            <!-- New Users Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">New Users</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.newUsers | number }}</p>
+              <p class="text-xs opacity-75 mt-1">First-time visitors</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Sessions</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.sessions | number }}</p>
+
+            <!-- Sessions Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Sessions</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.sessions | number }}</p>
+              <p class="text-xs opacity-75 mt-1">Total sessions</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Bounce rate</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.bounceRate | number:'1.1-1' }}%</p>
+
+            <!-- Bounce Rate Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Bounce Rate</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.bounceRate | number:'1.1-1' }}%</p>
+              <p class="text-xs opacity-75 mt-1">Single-page sessions</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Views / user</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.viewsPerActiveUser | number:'1.2-2' }}
-              </p>
+
+            <!-- Views Per User Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Views / User</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.viewsPerActiveUser | number:'1.2-2' }}</p>
+              <p class="text-xs opacity-75 mt-1">Average per user</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Avg engagement</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{
+
+            <!-- Avg Engagement Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Avg Engagement</span>
+              </div>
+              <p class="text-3xl font-black">{{
                 formatDuration(aiAnalytics()?.avgEngagementPerActiveUserSeconds || 0) }}</p>
+              <p class="text-xs opacity-75 mt-1">Time per user</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Avg session</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{
+
+            <!-- Avg Session Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-teal-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Avg Session</span>
+              </div>
+              <p class="text-3xl font-black">{{
                 formatDuration(aiAnalytics()?.avgSessionDurationSeconds || 0) }}</p>
+              <p class="text-xs opacity-75 mt-1">Session duration</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Events</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ aiAnalytics()?.eventCount | number }}</p>
+
+            <!-- Events Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Events</span>
+              </div>
+              <p class="text-3xl font-black">{{ aiAnalytics()?.eventCount | number }}</p>
+              <p class="text-xs opacity-75 mt-1">Total events</p>
             </div>
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Revenue</p>
-              <p class="text-2xl font-bold text-slate-900 mt-1">{{ (aiAnalytics()?.totalRevenue || 0) |
+
+            <!-- Revenue Card -->
+            <div
+              class="p-5 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <svg class="w-6 h-6 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs font-semibold opacity-90">Revenue</span>
+              </div>
+              <p class="text-3xl font-black">{{ (aiAnalytics()?.totalRevenue || 0) |
                 currency:'USD':'symbol':'1.0-2' }}</p>
+              <p class="text-xs opacity-75 mt-1">Total revenue</p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Breakdown Tables -->
+      <!-- Metrics Comparison Bar Chart -->
+      <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h2 class="text-xl font-bold text-slate-900">📈 Metrics Comparison</h2>
+          <p class="text-sm text-slate-600 mt-1">Relative performance across key metrics</p>
+        </div>
+        <div class="p-6">
+          <div class="h-80">
+            <canvas id="metricsBarChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visual Breakdown Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Top Countries -->
+        <!-- Top Countries Chart -->
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="px-6 py-5 border-b border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900">Top Countries</h2>
+          <div class="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-red-50 to-rose-50">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h2 class="text-lg font-bold text-slate-900">🌍 Top Countries</h2>
+            </div>
+            <p class="text-sm text-slate-600 mt-1">User distribution by country</p>
           </div>
           <div class="p-6">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200">
-                    <th class="text-left py-2 px-3 font-semibold text-slate-700">Country</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Users</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Views</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (country of aiAnalytics()?.countries; track country.country) {
-                  <tr class="border-b border-slate-100">
-                    <td class="py-2 px-3 text-slate-900">{{ country.country }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ country.activeUsers | number }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ country.views | number }}</td>
-                  </tr>
-                  }
-                </tbody>
-              </table>
+            <div class="h-80">
+              <canvas id="countriesChart"></canvas>
+            </div>
+            <!-- Country List -->
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto">
+              @for (country of aiAnalytics()?.countries?.slice(0, 5); track country.country) {
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition">
+                <span class="text-sm font-medium text-slate-700">{{ country.country }}</span>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-slate-500">{{ country.activeUsers | number }} users</span>
+                  <span class="text-xs text-slate-500">{{ country.views | number }} views</span>
+                </div>
+              </div>
+              }
             </div>
           </div>
         </section>
 
-        <!-- Traffic Sources -->
+        <!-- Traffic Sources Chart -->
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="px-6 py-5 border-b border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900">Traffic Sources</h2>
+          <div class="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              <h2 class="text-lg font-bold text-slate-900">📡 Traffic Sources</h2>
+            </div>
+            <p class="text-sm text-slate-600 mt-1">Where your visitors are coming from</p>
           </div>
           <div class="p-6">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200">
-                    <th class="text-left py-2 px-3 font-semibold text-slate-700">Channel</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Users</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Views</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (source of aiAnalytics()?.trafficSources; track source.channel) {
-                  <tr class="border-b border-slate-100">
-                    <td class="py-2 px-3 text-slate-900">{{ source.channel }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ source.activeUsers | number }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ source.views | number }}</td>
-                  </tr>
-                  }
-                </tbody>
-              </table>
+            <div class="h-80">
+              <canvas id="trafficSourcesChart"></canvas>
+            </div>
+            <!-- Traffic Sources List -->
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto">
+              @for (source of aiAnalytics()?.trafficSources?.slice(0, 5); track source.channel) {
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition">
+                <span class="text-sm font-medium text-slate-700">{{ source.channel }}</span>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-slate-500">{{ source.activeUsers | number }} users</span>
+                  <span class="text-xs text-slate-500">{{ source.views | number }} views</span>
+                </div>
+              </div>
+              }
             </div>
           </div>
         </section>
 
-        <!-- Devices -->
+        <!-- Devices Chart -->
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="px-6 py-5 border-b border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900">Devices</h2>
+          <div class="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-green-50 to-emerald-50">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              <h2 class="text-lg font-bold text-slate-900">📱 Devices</h2>
+            </div>
+            <p class="text-sm text-slate-600 mt-1">Device type distribution</p>
           </div>
           <div class="p-6">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200">
-                    <th class="text-left py-2 px-3 font-semibold text-slate-700">Device</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Users</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Views</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (device of aiAnalytics()?.devices; track device.device) {
-                  <tr class="border-b border-slate-100">
-                    <td class="py-2 px-3 text-slate-900">{{ device.device }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ device.activeUsers | number }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ device.views | number }}</td>
-                  </tr>
-                  }
-                </tbody>
-              </table>
+            <div class="h-80">
+              <canvas id="devicesChart"></canvas>
+            </div>
+            <!-- Devices List -->
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto">
+              @for (device of aiAnalytics()?.devices; track device.device) {
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition">
+                <span class="text-sm font-medium text-slate-700">{{ device.device }}</span>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-slate-500">{{ device.activeUsers | number }} users</span>
+                  <span class="text-xs text-slate-500">{{ device.views | number }} views</span>
+                </div>
+              </div>
+              }
             </div>
           </div>
         </section>
 
-        <!-- Browsers -->
+        <!-- Browsers Chart -->
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="px-6 py-5 border-b border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900">Browsers</h2>
+          <div class="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-purple-50 to-violet-50">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <h2 class="text-lg font-bold text-slate-900">🌐 Browsers</h2>
+            </div>
+            <p class="text-sm text-slate-600 mt-1">Browser usage breakdown</p>
           </div>
           <div class="p-6">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200">
-                    <th class="text-left py-2 px-3 font-semibold text-slate-700">Browser</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Users</th>
-                    <th class="text-right py-2 px-3 font-semibold text-slate-700">Views</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (browser of aiAnalytics()?.browsers; track browser.browser) {
-                  <tr class="border-b border-slate-100">
-                    <td class="py-2 px-3 text-slate-900">{{ browser.browser }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ browser.activeUsers | number }}</td>
-                    <td class="py-2 px-3 text-right text-slate-700">{{ browser.views | number }}</td>
-                  </tr>
-                  }
-                </tbody>
-              </table>
+            <div class="h-80">
+              <canvas id="browsersChart"></canvas>
+            </div>
+            <!-- Browsers List -->
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto">
+              @for (browser of aiAnalytics()?.browsers; track browser.browser) {
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition">
+                <span class="text-sm font-medium text-slate-700">{{ browser.browser }}</span>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-slate-500">{{ browser.activeUsers | number }} users</span>
+                  <span class="text-xs text-slate-500">{{ browser.views | number }} views</span>
+                </div>
+              </div>
+              }
             </div>
           </div>
         </section>
