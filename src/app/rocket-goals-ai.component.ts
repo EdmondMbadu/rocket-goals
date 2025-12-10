@@ -1,4 +1,4 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,7 +13,7 @@ import type { RocketGoal } from './models/rocket-goal';
   templateUrl: './rocket-goals-ai.component.html',
   styleUrl: './rocket-goals-ai.component.css'
 })
-export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDestroy {
+export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChanges, OnDestroy {
   @Input() goalContext: RocketGoal | null = null;
   @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
   @Output() eventAction = new EventEmitter<'refresh'>(); // Emit when calendar events are modified
@@ -31,7 +31,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
   readonly error = this.aiService.error;
   readonly copiedMessageId = signal<number | null>(null);
   readonly hasGreeted = signal(false);
-  
+
   // Typewriter effect state
   readonly typewriterMessageId = signal<number | null>(null);
   readonly typewriterDisplayedText = signal<string>('');
@@ -39,6 +39,16 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
 
   private shouldScrollToBottom = false;
   private scrollInterval: any = null;
+
+  ngOnInit(): void {
+    // If embedded mode and no goal context, show a greeting for non-logged-in users
+    if (this.embedded && !this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
+      // Wait a bit for the UI to settle, then trigger greeting
+      setTimeout(() => {
+        this.triggerGreetingForNonLoggedIn();
+      }, 1000);
+    }
+  }
 
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
@@ -55,6 +65,41 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     }
   }
 
+  private async triggerGreetingForNonLoggedIn(): Promise<void> {
+    if (this.hasGreeted() || this.messages().length > 0) return;
+    this.hasGreeted.set(true);
+
+    // Wait a moment for the UI to settle
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Check if user is signed in
+    const currentUser = this.authService.profile();
+    const isSignedIn = !!currentUser;
+
+    // Create welcoming greeting for non-logged-in users
+    let greeting = '';
+    if (isSignedIn && currentUser?.firstName) {
+      // Signed in but no goal context
+      const greetings = [
+        `Hey ${currentUser.firstName}! 🚀 I'm here to help you with your goals. What would you like to know?`,
+        `Welcome back, ${currentUser.firstName}! 👋 Ask me anything about goal setting or how RocketGoals works!`,
+        `${currentUser.firstName}, ready to achieve your goals? 🚀 What can I help you with today?`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    } else {
+      // Not signed in - welcoming greeting
+      const greetings = [
+        `Hello! 🚀 I'm here to help you with your goals. What would you like to know about RocketGoals?`,
+        `Hi there! 👋 Ask me anything about goal setting, productivity, or how RocketGoals can help you achieve your dreams!`,
+        `Welcome! 🚀 I'm your AI coach. Feel free to ask me questions about goals, motivation, or how to get started!`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    // Add the AI greeting with typewriter effect
+    this.addMessageWithTypewriter(greeting);
+  }
+
   private async triggerGreeting(): Promise<void> {
     if (this.hasGreeted() || !this.goalContext || this.messages().length > 0) return;
     this.hasGreeted.set(true);
@@ -65,7 +110,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     // Check if user is signed in
     const currentUser = this.authService.profile();
     const isSignedIn = !!currentUser;
-    
+
     // Get name: use signed-in user's name, or goal participant's name, or just "hello"
     let firstName = '';
     if (isSignedIn && currentUser?.firstName) {
@@ -74,9 +119,9 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
       // If not signed in but goal has participant name, just use generic greeting
       firstName = '';
     }
-    
+
     const goalTitle = this.getGoalTitle(this.goalContext);
-    
+
     // Create personalized greeting messages
     let greeting = '';
     if (isSignedIn && firstName) {
@@ -88,15 +133,15 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
       ];
       greeting = greetings[Math.floor(Math.random() * greetings.length)];
     } else {
-      // Not signed in - generic greeting
+      // Not signed in - welcoming greeting
       const greetings = [
-        `Hello! 🚀 I see you're viewing "${goalTitle}". Sign in to get personalized help with your goals!`,
-        `Hi there! Ready to make progress on "${goalTitle}"? Sign in to chat with me about your mission!`,
-        `Welcome! Your mission "${goalTitle}" awaits! Sign in to get started with personalized guidance.`,
+        `Hello! 🚀 I'm here to help you with your goals. What would you like to know about RocketGoals?`,
+        `Hi there! 👋 Ask me anything about goal setting, productivity, or how RocketGoals can help you achieve your dreams!`,
+        `Welcome! 🚀 I'm your AI coach. Feel free to ask me questions about goals, motivation, or how to get started!`,
       ];
       greeting = greetings[Math.floor(Math.random() * greetings.length)];
     }
-    
+
     // Add the AI greeting with typewriter effect
     this.addMessageWithTypewriter(greeting);
   }
@@ -105,23 +150,23 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     // Add an empty message first
     const timestamp = Date.now();
     this.aiService.addAIMessageWithTimestamp('', timestamp);
-    
+
     // Start typewriter effect
     this.typewriterMessageId.set(timestamp);
     this.typewriterDisplayedText.set('');
-    
+
     let charIndex = 0;
     const charsPerTick = 3; // Characters to type per interval tick
     const tickInterval = 1; // ms between ticks (1ms = max speed)
-    
+
     // Clear any existing interval
     if (this.typewriterInterval) {
       clearInterval(this.typewriterInterval);
     }
-    
+
     // Start continuous scrolling during typewriter
     this.startContinuousScroll();
-    
+
     this.typewriterInterval = setInterval(() => {
       if (charIndex < text.length) {
         charIndex = Math.min(charIndex + charsPerTick, text.length);
@@ -135,7 +180,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
         this.typewriterMessageId.set(null);
         this.stopContinuousScroll();
         this.shouldScrollToBottom = true;
-        
+
         // Finalize the message in service (adds to conversation history)
         this.aiService.finalizeMessage(timestamp, text);
       }
@@ -185,18 +230,7 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
     const message = this.inputMessage().trim();
     if (!message || this.isLoading()) return;
 
-    // Check if user is signed in
-    const currentUser = this.authService.profile();
-    if (!currentUser) {
-      // Not signed in - redirect to login
-      this.router.navigate(['/login'], { 
-        queryParams: { 
-          returnUrl: this.router.url 
-        } 
-      });
-      return;
-    }
-
+    // Allow both logged-in and non-logged-in users to send messages
     this.inputMessage.set('');
     this.shouldScrollToBottom = true;
 
@@ -274,9 +308,9 @@ export class RocketGoalsAIComponent implements AfterViewChecked, OnChanges, OnDe
 
   private getGoalTitle(goal: any): string {
     return goal.answers?.goal_title_label ||
-           goal.answers?.custom_goal_title ||
-           goal.primaryGoal ||
-           'my goal';
+      goal.answers?.custom_goal_title ||
+      goal.primaryGoal ||
+      'my goal';
   }
 
   trackByIndex(index: number): number {
