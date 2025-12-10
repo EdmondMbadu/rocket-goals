@@ -328,6 +328,11 @@
   margin: 0 auto;
 }
 
+.guest-three-column .chat-main {
+  max-width: none;
+  width: 100%;
+}
+
 .ai-layout.logged-out {
   display: flex;
   justify-content: center;
@@ -678,12 +683,22 @@
   border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
+.light-mode .cta-sidebar .cta-section {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04));
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
 .light-mode .cta-title {
   color: #0f172a;
 }
 
 .light-mode .cta-text {
   color: rgba(15, 23, 42, 0.8);
+}
+
+.light-mode .cta-sidebar .cta-section {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04));
+  border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
 .light-mode .cta-button-secondary {
@@ -757,44 +772,8 @@
     flex-wrap: wrap;
   }
 
-  .guest-content {
-    margin-top: 24px;
-  }
-
-  .ai-inspiration-section,
-  .why-ai-section,
-  .cta-section {
-    padding: 24px 20px;
-  }
-
-  .inspiration-title {
-    font-size: 28px;
-  }
-
-  .why-title {
-    font-size: 24px;
-  }
-
-  .cta-title {
-    font-size: 28px;
-  }
-
   .pricing-cards-mini {
     grid-template-columns: 1fr;
-  }
-
-  .why-point {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .why-point-number {
-    width: auto;
-    font-size: 36px;
-  }
-
-  .cta-actions {
-    flex-direction: column;
   }
 
   .cta-button-primary,
@@ -803,18 +782,15 @@
   }
 }
 
-/* Guest Content Styles */
-.guest-content {
-  margin-top: 32px;
-  width: 100%;
-}
-
-.guest-layout {
+/* Guest Three-Column Layout */
+.guest-three-column {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 280px 1fr 320px;
   gap: 24px;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
+  align-items: start;
 }
 
 /* Pricing Sidebar */
@@ -960,12 +936,6 @@
   transform: translateY(-2px);
 }
 
-/* Guest Main Content */
-.guest-main-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 
 /* Inspiration Section */
 .ai-inspiration-section {
@@ -1145,9 +1115,16 @@
   margin: 0;
 }
 
+/* CTA Sidebar */
+.cta-sidebar {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
 /* CTA Section */
 .cta-section {
-  padding: 48px 32px;
+  padding: 32px 24px;
   text-align: center;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
   border: 1px solid rgba(239, 68, 68, 0.2);
@@ -1159,34 +1136,37 @@
 }
 
 .cta-title {
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 900;
   color: #e5e7eb;
   margin: 0 0 16px 0;
+  line-height: 1.2;
 }
 
 .cta-text {
-  font-size: 18px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.6;
-  margin: 0 0 32px 0;
+  margin: 0 0 24px 0;
 }
 
 .cta-actions {
   display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .cta-button-primary,
 .cta-button-secondary {
-  padding: 16px 32px;
+  padding: 14px 24px;
   border-radius: 12px;
   font-weight: 800;
   text-decoration: none;
   transition: all 0.3s ease;
-  display: inline-block;
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
 }
 
 .cta-button-primary {
@@ -1212,20 +1192,37 @@
   transform: translateY(-2px);
 }
 
+@media (max-width: 1400px) {
+  .guest-three-column {
+    grid-template-columns: 260px 1fr 300px;
+    gap: 20px;
+  }
+}
+
 @media (max-width: 1200px) {
-  .guest-layout {
-    grid-template-columns: 240px 1fr;
+  .guest-three-column {
+    grid-template-columns: 240px 1fr 280px;
+    gap: 16px;
+  }
+
+  .cta-title {
+    font-size: 24px;
+  }
+
+  .cta-text {
+    font-size: 14px;
   }
 }
 
 @media (max-width: 968px) {
-  .guest-layout {
+  .guest-three-column {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 
-  .pricing-sidebar {
+  .pricing-sidebar,
+  .cta-sidebar {
     position: static;
-    margin-bottom: 24px;
   }
 
   .pricing-cards-mini {
@@ -1233,7 +1230,26 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .inspiration-grid {
-    grid-template-columns: 1fr;
+  .cta-section {
+    padding: 32px 24px;
+  }
+
+  .cta-title {
+    font-size: 28px;
+  }
+
+  .cta-text {
+    font-size: 16px;
+  }
+
+  .cta-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .cta-button-primary,
+  .cta-button-secondary {
+    flex: 1;
+    min-width: 150px;
   }
 }

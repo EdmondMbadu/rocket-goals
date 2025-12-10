@@ -100,7 +100,127 @@
       </div>
     </aside>
 
-    <section class="chat-main">
+    <!-- Three-column layout for non-logged-in users -->
+    <div class="guest-three-column" *ngIf="!isLoggedIn()">
+      <!-- Left: Pricing Sidebar -->
+      <aside class="pricing-sidebar">
+        <h3 class="pricing-sidebar-title">Choose Your Mission</h3>
+        <div class="pricing-cards-mini">
+          <!-- Launch -->
+          <a routerLink="/pricing" class="pricing-card-mini">
+            <div class="pricing-card-mini-header">
+              <div class="pricing-icon-mini bg-gray-900">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+                </svg>
+              </div>
+              <span class="pricing-badge-mini">Free</span>
+            </div>
+            <div class="pricing-card-mini-body">
+              <h4 class="pricing-title-mini">Launch</h4>
+              <p class="pricing-price-mini">Free</p>
+              <p class="pricing-desc-mini">Start your journey</p>
+            </div>
+          </a>
+
+          <!-- Moonshot -->
+          <a routerLink="/pricing" class="pricing-card-mini highlight-mini">
+            <div class="pricing-card-mini-header">
+              <div class="pricing-icon-mini bg-red-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l5 5-5 5-5-5z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12l-2 8 2-2 2 2-2-8z" />
+                </svg>
+              </div>
+              <span class="pricing-badge-mini popular">Popular</span>
+            </div>
+            <div class="pricing-card-mini-body">
+              <h4 class="pricing-title-mini">Moonshot</h4>
+              <p class="pricing-price-mini">$9.99<span>/mo</span></p>
+              <p class="pricing-desc-mini">Smart accountability</p>
+            </div>
+          </a>
+
+          <!-- Interplanetary -->
+          <a routerLink="/pricing" class="pricing-card-mini">
+            <div class="pricing-card-mini-header">
+              <div class="pricing-icon-mini bg-gradient-to-br from-black via-gray-800 to-red-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <span class="pricing-badge-mini performance">Pro</span>
+            </div>
+            <div class="pricing-card-mini-body">
+              <h4 class="pricing-title-mini">Interplanetary</h4>
+              <p class="pricing-price-mini">$29.99<span>/mo</span></p>
+              <p class="pricing-desc-mini">High performance</p>
+            </div>
+          </a>
+
+          <!-- Galactic -->
+          <a routerLink="/pricing" class="pricing-card-mini">
+            <div class="pricing-card-mini-header">
+              <div class="pricing-icon-mini bg-black">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l7 7 7-7M5 21l7-7 7 7" />
+                </svg>
+              </div>
+              <span class="pricing-badge-mini elite">Elite</span>
+            </div>
+            <div class="pricing-card-mini-body">
+              <h4 class="pricing-title-mini">Galactic</h4>
+              <p class="pricing-price-mini">$799<span>/mo</span></p>
+              <p class="pricing-desc-mini">Leadership system</p>
+            </div>
+          </a>
+        </div>
+        <a routerLink="/pricing" class="pricing-link-all">View all pricing →</a>
+      </aside>
+
+      <!-- Center: Chatbot -->
+      <section class="chat-main">
+        <section class="chat-card glass">
+          <div class="chat-head">
+            <div>
+              <p class="eyebrow">RocketGoals AI</p>
+              <h1 class="hero-title">Instant Coaching. No Fluff.</h1>
+              <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
+            </div>
+            <div class="status-pill">
+              <span class="status-dot"></span>
+              <div>
+                <p class="status-label">Live</p>
+                <p class="status-text">Gemini-powered</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-panel glass inner">
+            <app-rocket-goals-ai [embedded]="true" />
+          </div>
+        </section>
+      </section>
+
+      <!-- Right: CTA Sidebar -->
+      <aside class="cta-sidebar">
+        <section class="cta-section glass">
+          <div class="cta-content">
+            <h2 class="cta-title">Ready to Launch Your Goal?</h2>
+            <p class="cta-text">Create your first Rocket Goal and unlock personalized AI coaching tailored to your
+              mission. Get instant guidance, daily motivation, and a proven system to achieve what matters most.</p>
+            <div class="cta-actions">
+              <a routerLink="/signup" class="cta-button-primary">Start Free Trial</a>
+              <a routerLink="/goals" class="cta-button-secondary">Learn More</a>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <!-- Regular layout for logged-in users -->
+    <section class="chat-main" *ngIf="isLoggedIn()">
       <section class="chat-card glass">
         <div class="chat-head">
           <div>
@@ -121,213 +241,6 @@
           <app-rocket-goals-ai [embedded]="true" />
         </div>
       </section>
-
-      <!-- Content for non-logged-in users -->
-      <div class="guest-content" *ngIf="!isLoggedIn()">
-        <div class="guest-layout">
-          <!-- Pricing Cards Sidebar -->
-          <aside class="pricing-sidebar">
-            <h3 class="pricing-sidebar-title">Choose Your Mission</h3>
-            <div class="pricing-cards-mini">
-              <!-- Launch -->
-              <a routerLink="/pricing" class="pricing-card-mini">
-                <div class="pricing-card-mini-header">
-                  <div class="pricing-icon-mini bg-gray-900">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
-                    </svg>
-                  </div>
-                  <span class="pricing-badge-mini">Free</span>
-                </div>
-                <div class="pricing-card-mini-body">
-                  <h4 class="pricing-title-mini">Launch</h4>
-                  <p class="pricing-price-mini">Free</p>
-                  <p class="pricing-desc-mini">Start your journey</p>
-                </div>
-              </a>
-
-              <!-- Moonshot -->
-              <a routerLink="/pricing" class="pricing-card-mini highlight-mini">
-                <div class="pricing-card-mini-header">
-                  <div class="pricing-icon-mini bg-red-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l5 5-5 5-5-5z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 12l-2 8 2-2 2 2-2-8z" />
-                    </svg>
-                  </div>
-                  <span class="pricing-badge-mini popular">Popular</span>
-                </div>
-                <div class="pricing-card-mini-body">
-                  <h4 class="pricing-title-mini">Moonshot</h4>
-                  <p class="pricing-price-mini">$9.99<span>/mo</span></p>
-                  <p class="pricing-desc-mini">Smart accountability</p>
-                </div>
-              </a>
-
-              <!-- Interplanetary -->
-              <a routerLink="/pricing" class="pricing-card-mini">
-                <div class="pricing-card-mini-header">
-                  <div class="pricing-icon-mini bg-gradient-to-br from-black via-gray-800 to-red-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                  <span class="pricing-badge-mini performance">Pro</span>
-                </div>
-                <div class="pricing-card-mini-body">
-                  <h4 class="pricing-title-mini">Interplanetary</h4>
-                  <p class="pricing-price-mini">$29.99<span>/mo</span></p>
-                  <p class="pricing-desc-mini">High performance</p>
-                </div>
-              </a>
-
-              <!-- Galactic -->
-              <a routerLink="/pricing" class="pricing-card-mini">
-                <div class="pricing-card-mini-header">
-                  <div class="pricing-icon-mini bg-black">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M5 3l7 7 7-7M5 21l7-7 7 7" />
-                    </svg>
-                  </div>
-                  <span class="pricing-badge-mini elite">Elite</span>
-                </div>
-                <div class="pricing-card-mini-body">
-                  <h4 class="pricing-title-mini">Galactic</h4>
-                  <p class="pricing-price-mini">$799<span>/mo</span></p>
-                  <p class="pricing-desc-mini">Leadership system</p>
-                </div>
-              </a>
-            </div>
-            <a routerLink="/pricing" class="pricing-link-all">View all pricing →</a>
-          </aside>
-
-          <!-- Main Content -->
-          <div class="guest-main-content">
-            <section class="ai-inspiration-section glass">
-              <div class="inspiration-header">
-                <div class="inspiration-badge">
-                  <span class="badge-dot"></span>
-                  <span>Fabulous AI</span>
-                </div>
-                <h2 class="inspiration-title">Your Personal Rocket Goals AI Coach</h2>
-                <p class="inspiration-subtitle">Experience the power of AI-driven goal achievement</p>
-              </div>
-
-              <div class="inspiration-content">
-                <div class="inspiration-grid">
-                  <div class="inspiration-card">
-                    <div class="inspiration-icon">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h3 class="inspiration-card-title">Instant Guidance</h3>
-                    <p class="inspiration-card-text">Get real-time coaching and actionable advice whenever you need it.
-                      No waiting, no scheduling—just instant support for your goals.</p>
-                  </div>
-
-                  <div class="inspiration-card">
-                    <div class="inspiration-icon">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <h3 class="inspiration-card-title">Personalized Coaching</h3>
-                    <p class="inspiration-card-text">Every goal is unique. Our AI adapts to your specific mission,
-                      learning your patterns and providing tailored strategies that work for you.</p>
-                  </div>
-
-                  <div class="inspiration-card">
-                    <div class="inspiration-icon">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 class="inspiration-card-title">24/7 Availability</h3>
-                    <p class="inspiration-card-text">Your AI coach never sleeps. Whether it's 3 AM motivation or midday
-                      strategy, get the support you need exactly when you need it.</p>
-                  </div>
-
-                  <div class="inspiration-card">
-                    <div class="inspiration-icon">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 class="inspiration-card-title">Proven Methodology</h3>
-                    <p class="inspiration-card-text">Built on the 7-day Rocket Goal challenge framework, proven to help
-                      thousands achieve their most important goals faster.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="why-ai-section glass">
-              <h2 class="why-title">Why Rocket Goals AI is Worth It</h2>
-              <div class="why-content">
-                <div class="why-points">
-                  <div class="why-point">
-                    <div class="why-point-number">01</div>
-                    <div class="why-point-content">
-                      <h3 class="why-point-title">No Fluff, Just Results</h3>
-                      <p class="why-point-text">We cut through the noise. Every interaction is designed to move you
-                        closer to your goal. No generic advice—only actionable insights tailored to your mission.</p>
-                    </div>
-                  </div>
-
-                  <div class="why-point">
-                    <div class="why-point-number">02</div>
-                    <div class="why-point-content">
-                      <h3 class="why-point-title">Gemini-Powered Intelligence</h3>
-                      <p class="why-point-text">Powered by Google's Gemini AI, our coach understands context, remembers
-                        your journey, and provides increasingly personalized guidance as you progress.</p>
-                    </div>
-                  </div>
-
-                  <div class="why-point">
-                    <div class="why-point-number">03</div>
-                    <div class="why-point-content">
-                      <h3 class="why-point-title">Goal-Specific Coaching</h3>
-                      <p class="why-point-text">When you create a Rocket Goal, your AI coach gets access to your
-                        specific mission details, daily effort, and progress. This means hyper-relevant coaching that
-                        understands exactly where you are.</p>
-                    </div>
-                  </div>
-
-                  <div class="why-point">
-                    <div class="why-point-number">04</div>
-                    <div class="why-point-content">
-                      <h3 class="why-point-title">Momentum Building</h3>
-                      <p class="why-point-text">Our AI doesn't just answer questions—it builds momentum. Through
-                        micro-wins, daily alignment, and strategic nudges, you'll feel the progress every single day.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="cta-section glass">
-              <div class="cta-content">
-                <h2 class="cta-title">Ready to Launch Your Goal?</h2>
-                <p class="cta-text">Create your first Rocket Goal and unlock personalized AI coaching tailored to your
-                  mission. Get instant guidance, daily motivation, and a proven system to achieve what matters most.</p>
-                <div class="cta-actions">
-                  <a routerLink="/signup" class="cta-button-primary">Start Free Trial</a>
-                  <a routerLink="/goals" class="cta-button-secondary">Learn More</a>
-                </div>
-              </div>
-            </section>
-          </div>
-        </div>
-      </div>
     </section>
   </main>
 </div>
