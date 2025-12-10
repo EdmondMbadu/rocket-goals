@@ -22,6 +22,10 @@
 
         <div class="flex-1"></div>
         <div class="flex items-center gap-4">
+          <a routerLink="/pricing"
+            class="px-6 py-2.5 text-sm font-bold text-black bg-white border-2 border-black/10 rounded-full hover:border-black hover:bg-black hover:text-white transition-all duration-300">
+            Pricing
+          </a>
           <a routerLink="/login"
             class="px-6 py-2.5 text-sm font-bold text-black bg-white border-2 border-black/10 rounded-full hover:border-black hover:bg-black hover:text-white transition-all duration-300">
             Log in
@@ -900,182 +904,247 @@
   </div>
 </section>
 
-<!-- Pricing Section -->
+<!-- Pricing Section (inline) -->
 <section id="pricing" class="py-24 md:py-32 bg-white text-black relative overflow-hidden border-t border-black/5">
   <div class="absolute inset-0 opacity-20 pointer-events-none">
-    <div
-      class="absolute top-0 left-0 w-[800px] h-[800px] bg-red-600/10 rounded-full blur-[120px] transform -translate-x-1/2 -translate-y-1/2">
-    </div>
-    <div
-      class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-black/5 rounded-full blur-[100px] transform translate-x-1/3 translate-y-1/3">
-    </div>
+    <div class="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[140px]"></div>
+    <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px]"></div>
   </div>
 
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="max-w-5xl mx-auto text-center space-y-6 mb-14">
+  <div class="container mx-auto px-4 relative z-10 space-y-14">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200">
         <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
         <span class="text-xs font-bold text-gray-600 tracking-wider uppercase">Pricing</span>
       </div>
-      <h2 class="text-5xl md:text-6xl font-black tracking-tight leading-tight text-black">
-        Choose your mission plan
-      </h2>
-      <p class="text-xl md:text-2xl text-gray-500 leading-relaxed">
-        Emotionally intelligent reminders, weekly success rituals, and AI coaching that meets you where you are.
-      </p>
+      <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">Pick your mission</h2>
+      <p class="text-lg md:text-xl text-black/60">Emotionally intelligent reminders and accountability for every stage.</p>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      <!-- Launch Mode (Free) -->
-      <div
-        class="group relative bg-white border border-black/10 rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-black/0 via-black/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="relative space-y-6">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-black uppercase tracking-[0.2em] text-black">Launch Mode</div>
-            <div class="px-3 py-1 rounded-full bg-gray-900 text-white text-xs font-bold">Free</div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <!-- Launch -->
+      <div class="pricing-card">
+        <div class="card-top">
+          <div class="icon bg-gray-900 text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+            </svg>
           </div>
-          <div>
-            <div class="text-4xl font-black tracking-tight text-black">Free</div>
-            <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest">Activate momentum</p>
-          </div>
-          <p class="text-black/70 font-medium leading-relaxed">
-            Early wins and streaks to feel momentum fast.
-          </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Daily alignment + micro-wins
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Mood slider + weekly reset
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Starter dashboard, streaks, mini Blast
-            </li>
-          </ul>
-          <a routerLink="/signup"
-            class="block text-center w-full px-8 py-4 bg-black text-white font-bold text-lg rounded-2xl hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/25">
-            Start Free
-          </a>
+          <div class="badge bg-gray-900 text-white">Free</div>
         </div>
+        <div class="space-y-2">
+          <div class="title">Launch Mode</div>
+          <div class="price">Free</div>
+          <div class="sub">Activate momentum</div>
+          <p class="desc">Early wins and streaks to feel momentum fast.</p>
+        </div>
+        <ul class="features">
+          <li><span></span>Daily alignment + micro-wins</li>
+          <li><span></span>Mood slider + weekly reset</li>
+          <li><span></span>Starter dashboard, streaks, mini Blast</li>
+        </ul>
+        <a routerLink="/signup" class="btn-primary">Start Free</a>
       </div>
 
       <!-- Moonshot -->
-      <div
-        class="group relative bg-white border border-black/10 rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-red-600/0 via-red-600/5 to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="relative space-y-6">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-black uppercase tracking-[0.2em] text-red-600">Moonshot</div>
-            <div class="px-3 py-1 rounded-full bg-black text-white text-xs font-bold">Most Popular</div>
+      <div class="pricing-card highlight">
+        <div class="card-top">
+          <div class="icon bg-red-600 text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l5 5-5 5-5-5z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12l-2 8 2-2 2 2-2-8z" />
+            </svg>
           </div>
-          <div>
-            <div class="text-5xl font-black tracking-tight text-black">$9.99</div>
-            <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest">per month</p>
-          </div>
-          <p class="text-black/70 font-medium leading-relaxed">
-            Hit your ONE thing in 30–90 day sprints with smart accountability.
-          </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Custom reminders + AI encouragement
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Weekly PDF + bottleneck nudges
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Dynamic micro-wins + ROCKET Blast
-            </li>
-          </ul>
-          <a routerLink="/signup"
-            class="block text-center w-full px-8 py-4 bg-black text-white font-bold text-lg rounded-2xl hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/25">
-            Start Moonshot
-          </a>
+          <div class="badge bg-black text-white">Most Popular</div>
         </div>
+        <div class="space-y-2">
+          <div class="title text-red-600">Moonshot</div>
+          <div class="price">$9.99</div>
+          <div class="sub">per month</div>
+          <p class="desc">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
+        </div>
+        <ul class="features">
+          <li><span></span>Custom reminders + AI encouragement</li>
+          <li><span></span>Weekly PDF + bottleneck nudges</li>
+          <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
+        </ul>
+        <a routerLink="/signup" class="btn-accent">Start Moonshot</a>
       </div>
 
       <!-- Interplanetary -->
-      <div
-        class="group relative bg-white border border-black/10 rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-black/0 via-black/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="relative space-y-6">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-black uppercase tracking-[0.2em] text-black">Interplanetary</div>
-            <div class="px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold">Performance</div>
+      <div class="pricing-card">
+        <div class="card-top">
+          <div class="icon bg-gradient-to-br from-black via-gray-800 to-red-600 text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
-          <div>
-            <div class="text-5xl font-black tracking-tight text-black">$29.99</div>
-            <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest">per month</p>
-          </div>
-          <p class="text-black/70 font-medium leading-relaxed">
-            Predictive, multi-channel coaching for high-performers.
-          </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              App + Email + SMS reminders
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Personality-coached, predictive nudges
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Deep weekly report + ROCKET Blast Pro
-            </li>
-          </ul>
-          <a routerLink="/signup"
-            class="block text-center w-full px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-2xl hover:bg-black transition-all duration-300 shadow-lg hover:shadow-black/20">
-            Upgrade to Interplan
-          </a>
+          <div class="badge bg-red-600 text-white">Performance</div>
         </div>
+        <div class="space-y-2">
+          <div class="title">Interplanetary</div>
+          <div class="price">$29.99</div>
+          <div class="sub">per month</div>
+          <p class="desc">Predictive, multi-channel coaching for high-performers.</p>
+        </div>
+        <ul class="features">
+          <li><span></span>App + Email + SMS reminders</li>
+          <li><span></span>Personality-coached, predictive nudges</li>
+          <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
+        </ul>
+        <a routerLink="/signup" class="btn-primary">Upgrade to Interplanetary</a>
       </div>
 
       <!-- Galactic -->
-      <div
-        class="group relative bg-white border border-black/10 rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-black/5 via-white to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="relative space-y-6">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-black uppercase tracking-[0.2em] text-gray-800">Galactic</div>
-            <div class="px-3 py-1 rounded-full bg-gray-900 text-white text-xs font-bold">Elite</div>
+      <div class="pricing-card">
+        <div class="card-top">
+          <div class="icon bg-black text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l7 7 7-7M5 21l7-7 7 7" />
+            </svg>
           </div>
-          <div>
-            <div class="text-5xl font-black tracking-tight text-black">$799</div>
-            <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest">per month</p>
-          </div>
-          <p class="text-black/70 font-medium leading-relaxed">
-            Hybrid human + AI leadership system with elite accountability.
-          </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Mentor nudges + leadership dashboards
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Build templates, lead pods/masterminds
-            </li>
-            <li class="flex items-center gap-3 text-black/80 font-semibold">
-              <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span>
-              Advanced AI insights + ROCKET Blast Elite
-            </li>
-          </ul>
-          <a routerLink="/signup"
-            class="block text-center w-full px-8 py-4 bg-white text-black font-bold text-lg rounded-2xl border-2 border-black/10 hover:bg-black hover:text-white transition-all duration-300">
-            Talk to Sales
-          </a>
+          <div class="badge bg-gray-900 text-white">Elite</div>
         </div>
+        <div class="space-y-2">
+          <div class="title text-gray-800">Galactic</div>
+          <div class="price">$799</div>
+          <div class="sub">per month</div>
+          <p class="desc">Hybrid human + AI leadership system with elite accountability.</p>
+        </div>
+        <ul class="features">
+          <li><span></span>Mentor nudges + leadership dashboards</li>
+          <li><span></span>Build templates, lead pods/masterminds</li>
+          <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
+        </ul>
+        <a routerLink="/signup" class="btn-outline">Talk to Sales</a>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Pricing Styles -->
+<style>
+  .pricing-card {
+    position: relative;
+    padding: 32px;
+    border-radius: 24px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: all 0.25s ease;
+  }
+  .pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    border-color: rgba(0,0,0,0.12);
+  }
+  .pricing-card.highlight {
+    border: 1px solid rgba(220,38,38,0.15);
+    box-shadow: 0 20px 45px rgba(220,38,38,0.12);
+    background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(255,245,245,0.95));
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  }
+  .badge {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .title {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .price {
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  .sub {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(0,0,0,0.45);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .desc {
+    color: rgba(0,0,0,0.65);
+    font-weight: 600;
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+  .features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(0,0,0,0.8);
+    font-weight: 600;
+  }
+  .features li span {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #dc2626;
+    box-shadow: 0 0 0 6px rgba(220,38,38,0.08);
+    flex-shrink: 0;
+  }
+  .btn-primary, .btn-accent, .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-weight: 800;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: black;
+    color: white;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  }
+  .btn-primary:hover { background: #111; transform: translateY(-2px); }
+  .btn-accent {
+    background: #dc2626;
+    color: white;
+    box-shadow: 0 12px 30px rgba(220,38,38,0.18);
+  }
+  .btn-accent:hover { background: #b91c1c; transform: translateY(-2px); }
+  .btn-outline {
+    border: 2px solid rgba(0,0,0,0.1);
+    color: black;
+    background: white;
+  }
+  .btn-outline:hover { background: black; color: white; transform: translateY(-2px); }
+</style>
 
 <!-- CTA Section -->
 <section id="cta" class="py-24 md:py-32 bg-white text-black relative overflow-hidden border-t border-black/5">
