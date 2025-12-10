@@ -179,7 +179,7 @@
         <a routerLink="/pricing" class="pricing-link-all">View all pricing →</a>
       </aside>
 
-      <!-- Center: Chatbot -->
+      <!-- Center: Chatbot + Join Section -->
       <section class="chat-main">
         <section class="chat-card glass">
           <div class="chat-head">
@@ -201,18 +201,154 @@
             <app-rocket-goals-ai [embedded]="true" />
           </div>
         </section>
+
+        <!-- Join Button Section -->
+        <div class="join-section glass">
+          <a routerLink="/signup" class="join-button-primary">Join RocketGoals Now</a>
+        </div>
+
+        <!-- Why Joining is a Win Section -->
+        <section class="why-join-section glass">
+          <h2 class="why-join-title">Why Joining RocketGoals is a Win</h2>
+          <div class="why-join-grid">
+            <div class="why-join-card">
+              <div class="why-join-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 class="why-join-card-title">Transform Goals into Reality</h3>
+              <p class="why-join-card-text">Stop dreaming, start achieving. Our proven 7-day framework turns your vision
+                into actionable steps that actually work.</p>
+            </div>
+
+            <div class="why-join-card">
+              <div class="why-join-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 class="why-join-card-title">AI-Powered Personal Coach</h3>
+              <p class="why-join-card-text">Get 24/7 access to intelligent coaching that understands your goals, tracks
+                your progress, and adapts to your needs.</p>
+            </div>
+
+            <div class="why-join-card">
+              <div class="why-join-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="why-join-card-title">Build Unstoppable Momentum</h3>
+              <p class="why-join-card-text">Daily micro-wins, streak tracking, and smart reminders keep you motivated
+                and moving forward every single day.</p>
+            </div>
+
+            <div class="why-join-card">
+              <div class="why-join-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="why-join-card-title">Join Thousands of Achievers</h3>
+              <p class="why-join-card-text">Be part of a community that's already launched their goals. See real results
+                from real people who took action.</p>
+            </div>
+
+            <div class="why-join-card">
+              <div class="why-join-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              </div>
+              <h3 class="why-join-card-title">Flexible Plans for Every Stage</h3>
+              <p class="why-join-card-text">Start free, upgrade when ready. From Launch to Galactic, choose the plan
+                that matches your ambition level.</p>
+            </div>
+
+            <div class="why-join-card">
+              <div class="why-join-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <h3 class="why-join-card-title">Data-Driven Progress</h3>
+              <p class="why-join-card-text">Track your journey with beautiful dashboards, insights, and analytics that
+                show exactly how far you've come.</p>
+            </div>
+          </div>
+        </section>
       </section>
 
-      <!-- Right: CTA Sidebar -->
-      <aside class="cta-sidebar">
-        <section class="cta-section glass">
-          <div class="cta-content">
-            <h2 class="cta-title">Ready to Launch Your Goal?</h2>
-            <p class="cta-text">Create your first Rocket Goal and unlock personalized AI coaching tailored to your
-              mission. Get instant guidance, daily motivation, and a proven system to achieve what matters most.</p>
-            <div class="cta-actions">
-              <a routerLink="/signup" class="cta-button-primary">Start Free Trial</a>
-              <a routerLink="/goals" class="cta-button-secondary">Learn More</a>
+      <!-- Right: Why Join Sidebar -->
+      <aside class="why-join-sidebar">
+        <section class="why-join-sidebar-section glass">
+          <h2 class="why-join-sidebar-title">Why Join RocketGoals</h2>
+          <div class="why-join-sidebar-content">
+            <div class="why-join-sidebar-point">
+              <div class="why-join-sidebar-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="why-join-sidebar-point-title">Proven System</h3>
+                <p class="why-join-sidebar-point-text">7-day framework tested by thousands</p>
+              </div>
+            </div>
+
+            <div class="why-join-sidebar-point">
+              <div class="why-join-sidebar-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="why-join-sidebar-point-title">AI Coaching</h3>
+                <p class="why-join-sidebar-point-text">24/7 personalized guidance</p>
+              </div>
+            </div>
+
+            <div class="why-join-sidebar-point">
+              <div class="why-join-sidebar-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="why-join-sidebar-point-title">Fast Results</h3>
+                <p class="why-join-sidebar-point-text">See progress in days, not months</p>
+              </div>
+            </div>
+
+            <div class="why-join-sidebar-point">
+              <div class="why-join-sidebar-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="why-join-sidebar-point-title">Free to Start</h3>
+                <p class="why-join-sidebar-point-text">No credit card required</p>
+              </div>
+            </div>
+
+            <div class="why-join-sidebar-point">
+              <div class="why-join-sidebar-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="why-join-sidebar-point-title">Community Support</h3>
+                <p class="why-join-sidebar-point-text">Join thousands of achievers</p>
+              </div>
             </div>
           </div>
         </section>
