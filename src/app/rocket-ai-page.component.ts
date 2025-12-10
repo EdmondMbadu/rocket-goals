@@ -24,7 +24,7 @@ interface InteractionPreview {
 export class RocketAiPageComponent {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
-  protected readonly isLightMode = signal(true); // default to white background
+  protected readonly isLightMode = signal(true); // default to light mode
   protected readonly showHistory = signal(true);
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
 
