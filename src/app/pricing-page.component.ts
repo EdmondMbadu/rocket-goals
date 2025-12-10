@@ -141,7 +141,7 @@ import { RouterModule } from '@angular/router';
                   <li><span></span>Build templates, lead pods/masterminds</li>
                   <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
                 </ul>
-                <a routerLink="/signup" class="btn-outline">Talk to Sales</a>
+                <a routerLink="/contact" class="btn-outline">Talk to Sales</a>
               </div>
             </div>
           </div>
