@@ -35,7 +35,7 @@ export class SignupComponent {
     try {
       const { firstName, lastName, email, password } = this.signupForm.getRawValue();
       await this.authService.signUpWithEmail({ firstName, lastName, email, password });
-      await this.router.navigateByUrl('/goals');
+      await this.router.navigateByUrl('/ai');
     } catch {
       this.serverError.set(this.authService.authError());
     }
@@ -46,7 +46,7 @@ export class SignupComponent {
     this.serverError.set(null);
     try {
       await this.authService.signInWithGoogle();
-      await this.router.navigateByUrl('/goals');
+      await this.router.navigateByUrl('/ai');
     } catch {
       this.serverError.set(this.authService.authError());
     }

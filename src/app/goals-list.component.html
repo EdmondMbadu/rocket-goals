@@ -9,9 +9,15 @@
 <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-red-50 text-black overflow-hidden flex flex-col">
   <!-- Animated Background Elements -->
   <div class="fixed inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-20 left-10 w-72 h-72 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-    <div class="absolute top-40 right-10 w-72 h-72 bg-gray-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-    <div class="absolute -bottom-8 left-1/2 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div
+      class="absolute top-20 left-10 w-72 h-72 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob">
+    </div>
+    <div
+      class="absolute top-40 right-10 w-72 h-72 bg-gray-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000">
+    </div>
+    <div
+      class="absolute -bottom-8 left-1/2 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000">
+    </div>
   </div>
 
   <!-- Header -->
@@ -19,7 +25,9 @@
     <div class="flex items-center justify-between max-w-7xl mx-auto w-full gap-6">
       <a routerLink="/goals" class="flex items-center gap-3 group flex-none">
         <div class="relative">
-          <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+          <div
+            class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500">
+          </div>
           <img src="/assets/rocket-goals.png" alt="Rocket Goals"
             class="relative w-14 h-14 md:w-16 md:h-16 object-contain transform group-hover:scale-105 transition-transform" />
         </div>
@@ -28,28 +36,29 @@
         </span>
       </a>
       <div class="flex-1 flex items-center justify-center gap-6">
-        <a routerLink="/goals"
-          routerLinkActive="text-red-600 border-b-2 border-red-600"
+        <a routerLink="/goals" routerLinkActive="text-red-600 border-b-2 border-red-600"
           class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           Home
         </a>
-        <a routerLink="/rocketAi"
-          routerLinkActive="text-red-600 border-b-2 border-red-600"
+        <a routerLink="/ai" routerLinkActive="text-red-600 border-b-2 border-red-600"
           class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           AI
         </a>
-        <a routerLink="/profile"
-          routerLinkActive="text-red-600 border-b-2 border-red-600"
+        <a routerLink="/profile" routerLinkActive="text-red-600 border-b-2 border-red-600"
           class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           Profile
         </a>
@@ -76,12 +85,13 @@
       <div class="text-center py-16">
         <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-6">
           <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         <h2 class="text-3xl font-black text-black mb-3">Error Loading Goals</h2>
         <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ error() }}</p>
-        <button (click)="loadGoals()" 
+        <button (click)="loadGoals()"
           class="px-8 py-4 bg-black text-white font-bold rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
           Try Again
         </button>
@@ -90,7 +100,9 @@
       <!-- Beautiful Empty State -->
       <div class="text-center py-20 md:py-32">
         <div class="relative inline-block mb-8">
-          <div class="absolute inset-0 bg-gradient-to-r from-red-600 to-black rounded-full blur-2xl opacity-20 animate-pulse"></div>
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-red-600 to-black rounded-full blur-2xl opacity-20 animate-pulse">
+          </div>
           <div class="relative w-32 h-32 md:w-40 md:h-40 mx-auto">
             <img src="/assets/rocket-3d.png" alt="Rocket" class="w-full h-full object-contain animate-bounce-slow">
           </div>
@@ -99,23 +111,29 @@
           Ready to <span class="text-red-600">Launch</span>?
         </h2>
         <p class="text-xl md:text-2xl text-gray-600 mb-4 max-w-2xl mx-auto leading-relaxed">
-          Your mission control is ready. Start your first 7-day Rocket Goal challenge and transform your vision into reality.
+          Your mission control is ready. Start your first 7-day Rocket Goal challenge and transform your vision into
+          reality.
         </p>
         <p class="text-gray-500 mb-12 max-w-xl mx-auto">
-          Join thousands who've already launched their goals. It's free, takes less than 3 minutes, and you'll get your personalized action plan instantly.
+          Join thousands who've already launched their goals. It's free, takes less than 3 minutes, and you'll get your
+          personalized action plan instantly.
         </p>
-        <button (click)="startChallenge()" 
+        <button (click)="startChallenge()"
           class="group relative px-10 py-5 bg-gradient-to-r from-black to-gray-900 text-white font-black text-lg md:text-xl rounded-full overflow-hidden shadow-2xl hover:shadow-red-600/30 transition-all duration-300 hover:-translate-y-2 transform">
           <span class="relative z-10 flex items-center gap-3">
-            <svg class="w-6 h-6 md:w-7 md:h-7 transform group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6 md:w-7 md:h-7 transform group-hover:rotate-12 transition-transform" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             Launch 7-Day Challenge
-            <svg class="w-5 h-5 md:w-6 md:h-6 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 md:w-6 md:h-6 transform group-hover:translate-x-2 transition-transform" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
+          </div>
         </button>
         <div class="mt-8 flex items-center justify-center gap-2 text-sm text-gray-500">
           <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,20 +150,18 @@
           <div class="mb-4">
             @if (isEditingWorkOnTitle()) {
             <div class="flex items-center gap-2">
-              <input type="text" 
-                [ngModel]="editingWorkOnTitleValue()" 
-                (ngModelChange)="editingWorkOnTitleValue.set($event)"
-                (keyup.enter)="saveWorkOnTitle()" 
+              <input type="text" [ngModel]="editingWorkOnTitleValue()"
+                (ngModelChange)="editingWorkOnTitleValue.set($event)" (keyup.enter)="saveWorkOnTitle()"
                 (keyup.escape)="cancelEditingWorkOnTitle()"
                 class="work-on-title-input text-3xl md:text-4xl font-black tracking-tight text-black bg-transparent border-b-2 border-red-600 focus:outline-none focus:border-red-700 flex-1"
                 #workOnTitleInput />
-              <button (click)="saveWorkOnTitle()" 
+              <button (click)="saveWorkOnTitle()"
                 class="text-green-600 hover:text-green-700 transition-colors p-1 shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               </button>
-              <button (click)="cancelEditingWorkOnTitle()" 
+              <button (click)="cancelEditingWorkOnTitle()"
                 class="text-gray-400 hover:text-red-600 transition-colors p-1 shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -157,16 +173,19 @@
               <h2 class="text-3xl md:text-4xl font-black text-black tracking-tight">
                 {{ workOnTitle() }}
               </h2>
-              <button (click)="startEditingWorkOnTitle()" 
+              <button (click)="startEditingWorkOnTitle()"
                 class="text-gray-400 hover:text-red-600 transition-colors p-1 shrink-0 relative group"
                 title="Overall goal (e.g., be the best speaker)">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 <!-- Tooltip -->
-                <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-black text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <span
+                  class="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-black text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Overall goal (e.g., be the best speaker)
-                  <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-black"></span>
+                  <span
+                    class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-black"></span>
                 </span>
               </button>
             </div>
@@ -174,7 +193,8 @@
           </div>
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.4)]"></div>
-            <span class="text-base md:text-lg font-semibold text-gray-700 uppercase tracking-wider">Systems Nominal • Commander {{
+            <span class="text-base md:text-lg font-semibold text-gray-700 uppercase tracking-wider">Systems Nominal •
+              Commander {{
               getUserFirstName() }}</span>
           </div>
         </div>
@@ -183,7 +203,7 @@
             <h2 class="text-3xl md:text-4xl font-black text-black mb-2 tracking-tight">Your Rocket Goals</h2>
             <p class="text-gray-600">Select a mission to view its dashboard</p>
           </div>
-          <button (click)="startChallenge()" 
+          <button (click)="startChallenge()"
             class="hidden md:flex items-center gap-2 px-6 py-3 bg-black text-white font-bold rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -194,17 +214,21 @@
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (goal of goals(); track goal.id) {
-        <div class="group relative bg-white/80 backdrop-blur-sm border border-gray-200 rounded-3xl p-6 hover:shadow-2xl hover:border-red-300 transition-all duration-300 hover:-translate-y-2 transform overflow-hidden">
+        <div
+          class="group relative bg-white/80 backdrop-blur-sm border border-gray-200 rounded-3xl p-6 hover:shadow-2xl hover:border-red-300 transition-all duration-300 hover:-translate-y-2 transform overflow-hidden">
           <!-- Gradient overlay on hover -->
-          <div class="absolute inset-0 bg-gradient-to-br from-red-50/0 to-transparent group-hover:from-red-50/50 transition-opacity duration-300"></div>
-          
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-red-50/0 to-transparent group-hover:from-red-50/50 transition-opacity duration-300">
+          </div>
+
           <div class="relative z-10">
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
                 <h3 class="text-2xl font-black text-black mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
                   {{ getGoalTitle(goal) }}
                 </h3>
-                <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ getGoalTheme(goal) }}</p>
+                <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ getGoalTheme(goal) }}
+                </p>
               </div>
               <div class="flex flex-col items-end gap-2 shrink-0">
                 <span class="px-3 py-1.5 text-xs font-bold rounded-full uppercase tracking-wider"
@@ -217,28 +241,31 @@
                   {{ getGoalStatus(goal) }}
                 </span>
                 <div class="flex items-center gap-2">
-                  <button (click)="editGoal(goal.id); $event.stopPropagation()" 
+                  <button (click)="editGoal(goal.id); $event.stopPropagation()"
                     class="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-full hover:bg-red-50"
                     title="Edit Goal">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
-                  <button (click)="deleteGoal(goal.id); $event.stopPropagation()" 
+                  <button (click)="deleteGoal(goal.id); $event.stopPropagation()"
                     class="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-full hover:bg-red-50"
                     title="Delete Goal">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
                 </div>
               </div>
             </div>
-            
+
             <div class="space-y-3 mb-4">
               <div class="flex items-center gap-2 text-sm">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span class="text-gray-600">Daily:</span>
                 <span class="font-bold text-black">{{ goal.answers['daily_effort'] === '5min' ? '5 Mins' :
@@ -250,11 +277,12 @@
                 ID: {{ goal.id.substring(0, 8) }}...
               </div>
             </div>
-            
-            <a [routerLink]="['/rocketgoal', goal.id]" 
+
+            <a [routerLink]="['/rocketgoal', goal.id]"
               class="flex items-center gap-2 text-sm font-semibold text-red-600 group-hover:text-red-700 transition-colors">
               <span>View Dashboard</span>
-              <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </a>
@@ -262,10 +290,10 @@
         </div>
         }
       </div>
-      
+
       <!-- Mobile New Goal Button -->
       <div class="md:hidden fixed bottom-6 right-6 z-50">
-        <button (click)="startChallenge()" 
+        <button (click)="startChallenge()"
           class="w-14 h-14 rounded-full bg-gradient-to-r from-black to-gray-900 text-white shadow-2xl hover:shadow-red-600/30 transition-all duration-300 hover:scale-110 flex items-center justify-center">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

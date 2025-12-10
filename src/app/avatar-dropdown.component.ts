@@ -43,7 +43,7 @@ export class AvatarDropdownComponent implements OnInit {
   async loadUserGoals() {
     const profile = this.authService.profile();
     if (!profile?.userId) return;
-    
+
     this.loadingGoals.set(true);
     try {
       const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
@@ -71,7 +71,7 @@ export class AvatarDropdownComponent implements OnInit {
   }
 
   navigateToAI() {
-    this.router.navigateByUrl('/rocketAi');
+    this.router.navigateByUrl('/ai');
     this.closeDropdown();
   }
 

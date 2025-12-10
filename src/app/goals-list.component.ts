@@ -70,10 +70,10 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.router.navigate(['/goals'], { replaceUrl: true, queryParams: {} });
       }
     };
-    
+
     // Check immediately
     checkParams();
-    
+
     // Subscribe to query param changes
     this.route.queryParams.subscribe(params => {
       if (params['startChallenge'] === 'true') {
@@ -113,11 +113,11 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Try multiple times to wait for profile to be ready
     let attempts = 0;
     const maxAttempts = 10;
-    
+
     const tryLoad = async () => {
       attempts++;
       const profile = this.authService.profile();
-      
+
       if (profile?.userId) {
         // Profile is ready, load goals
         await this.loadGoals();
@@ -130,7 +130,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loading.set(false);
       }
     };
-    
+
     // Start trying after a short delay
     setTimeout(tryLoad, 100);
   }
@@ -213,7 +213,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToAI() {
-    this.router.navigateByUrl('/rocketAi');
+    this.router.navigateByUrl('/ai');
     this.closeAvatarDropdown();
   }
 

@@ -22,7 +22,6 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   { path: 'admin/ai-stats', component: AiStatsComponent },
   { path: 'admin', component: AdminComponent },
-  { path: 'rocketAi', component: RocketAiPageComponent },
   { path: 'ai', component: RocketAiPageComponent },
   { path: 'pricing', component: PricingPageComponent },
   { path: 'contact', component: ContactPageComponent },
