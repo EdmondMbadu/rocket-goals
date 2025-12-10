@@ -45,3 +45,9 @@ Thumbs.db
 # Environment files
 /environments
 environments/
+.env*
+**/.env*
+
+# npm cache
+.npm-cache/
+/.npm-cache/
