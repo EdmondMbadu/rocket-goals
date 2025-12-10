@@ -749,7 +749,7 @@ export const getAiAnalytics = functions.runWith({
     timeoutSeconds: 30,
     memory: "256MB",
     secrets: [gaPropertyId]
-}).https.onCall(async (_data: unknown, context: functions.https.CallableContext) => {
+}).https.onCall(async (data: { startDate?: string; endDate?: string } | unknown, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError(
             'unauthenticated',
@@ -780,8 +780,9 @@ export const getAiAnalytics = functions.runWith({
 
     try {
         const analyticsDataClient = new BetaAnalyticsDataClient();
-        const startDate = "28daysAgo";
-        const endDate = "today";
+        // Accept date range from data, default to last 28 days
+        const startDate = (data && typeof data === 'object' && 'startDate' in data && data.startDate) || "28daysAgo";
+        const endDate = (data && typeof data === 'object' && 'endDate' in data && data.endDate) || "today";
         const aiPageFilter = {
             filter: {
                 fieldName: "pagePath",

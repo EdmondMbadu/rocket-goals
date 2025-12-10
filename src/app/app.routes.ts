@@ -7,6 +7,7 @@ import { RocketGoalViewComponent } from './rocket-goal-view.component';
 import { GoalsListComponent } from './goals-list.component';
 import { ProfileComponent } from './profile.component';
 import { AdminComponent } from './admin/admin.component';
+import { AiStatsComponent } from './admin/ai-stats.component';
 import { RocketAiPageComponent } from './rocket-ai-page.component';
 import { PricingPageComponent } from './pricing-page.component';
 import { ContactPageComponent } from './contact-page.component';
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'rocketgoal/:id', component: RocketGoalViewComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'admin', component: AdminComponent },
+  { path: 'admin/ai-stats', component: AiStatsComponent },
   { path: 'rocketAi', component: RocketAiPageComponent },
   { path: 'ai', component: RocketAiPageComponent },
   { path: 'pricing', component: PricingPageComponent },
