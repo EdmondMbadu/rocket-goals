@@ -59,7 +59,7 @@ export class AdminComponent implements OnInit {
     users: false,
     email: false,
     quickActions: true,
-    aiAnalytics: true
+    aiAnalytics: false
   });
   totalUsers = signal<number | null>(null);
   totalGoals = signal<number | null>(null);
