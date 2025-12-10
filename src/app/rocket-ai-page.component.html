@@ -13,7 +13,7 @@
       </a>
       <div class="badge">Premium AI</div>
     </div>
-    <div class="nav-right">
+    <div class="nav-center">
       <div class="nav-links">
         <a routerLink="/goals" routerLinkActive="nav-active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,6 +39,8 @@
           Profile
         </a>
       </div>
+    </div>
+    <div class="nav-right">
       <button type="button" class="ghost-btn icon-btn" (click)="toggleHistory()" aria-label="Toggle history">
         <svg *ngIf="showHistory()" viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor"
           stroke-width="2">

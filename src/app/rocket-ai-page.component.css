@@ -5,8 +5,8 @@
 .ai-premium-shell {
   position: relative;
   background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 25%),
-              radial-gradient(circle at 80% 0%, rgba(239, 68, 68, 0.18), transparent 30%),
-              linear-gradient(135deg, #0b0f1a 0%, #0d111f 60%, #0b0f1a 100%);
+    radial-gradient(circle at 80% 0%, rgba(239, 68, 68, 0.18), transparent 30%),
+    linear-gradient(135deg, #0b0f1a 0%, #0d111f 60%, #0b0f1a 100%);
   padding: 32px;
   overflow: hidden;
   color: #e5e7eb;
@@ -16,7 +16,7 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at 30% 30%, rgba(220, 38, 38, 0.08), transparent 40%),
-              radial-gradient(circle at 70% 60%, rgba(59, 130, 246, 0.08), transparent 45%);
+    radial-gradient(circle at 70% 60%, rgba(59, 130, 246, 0.08), transparent 45%);
   filter: blur(60px);
   opacity: 0.8;
   pointer-events: none;
@@ -37,9 +37,9 @@
   position: sticky;
   top: 0;
   z-index: 5;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
@@ -52,6 +52,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  justify-self: start;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
 }
 
 .logo-link {
@@ -92,11 +107,6 @@
   box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);
 }
 
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 .nav-links {
   display: flex;
@@ -386,7 +396,7 @@
 
 .light-mode .ai-gradient-bg {
   background: radial-gradient(circle at 30% 30%, rgba(239, 68, 68, 0.08), transparent 40%),
-              radial-gradient(circle at 70% 60%, rgba(59, 130, 246, 0.08), transparent 45%);
+    radial-gradient(circle at 70% 60%, rgba(59, 130, 246, 0.08), transparent 45%);
   filter: blur(80px);
   opacity: 0.7;
 }
@@ -542,8 +552,18 @@
   }
 
   .ai-nav {
-    flex-direction: column;
-    gap: 10px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .nav-left,
+  .nav-center,
+  .nav-right {
+    justify-self: center;
+  }
+
+  .nav-right {
+    justify-self: center;
   }
 
   .hero {
@@ -554,4 +574,3 @@
     flex-wrap: wrap;
   }
 }
-
