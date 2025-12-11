@@ -50,15 +50,11 @@ import { RouterModule } from '@angular/router';
               <!-- Launch -->
               <div class="pricing-card">
                 <div class="card-top">
-                  <div class="icon bg-gray-900 text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
-                    </svg>
-                  </div>
+                  <span class="rocket-emoji rocket-size-1">🚀</span>
                   <div class="badge bg-gray-900 text-white">Free</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title">Launch Mode</div>
+                  <div class="title">1. Launch Mode</div>
                   <div class="price">Free</div>
                   <div class="sub">Activate momentum</div>
                   <p class="desc">Early wins and streaks to feel momentum fast.</p>
@@ -74,16 +70,11 @@ import { RouterModule } from '@angular/router';
               <!-- Moonshot -->
               <div class="pricing-card highlight">
                 <div class="card-top">
-                  <div class="icon bg-red-600 text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l5 5-5 5-5-5z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12l-2 8 2-2 2 2-2-8z" />
-                    </svg>
-                  </div>
+                  <span class="rocket-emoji rocket-size-2">🚀</span>
                   <div class="badge bg-black text-white">Most Popular</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title text-red-600">Moonshot</div>
+                  <div class="title text-red-600">2. Moonshot</div>
                   <div class="price">$9.99</div>
                   <div class="sub">per month</div>
                   <p class="desc">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
@@ -99,15 +90,11 @@ import { RouterModule } from '@angular/router';
               <!-- Interplanetary -->
               <div class="pricing-card">
                 <div class="card-top">
-                  <div class="icon bg-gradient-to-br from-black via-gray-800 to-red-600 text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </div>
+                  <span class="rocket-emoji rocket-size-3">🚀</span>
                   <div class="badge bg-red-600 text-white">Performance</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title">Interplanetary</div>
+                  <div class="title">3. Interplanetary</div>
                   <div class="price">$29.99</div>
                   <div class="sub">per month</div>
                   <p class="desc">Predictive, multi-channel coaching for high-performers.</p>
@@ -123,15 +110,11 @@ import { RouterModule } from '@angular/router';
               <!-- Galactic -->
               <div class="pricing-card">
                 <div class="card-top">
-                  <div class="icon bg-black text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l7 7 7-7M5 21l7-7 7 7" />
-                    </svg>
-                  </div>
+                  <span class="rocket-emoji rocket-size-4">🚀</span>
                   <div class="badge bg-gray-900 text-white">Elite</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title text-gray-800">Galactic</div>
+                  <div class="title text-gray-800">4. Galactic</div>
                   <div class="price">$499</div>
                   <div class="sub">per month</div>
                   <p class="desc">Hybrid human + AI leadership system with elite accountability.</p>
@@ -186,6 +169,26 @@ import { RouterModule } from '@angular/router';
       align-items: center;
       justify-content: center;
       box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+    .rocket-emoji {
+      display: inline-block;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+      transition: transform 0.3s ease;
+    }
+    .rocket-emoji:hover {
+      transform: scale(1.15) rotate(-10deg);
+    }
+    .rocket-size-1 {
+      font-size: 28px;
+    }
+    .rocket-size-2 {
+      font-size: 36px;
+    }
+    .rocket-size-3 {
+      font-size: 44px;
+    }
+    .rocket-size-4 {
+      font-size: 52px;
     }
     .badge {
       padding: 6px 10px;
