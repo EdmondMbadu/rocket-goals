@@ -115,12 +115,13 @@
             </p>
           </div>
           <button type="button"
-            class="ghost-btn icon-btn text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
-            aria-label="Delete chat" (click)="openDeleteModal(session.id, $event)">
-            <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21a1 1 0 00-.993-.79H5.765a1 1 0 00-.993.79l-.964 5.5a1 1 0 00.986 1.21h10.922a1 1 0 00.986-1.21l-.964-5.5zM10 5V4a2 2 0 114 0v1" />
+            class="ghost-btn icon-btn hover:bg-blue-50 transition-colors flex items-center justify-center"
+            aria-label="Start new chat" (click)="startNewChat(); $event.stopPropagation()">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
+              aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
             </svg>
+            <span class="sr-only">New chat</span>
           </button>
         </div>
       </div>

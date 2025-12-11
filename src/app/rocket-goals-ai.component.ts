@@ -275,6 +275,10 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     this.aiService.clearConversation();
   }
 
+  startNewChat(): void {
+    this.aiService.startNewSession();
+  }
+
   sendQuickPrompt(prompt: string): void {
     this.inputMessage.set(prompt);
     this.sendMessage();
