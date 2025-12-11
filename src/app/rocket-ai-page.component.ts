@@ -23,6 +23,7 @@ export class RocketAiPageComponent implements OnInit {
   protected readonly sessionsLoading = this.aiService.sessionsLoading;
   protected readonly sessionsError = this.aiService.sessionsError;
   protected readonly currentSessionId = this.aiService.currentSessionId;
+  protected readonly confirmingDeleteSessionId = signal<string | null>(null);
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
 
@@ -51,12 +52,24 @@ export class RocketAiPageComponent implements OnInit {
     await this.aiService.loadSession(sessionId);
   }
 
-  protected async deleteSession(sessionId: string): Promise<void> {
-    await this.aiService.deleteSession(sessionId);
-  }
-
   protected startNewChat(): void {
     this.aiService.startNewSession();
+  }
+
+  protected openDeleteModal(sessionId: string, event?: Event): void {
+    event?.stopPropagation();
+    this.confirmingDeleteSessionId.set(sessionId);
+  }
+
+  protected cancelDelete(): void {
+    this.confirmingDeleteSessionId.set(null);
+  }
+
+  protected async confirmDelete(): Promise<void> {
+    const sessionId = this.confirmingDeleteSessionId();
+    if (!sessionId) return;
+    await this.aiService.deleteSession(sessionId);
+    this.confirmingDeleteSessionId.set(null);
   }
 
   protected trackBySession(_index: number, session: { id: string }): string {
