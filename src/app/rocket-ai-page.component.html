@@ -110,9 +110,6 @@
             <p class="history-question">
               {{ session.title || 'Chat' }}
             </p>
-            <p class="history-answer" *ngIf="session.lastMessage">
-              {{ session.lastMessage | slice:0:120 }}<span *ngIf="(session.lastMessage?.length || 0) > 120">…</span>
-            </p>
           </div>
           <div class="flex items-center gap-2">
             <div class="relative group hidden sm:block">
