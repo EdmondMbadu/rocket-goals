@@ -145,8 +145,9 @@
                 Delete chat
               </div>
             </div>
-            <span class="ml-2 whitespace-nowrap text-[11px] text-gray-400 hidden sm:inline">{{ session.updatedAt | date:
-              'shortTime' }}</span>
+            <span class="ml-2 whitespace-nowrap text-[11px] text-gray-400 hidden sm:inline">
+              {{ session.updatedAt | date: 'MMM d, y, h:mm a' }}
+            </span>
           </div>
         </div>
       </div>
