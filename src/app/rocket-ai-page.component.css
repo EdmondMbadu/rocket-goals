@@ -285,6 +285,12 @@
   gap: 10px;
   padding: 10px 6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .dot {
