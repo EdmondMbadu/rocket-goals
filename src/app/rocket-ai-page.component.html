@@ -412,6 +412,312 @@
     </section>
   </main>
 
+  <!-- SCROLL-DOWN LANDING PAGE SECTIONS FOR NON-LOGGED-IN USERS -->
+  <div class="landing-scroll-sections" *ngIf="!isLoggedIn()">
+
+    <!-- SECTION 1: HERO WITH IMAGE -->
+    <section class="landing-hero-section">
+      <div class="landing-hero-content">
+        <div class="landing-hero-text">
+          <div class="landing-hero-badge">
+            <span class="badge-pulse"></span>
+            <span>AI-Powered Goal Achievement</span>
+          </div>
+          <h2 class="landing-hero-title">
+            Your Goals.<br />
+            <span class="gradient-text">Your AI Coach.</span><br />
+            Unstoppable Progress.
+          </h2>
+          <p class="landing-hero-subtitle">
+            Transform ambitious dreams into daily achievements with RocketGoals —
+            the AI-powered platform that turns your vision into a clear, actionable mission plan.
+          </p>
+          <div class="landing-hero-actions">
+            <a routerLink="/signup" class="hero-cta-primary">
+              <span>Start Your Mission Free</span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+            <a routerLink="/pricing" class="hero-cta-secondary">View Pricing</a>
+          </div>
+          <div class="landing-hero-stats">
+            <div class="stat-item">
+              <span class="stat-number">10,000+</span>
+              <span class="stat-label">Goals Launched</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">94%</span>
+              <span class="stat-label">Success Rate</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">24/7</span>
+              <span class="stat-label">AI Coaching</span>
+            </div>
+          </div>
+        </div>
+        <div class="landing-hero-image">
+          <div class="hero-image-glow"></div>
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fimage.jpg?alt=media&token=b1242c82-30f6-4297-a2cd-5056ecc3f2b"
+            alt="RocketGoals AI Coach helping you achieve your goals" class="hero-main-image" />
+          <div class="hero-floating-card card-1">
+            <span class="floating-icon">🎯</span>
+            <span>Goal Tracking</span>
+          </div>
+          <div class="hero-floating-card card-2">
+            <span class="floating-icon">🚀</span>
+            <span>Launch in 7 Days</span>
+          </div>
+          <div class="hero-floating-card card-3">
+            <span class="floating-icon">✨</span>
+            <span>AI Insights</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: DASHBOARD SHOWCASE -->
+    <section class="landing-dashboard-section">
+      <div class="dashboard-content">
+        <div class="dashboard-text">
+          <span class="section-eyebrow">See It In Action</span>
+          <h2 class="section-title">A Dashboard Built for Achievers</h2>
+          <p class="section-subtitle">Track every goal, celebrate every win, and visualize your path to success with our
+            intuitive interface.</p>
+          <ul class="dashboard-features-list">
+            <li>
+              <span class="check-icon">✓</span>
+              <span>Real-time progress tracking across all your goals</span>
+            </li>
+            <li>
+              <span class="check-icon">✓</span>
+              <span>AI-generated insights and recommendations</span>
+            </li>
+            <li>
+              <span class="check-icon">✓</span>
+              <span>Beautiful streak visualizations to keep you motivated</span>
+            </li>
+            <li>
+              <span class="check-icon">✓</span>
+              <span>Mission timelines with milestone celebrations</span>
+            </li>
+          </ul>
+          <a routerLink="/signup" class="dashboard-cta">
+            <span>Get Started Free</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+        <div class="dashboard-image-container">
+          <div class="dashboard-image-glow"></div>
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fdashboard.png?alt=media&token=232316d6-813b-44f7-bdf0-165df92a3f64"
+            alt="RocketGoals Dashboard showing goal progress and AI insights" class="dashboard-main-image" />
+          <div class="dashboard-badge">
+            <span class="live-dot"></span>
+            <span>Live Preview</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: FEATURES SHOWCASE -->
+    <section class="landing-features-section">
+      <div class="section-header">
+        <span class="section-eyebrow">Why RocketGoals</span>
+        <h2 class="section-title">Everything You Need to Achieve More</h2>
+        <p class="section-subtitle">Our powerful AI-driven platform gives you the tools, insights, and accountability to
+          crush your goals.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card featured">
+          <div class="feature-icon-large">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <h3 class="feature-title">AI-Powered Coaching</h3>
+          <p class="feature-description">Get personalized guidance 24/7. Our AI understands your goals, learns your
+            patterns, and provides real-time coaching to keep you on track.</p>
+          <div class="feature-highlight">Powered by Gemini</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <h3 class="feature-title">7-Day Launch Framework</h3>
+          <p class="feature-description">Turn any goal into an actionable 7-day mission plan. Break down big dreams into
+            daily achievable steps.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="feature-title">Streak Tracking</h3>
+          <p class="feature-description">Build unstoppable momentum with daily streaks. Never break the chain and watch
+            your progress compound.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 class="feature-title">Smart Calendar</h3>
+          <p class="feature-description">Visualize your mission timeline. Schedule tasks, set reminders, and never miss
+            a milestone.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h3 class="feature-title">Progress Analytics</h3>
+          <p class="feature-description">Beautiful dashboards show exactly how far you've come. Track metrics that
+            matter to your success.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="feature-title">Flexible Pricing</h3>
+          <p class="feature-description">Start free, upgrade when ready. Plans that scale with your ambition from Launch
+            to Galactic.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: PRICING PREVIEW -->
+    <section class="landing-pricing-section">
+      <div class="section-header">
+        <span class="section-eyebrow">Choose Your Mission</span>
+        <h2 class="section-title">Plans for Every Level of Ambition</h2>
+        <p class="section-subtitle">Start free and upgrade as you grow. Every plan includes our powerful AI coaching.
+        </p>
+      </div>
+      <div class="pricing-cards-showcase">
+        <a routerLink="/pricing" class="pricing-showcase-card">
+          <div class="pricing-card-glow green"></div>
+          <span class="rocket-large rocket-green">🚀</span>
+          <h3 class="pricing-card-name">Launch</h3>
+          <p class="pricing-card-price">Free</p>
+          <p class="pricing-card-desc">Start your journey with basic AI coaching and goal tracking.</p>
+          <span class="pricing-card-tag">Perfect for beginners</span>
+        </a>
+        <a routerLink="/pricing" class="pricing-showcase-card popular">
+          <div class="popular-ribbon">Most Popular</div>
+          <div class="pricing-card-glow orange"></div>
+          <span class="rocket-large rocket-orange">🚀</span>
+          <h3 class="pricing-card-name">Moonshot</h3>
+          <p class="pricing-card-price">$9.99<span>/mo</span></p>
+          <p class="pricing-card-desc">Smart accountability with advanced AI features and analytics.</p>
+          <span class="pricing-card-tag">Best value</span>
+        </a>
+        <a routerLink="/pricing" class="pricing-showcase-card">
+          <div class="pricing-card-glow red"></div>
+          <span class="rocket-large rocket-red">🚀</span>
+          <h3 class="pricing-card-name">Interplanetary</h3>
+          <p class="pricing-card-price">$29.99<span>/mo</span></p>
+          <p class="pricing-card-desc">High-performance features for serious goal crushers.</p>
+          <span class="pricing-card-tag">Pro features</span>
+        </a>
+        <a routerLink="/pricing" class="pricing-showcase-card">
+          <div class="pricing-card-glow gray"></div>
+          <span class="rocket-large rocket-platinum">🚀</span>
+          <h3 class="pricing-card-name">Galactic</h3>
+          <p class="pricing-card-price">$499<span>/mo</span></p>
+          <p class="pricing-card-desc">Full leadership system with team management and enterprise features.</p>
+          <span class="pricing-card-tag">Elite tier</span>
+        </a>
+      </div>
+      <a routerLink="/pricing" class="view-all-pricing">View Full Pricing Details →</a>
+    </section>
+
+    <!-- SECTION 5: TESTIMONIALS / SOCIAL PROOF -->
+    <section class="landing-testimonials-section">
+      <div class="section-header">
+        <span class="section-eyebrow">Success Stories</span>
+        <h2 class="section-title">Join Thousands of Goal Achievers</h2>
+        <p class="section-subtitle">Real people. Real results. See what our community is saying.</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"RocketGoals transformed how I approach my career goals. The AI coaching feels
+            like having a personal mentor available 24/7."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">JM</div>
+            <div>
+              <p class="author-name">James Morrison</p>
+              <p class="author-title">Entrepreneur</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card featured">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"I've tried every productivity app out there. RocketGoals is different — it
+            actually understands my goals and helps me break them down into achievable daily actions."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">SK</div>
+            <div>
+              <p class="author-name">Sarah Kim</p>
+              <p class="author-title">Product Designer</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"The 7-day launch framework helped me finally finish writing my book. I went from
+            stuck to published in 6 months!"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">MP</div>
+            <div>
+              <p class="author-name">Michael Park</p>
+              <p class="author-title">Author</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: FINAL CTA -->
+    <section class="landing-final-cta-section">
+      <div class="final-cta-glow"></div>
+      <div class="final-cta-content">
+        <h2 class="final-cta-title">Ready to Launch Your Goals?</h2>
+        <p class="final-cta-subtitle">Join thousands of achievers who are crushing their goals with AI-powered coaching.
+          Start free today.</p>
+        <div class="final-cta-actions">
+          <a routerLink="/signup" class="final-cta-primary">
+            <span>Start Your Free Mission</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <a routerLink="/login" class="final-cta-secondary">Already have an account? Log in</a>
+        </div>
+        <p class="final-cta-note">No credit card required • Free forever on Launch plan</p>
+      </div>
+    </section>
+
+  </div>
+
   <!-- Delete confirmation modal -->
   <div *ngIf="confirmingDeleteSessionId()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
     <div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
