@@ -132,7 +132,7 @@ import { RouterModule } from '@angular/router';
                 </div>
                 <div class="space-y-2">
                   <div class="title text-gray-800">Galactic</div>
-                  <div class="price">$799</div>
+                  <div class="price">$499</div>
                   <div class="sub">per month</div>
                   <p class="desc">Hybrid human + AI leadership system with elite accountability.</p>
                 </div>
@@ -272,5 +272,5 @@ import { RouterModule } from '@angular/router';
     .btn-outline:hover { background: black; color: white; transform: translateY(-2px); }
   `]
 })
-export class PricingPageComponent {}
+export class PricingPageComponent { }
 

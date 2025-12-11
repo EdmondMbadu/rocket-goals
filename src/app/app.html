@@ -7,7 +7,8 @@
     class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/90 backdrop-blur-md border-b border-black/5">
     <div class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between gap-6">
-        <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'" class="flex items-center gap-3 group cursor-pointer flex-none">
+        <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'"
+          class="flex items-center gap-3 group cursor-pointer flex-none">
           <div class="relative">
             <div
               class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500">
@@ -135,1111 +136,1148 @@
     </div>
   </section>
 
-<!-- Rocket Dashboard Overlay (White Sci-Fi Ultimate) -->
-@if (isDashboardActive()) {
-<div class="fixed inset-0 z-[100] bg-white-space text-black overflow-hidden animate-fade-in flex flex-col">
+  <!-- Rocket Dashboard Overlay (White Sci-Fi Ultimate) -->
+  @if (isDashboardActive()) {
+  <div class="fixed inset-0 z-[100] bg-white-space text-black overflow-hidden animate-fade-in flex flex-col">
 
-  <!-- Dark Stars Animation (Inverted for White Theme) -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="star-dark" style="top: 10%; left: 20%; width: 3px; height: 3px; --duration: 3s; --delay: 0s"></div>
-    <div class="star-dark" style="top: 30%; left: 80%; width: 4px; height: 4px; --duration: 4s; --delay: 1s"></div>
-    <div class="star-dark" style="top: 70%; left: 40%; width: 2px; height: 2px; --duration: 2.5s; --delay: 2s"></div>
-    <div class="star-dark" style="top: 50%; left: 10%; width: 3px; height: 3px; --duration: 5s; --delay: 0.5s"></div>
-    <div class="star-dark" style="top: 80%; left: 90%; width: 4px; height: 4px; --duration: 3.5s; --delay: 1.5s"></div>
-  </div>
-
-  <!-- Dashboard Header -->
-  <header class="relative z-40 px-8 py-6 flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-    <div class="flex items-center justify-between max-w-7xl mx-auto w-full">
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-gray-200 shadow-sm">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            @if (isEditingTitle()) {
-            <input type="text" [ngModel]="editingTitleValue()" 
-              (ngModelChange)="editingTitleValue.set($event)"
-              (keyup.enter)="saveTitle()" 
-              (keyup.escape)="cancelEditingTitle()"
-              class="text-2xl font-black tracking-tighter text-black bg-transparent border-b-2 border-red-600 focus:outline-none focus:border-red-700"
-              #titleInput />
-            <button (click)="saveTitle()" 
-              class="text-green-600 hover:text-green-700 transition-colors p-1">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-            <button (click)="cancelEditingTitle()" 
-              class="text-gray-400 hover:text-red-600 transition-colors p-1">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            } @else {
-            <h1 class="text-2xl font-black tracking-tighter text-black">
-              {{ dashboardTitle() }}
-            </h1>
-            <button (click)="startEditingTitle()" 
-              class="text-gray-400 hover:text-red-600 transition-colors p-1 ml-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-            }
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.4)]"></div>
-            <span class="text-base font-semibold text-gray-700 uppercase tracking-wider">Systems Nominal • Commander {{
-              userInfo().name.split(' ')[0] }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-4">
-        <button (click)="closeDashboard()"
-          class="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <!-- Avatar Dropdown -->
-        <app-avatar-dropdown />
+    <!-- Dark Stars Animation (Inverted for White Theme) -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="star-dark" style="top: 10%; left: 20%; width: 3px; height: 3px; --duration: 3s; --delay: 0s"></div>
+      <div class="star-dark" style="top: 30%; left: 80%; width: 4px; height: 4px; --duration: 4s; --delay: 1s"></div>
+      <div class="star-dark" style="top: 70%; left: 40%; width: 2px; height: 2px; --duration: 2.5s; --delay: 2s"></div>
+      <div class="star-dark" style="top: 50%; left: 10%; width: 3px; height: 3px; --duration: 5s; --delay: 0.5s"></div>
+      <div class="star-dark" style="top: 80%; left: 90%; width: 4px; height: 4px; --duration: 3.5s; --delay: 1.5s">
       </div>
     </div>
-  </header>
 
-  <!-- Main Content - Bento Grid -->
-  <div class="flex-1 overflow-y-auto p-6 relative z-30">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 h-full">
-
-      <!-- Col 1: Primary Directive (Goal) -->
-      <div class="md:col-span-2 hud-card-white p-8 relative overflow-hidden group">
-        <div class="scanline"></div>
-        <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-          <svg class="w-32 h-32 text-black" fill="currentColor" viewBox="0 0 24 24">
-            <path
-              d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z" />
-          </svg>
-        </div>
-        <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-          <span class="w-1.5 h-1.5 bg-red-600 rounded-full"></span> Primary Directive
-        </h3>
-        <h2 class="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
-          {{ getGoalTitleDisplay() || 'Your 7-Day Mission' }}
-        </h2>
-        <p class="text-sm font-mono uppercase tracking-[0.3em] text-gray-500">
-          Theme: {{ getGoalThemeDisplay() }}
-        </p>
-        <div class="grid grid-cols-2 gap-4 mt-8 relative z-10">
-          <div class="bg-gray-50 p-4 border-l-2 border-red-600">
-            <div class="text-[10px] text-gray-400 uppercase font-mono mb-1">Daily Thrust</div>
-            <div class="text-xl font-bold text-black">{{ challengeAnswers()['daily_effort'] === '5min' ? '5 Mins' :
-              challengeAnswers()['daily_effort'] === '10min' ? '10 Mins' :
-              challengeAnswers()['daily_effort'] === '20min' ? '20 Mins' :
-              challengeAnswers()['daily_effort'] === '30min' ? '30 Mins' : '1 Hour' }}</div>
+    <!-- Dashboard Header -->
+    <header class="relative z-40 px-8 py-6 flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+      <div class="flex items-center justify-between max-w-7xl mx-auto w-full">
+        <div class="flex items-center gap-4">
+          <div
+            class="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-gray-200 shadow-sm">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
           </div>
-          <div class="bg-gray-50 p-4 border-l-2 border-red-600">
-            <div class="text-[10px] text-gray-400 uppercase font-mono mb-1">Support</div>
-            <div class="text-xl font-bold text-black capitalize truncate">{{ getSupportDisplay() }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Col 2: Motivation Gauge -->
-      <div class="hud-card-white p-6 flex flex-col items-center justify-center relative">
-        <div class="scanline"></div>
-        <h3 class="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4 absolute top-6 left-6">Fuel Status
-        </h3>
-        <div class="relative w-40 h-40">
-          <svg class="w-full h-full transform -rotate-90">
-            <circle cx="80" cy="80" r="70" class="gauge-arc-white" />
-            <circle cx="80" cy="80" r="70" class="gauge-value-white" />
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center flex-col">
-            <span class="text-3xl font-bold text-black">98%</span>
-            <span class="text-[10px] text-red-600 uppercase tracking-wider font-bold">Optimal</span>
-          </div>
-        </div>
-        <div class="mt-4 text-center relative z-10">
-          <div class="text-sm text-gray-400">Driving Emotion</div>
-          <div class="text-lg font-bold text-black capitalize">{{ challengeAnswers()['future_result']?.[0] ||
-            'Motivated'
-            }}</div>
-        </div>
-      </div>
-
-      <!-- Col 3: System Diagnostics (Terminal) -->
-      <div class="hud-card-white p-0 overflow-hidden flex flex-col terminal-window-white">
-        <div class="bg-gray-50 p-2 border-b border-gray-200 flex items-center gap-2 px-4">
-          <div class="w-2 h-2 rounded-full bg-red-500"></div>
-          <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-          <div class="w-2 h-2 rounded-full bg-green-500"></div>
-          <span class="ml-2 text-[10px] font-mono text-gray-400">SYS_DIAG_V2.4</span>
-        </div>
-        <div class="p-4 font-mono text-xs text-black space-y-2 flex-1 overflow-y-auto">
-          <div class="terminal-line"><span>></span> <span>Initializing launch sequence...</span></div>
-          <div class="terminal-line" style="animation-delay: 0.2s"><span>></span> <span>User identity verified: {{
-              userInfo().name }}</span></div>
-          <div class="terminal-line" style="animation-delay: 0.4s"><span>></span> <span>Target locked: {{
-              getGoalTitleDisplay() || 'Rocket Goal' }}</span></div>
-          <div class="terminal-line" style="animation-delay: 0.6s"><span>></span> <span class="text-blue-600">Analyzing
-              vibe frequency...</span></div>
-          <div class="terminal-line" style="animation-delay: 0.8s"><span>></span> <span>Vibe detected: {{
-              (challengeAnswers()['future_result'] || []).join(', ') }}</span></div>
-          <div class="terminal-line" style="animation-delay: 1.0s"><span>></span> <span
-              class="text-orange-500">Calibrating daily effort...</span></div>
-          <div class="terminal-line" style="animation-delay: 1.2s"><span>></span> <span>Allocating {{
-              challengeAnswers()['daily_effort'] }} / day</span></div>
-          <div class="terminal-line" style="animation-delay: 1.5s"><span>></span> <span
-              class="text-white bg-green-600 px-1">ALL SYSTEMS GO</span></div>
-          <div class="animate-pulse mt-2">_</div>
-        </div>
-      </div>
-
-      <!-- Row 2: Mission Timeline -->
-      <div class="md:col-span-4 hud-card-white p-8">
-        <div class="scanline"></div>
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-4">
-            <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest">Mission Timeline</h3>
-            <div class="countdown-timer text-3xl md:text-4xl text-black tracking-tighter">
-              T-MINUS <span class="text-red-600">{{ countdown() }}</span>
-            </div>
-          </div>
-          <div class="barcode w-32 opacity-50"></div>
-        </div>
-
-        <div class="flex items-center justify-between relative z-10">
-          <!-- Line Background -->
-          <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -z-10"></div>
-
-          @for (day of [1,2,3,4,5,6,7]; track day) {
-          <div class="flex flex-col items-center gap-3 timeline-node-white" [class.timeline-active]="day <= 1">
-            <div
-              class="w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-white"
-              [class.border-red-600]="day === 1" [class.border-gray-200]="day > 1">
-              @if(day === 1) {
-              <div class="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+          <div>
+            <div class="flex items-center gap-2">
+              @if (isEditingTitle()) {
+              <input type="text" [ngModel]="editingTitleValue()" (ngModelChange)="editingTitleValue.set($event)"
+                (keyup.enter)="saveTitle()" (keyup.escape)="cancelEditingTitle()"
+                class="text-2xl font-black tracking-tighter text-black bg-transparent border-b-2 border-red-600 focus:outline-none focus:border-red-700"
+                #titleInput />
+              <button (click)="saveTitle()" class="text-green-600 hover:text-green-700 transition-colors p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button (click)="cancelEditingTitle()" class="text-gray-400 hover:text-red-600 transition-colors p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
               } @else {
-              <span class="text-[10px] text-gray-400">{{ day }}</span>
+              <h1 class="text-2xl font-black tracking-tighter text-black">
+                {{ dashboardTitle() }}
+              </h1>
+              <button (click)="startEditingTitle()" class="text-gray-400 hover:text-red-600 transition-colors p-1 ml-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
               }
             </div>
-            <span class="text-[10px] font-mono uppercase tracking-wider" [class.text-black]="day === 1"
-              [class.font-bold]="day === 1" [class.text-gray-400]="day > 1">
-              Day {{ day }}
-            </span>
-          </div>
-          }
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-}
-
-<!-- Video & Avatar Section -->
-<section id="video-avatar" class="py-24 bg-white text-black relative overflow-hidden border-t border-black/5">
-  <!-- Decorative Elements -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-[120px] opacity-50">
-    </div>
-    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-black/5 rounded-full blur-[100px] opacity-30"></div>
-  </div>
-
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="grid lg:grid-cols-[1fr_1.2fr] gap-16 items-center max-w-7xl mx-auto">
-      <!-- Left Column - Video Placeholder -->
-      <div class="relative order-2 lg:order-1 space-y-8">
-        <div
-          class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-black/10 group cursor-pointer bg-gray-50 hover:border-red-600/50 transition-all duration-500">
-          <!-- Video Placeholder -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="text-center space-y-6 px-8">
-              <div
-                class="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)]">
-                <svg class="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-              <div class="space-y-2">
-                <h3 class="text-3xl font-bold text-black tracking-tight">
-                  Meet <span class="text-red-600">RocketGoals</span>
-                </h3>
-                <p class="text-gray-500 font-medium text-lg">Watch the introduction</p>
-              </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.4)]"></div>
+              <span class="text-base font-semibold text-gray-700 uppercase tracking-wider">Systems Nominal • Commander
+                {{
+                userInfo().name.split(' ')[0] }}</span>
             </div>
           </div>
-          <!-- Decorative overlay -->
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300">
-          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <button (click)="closeDashboard()"
+            class="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- Avatar Dropdown -->
+          <app-avatar-dropdown />
         </div>
       </div>
+    </header>
 
-      <!-- Right Column - Avatar -->
-      <div class="relative order-1 lg:order-2 flex flex-col items-center lg:items-start space-y-10">
-        <div class="relative group w-full max-w-md mx-auto lg:mx-0">
-          <!-- Pod Container -->
-          <div class="relative bg-white border border-black/10 rounded-[2.5rem] p-8 shadow-xl">
-            <!-- Avatar Image -->
-            <div class="relative z-10 flex justify-center mb-8">
-              <div class="relative">
-                <div class="absolute -inset-4 bg-red-600/10 rounded-full blur-xl animate-pulse"></div>
-                <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-                  class="relative z-10 w-48 h-48 rounded-full object-cover border-4 border-white shadow-2xl" />
-                <!-- Status Indicator Badge -->
-                <div class="absolute bottom-2 right-2 z-20">
-                  @if (isSpeaking()) {
-                  <div
-                    class="flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full shadow-lg border border-white">
-                    <div class="flex gap-1 h-3 items-center">
-                      <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></div>
-                      <div class="w-1 h-2 bg-white rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></div>
-                      <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></div>
-                    </div>
-                    <span class="text-xs font-bold text-white uppercase tracking-wider">Speaking</span>
-                  </div>
-                  } @else {
-                  <div
-                    class="flex items-center gap-2 px-3 py-1.5 bg-green-500 rounded-full shadow-lg border border-white">
-                    <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <span class="text-xs font-bold text-white uppercase tracking-wider">Online</span>
-                  </div>
-                  }
+    <!-- Main Content - Bento Grid -->
+    <div class="flex-1 overflow-y-auto p-6 relative z-30">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 h-full">
+
+        <!-- Col 1: Primary Directive (Goal) -->
+        <div class="md:col-span-2 hud-card-white p-8 relative overflow-hidden group">
+          <div class="scanline"></div>
+          <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <svg class="w-32 h-32 text-black" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z" />
+            </svg>
+          </div>
+          <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 bg-red-600 rounded-full"></span> Primary Directive
+          </h3>
+          <h2 class="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
+            {{ getGoalTitleDisplay() || 'Your 7-Day Mission' }}
+          </h2>
+          <p class="text-sm font-mono uppercase tracking-[0.3em] text-gray-500">
+            Theme: {{ getGoalThemeDisplay() }}
+          </p>
+          <div class="grid grid-cols-2 gap-4 mt-8 relative z-10">
+            <div class="bg-gray-50 p-4 border-l-2 border-red-600">
+              <div class="text-[10px] text-gray-400 uppercase font-mono mb-1">Daily Thrust</div>
+              <div class="text-xl font-bold text-black">{{ challengeAnswers()['daily_effort'] === '5min' ? '5 Mins' :
+                challengeAnswers()['daily_effort'] === '10min' ? '10 Mins' :
+                challengeAnswers()['daily_effort'] === '20min' ? '20 Mins' :
+                challengeAnswers()['daily_effort'] === '30min' ? '30 Mins' : '1 Hour' }}</div>
+            </div>
+            <div class="bg-gray-50 p-4 border-l-2 border-red-600">
+              <div class="text-[10px] text-gray-400 uppercase font-mono mb-1">Support</div>
+              <div class="text-xl font-bold text-black capitalize truncate">{{ getSupportDisplay() }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: Motivation Gauge -->
+        <div class="hud-card-white p-6 flex flex-col items-center justify-center relative">
+          <div class="scanline"></div>
+          <h3 class="text-xs font-mono text-gray-500 uppercase tracking-widest mb-4 absolute top-6 left-6">Fuel Status
+          </h3>
+          <div class="relative w-40 h-40">
+            <svg class="w-full h-full transform -rotate-90">
+              <circle cx="80" cy="80" r="70" class="gauge-arc-white" />
+              <circle cx="80" cy="80" r="70" class="gauge-value-white" />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center flex-col">
+              <span class="text-3xl font-bold text-black">98%</span>
+              <span class="text-[10px] text-red-600 uppercase tracking-wider font-bold">Optimal</span>
+            </div>
+          </div>
+          <div class="mt-4 text-center relative z-10">
+            <div class="text-sm text-gray-400">Driving Emotion</div>
+            <div class="text-lg font-bold text-black capitalize">{{ challengeAnswers()['future_result']?.[0] ||
+              'Motivated'
+              }}</div>
+          </div>
+        </div>
+
+        <!-- Col 3: System Diagnostics (Terminal) -->
+        <div class="hud-card-white p-0 overflow-hidden flex flex-col terminal-window-white">
+          <div class="bg-gray-50 p-2 border-b border-gray-200 flex items-center gap-2 px-4">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span class="ml-2 text-[10px] font-mono text-gray-400">SYS_DIAG_V2.4</span>
+          </div>
+          <div class="p-4 font-mono text-xs text-black space-y-2 flex-1 overflow-y-auto">
+            <div class="terminal-line"><span>></span> <span>Initializing launch sequence...</span></div>
+            <div class="terminal-line" style="animation-delay: 0.2s"><span>></span> <span>User identity verified: {{
+                userInfo().name }}</span></div>
+            <div class="terminal-line" style="animation-delay: 0.4s"><span>></span> <span>Target locked: {{
+                getGoalTitleDisplay() || 'Rocket Goal' }}</span></div>
+            <div class="terminal-line" style="animation-delay: 0.6s"><span>></span> <span
+                class="text-blue-600">Analyzing
+                vibe frequency...</span></div>
+            <div class="terminal-line" style="animation-delay: 0.8s"><span>></span> <span>Vibe detected: {{
+                (challengeAnswers()['future_result'] || []).join(', ') }}</span></div>
+            <div class="terminal-line" style="animation-delay: 1.0s"><span>></span> <span
+                class="text-orange-500">Calibrating daily effort...</span></div>
+            <div class="terminal-line" style="animation-delay: 1.2s"><span>></span> <span>Allocating {{
+                challengeAnswers()['daily_effort'] }} / day</span></div>
+            <div class="terminal-line" style="animation-delay: 1.5s"><span>></span> <span
+                class="text-white bg-green-600 px-1">ALL SYSTEMS GO</span></div>
+            <div class="animate-pulse mt-2">_</div>
+          </div>
+        </div>
+
+        <!-- Row 2: Mission Timeline -->
+        <div class="md:col-span-4 hud-card-white p-8">
+          <div class="scanline"></div>
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+              <h3 class="text-xs font-mono text-red-600 uppercase tracking-widest">Mission Timeline</h3>
+              <div class="countdown-timer text-3xl md:text-4xl text-black tracking-tighter">
+                T-MINUS <span class="text-red-600">{{ countdown() }}</span>
+              </div>
+            </div>
+            <div class="barcode w-32 opacity-50"></div>
+          </div>
+
+          <div class="flex items-center justify-between relative z-10">
+            <!-- Line Background -->
+            <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -z-10"></div>
+
+            @for (day of [1,2,3,4,5,6,7]; track day) {
+            <div class="flex flex-col items-center gap-3 timeline-node-white" [class.timeline-active]="day <= 1">
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-white"
+                [class.border-red-600]="day === 1" [class.border-gray-200]="day > 1">
+                @if(day === 1) {
+                <div class="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+                } @else {
+                <span class="text-[10px] text-gray-400">{{ day }}</span>
+                }
+              </div>
+              <span class="text-[10px] font-mono uppercase tracking-wider" [class.text-black]="day === 1"
+                [class.font-bold]="day === 1" [class.text-gray-400]="day > 1">
+                Day {{ day }}
+              </span>
+            </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Video & Avatar Section -->
+  <section id="video-avatar" class="py-24 bg-white text-black relative overflow-hidden border-t border-black/5">
+    <!-- Decorative Elements -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-[120px] opacity-50">
+      </div>
+      <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-black/5 rounded-full blur-[100px] opacity-30"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="grid lg:grid-cols-[1fr_1.2fr] gap-16 items-center max-w-7xl mx-auto">
+        <!-- Left Column - Video Placeholder -->
+        <div class="relative order-2 lg:order-1 space-y-8">
+          <div
+            class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-black/10 group cursor-pointer bg-gray-50 hover:border-red-600/50 transition-all duration-500">
+            <!-- Video Placeholder -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="text-center space-y-6 px-8">
+                <div
+                  class="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)]">
+                  <svg class="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <div class="space-y-2">
+                  <h3 class="text-3xl font-bold text-black tracking-tight">
+                    Meet <span class="text-red-600">RocketGoals</span>
+                  </h3>
+                  <p class="text-gray-500 font-medium text-lg">Watch the introduction</p>
                 </div>
               </div>
             </div>
+            <!-- Decorative overlay -->
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300">
+            </div>
+          </div>
+        </div>
 
-            <!-- Text Content -->
-            <div class="text-center space-y-6">
-              <div>
-                <h3 class="text-3xl font-black text-black mb-2">
-                  Talk to <span class="text-red-600">Jim</span>
-                </h3>
-                <p class="text-gray-500 font-medium text-lg leading-relaxed">
-                  Get your instant Rocket Goals Launch Plan. It's free and takes less than 3 minutes.
-                </p>
+        <!-- Right Column - Avatar -->
+        <div class="relative order-1 lg:order-2 flex flex-col items-center lg:items-start space-y-10">
+          <div class="relative group w-full max-w-md mx-auto lg:mx-0">
+            <!-- Pod Container -->
+            <div class="relative bg-white border border-black/10 rounded-[2.5rem] p-8 shadow-xl">
+              <!-- Avatar Image -->
+              <div class="relative z-10 flex justify-center mb-8">
+                <div class="relative">
+                  <div class="absolute -inset-4 bg-red-600/10 rounded-full blur-xl animate-pulse"></div>
+                  <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
+                    class="relative z-10 w-48 h-48 rounded-full object-cover border-4 border-white shadow-2xl" />
+                  <!-- Status Indicator Badge -->
+                  <div class="absolute bottom-2 right-2 z-20">
+                    @if (isSpeaking()) {
+                    <div
+                      class="flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full shadow-lg border border-white">
+                      <div class="flex gap-1 h-3 items-center">
+                        <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></div>
+                        <div class="w-1 h-2 bg-white rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></div>
+                        <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></div>
+                      </div>
+                      <span class="text-xs font-bold text-white uppercase tracking-wider">Speaking</span>
+                    </div>
+                    } @else {
+                    <div
+                      class="flex items-center gap-2 px-3 py-1.5 bg-green-500 rounded-full shadow-lg border border-white">
+                      <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      <span class="text-xs font-bold text-white uppercase tracking-wider">Online</span>
+                    </div>
+                    }
+                  </div>
+                </div>
               </div>
 
-              <button (click)="startConversation()" [disabled]="isConversationActive()"
-                class="w-full py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group">
-                <span>{{ isConversationActive() ? 'Conversation Active' : 'Start Conversation' }}</span>
-                @if (!isConversationActive()) {
-                <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
-                  stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
-                  </path>
+              <!-- Text Content -->
+              <div class="text-center space-y-6">
+                <div>
+                  <h3 class="text-3xl font-black text-black mb-2">
+                    Talk to <span class="text-red-600">Jim</span>
+                  </h3>
+                  <p class="text-gray-500 font-medium text-lg leading-relaxed">
+                    Get your instant Rocket Goals Launch Plan. It's free and takes less than 3 minutes.
+                  </p>
+                </div>
+
+                <button (click)="startConversation()" [disabled]="isConversationActive()"
+                  class="w-full py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group">
+                  <span>{{ isConversationActive() ? 'Conversation Active' : 'Start Conversation' }}</span>
+                  @if (!isConversationActive()) {
+                  <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+                    </path>
+                  </svg>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Conversation Modal -->
+  @if (isConversationActive()) {
+  <div class="fixed inset-0 bg-white/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+    (click)="closeConversation()">
+
+    <!-- Voice Mode View -->
+    @if (conversationMode() === 'voice') {
+    <div
+      class="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative border border-white/20"
+      (click)="$event.stopPropagation()">
+      <!-- Voice Mode Header -->
+      <div
+        class="flex items-center justify-between p-6 border-b border-black/5 bg-white/80 backdrop-blur-sm absolute top-0 left-0 right-0 z-20">
+        <!-- Timer Display -->
+        @if (isConversationActive() && conversationStartTime()) {
+        <div class="flex items-center gap-2 px-4 py-2 bg-black/5 rounded-full border border-black/5"
+          [class.bg-red-50]="conversationTimeRemaining() < 30"
+          [class.border-red-200]="conversationTimeRemaining() < 30">
+          <svg class="w-4 h-4 text-black/60" [class.text-red-600]="conversationTimeRemaining() < 30" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-bold tabular-nums text-black/80"
+            [class.text-red-600]="conversationTimeRemaining() < 30">
+            {{ formatTime(conversationTimeRemaining()) }}
+          </span>
+        </div>
+        }
+
+        <!-- Mode Toggle -->
+        <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-lg mx-auto shadow-inner">
+          <button (click)="conversationMode.set('voice')"
+            class="px-4 py-2 text-sm font-bold rounded-md transition-all duration-200 bg-white text-black shadow-sm">
+            Voice
+          </button>
+          <button (click)="conversationMode.set('chat')"
+            class="px-4 py-2 text-sm font-bold rounded-md transition-all duration-200 text-black/60 hover:text-black hover:bg-white/50">
+            Chat
+          </button>
+        </div>
+
+        <!-- Close button -->
+        <button (click)="closeConversation()"
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 hover:bg-red-600 hover:text-white transition-all duration-200 group">
+          <svg class="w-5 h-5 text-black/60 group-hover:text-white transition-colors" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Voice Mode Avatar Center -->
+      <div class="flex-1 flex items-center justify-center relative overflow-hidden bg-white pt-20 pb-32">
+        <!-- Animated Background Waves -->
+        <div class="absolute inset-0 voice-waves-container opacity-30">
+          <div class="voice-wave voice-wave-1 border-red-600"></div>
+          <div class="voice-wave voice-wave-2 border-red-600"></div>
+          <div class="voice-wave voice-wave-3 border-red-600"></div>
+        </div>
+
+        <!-- Avatar with enhanced animations -->
+        <div class="relative z-10 flex flex-col items-center">
+          <!-- Avatar Image -->
+          <div class="relative z-20">
+            <div class="absolute -inset-8 bg-red-600/10 rounded-full blur-2xl transform rotate-6 animate-pulse"
+              [class.opacity-100]="isSpeaking()" [class.opacity-0]="!isSpeaking()"></div>
+            <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
+              [class.avatar-listening]="isListening()"
+              class="w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-8 border-white shadow-2xl transform transition-all duration-500" />
+
+            <!-- Listening indicator -->
+            @if (isListening()) {
+            <div class="absolute -inset-4 flex items-center justify-center pointer-events-none">
+              <div class="listening-pulse border-red-600"></div>
+            </div>
+            }
+          </div>
+
+          <!-- Status Text -->
+          <div class="mt-10 text-center h-8">
+            @if (isSpeaking()) {
+            <p class="text-xl font-bold text-red-600 flex items-center justify-center gap-3 animate-fade-in">
+              <span class="flex gap-1 h-4 items-center">
+                <span class="w-1.5 h-4 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_infinite]"></span>
+                <span class="w-1.5 h-6 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></span>
+                <span class="w-1.5 h-4 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></span>
+              </span>
+              Speaking...
+            </p>
+            } @else if (isListening()) {
+            <p class="text-xl font-bold text-black flex items-center justify-center gap-3 animate-fade-in">
+              <span class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
+              Listening...
+            </p>
+            } @else if (isThinking()) {
+            <p class="text-xl font-bold text-black/60 flex items-center justify-center gap-3 animate-fade-in">
+              <span class="w-3 h-3 bg-black/40 rounded-full animate-bounce"></span>
+              Thinking...
+            </p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Voice Mode Input Area -->
+      <div class="absolute bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-md border-t border-black/5 z-30">
+        <div class="max-w-2xl mx-auto w-full">
+          <!-- Email Input Indicator -->
+          @if (isWaitingForEmail()) {
+          <div
+            class="mb-6 flex items-center gap-4 bg-blue-50 border border-blue-100 rounded-2xl p-5 animate-fade-in shadow-sm">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-base font-bold text-blue-900">Please enter your email address</p>
+              <p class="text-sm text-blue-700">To receive your Rocket Goals Launch Plan</p>
+            </div>
+          </div>
+          }
+
+          <!-- Download Button -->
+          @if (userEmail() && !isWaitingForEmail()) {
+          <div
+            class="mb-6 flex flex-col items-center gap-4 bg-green-50 border border-green-100 rounded-2xl p-6 animate-fade-in shadow-sm">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="text-lg font-bold text-green-900 text-center">Your Launch Plan is ready!</p>
+            <button (click)="downloadConversationAsPDF()"
+              class="px-8 py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-gray-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 w-full justify-center sm:w-auto">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download PDF
+            </button>
+          </div>
+          }
+
+          <div class="flex gap-4 items-center">
+            <!-- Microphone Button -->
+            @if (speechSupported()) {
+            <button (click)="isListening() ? stopListening() : startListening()"
+              [class.bg-red-600]="!isListening() && !isSpeaking()" [class.bg-black]="isSpeaking()"
+              [class.bg-red-700]="isListening()" [class.animate-pulse]="isListening()"
+              class="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex-shrink-0">
+              @if (isListening()) {
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                <path
+                  d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+              </svg>
+              } @else {
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              }
+            </button>
+            }
+
+            <div class="flex-1 relative">
+              <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
+                [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
+                [placeholder]="isWaitingForEmail() ? 'Enter your email...' : 'Type a message...'"
+                class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-black/10 transition-all text-lg font-medium placeholder:text-gray-400 disabled:opacity-50" />
+              <button (click)="sendMessage()"
+                [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-black text-white rounded-xl hover:bg-gray-800 transition-all disabled:opacity-0 disabled:pointer-events-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-                }
               </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+    }
 
-<!-- Conversation Modal -->
-@if (isConversationActive()) {
-<div class="fixed inset-0 bg-white/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
-  (click)="closeConversation()">
-
-  <!-- Voice Mode View -->
-  @if (conversationMode() === 'voice') {
-  <div
-    class="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative border border-white/20"
-    (click)="$event.stopPropagation()">
-    <!-- Voice Mode Header -->
-    <div
-      class="flex items-center justify-between p-6 border-b border-black/5 bg-white/80 backdrop-blur-sm absolute top-0 left-0 right-0 z-20">
-      <!-- Timer Display -->
-      @if (isConversationActive() && conversationStartTime()) {
-      <div class="flex items-center gap-2 px-4 py-2 bg-black/5 rounded-full border border-black/5"
-        [class.bg-red-50]="conversationTimeRemaining() < 30" [class.border-red-200]="conversationTimeRemaining() < 30">
-        <svg class="w-4 h-4 text-black/60" [class.text-red-600]="conversationTimeRemaining() < 30" fill="none"
-          stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span class="text-sm font-bold tabular-nums text-black/80"
-          [class.text-red-600]="conversationTimeRemaining() < 30">
-          {{ formatTime(conversationTimeRemaining()) }}
-        </span>
-      </div>
-      }
-
-      <!-- Mode Toggle -->
-      <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-lg mx-auto shadow-inner">
-        <button (click)="conversationMode.set('voice')"
-          class="px-4 py-2 text-sm font-bold rounded-md transition-all duration-200 bg-white text-black shadow-sm">
-          Voice
-        </button>
-        <button (click)="conversationMode.set('chat')"
-          class="px-4 py-2 text-sm font-bold rounded-md transition-all duration-200 text-black/60 hover:text-black hover:bg-white/50">
-          Chat
-        </button>
-      </div>
-
-      <!-- Close button -->
-      <button (click)="closeConversation()"
-        class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 hover:bg-red-600 hover:text-white transition-all duration-200 group">
-        <svg class="w-5 h-5 text-black/60 group-hover:text-white transition-colors" fill="none" stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Voice Mode Avatar Center -->
-    <div class="flex-1 flex items-center justify-center relative overflow-hidden bg-white pt-20 pb-32">
-      <!-- Animated Background Waves -->
-      <div class="absolute inset-0 voice-waves-container opacity-30">
-        <div class="voice-wave voice-wave-1 border-red-600"></div>
-        <div class="voice-wave voice-wave-2 border-red-600"></div>
-        <div class="voice-wave voice-wave-3 border-red-600"></div>
-      </div>
-
-      <!-- Avatar with enhanced animations -->
-      <div class="relative z-10 flex flex-col items-center">
-        <!-- Avatar Image -->
-        <div class="relative z-20">
-          <div class="absolute -inset-8 bg-red-600/10 rounded-full blur-2xl transform rotate-6 animate-pulse"
-            [class.opacity-100]="isSpeaking()" [class.opacity-0]="!isSpeaking()"></div>
-          <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-            [class.avatar-listening]="isListening()"
-            class="w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-8 border-white shadow-2xl transform transition-all duration-500" />
-
-          <!-- Listening indicator -->
-          @if (isListening()) {
-          <div class="absolute -inset-4 flex items-center justify-center pointer-events-none">
-            <div class="listening-pulse border-red-600"></div>
-          </div>
-          }
-        </div>
-
-        <!-- Status Text -->
-        <div class="mt-10 text-center h-8">
-          @if (isSpeaking()) {
-          <p class="text-xl font-bold text-red-600 flex items-center justify-center gap-3 animate-fade-in">
-            <span class="flex gap-1 h-4 items-center">
-              <span class="w-1.5 h-4 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_infinite]"></span>
-              <span class="w-1.5 h-6 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></span>
-              <span class="w-1.5 h-4 bg-red-600 rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></span>
-            </span>
-            Speaking...
-          </p>
-          } @else if (isListening()) {
-          <p class="text-xl font-bold text-black flex items-center justify-center gap-3 animate-fade-in">
-            <span class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
-            Listening...
-          </p>
-          } @else if (isThinking()) {
-          <p class="text-xl font-bold text-black/60 flex items-center justify-center gap-3 animate-fade-in">
-            <span class="w-3 h-3 bg-black/40 rounded-full animate-bounce"></span>
-            Thinking...
-          </p>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Voice Mode Input Area -->
-    <div class="absolute bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-md border-t border-black/5 z-30">
-      <div class="max-w-2xl mx-auto w-full">
-        <!-- Email Input Indicator -->
-        @if (isWaitingForEmail()) {
-        <div
-          class="mb-6 flex items-center gap-4 bg-blue-50 border border-blue-100 rounded-2xl p-5 animate-fade-in shadow-sm">
-          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+    <!-- Chat Mode View (Fallback/Alternative) -->
+    @if (conversationMode() === 'chat') {
+    <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden"
+      (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-5 border-b border-black/5 bg-white">
+        <div class="flex items-center gap-4 flex-1">
+          <div class="relative">
+            <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
+              class="w-12 h-12 rounded-full object-cover border-2 border-red-600 shadow-sm" />
           </div>
           <div class="flex-1">
-            <p class="text-base font-bold text-blue-900">Please enter your email address</p>
-            <p class="text-sm text-blue-700">To receive your Rocket Goals Launch Plan</p>
+            <h3 class="text-lg font-bold text-black">Jim</h3>
+            <p class="text-xs text-black/60 flex items-center gap-2 font-medium">
+              @if (isThinking()) {
+              <span class="flex items-center gap-1 text-black">
+                <span class="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></span>
+                Thinking...
+              </span>
+              } @else {
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              Online
+              }
+            </p>
           </div>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-lg mr-4">
+          <button (click)="conversationMode.set('voice')"
+            class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 text-black/60 hover:text-black hover:bg-white/50">
+            Voice
+          </button>
+          <button (click)="conversationMode.set('chat')"
+            class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 bg-white text-black shadow-sm">
+            Chat
+          </button>
+        </div>
+
+        <!-- Close button -->
+        <button (click)="closeConversation()"
+          class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200">
+          <svg class="w-5 h-5 text-black/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Conversation History -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
+        @if (errorMessage()) {
+        <div class="bg-red-50 border border-red-100 rounded-xl p-4 mb-4 animate-fade-in">
+          <p class="text-sm text-red-600 font-medium">{{ errorMessage() }}</p>
         </div>
         }
 
-        <!-- Download Button -->
-        @if (userEmail() && !isWaitingForEmail()) {
-        <div
-          class="mb-6 flex flex-col items-center gap-4 bg-green-50 border border-green-100 rounded-2xl p-6 animate-fade-in shadow-sm">
-          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p class="text-lg font-bold text-green-900 text-center">Your Launch Plan is ready!</p>
-          <button (click)="downloadConversationAsPDF()"
-            class="px-8 py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-gray-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 w-full justify-center sm:w-auto">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download PDF
-          </button>
-        </div>
-        }
-
-        <div class="flex gap-4 items-center">
-          <!-- Microphone Button -->
-          @if (speechSupported()) {
-          <button (click)="isListening() ? stopListening() : startListening()"
-            [class.bg-red-600]="!isListening() && !isSpeaking()" [class.bg-black]="isSpeaking()"
-            [class.bg-red-700]="isListening()" [class.animate-pulse]="isListening()"
-            class="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex-shrink-0">
-            @if (isListening()) {
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path
-                d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-            </svg>
-            } @else {
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            }
-          </button>
-          }
-
-          <div class="flex-1 relative">
-            <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
-              [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
-              [placeholder]="isWaitingForEmail() ? 'Enter your email...' : 'Type a message...'"
-              class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-black/10 transition-all text-lg font-medium placeholder:text-gray-400 disabled:opacity-50" />
-            <button (click)="sendMessage()"
-              [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-black text-white rounded-xl hover:bg-gray-800 transition-all disabled:opacity-0 disabled:pointer-events-none">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        @if (conversationHistory.length === 0) {
+        <div class="flex items-center justify-center h-full py-12 opacity-50">
+          <div class="text-center space-y-3">
+            <div class="w-16 h-16 mx-auto bg-black/5 rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-black/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-            </button>
+            </div>
+            <p class="text-black/40 text-sm font-medium">Start chatting with Jim</p>
           </div>
+        </div>
+        }
+
+        @for (item of conversationHistory; track $index) {
+        <div class="flex gap-4" [class.justify-end]="item.role === 'user'"
+          [class.flex-row-reverse]="item.role === 'user'">
+          @if (item.role === 'avatar') {
+          <div class="flex-shrink-0">
+            <img src="/assets/jim-pic.png" alt="Jim"
+              class="w-10 h-10 rounded-full object-cover border border-black/5 shadow-sm" />
+          </div>
+          }
+          <div
+            [class]="item.role === 'user' 
+                ? 'bg-black text-white rounded-2xl rounded-tr-sm px-6 py-4 max-w-[80%] shadow-lg' 
+                : 'bg-white text-black rounded-2xl rounded-tl-sm px-6 py-4 max-w-[80%] shadow-sm border border-black/5'">
+            <p class="text-base leading-relaxed font-medium" [innerHTML]="item.role === 'avatar' 
+              ? formatMessage(item.displayedMessage !== undefined ? item.displayedMessage : item.message) 
+              : item.message"></p>
+          </div>
+        </div>
+        }
+
+        @if (isThinking()) {
+        <div class="flex gap-4">
+          <div class="flex-shrink-0">
+            <img src="/assets/jim-pic.png" alt="Jim"
+              class="w-10 h-10 rounded-full object-cover border border-black/5 shadow-sm" />
+          </div>
+          <div class="bg-white text-black rounded-2xl rounded-tl-sm px-6 py-4 shadow-sm border border-black/5">
+            <div class="flex gap-1.5">
+              <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+              <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+              <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Input Area -->
+      <div class="p-5 border-t border-black/5 bg-white">
+        <div class="flex gap-3">
+          <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
+            [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
+            [placeholder]="isWaitingForEmail() ? 'Enter your email...' : 'Type your message...'"
+            class="flex-1 px-5 py-4 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-black/10 transition-all font-medium" />
+          <button (click)="sendMessage()"
+            [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
+            class="px-6 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
+            Send
+          </button>
         </div>
       </div>
     </div>
+    }
   </div>
   }
 
-  <!-- Chat Mode View (Fallback/Alternative) -->
-  @if (conversationMode() === 'chat') {
-  <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden"
-    (click)="$event.stopPropagation()">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-5 border-b border-black/5 bg-white">
-      <div class="flex items-center gap-4 flex-1">
-        <div class="relative">
-          <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-            class="w-12 h-12 rounded-full object-cover border-2 border-red-600 shadow-sm" />
+  <!-- Features Section -->
+  <section id="features" class="py-24 bg-white relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-black/10 to-transparent">
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="text-center mb-20">
+        <h2 class="text-4xl md:text-5xl font-black text-black mb-6 tracking-tight">
+          EVERYTHING YOU NEED TO
+          <span class="text-red-600 block mt-2">DOMINATE</span>
+        </h2>
+        <p class="text-xl text-black/60 max-w-2xl mx-auto font-medium">
+          Powerful tools designed to help you achieve your goals faster and more effectively than ever before.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
+          <div
+            class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
+            <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Track Progress</h3>
+          <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
+            Monitor your goals with beautiful visualizations, detailed analytics, and real-time progress tracking that
+            keeps you honest.
+          </p>
         </div>
-        <div class="flex-1">
-          <h3 class="text-lg font-bold text-black">Jim</h3>
-          <p class="text-xs text-black/60 flex items-center gap-2 font-medium">
-            @if (isThinking()) {
-            <span class="flex items-center gap-1 text-black">
-              <span class="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></span>
-              Thinking...
-            </span>
-            } @else {
-            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-            Online
-            }
+
+        <!-- Feature 2 -->
+        <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
+          <div
+            class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
+            <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Stay Motivated</h3>
+          <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
+            Get smart reminders, celebrate milestones, and stay inspired with personalized motivation tools powered by
+            AI.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
+          <div
+            class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
+            <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Achieve Faster</h3>
+          <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
+            Break down big goals into manageable tasks, set priorities, and accelerate your path to success with
+            proven
+            frameworks.
           </p>
         </div>
       </div>
-
-      <!-- Mode Toggle -->
-      <div class="flex items-center gap-1 p-1 bg-gray-100 rounded-lg mr-4">
-        <button (click)="conversationMode.set('voice')"
-          class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 text-black/60 hover:text-black hover:bg-white/50">
-          Voice
-        </button>
-        <button (click)="conversationMode.set('chat')"
-          class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 bg-white text-black shadow-sm">
-          Chat
-        </button>
-      </div>
-
-      <!-- Close button -->
-      <button (click)="closeConversation()"
-        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all duration-200">
-        <svg class="w-5 h-5 text-black/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
     </div>
+  </section>
 
-    <!-- Conversation History -->
-    <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
-      @if (errorMessage()) {
-      <div class="bg-red-50 border border-red-100 rounded-xl p-4 mb-4 animate-fade-in">
-        <p class="text-sm text-red-600 font-medium">{{ errorMessage() }}</p>
+  <!-- Social Proof Section -->
+  <section class="py-20 md:py-32 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-black text-black mb-4">
+          Trusted by <span class="text-red-600">Thousands</span>
+        </h2>
+        <p class="text-xl text-black/70 max-w-2xl mx-auto">
+          Join a community of achievers who are transforming their lives every day.
+        </p>
       </div>
-      }
 
-      @if (conversationHistory.length === 0) {
-      <div class="flex items-center justify-center h-full py-12 opacity-50">
-        <div class="text-center space-y-3">
-          <div class="w-16 h-16 mx-auto bg-black/5 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-black/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Testimonial 1 -->
+        <div
+          class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
+              JD
+            </div>
+            <div>
+              <div class="font-bold text-black text-lg">John Doe</div>
+              <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Entrepreneur</div>
+            </div>
           </div>
-          <p class="text-black/40 text-sm font-medium">Start chatting with Jim</p>
+          <p class="text-black/80 leading-relaxed text-lg font-medium">
+            "RocketGoals transformed how I approach my business goals. I've achieved more in 3 months than I did in
+            the
+            previous year."
+          </p>
         </div>
-      </div>
-      }
 
-      @for (item of conversationHistory; track $index) {
-      <div class="flex gap-4" [class.justify-end]="item.role === 'user'"
-        [class.flex-row-reverse]="item.role === 'user'">
-        @if (item.role === 'avatar') {
-        <div class="flex-shrink-0">
-          <img src="/assets/jim-pic.png" alt="Jim"
-            class="w-10 h-10 rounded-full object-cover border border-black/5 shadow-sm" />
-        </div>
-        }
+        <!-- Testimonial 2 -->
         <div
-          [class]="item.role === 'user' 
-                ? 'bg-black text-white rounded-2xl rounded-tr-sm px-6 py-4 max-w-[80%] shadow-lg' 
-                : 'bg-white text-black rounded-2xl rounded-tl-sm px-6 py-4 max-w-[80%] shadow-sm border border-black/5'">
-          <p class="text-base leading-relaxed font-medium" [innerHTML]="item.role === 'avatar' 
-              ? formatMessage(item.displayedMessage !== undefined ? item.displayedMessage : item.message) 
-              : item.message"></p>
-        </div>
-      </div>
-      }
-
-      @if (isThinking()) {
-      <div class="flex gap-4">
-        <div class="flex-shrink-0">
-          <img src="/assets/jim-pic.png" alt="Jim"
-            class="w-10 h-10 rounded-full object-cover border border-black/5 shadow-sm" />
-        </div>
-        <div class="bg-white text-black rounded-2xl rounded-tl-sm px-6 py-4 shadow-sm border border-black/5">
-          <div class="flex gap-1.5">
-            <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-            <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-            <div class="w-2 h-2 bg-black/40 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+          class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
+              SM
+            </div>
+            <div>
+              <div class="font-bold text-black text-lg">Sarah Miller</div>
+              <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Fitness Coach</div>
+            </div>
           </div>
+          <p class="text-black/80 leading-relaxed text-lg font-medium">
+            "The progress tracking features are incredible. I can see exactly where I'm succeeding and where I need to
+            focus more."
+          </p>
         </div>
-      </div>
-      }
-    </div>
 
-    <!-- Input Area -->
-    <div class="p-5 border-t border-black/5 bg-white">
-      <div class="flex gap-3">
-        <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()"
-          [disabled]="isListening() || (!!userEmail() && !isWaitingForEmail())"
-          [placeholder]="isWaitingForEmail() ? 'Enter your email...' : 'Type your message...'"
-          class="flex-1 px-5 py-4 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-black/10 transition-all font-medium" />
-        <button (click)="sendMessage()"
-          [disabled]="!userMessage.trim() || isListening() || (!!userEmail() && !isWaitingForEmail())"
-          class="px-6 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
-          Send
-        </button>
-      </div>
-    </div>
-  </div>
-  }
-</div>
-}
-
-<!-- Features Section -->
-<section id="features" class="py-24 bg-white relative overflow-hidden">
-  <!-- Background decoration -->
-  <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-black/10 to-transparent">
-  </div>
-
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="text-center mb-20">
-      <h2 class="text-4xl md:text-5xl font-black text-black mb-6 tracking-tight">
-        EVERYTHING YOU NEED TO
-        <span class="text-red-600 block mt-2">DOMINATE</span>
-      </h2>
-      <p class="text-xl text-black/60 max-w-2xl mx-auto font-medium">
-        Powerful tools designed to help you achieve your goals faster and more effectively than ever before.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-8">
-      <!-- Feature 1 -->
-      <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
+        <!-- Testimonial 3 -->
         <div
-          class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
-          <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+          class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
+              MC
+            </div>
+            <div>
+              <div class="font-bold text-black text-lg">Mike Chen</div>
+              <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Software Developer</div>
+            </div>
+          </div>
+          <p class="text-black/80 leading-relaxed text-lg font-medium">
+            "Best goal-setting platform I've used. Clean interface, powerful features, and it actually helps me stay
+            accountable."
+          </p>
         </div>
-        <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Track Progress</h3>
-        <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
-          Monitor your goals with beautiful visualizations, detailed analytics, and real-time progress tracking that
-          keeps you honest.
-        </p>
-      </div>
-
-      <!-- Feature 2 -->
-      <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
-        <div
-          class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
-          <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Stay Motivated</h3>
-        <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
-          Get smart reminders, celebrate milestones, and stay inspired with personalized motivation tools powered by
-          AI.
-        </p>
-      </div>
-
-      <!-- Feature 3 -->
-      <div class="hover-card group bg-white border border-black/10 rounded-3xl p-10 relative overflow-hidden">
-        <div
-          class="icon-container w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8 transition-colors duration-400 group-hover:bg-white group-hover:text-red-600">
-          <svg class="w-8 h-8 transition-colors duration-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <h3 class="text-2xl font-bold text-black mb-4 transition-colors duration-400">Achieve Faster</h3>
-        <p class="text-black/60 leading-relaxed font-medium transition-colors duration-400">
-          Break down big goals into manageable tasks, set priorities, and accelerate your path to success with
-          proven
-          frameworks.
-        </p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Social Proof Section -->
-<section class="py-20 md:py-32 bg-white">
-  <div class="container mx-auto px-4">
-    <div class="text-center mb-16">
-      <h2 class="text-4xl md:text-5xl font-black text-black mb-4">
-        Trusted by <span class="text-red-600">Thousands</span>
-      </h2>
-      <p class="text-xl text-black/70 max-w-2xl mx-auto">
-        Join a community of achievers who are transforming their lives every day.
-      </p>
+  <!-- Pricing Section (inline) -->
+  <section id="pricing" class="py-24 md:py-32 bg-white text-black relative overflow-hidden border-t border-black/5">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+      <div class="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[140px]">
+      </div>
+      <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px]">
+      </div>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      <!-- Testimonial 1 -->
+    <div class="container mx-auto px-4 relative z-10 space-y-14">
+      <div class="max-w-4xl mx-auto text-center space-y-4">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200">
+          <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+          <span class="text-xs font-bold text-gray-600 tracking-wider uppercase">Pricing</span>
+        </div>
+        <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">Pick your mission</h2>
+        <p class="text-lg md:text-xl text-black/60">Emotionally intelligent reminders and accountability for every
+          stage.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Launch -->
+        <div class="pricing-card">
+          <div class="card-top">
+            <div class="icon bg-gray-900 text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+              </svg>
+            </div>
+            <div class="badge bg-gray-900 text-white">Free</div>
+          </div>
+          <div class="space-y-2">
+            <div class="title">Launch Mode</div>
+            <div class="price">Free</div>
+            <div class="sub">Activate momentum</div>
+            <p class="desc">Early wins and streaks to feel momentum fast.</p>
+          </div>
+          <ul class="features">
+            <li><span></span>Daily alignment + micro-wins</li>
+            <li><span></span>Mood slider + weekly reset</li>
+            <li><span></span>Starter dashboard, streaks, mini Blast</li>
+          </ul>
+          <a routerLink="/signup" class="btn-primary">Start Free</a>
+        </div>
+
+        <!-- Moonshot -->
+        <div class="pricing-card highlight">
+          <div class="card-top">
+            <div class="icon bg-red-600 text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l5 5-5 5-5-5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12l-2 8 2-2 2 2-2-8z" />
+              </svg>
+            </div>
+            <div class="badge bg-black text-white">Most Popular</div>
+          </div>
+          <div class="space-y-2">
+            <div class="title text-red-600">Moonshot</div>
+            <div class="price">$9.99</div>
+            <div class="sub">per month</div>
+            <p class="desc">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
+          </div>
+          <ul class="features">
+            <li><span></span>Custom reminders + AI encouragement</li>
+            <li><span></span>Weekly PDF + bottleneck nudges</li>
+            <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
+          </ul>
+          <a routerLink="/signup" class="btn-accent">Start Moonshot</a>
+        </div>
+
+        <!-- Interplanetary -->
+        <div class="pricing-card">
+          <div class="card-top">
+            <div class="icon bg-gradient-to-br from-black via-gray-800 to-red-600 text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div class="badge bg-red-600 text-white">Performance</div>
+          </div>
+          <div class="space-y-2">
+            <div class="title">Interplanetary</div>
+            <div class="price">$29.99</div>
+            <div class="sub">per month</div>
+            <p class="desc">Predictive, multi-channel coaching for high-performers.</p>
+          </div>
+          <ul class="features">
+            <li><span></span>App + Email + SMS reminders</li>
+            <li><span></span>Personality-coached, predictive nudges</li>
+            <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
+          </ul>
+          <a routerLink="/signup" class="btn-primary">Upgrade to Interplanetary</a>
+        </div>
+
+        <!-- Galactic -->
+        <div class="pricing-card">
+          <div class="card-top">
+            <div class="icon bg-black text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l7 7 7-7M5 21l7-7 7 7" />
+              </svg>
+            </div>
+            <div class="badge bg-gray-900 text-white">Elite</div>
+          </div>
+          <div class="space-y-2">
+            <div class="title text-gray-800">Galactic</div>
+            <div class="price">$499</div>
+            <div class="sub">per month</div>
+            <p class="desc">Hybrid human + AI leadership system with elite accountability.</p>
+          </div>
+          <ul class="features">
+            <li><span></span>Mentor nudges + leadership dashboards</li>
+            <li><span></span>Build templates, lead pods/masterminds</li>
+            <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
+          </ul>
+          <a routerLink="/contact" class="btn-outline">Talk to Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Styles -->
+  <style>
+    .pricing-card {
+      position: relative;
+      padding: 32px;
+      border-radius: 24px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transition: all 0.25s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    .pricing-card.highlight {
+      border: 1px solid rgba(220, 38, 38, 0.15);
+      box-shadow: 0 20px 45px rgba(220, 38, 38, 0.12);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 245, 245, 0.95));
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .price {
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(0, 0, 0, 0.45);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .desc {
+      color: rgba(0, 0, 0, 0.65);
+      font-weight: 600;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
+    .features {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(0, 0, 0, 0.8);
+      font-weight: 600;
+    }
+
+    .features li span {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #dc2626;
+      box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.08);
+      flex-shrink: 0;
+    }
+
+    .btn-primary,
+    .btn-accent,
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-weight: 800;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: black;
+      color: white;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: #111;
+      transform: translateY(-2px);
+    }
+
+    .btn-accent {
+      background: #dc2626;
+      color: white;
+      box-shadow: 0 12px 30px rgba(220, 38, 38, 0.18);
+    }
+
+    .btn-accent:hover {
+      background: #b91c1c;
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      color: black;
+      background: white;
+    }
+
+    .btn-outline:hover {
+      background: black;
+      color: white;
+      transform: translateY(-2px);
+    }
+  </style>
+
+  <!-- CTA Section -->
+  <section id="cta" class="py-24 md:py-32 bg-white text-black relative overflow-hidden border-t border-black/5">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
       <div
-        class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
-        <div class="flex items-center mb-6">
-          <div
-            class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
-            JD
-          </div>
-          <div>
-            <div class="font-bold text-black text-lg">John Doe</div>
-            <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Entrepreneur</div>
-          </div>
-        </div>
-        <p class="text-black/80 leading-relaxed text-lg font-medium">
-          "RocketGoals transformed how I approach my business goals. I've achieved more in 3 months than I did in
-          the
-          previous year."
-        </p>
+        class="absolute top-0 left-0 w-[800px] h-[800px] bg-red-600/10 rounded-full blur-[120px] transform -translate-x-1/2 -translate-y-1/2">
       </div>
-
-      <!-- Testimonial 2 -->
       <div
-        class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
-        <div class="flex items-center mb-6">
-          <div
-            class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
-            SM
-          </div>
-          <div>
-            <div class="font-bold text-black text-lg">Sarah Miller</div>
-            <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Fitness Coach</div>
-          </div>
-        </div>
-        <p class="text-black/80 leading-relaxed text-lg font-medium">
-          "The progress tracking features are incredible. I can see exactly where I'm succeeding and where I need to
-          focus more."
+        class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-black/5 rounded-full blur-[100px] transform translate-x-1/3 translate-y-1/3">
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="max-w-4xl mx-auto text-center space-y-10">
+        <h2 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none text-black">
+          Ready to Launch <br />
+          <span class="text-red-600">Your Success?</span>
+        </h2>
+        <p class="text-xl md:text-2xl text-gray-500 leading-relaxed max-w-2xl mx-auto">
+          Join thousands of achievers who are already transforming their dreams into reality. Start your journey
+          today.
         </p>
-      </div>
-
-      <!-- Testimonial 3 -->
-      <div
-        class="bg-white border-2 border-black/5 rounded-[2rem] p-10 hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl">
-        <div class="flex items-center mb-6">
-          <div
-            class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl mr-4 shadow-md">
-            MC
-          </div>
-          <div>
-            <div class="font-bold text-black text-lg">Mike Chen</div>
-            <div class="text-red-600 text-sm font-bold uppercase tracking-wider">Software Developer</div>
-          </div>
+        <div class="flex flex-col sm:flex-row gap-6 justify-center pt-4">
+          <a routerLink="/signup"
+            class="px-12 py-6 bg-red-600 text-white font-bold text-xl rounded-full hover:bg-black transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)] hover:shadow-black/20 hover:-translate-y-1 inline-flex items-center justify-center">
+            Get Started Free
+          </a>
+          <button
+            class="px-12 py-6 bg-white text-black font-bold text-xl rounded-full border-2 border-black/10 hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1">
+            Watch Demo
+          </button>
         </div>
-        <p class="text-black/80 leading-relaxed text-lg font-medium">
-          "Best goal-setting platform I've used. Clean interface, powerful features, and it actually helps me stay
-          accountable."
-        </p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Pricing Section (inline) -->
-<section id="pricing" class="py-24 md:py-32 bg-white text-black relative overflow-hidden border-t border-black/5">
-  <div class="absolute inset-0 opacity-20 pointer-events-none">
-    <div class="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[140px]"></div>
-    <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px]"></div>
-  </div>
-
-  <div class="container mx-auto px-4 relative z-10 space-y-14">
-    <div class="max-w-4xl mx-auto text-center space-y-4">
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200">
-        <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-        <span class="text-xs font-bold text-gray-600 tracking-wider uppercase">Pricing</span>
+  <!-- Footer -->
+  <footer class="bg-white border-t border-black/5 py-20">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-12 mb-16">
+        <div class="col-span-1 md:col-span-1">
+          <a href="#" class="block mb-6">
+            <img src="/assets/rocket-goals.png" alt="RocketGoals Logo" class="w-16 h-16 object-contain" />
+          </a>
+          <p class="text-black/60 text-sm leading-relaxed font-medium">
+            Power your impossible. <br />Transform your goals into achievements with the world's most advanced
+            goal-tracking platform.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-bold text-black text-lg mb-6">Product</h4>
+          <ul class="space-y-4 text-black/60 font-medium">
+            <li><a href="#" class="hover:text-red-600 transition-colors">Features</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Pricing</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Updates</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Beta Access</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-black text-lg mb-6">Company</h4>
+          <ul class="space-y-4 text-black/60 font-medium">
+            <li><a href="#" class="hover:text-red-600 transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Press Kit</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-black text-lg mb-6">Support</h4>
+          <ul class="space-y-4 text-black/60 font-medium">
+            <li><a href="#" class="hover:text-red-600 transition-colors">Help Center</a></li>
+            <li><a routerLink="/contact" class="hover:text-red-600 transition-colors">Contact Us</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
       </div>
-      <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">Pick your mission</h2>
-      <p class="text-lg md:text-xl text-black/60">Emotionally intelligent reminders and accountability for every stage.</p>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-      <!-- Launch -->
-      <div class="pricing-card">
-        <div class="card-top">
-          <div class="icon bg-gray-900 text-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+      <div class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-black/40 text-sm font-medium">&copy; 2025 RocketGoals. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="https://x.com/RocketGoals" target="_blank" rel="noopener noreferrer"
+            class="text-black/40 hover:text-black transition-colors">
+            <span class="sr-only">Twitter</span>
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
             </svg>
-          </div>
-          <div class="badge bg-gray-900 text-white">Free</div>
-        </div>
-        <div class="space-y-2">
-          <div class="title">Launch Mode</div>
-          <div class="price">Free</div>
-          <div class="sub">Activate momentum</div>
-          <p class="desc">Early wins and streaks to feel momentum fast.</p>
-        </div>
-        <ul class="features">
-          <li><span></span>Daily alignment + micro-wins</li>
-          <li><span></span>Mood slider + weekly reset</li>
-          <li><span></span>Starter dashboard, streaks, mini Blast</li>
-        </ul>
-        <a routerLink="/signup" class="btn-primary">Start Free</a>
-      </div>
-
-      <!-- Moonshot -->
-      <div class="pricing-card highlight">
-        <div class="card-top">
-          <div class="icon bg-red-600 text-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l5 5-5 5-5-5z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12l-2 8 2-2 2 2-2-8z" />
+          </a>
+          <a href="#" class="text-black/40 hover:text-black transition-colors">
+            <span class="sr-only">GitHub</span>
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd" />
             </svg>
-          </div>
-          <div class="badge bg-black text-white">Most Popular</div>
+          </a>
         </div>
-        <div class="space-y-2">
-          <div class="title text-red-600">Moonshot</div>
-          <div class="price">$9.99</div>
-          <div class="sub">per month</div>
-          <p class="desc">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
-        </div>
-        <ul class="features">
-          <li><span></span>Custom reminders + AI encouragement</li>
-          <li><span></span>Weekly PDF + bottleneck nudges</li>
-          <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
-        </ul>
-        <a routerLink="/signup" class="btn-accent">Start Moonshot</a>
-      </div>
-
-      <!-- Interplanetary -->
-      <div class="pricing-card">
-        <div class="card-top">
-          <div class="icon bg-gradient-to-br from-black via-gray-800 to-red-600 text-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
-          <div class="badge bg-red-600 text-white">Performance</div>
-        </div>
-        <div class="space-y-2">
-          <div class="title">Interplanetary</div>
-          <div class="price">$29.99</div>
-          <div class="sub">per month</div>
-          <p class="desc">Predictive, multi-channel coaching for high-performers.</p>
-        </div>
-        <ul class="features">
-          <li><span></span>App + Email + SMS reminders</li>
-          <li><span></span>Personality-coached, predictive nudges</li>
-          <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
-        </ul>
-        <a routerLink="/signup" class="btn-primary">Upgrade to Interplanetary</a>
-      </div>
-
-      <!-- Galactic -->
-      <div class="pricing-card">
-        <div class="card-top">
-          <div class="icon bg-black text-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l7 7 7-7M5 21l7-7 7 7" />
-            </svg>
-          </div>
-          <div class="badge bg-gray-900 text-white">Elite</div>
-        </div>
-        <div class="space-y-2">
-          <div class="title text-gray-800">Galactic</div>
-          <div class="price">$799</div>
-          <div class="sub">per month</div>
-          <p class="desc">Hybrid human + AI leadership system with elite accountability.</p>
-        </div>
-        <ul class="features">
-          <li><span></span>Mentor nudges + leadership dashboards</li>
-          <li><span></span>Build templates, lead pods/masterminds</li>
-          <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
-        </ul>
-        <a routerLink="/contact" class="btn-outline">Talk to Sales</a>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- Pricing Styles -->
-<style>
-  .pricing-card {
-    position: relative;
-    padding: 32px;
-    border-radius: 24px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background: white;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    transition: all 0.25s ease;
-  }
-  .pricing-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-    border-color: rgba(0,0,0,0.12);
-  }
-  .pricing-card.highlight {
-    border: 1px solid rgba(220,38,38,0.15);
-    box-shadow: 0 20px 45px rgba(220,38,38,0.12);
-    background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(255,245,245,0.95));
-  }
-  .card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-  }
-  .badge {
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .title {
-    font-size: 14px;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-  .price {
-    font-size: 40px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-  }
-  .sub {
-    font-size: 12px;
-    font-weight: 700;
-    color: rgba(0,0,0,0.45);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-  .desc {
-    color: rgba(0,0,0,0.65);
-    font-weight: 600;
-    line-height: 1.5;
-    margin-top: 6px;
-  }
-  .features {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 12px;
-  }
-  .features li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: rgba(0,0,0,0.8);
-    font-weight: 600;
-  }
-  .features li span {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: #dc2626;
-    box-shadow: 0 0 0 6px rgba(220,38,38,0.08);
-    flex-shrink: 0;
-  }
-  .btn-primary, .btn-accent, .btn-outline {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 14px;
-    font-weight: 800;
-    transition: all 0.2s ease;
-    text-decoration: none;
-  }
-  .btn-primary {
-    background: black;
-    color: white;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-  }
-  .btn-primary:hover { background: #111; transform: translateY(-2px); }
-  .btn-accent {
-    background: #dc2626;
-    color: white;
-    box-shadow: 0 12px 30px rgba(220,38,38,0.18);
-  }
-  .btn-accent:hover { background: #b91c1c; transform: translateY(-2px); }
-  .btn-outline {
-    border: 2px solid rgba(0,0,0,0.1);
-    color: black;
-    background: white;
-  }
-  .btn-outline:hover { background: black; color: white; transform: translateY(-2px); }
-</style>
-
-<!-- CTA Section -->
-<section id="cta" class="py-24 md:py-32 bg-white text-black relative overflow-hidden border-t border-black/5">
-  <div class="absolute inset-0 opacity-20 pointer-events-none">
-    <div
-      class="absolute top-0 left-0 w-[800px] h-[800px] bg-red-600/10 rounded-full blur-[120px] transform -translate-x-1/2 -translate-y-1/2">
-    </div>
-    <div
-      class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-black/5 rounded-full blur-[100px] transform translate-x-1/3 translate-y-1/3">
-    </div>
-  </div>
-
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="max-w-4xl mx-auto text-center space-y-10">
-      <h2 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none text-black">
-        Ready to Launch <br />
-        <span class="text-red-600">Your Success?</span>
-      </h2>
-      <p class="text-xl md:text-2xl text-gray-500 leading-relaxed max-w-2xl mx-auto">
-        Join thousands of achievers who are already transforming their dreams into reality. Start your journey
-        today.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-6 justify-center pt-4">
-        <a routerLink="/signup"
-          class="px-12 py-6 bg-red-600 text-white font-bold text-xl rounded-full hover:bg-black transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)] hover:shadow-black/20 hover:-translate-y-1 inline-flex items-center justify-center">
-          Get Started Free
-        </a>
-        <button
-          class="px-12 py-6 bg-white text-black font-bold text-xl rounded-full border-2 border-black/10 hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1">
-          Watch Demo
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="bg-white border-t border-black/5 py-20">
-  <div class="container mx-auto px-4">
-    <div class="grid md:grid-cols-4 gap-12 mb-16">
-      <div class="col-span-1 md:col-span-1">
-        <a href="#" class="block mb-6">
-          <img src="/assets/rocket-goals.png" alt="RocketGoals Logo" class="w-16 h-16 object-contain" />
-        </a>
-        <p class="text-black/60 text-sm leading-relaxed font-medium">
-          Power your impossible. <br />Transform your goals into achievements with the world's most advanced
-          goal-tracking platform.
-        </p>
-      </div>
-      <div>
-        <h4 class="font-bold text-black text-lg mb-6">Product</h4>
-        <ul class="space-y-4 text-black/60 font-medium">
-          <li><a href="#" class="hover:text-red-600 transition-colors">Features</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Pricing</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Updates</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Beta Access</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold text-black text-lg mb-6">Company</h4>
-        <ul class="space-y-4 text-black/60 font-medium">
-          <li><a href="#" class="hover:text-red-600 transition-colors">About Us</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Careers</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Blog</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Press Kit</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold text-black text-lg mb-6">Support</h4>
-        <ul class="space-y-4 text-black/60 font-medium">
-          <li><a href="#" class="hover:text-red-600 transition-colors">Help Center</a></li>
-          <li><a routerLink="/contact" class="hover:text-red-600 transition-colors">Contact Us</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Privacy Policy</a></li>
-          <li><a href="#" class="hover:text-red-600 transition-colors">Terms of Service</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="text-black/40 text-sm font-medium">&copy; 2025 RocketGoals. All rights reserved.</p>
-      <div class="flex gap-6">
-        <a href="https://x.com/RocketGoals" target="_blank" rel="noopener noreferrer" class="text-black/40 hover:text-black transition-colors">
-          <span class="sr-only">Twitter</span>
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path
-              d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-          </svg>
-        </a>
-        <a href="#" class="text-black/40 hover:text-black transition-colors">
-          <span class="sr-only">GitHub</span>
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path fill-rule="evenodd"
-              d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-              clip-rule="evenodd" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</footer>
+  </footer>
 </div>
 
 <router-outlet class="hidden" />
@@ -1270,246 +1308,248 @@
       <!-- Questions -->
       @if (currentChallengeStep() < challengeQuestions.length) { @let
         question=challengeQuestions[currentChallengeStep()]; <div class="space-y-12 animate-slide-up">
-          <div class="text-center space-y-6">
-            <div
-              class="inline-block px-4 py-1 rounded-full border border-gray-200 bg-white text-gray-500 text-xs font-bold tracking-[0.2em] uppercase mb-4">
-              Phase {{ currentChallengeStep() + 1 }} / {{ challengeQuestions.length }}
-            </div>
-            <h3 class="text-4xl md:text-6xl font-black text-black tracking-tight leading-tight">
-              {{ question.title }}
-            </h3>
-            <p class="text-xl md:text-2xl text-gray-500 font-light tracking-wide">
-              {{ question.subtitle }}
-              @if (question.type === 'multi-select') {
-              <span class="block text-sm mt-3 text-red-600 font-mono tracking-wider uppercase opacity-80">[ Select up to
-                {{ question.maxSelect }} ]</span>
-              }
-            </p>
+        <div class="text-center space-y-6">
+          <div
+            class="inline-block px-4 py-1 rounded-full border border-gray-200 bg-white text-gray-500 text-xs font-bold tracking-[0.2em] uppercase mb-4">
+            Phase {{ currentChallengeStep() + 1 }} / {{ challengeQuestions.length }}
           </div>
-
-          @let options = question.id === 'goal_title' ? goalTitleOptions() : question.options;
-          <div class="grid gap-6" [class.md:grid-cols-2]="options.length > 4" [class.md:grid-cols-1]="options.length <= 4">
-            @for (option of options; track option.id) {
-            <button (click)="selectOption(question.id, option.id, question.type, question.maxSelect)"
-              [class.btn-clean-selected]="isOptionSelected(question.id, option.id)"
-              class="btn-clean group p-8 rounded-xl text-left flex items-center justify-between bg-white">
-              <span class="text-xl font-bold tracking-wide text-gray-900">{{ option.label }}</span>
-              @if (isOptionSelected(question.id, option.id)) {
-              <div class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              } @else {
-              <div class="w-6 h-6 rounded-full border border-gray-300 group-hover:border-red-400 transition-colors">
-              </div>
-              }
-            </button>
+          <h3 class="text-4xl md:text-6xl font-black text-black tracking-tight leading-tight">
+            {{ question.title }}
+          </h3>
+          <p class="text-xl md:text-2xl text-gray-500 font-light tracking-wide">
+            {{ question.subtitle }}
+            @if (question.type === 'multi-select') {
+            <span class="block text-sm mt-3 text-red-600 font-mono tracking-wider uppercase opacity-80">[ Select up to
+              {{ question.maxSelect }} ]</span>
             }
-          </div>
+          </p>
+        </div>
 
-          @if (question.id === 'goal_title' && isGoalTitleCustomSelected()) {
-          <div class="bg-white p-6 rounded-2xl border border-black/5 space-y-3">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Custom goal name</label>
-            <input type="text" [ngModel]="challengeCustomGoalTitle()" (ngModelChange)="updateCustomGoalTitle($event)"
-              class="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-red-600 focus:ring-2 focus:ring-red-500 bg-gray-50 focus:bg-white transition"
-              placeholder="Describe your mission...">
-            <p class="text-sm text-gray-500">Keep it short and punchy. This will be the name of your RocketGoal.</p>
-          </div>
+        @let options = question.id === 'goal_title' ? goalTitleOptions() : question.options;
+        <div class="grid gap-6" [class.md:grid-cols-2]="options.length > 4"
+          [class.md:grid-cols-1]="options.length <= 4">
+          @for (option of options; track option.id) {
+          <button (click)="selectOption(question.id, option.id, question.type, question.maxSelect)"
+            [class.btn-clean-selected]="isOptionSelected(question.id, option.id)"
+            class="btn-clean group p-8 rounded-xl text-left flex items-center justify-between bg-white">
+            <span class="text-xl font-bold tracking-wide text-gray-900">{{ option.label }}</span>
+            @if (isOptionSelected(question.id, option.id)) {
+            <div class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            } @else {
+            <div class="w-6 h-6 rounded-full border border-gray-300 group-hover:border-red-400 transition-colors">
+            </div>
+            }
+          </button>
           }
+        </div>
 
-          <div class="flex justify-between pt-12 items-center">
-            <button (click)="prevStep()" [disabled]="currentChallengeStep() === 0"
-              class="px-6 py-3 text-gray-400 font-bold hover:text-black disabled:opacity-0 transition-colors uppercase tracking-widest text-sm hover:underline decoration-red-500 underline-offset-8">
-              < Back </button>
+        @if (question.id === 'goal_title' && isGoalTitleCustomSelected()) {
+        <div class="bg-white p-6 rounded-2xl border border-black/5 space-y-3">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Custom goal name</label>
+          <input type="text" [ngModel]="challengeCustomGoalTitle()" (ngModelChange)="updateCustomGoalTitle($event)"
+            class="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-red-600 focus:ring-2 focus:ring-red-500 bg-gray-50 focus:bg-white transition"
+            placeholder="Describe your mission...">
+          <p class="text-sm text-gray-500">Keep it short and punchy. This will be the name of your RocketGoal.</p>
+        </div>
+        }
 
-                @if (shouldShowConfirmButton(question.id, question.type)) {
-                <button (click)="nextStep()" [disabled]="!canConfirmQuestion(question.id)"
-                  class="px-10 py-4 bg-black text-white font-black rounded-full hover:bg-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 uppercase tracking-wider text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-                  {{ question.id === 'goal_title' ? 'Use this name' : 'Confirm Selection' }}
-                </button>
-                }
-          </div>
+        <div class="flex justify-between pt-12 items-center">
+          <button (click)="prevStep()" [disabled]="currentChallengeStep() === 0"
+            class="px-6 py-3 text-gray-400 font-bold hover:text-black disabled:opacity-0 transition-colors uppercase tracking-widest text-sm hover:underline decoration-red-500 underline-offset-8">
+            < Back </button>
+
+              @if (shouldShowConfirmButton(question.id, question.type)) {
+              <button (click)="nextStep()" [disabled]="!canConfirmQuestion(question.id)"
+                class="px-10 py-4 bg-black text-white font-black rounded-full hover:bg-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 uppercase tracking-wider text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                {{ question.id === 'goal_title' ? 'Use this name' : 'Confirm Selection' }}
+              </button>
+              }
+        </div>
+    </div>
+    } @else {
+    <!-- Final Auth + Save Step -->
+    @if (authService.profile()?.userId || challengeAuthStage() === 'saving') {
+    <!-- User is logged in - show saving directly -->
+    <div
+      class="max-w-xl mx-auto space-y-8 animate-slide-up text-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl">
+      <div class="w-24 h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center">
+        <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Building your dashboard</h3>
+        <p class="text-gray-500 text-lg font-light">Hang tight while we store your RocketGoal and prep your mission
+          control.</p>
+      </div>
+      <div class="flex flex-col items-center gap-4 py-8">
+        <div class="w-12 h-12 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
+        <p class="text-lg text-gray-600 font-medium">Saving your RocketGoal to mission control...</p>
+      </div>
+    </div>
+    } @else {
+    <!-- User is not logged in - show auth flow -->
+    <div
+      class="max-w-xl mx-auto space-y-8 animate-slide-up text-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl">
+      <div class="w-24 h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center">
+        <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+
+      @if (challengeAuthStage() === 'email') {
+      <div>
+        <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Confirm your cockpit</h3>
+        <p class="text-gray-500 text-lg font-light">Use your RocketPrompt email so we can sync your missions.</p>
+      </div>
+      } @else if (challengeAuthStage() === 'existing-login') {
+      <div>
+        <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Welcome back</h3>
+        <p class="text-gray-500 text-lg font-light">Enter your password for <span class="font-semibold text-black">{{
+            challengeEmail() }}</span>.</p>
+      </div>
+      } @else if (challengeAuthStage() === 'new-profile') {
+      <div>
+        <h3 class="text-4xl font-black text-black mb-3 tracking-tight">You're one step closer to launching your goal
+        </h3>
+        <p class="text-gray-500 text-lg font-light">This is free. Finish setup to get started.</p>
+      </div>
+      } @else if (challengeAuthStage() === 'verify') {
+      <div>
+        <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Verify & Ignite</h3>
+        <p class="text-gray-500 text-lg font-light">Check <span class="font-semibold text-black">{{ challengeEmail()
+            }}</span> for the verification link. We'll unlock the dashboard once it's confirmed.</p>
       </div>
       } @else {
-      <!-- Final Auth + Save Step -->
-      @if (authService.profile()?.userId || challengeAuthStage() === 'saving') {
-      <!-- User is logged in - show saving directly -->
-      <div
-        class="max-w-xl mx-auto space-y-8 animate-slide-up text-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl">
-        <div class="w-24 h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center">
-          <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Building your dashboard</h3>
-          <p class="text-gray-500 text-lg font-light">Hang tight while we store your RocketGoal and prep your mission
-            control.</p>
-        </div>
-        <div class="flex flex-col items-center gap-4 py-8">
-          <div class="w-12 h-12 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
-          <p class="text-lg text-gray-600 font-medium">Saving your RocketGoal to mission control...</p>
-        </div>
+      <div>
+        <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Building your dashboard</h3>
+        <p class="text-gray-500 text-lg font-light">Hang tight while we store your RocketGoal and prep your mission
+          control.</p>
       </div>
-      } @else {
-      <!-- User is not logged in - show auth flow -->
-      <div
-        class="max-w-xl mx-auto space-y-8 animate-slide-up text-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl">
-        <div class="w-24 h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center">
-          <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
+      }
 
-        @if (challengeAuthStage() === 'email') {
-        <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Confirm your cockpit</h3>
-          <p class="text-gray-500 text-lg font-light">Use your RocketPrompt email so we can sync your missions.</p>
-        </div>
-        } @else if (challengeAuthStage() === 'existing-login') {
-        <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Welcome back</h3>
-          <p class="text-gray-500 text-lg font-light">Enter your password for <span class="font-semibold text-black">{{
-              challengeEmail() }}</span>.</p>
-        </div>
-        } @else if (challengeAuthStage() === 'new-profile') {
-        <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">You're one step closer to launching your goal</h3>
-          <p class="text-gray-500 text-lg font-light">This is free. Finish setup to get started.</p>
-        </div>
-        } @else if (challengeAuthStage() === 'verify') {
-        <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Verify & Ignite</h3>
-          <p class="text-gray-500 text-lg font-light">Check <span class="font-semibold text-black">{{ challengeEmail()
-              }}</span> for the verification link. We'll unlock the dashboard once it's confirmed.</p>
-        </div>
+      @if (challengeInfoMessage()) {
+      <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        {{ challengeInfoMessage() }}
+      </div>
+      }
+
+      @if (challengeAuthError()) {
+      <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        {{ challengeAuthError() }}
+      </div>
+      }
+
+      @switch (challengeAuthStage()) {
+      @case ('email') {
+      <div class="space-y-5 text-left">
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+        <input type="email" [ngModel]="challengeEmail()" (ngModelChange)="updateChallengeEmail($event)"
+          class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
+          placeholder="you@rocketprompt.io">
+      </div>
+      <button (click)="handleChallengeEmailContinue()" [disabled]="challengeLoading()"
+        class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+        @if (challengeLoading()) {
+        <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        <span>Checking...</span>
         } @else {
+        <span>Continue</span>
+        }
+      </button>
+      }
+      @case ('existing-login') {
+      <div class="space-y-5 text-left">
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
+        <input type="password" [ngModel]="challengePassword()" (ngModelChange)="updateChallengePassword($event)"
+          class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
+          placeholder="••••••••">
+      </div>
+      <button (click)="handleChallengeExistingLogin()" [disabled]="challengeLoading()"
+        class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+        @if (challengeLoading()) {
+        <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        <span>Signing In...</span>
+        } @else {
+        <span>Launch Dashboard 🚀</span>
+        }
+      </button>
+      <button type="button" (click)="restartChallengeAuthFlow()"
+        class="text-sm font-semibold text-red-600 hover:text-red-500 mt-3">Use a different email</button>
+      }
+      @case ('new-profile') {
+      <div class="space-y-5 text-left">
         <div>
-          <h3 class="text-4xl font-black text-black mb-3 tracking-tight">Building your dashboard</h3>
-          <p class="text-gray-500 text-lg font-light">Hang tight while we store your RocketGoal and prep your mission
-            control.</p>
-        </div>
-        }
-
-        @if (challengeInfoMessage()) {
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-          {{ challengeInfoMessage() }}
-        </div>
-        }
-
-        @if (challengeAuthError()) {
-        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {{ challengeAuthError() }}
-        </div>
-        }
-
-        @switch (challengeAuthStage()) {
-        @case ('email') {
-        <div class="space-y-5 text-left">
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
-          <input type="email" [ngModel]="challengeEmail()" (ngModelChange)="updateChallengeEmail($event)"
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">First Name</label>
+          <input type="text" [ngModel]="challengeFirstName()" (ngModelChange)="updateChallengeFirstName($event)"
             class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-            placeholder="you@rocketprompt.io">
+            placeholder="Commander">
         </div>
-        <button (click)="handleChallengeEmailContinue()" [disabled]="challengeLoading()"
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Last Name</label>
+          <input type="text" [ngModel]="challengeLastName()" (ngModelChange)="updateChallengeLastName($event)"
+            class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
+            placeholder="Nova">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
+          <input type="password" [ngModel]="challengePassword()" (ngModelChange)="updateChallengePassword($event)"
+            class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
+            placeholder="Minimum 6 characters">
+        </div>
+      </div>
+      <button (click)="handleChallengeSignup()" [disabled]="challengeLoading()"
+        class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
+        @if (challengeLoading()) {
+        <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        <span>Creating...</span>
+        } @else {
+        <span>Create & Verify</span>
+        }
+      </button>
+      <button type="button" (click)="restartChallengeAuthFlow()"
+        class="text-sm font-semibold text-red-600 hover:text-red-500 mt-3">Use a different email</button>
+      }
+      @case ('verify') {
+      <div class="space-y-4 text-left">
+        <p class="text-gray-600 font-medium text-base leading-relaxed">
+          We've sent a verification link to <span class="font-semibold text-black">{{ challengeEmail() }}</span>.
+          Click the link, then hit the button below. This keeps every RocketGoal secure.
+        </p>
+      </div>
+      <div class="space-y-3">
+        <button (click)="confirmChallengeVerification()" [disabled]="challengeLoading()"
           class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
           @if (challengeLoading()) {
           <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           <span>Checking...</span>
           } @else {
-          <span>Continue</span>
+          <span>I've Verified</span>
           }
         </button>
-        }
-        @case ('existing-login') {
-        <div class="space-y-5 text-left">
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
-          <input type="password" [ngModel]="challengePassword()" (ngModelChange)="updateChallengePassword($event)"
-            class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-            placeholder="••••••••">
-        </div>
-        <button (click)="handleChallengeExistingLogin()" [disabled]="challengeLoading()"
-          class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
-          @if (challengeLoading()) {
-          <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>Signing In...</span>
-          } @else {
-          <span>Launch Dashboard 🚀</span>
-          }
+        <button type="button" (click)="resendVerificationEmail()"
+          class="w-full py-4 border border-black/10 rounded-xl font-semibold text-black hover:bg-black hover:text-white transition">
+          Resend Verification Email
         </button>
         <button type="button" (click)="restartChallengeAuthFlow()"
-          class="text-sm font-semibold text-red-600 hover:text-red-500 mt-3">Use a different email</button>
-        }
-        @case ('new-profile') {
-        <div class="space-y-5 text-left">
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">First Name</label>
-            <input type="text" [ngModel]="challengeFirstName()" (ngModelChange)="updateChallengeFirstName($event)"
-              class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-              placeholder="Commander">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Last Name</label>
-            <input type="text" [ngModel]="challengeLastName()" (ngModelChange)="updateChallengeLastName($event)"
-              class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-              placeholder="Nova">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
-            <input type="password" [ngModel]="challengePassword()" (ngModelChange)="updateChallengePassword($event)"
-              class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-black focus:border-red-600 focus:bg-white focus:outline-none transition-all duration-300 placeholder-gray-300 font-medium"
-              placeholder="Minimum 6 characters">
-          </div>
-        </div>
-        <button (click)="handleChallengeSignup()" [disabled]="challengeLoading()"
-          class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
-          @if (challengeLoading()) {
-          <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>Creating...</span>
-          } @else {
-          <span>Create & Verify</span>
-          }
-        </button>
-        <button type="button" (click)="restartChallengeAuthFlow()"
-          class="text-sm font-semibold text-red-600 hover:text-red-500 mt-3">Use a different email</button>
-        }
-        @case ('verify') {
-        <div class="space-y-4 text-left">
-          <p class="text-gray-600 font-medium text-base leading-relaxed">
-            We've sent a verification link to <span class="font-semibold text-black">{{ challengeEmail() }}</span>.
-            Click the link, then hit the button below. This keeps every RocketGoal secure.
-          </p>
-        </div>
-        <div class="space-y-3">
-          <button (click)="confirmChallengeVerification()" [disabled]="challengeLoading()"
-            class="w-full py-5 bg-black text-white font-black text-xl rounded-xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-red-600/30 disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-3">
-            @if (challengeLoading()) {
-            <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span>Checking...</span>
-            } @else {
-            <span>I've Verified</span>
-            }
-          </button>
-          <button type="button" (click)="resendVerificationEmail()"
-            class="w-full py-4 border border-black/10 rounded-xl font-semibold text-black hover:bg-black hover:text-white transition">
-            Resend Verification Email
-          </button>
-          <button type="button" (click)="restartChallengeAuthFlow()"
-            class="text-sm font-semibold text-red-600 hover:text-red-500 mt-2">Use a different email</button>
-        </div>
-        }
-        @case ('saving') {
-        <div class="flex flex-col items-center gap-4 py-8">
-          <div class="w-12 h-12 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
-          <p class="text-lg text-gray-600 font-medium">Saving your RocketGoal to mission control...</p>
-        </div>
-        }
-        }
+          class="text-sm font-semibold text-red-600 hover:text-red-500 mt-2">Use a different email</button>
+      </div>
+      }
+      @case ('saving') {
+      <div class="flex flex-col items-center gap-4 py-8">
+        <div class="w-12 h-12 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
+        <p class="text-lg text-gray-600 font-medium">Saving your RocketGoal to mission control...</p>
       </div>
       }
       }
     </div>
+    }
+    }
   </div>
+</div>
 </div>
 }
