@@ -31,6 +31,8 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   readonly error = this.aiService.error;
   readonly copiedMessageId = signal<number | null>(null);
   readonly hasGreeted = signal(false);
+  readonly currentSessionTitle = this.aiService.currentSessionTitle;
+  readonly currentSessionCreatedAt = this.aiService.currentSessionCreatedAt;
 
   // Typewriter effect state
   readonly typewriterMessageId = signal<number | null>(null);
@@ -41,6 +43,11 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   private scrollInterval: any = null;
 
   ngOnInit(): void {
+    const profile = this.authService.profile();
+    if (profile?.userId && this.aiService.sessions().length === 0) {
+      void this.aiService.loadSessionsForCurrentUser();
+    }
+
     // If embedded mode and no goal context, show a greeting for non-logged-in users
     if (this.embedded && !this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
       // Wait a bit for the UI to settle, then trigger greeting
@@ -315,6 +322,11 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  formatSessionTimestamp(date: Date | null): string {
+    if (!date) return '';
+    return date.toLocaleString();
   }
 
   async copyMessage(message: ChatMessage): Promise<void> {

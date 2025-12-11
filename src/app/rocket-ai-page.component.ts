@@ -1,18 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ViewChild, computed, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
-import type { ChatMessage } from './rocket-goals-ai.service';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
-
-interface InteractionPreview {
-  id: number;
-  user?: ChatMessage;
-  ai?: ChatMessage;
-  timestamp: Date;
-}
 
 @Component({
   selector: 'app-rocket-ai-page',
@@ -21,35 +13,18 @@ interface InteractionPreview {
   templateUrl: './rocket-ai-page.component.html',
   styleUrl: './rocket-ai-page.component.css'
 })
-export class RocketAiPageComponent {
+export class RocketAiPageComponent implements OnInit {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
   protected readonly isLightMode = signal(true); // default to light mode
   protected readonly showHistory = signal(true);
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
+  protected readonly sessions = this.aiService.sessions;
+  protected readonly sessionsLoading = this.aiService.sessionsLoading;
+  protected readonly sessionsError = this.aiService.sessionsError;
+  protected readonly currentSessionId = this.aiService.currentSessionId;
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
-
-  protected readonly interactions = computed<InteractionPreview[]>(() => {
-    const messages = this.aiService.messages();
-    const previews: InteractionPreview[] = [];
-
-    for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
-      if (msg.role !== 'user') continue;
-
-      const aiResponse = messages[i + 1]?.role === 'model' ? messages[i + 1] : undefined;
-      previews.push({
-        id: msg.timestamp.getTime(),
-        user: msg,
-        ai: aiResponse,
-        timestamp: msg.timestamp
-      });
-    }
-
-    // Show most recent first
-    return previews.reverse();
-  });
 
   protected readonly starterPrompts = [
     'Give me a focused 7-day launch plan.',
@@ -58,8 +33,10 @@ export class RocketAiPageComponent {
     'Write a motivational boost for my mission.'
   ];
 
-  protected clearConversation(): void {
-    this.aiService.clearConversation();
+  async ngOnInit() {
+    if (this.isLoggedIn()) {
+      await this.aiService.loadSessionsForCurrentUser();
+    }
   }
 
   protected runPrompt(prompt: string): void {
@@ -70,8 +47,20 @@ export class RocketAiPageComponent {
     }
   }
 
-  protected trackByInteraction(_index: number, interaction: InteractionPreview): number {
-    return interaction.id;
+  protected async openSession(sessionId: string): Promise<void> {
+    await this.aiService.loadSession(sessionId);
+  }
+
+  protected async deleteSession(sessionId: string): Promise<void> {
+    await this.aiService.deleteSession(sessionId);
+  }
+
+  protected startNewChat(): void {
+    this.aiService.startNewSession();
+  }
+
+  protected trackBySession(_index: number, session: { id: string }): string {
+    return session.id;
   }
 
   protected toggleTheme(): void {

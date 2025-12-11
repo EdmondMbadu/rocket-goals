@@ -12,6 +12,27 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+export interface ChatSessionMeta {
+  id: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastMessage?: string;
+}
+
+type FirestoreSessionDoc = {
+  title?: string;
+  createdAt?: any;
+  updatedAt?: any;
+  lastMessage?: string;
+};
+
+type FirestoreMessageDoc = {
+  role?: 'user' | 'model';
+  content?: string;
+  createdAt?: any;
+};
+
 interface AIRequest {
   message: string;
   conversationHistory?: { role: 'user' | 'model'; content: string }[];
@@ -83,7 +104,15 @@ export class RocketGoalsAIService {
   readonly error = signal<string | null>(null);
   readonly isOpen = signal(false);
 
+  readonly sessions = signal<ChatSessionMeta[]>([]);
+  readonly sessionsLoading = signal(false);
+  readonly sessionsError = signal<string | null>(null);
+  readonly currentSessionId = signal<string | null>(null);
+  readonly currentSessionTitle = signal<string | null>(null);
+  readonly currentSessionCreatedAt = signal<Date | null>(null);
+
   private conversationHistory: { role: 'user' | 'model'; content: string }[] = [];
+  private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
 
   private readonly systemPrompt = `You are RocketGoals AI, a helpful assistant for goal-setting and achievement. You help users create, manage, and achieve their goals using the 7-day Rocket Goal challenge methodology.
 
@@ -107,6 +136,32 @@ If asked about technical issues or features, explain them clearly and suggest so
 
 Remember: Users are on a 7-day journey to transform their goals into reality. Help them launch successfully and stay on course!`;
 
+  private async ensureFirestore() {
+    if (!this.firestorePromise) {
+      this.firestorePromise = (async () => {
+        const firestoreModule = await import('firebase/firestore');
+        return firestoreModule.getFirestore(getApp());
+      })();
+    }
+    return this.firestorePromise;
+  }
+
+  private buildTitleFromMessage(message: string) {
+    if (!message) return 'New chat';
+    const words = message.trim().split(/\s+/).slice(0, 8);
+    const title = words.join(' ');
+    return title.charAt(0).toUpperCase() + title.slice(1);
+  }
+
+  private convertToDate(value: any): Date {
+    if (!value) return new Date();
+    if (value instanceof Date) return value;
+    if (typeof value === 'number') return new Date(value);
+    if (typeof value === 'string') return new Date(value);
+    if (value?.toDate) return value.toDate();
+    return new Date();
+  }
+
   togglePanel(): void {
     this.isOpen.update(v => !v);
   }
@@ -119,6 +174,242 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isOpen.set(false);
   }
 
+  async loadSessionsForCurrentUser(selectMostRecent: boolean = true): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      this.sessions.set([]);
+      return;
+    }
+
+    this.sessionsLoading.set(true);
+    this.sessionsError.set(null);
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const sessionsQuery = firestoreModule.query(
+        firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
+        firestoreModule.orderBy('updatedAt', 'desc')
+      );
+      const snapshot = await firestoreModule.getDocs(sessionsQuery);
+      const mapped: ChatSessionMeta[] = snapshot.docs.map(doc => {
+        const data = doc.data() as FirestoreSessionDoc;
+        return {
+          id: doc.id,
+          title: data.title || 'Chat',
+          createdAt: this.convertToDate(data.createdAt),
+          updatedAt: this.convertToDate(data.updatedAt),
+          lastMessage: data.lastMessage
+        };
+      });
+      this.sessions.set(mapped);
+
+      if (selectMostRecent && mapped.length > 0 && !this.currentSessionId()) {
+        await this.loadSession(mapped[0].id);
+      }
+    } catch (error: any) {
+      console.error('Failed to load chat sessions', error);
+      this.sessionsError.set(error?.message || 'Unable to load chat history');
+    } finally {
+      this.sessionsLoading.set(false);
+    }
+  }
+
+  async loadSession(sessionId: string): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return;
+
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const messagesQuery = firestoreModule.query(
+        firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats', sessionId, 'messages'),
+        firestoreModule.orderBy('createdAt', 'asc')
+      );
+      const snapshot = await firestoreModule.getDocs(messagesQuery);
+      const loadedMessages: ChatMessage[] = snapshot.docs.map(doc => {
+        const data = doc.data() as FirestoreMessageDoc;
+        return {
+          role: (data as any)['role'] || 'model',
+          content: (data as any)['content'] || '',
+          timestamp: this.convertToDate((data as any)['createdAt'])
+        } as ChatMessage;
+      });
+
+      this.messages.set(loadedMessages);
+      this.conversationHistory = loadedMessages.map(msg => ({ role: msg.role, content: msg.content })).slice(-20);
+      this.currentSessionId.set(sessionId);
+
+      const sessionMeta = this.sessions().find(s => s.id === sessionId);
+      this.currentSessionTitle.set(sessionMeta?.title || 'Chat');
+      this.currentSessionCreatedAt.set(sessionMeta?.createdAt || loadedMessages[0]?.timestamp || new Date());
+    } catch (error: any) {
+      console.error('Failed to load session messages', error);
+      this.error.set(error?.message || 'Unable to load chat');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  startNewSession(): void {
+    this.messages.set([]);
+    this.conversationHistory = [];
+    this.error.set(null);
+    this.isLoading.set(false);
+    this.currentSessionId.set(null);
+    this.currentSessionTitle.set(null);
+    this.currentSessionCreatedAt.set(null);
+  }
+
+  async deleteSession(sessionId: string): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return;
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+
+      // Delete message subcollection
+      const messagesRef = firestoreModule.collection(
+        firestore,
+        'userProfiles',
+        profile.userId,
+        'aiChats',
+        sessionId,
+        'messages'
+      );
+      const messagesSnap = await firestoreModule.getDocs(messagesRef);
+      await Promise.all(messagesSnap.docs.map(doc => firestoreModule.deleteDoc(doc.ref)));
+
+      // Delete session doc
+      const sessionRef = firestoreModule.doc(firestore, 'userProfiles', profile.userId, 'aiChats', sessionId);
+      await firestoreModule.deleteDoc(sessionRef);
+
+      this.sessions.update(list => list.filter(session => session.id !== sessionId));
+
+      if (this.currentSessionId() === sessionId) {
+        this.startNewSession();
+      }
+    } catch (error: any) {
+      console.error('Failed to delete session', error);
+      this.sessionsError.set(error?.message || 'Unable to delete chat');
+    }
+  }
+
+  private async ensureActiveSession(initialUserMessage?: string): Promise<string | null> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return null;
+
+    if (this.currentSessionId()) {
+      return this.currentSessionId();
+    }
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const title = this.buildTitleFromMessage(initialUserMessage || 'New chat');
+      const now = firestoreModule.serverTimestamp();
+      const docRef = await firestoreModule.addDoc(
+        firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
+        {
+          title,
+          createdAt: now,
+          updatedAt: now,
+          lastMessage: initialUserMessage || 'New chat'
+        }
+      );
+
+      this.currentSessionId.set(docRef.id);
+      this.currentSessionTitle.set(title);
+      this.currentSessionCreatedAt.set(new Date());
+
+      // Refresh session list but don't override selection
+      void this.loadSessionsForCurrentUser(false);
+
+      return docRef.id;
+    } catch (error) {
+      console.error('Failed to create chat session', error);
+      return null;
+    }
+  }
+
+  private async persistMessageToSession(sessionId: string | null, message: ChatMessage): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId || !sessionId) return;
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      await firestoreModule.addDoc(
+        firestoreModule.collection(
+          firestore,
+          'userProfiles',
+          profile.userId,
+          'aiChats',
+          sessionId,
+          'messages'
+        ),
+        {
+          role: message.role,
+          content: message.content,
+          createdAt: firestoreModule.serverTimestamp()
+        }
+      );
+
+      await this.updateSessionMetadata(sessionId, message);
+    } catch (error) {
+      console.warn('Failed to persist chat message (non-blocking)', error);
+    }
+  }
+
+  private async updateSessionMetadata(sessionId: string, message: ChatMessage): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return;
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const sessionRef = firestoreModule.doc(firestore, 'userProfiles', profile.userId, 'aiChats', sessionId);
+      const updates: Record<string, any> = {
+        updatedAt: firestoreModule.serverTimestamp(),
+        lastMessage: message.content,
+        lastMessageRole: message.role
+      };
+
+      // If session title hasn't been set yet, use first user message as title
+      if (!this.currentSessionTitle() && message.role === 'user') {
+        updates['title'] = this.buildTitleFromMessage(message.content);
+      }
+
+      await firestoreModule.updateDoc(sessionRef, updates);
+
+      // Update local cache to keep UI fresh
+      this.sessions.update(list => {
+        const existing = list.find(item => item.id === sessionId);
+        const updated: ChatSessionMeta = {
+          id: sessionId,
+          title: updates['title'] || existing?.title || this.currentSessionTitle() || 'Chat',
+          createdAt: existing?.createdAt || new Date(),
+          updatedAt: new Date(),
+          lastMessage: message.content
+        };
+
+        const without = list.filter(item => item.id !== sessionId);
+        return [updated, ...without];
+      });
+
+      if (updates['title']) {
+        this.currentSessionTitle.set(updates['title']);
+      }
+      this.currentSessionCreatedAt.set(this.currentSessionCreatedAt() || new Date());
+    } catch (error) {
+      console.warn('Failed to update session metadata (non-blocking)', error);
+    }
+  }
+
   async sendMessage(userMessage: string, goalContext?: RocketGoal | null): Promise<string> {
     if (!userMessage.trim()) {
       throw new Error('Message cannot be empty');
@@ -127,6 +418,8 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isLoading.set(true);
     this.error.set(null);
 
+    const sessionId = await this.ensureActiveSession(userMessage);
+
     // Add user message to conversation
     const userChatMessage: ChatMessage = {
       role: 'user',
@@ -134,6 +427,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       timestamp: new Date()
     };
     this.messages.update(msgs => [...msgs, userChatMessage]);
+    void this.persistMessageToSession(sessionId, userChatMessage);
 
     try {
       // Prepare conversation history for context (last 10 messages for efficiency)
@@ -190,6 +484,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
         timestamp: new Date()
       };
       this.messages.update(msgs => [...msgs, aiChatMessage]);
+      void this.persistMessageToSession(sessionId, aiChatMessage);
 
       // Add to conversation history
       this.conversationHistory.push({
@@ -229,6 +524,8 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isLoading.set(true);
     this.error.set(null);
 
+    const sessionId = await this.ensureActiveSession(userMessage);
+
     // Add user message to conversation
     const userChatMessage: ChatMessage = {
       role: 'user',
@@ -236,6 +533,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       timestamp: new Date()
     };
     this.messages.update(msgs => [...msgs, userChatMessage]);
+    void this.persistMessageToSession(sessionId, userChatMessage);
 
     try {
       // Prepare conversation history for context (last 10 messages for efficiency)
@@ -318,9 +616,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   clearConversation(): void {
-    this.messages.set([]);
-    this.conversationHistory = [];
-    this.error.set(null);
+    this.startNewSession();
   }
 
   addLocalUserMessage(content: string): void {
@@ -336,6 +632,11 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     };
 
     this.messages.update(msgs => [...msgs, message]);
+    void this.ensureActiveSession(cleanContent).then(sessionId => {
+      if (sessionId) {
+        void this.persistMessageToSession(sessionId, message);
+      }
+    });
   }
 
   addAIMessage(content: string): void {
@@ -351,12 +652,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     };
 
     this.messages.update(msgs => [...msgs, message]);
-    
+
     // Also add to conversation history so context is maintained
     this.conversationHistory.push({
       role: 'model',
       content: cleanContent
     });
+
+    const sessionId = this.currentSessionId();
+    if (sessionId) {
+      void this.persistMessageToSession(sessionId, message);
+    }
   }
 
   addAIMessageWithTimestamp(content: string, timestamp: number): void {
@@ -370,10 +676,10 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   updateMessageContent(timestamp: number, content: string): void {
-    this.messages.update(msgs => 
-      msgs.map(msg => 
-        msg.timestamp.getTime() === timestamp 
-          ? { ...msg, content } 
+    this.messages.update(msgs =>
+      msgs.map(msg =>
+        msg.timestamp.getTime() === timestamp
+          ? { ...msg, content }
           : msg
       )
     );
@@ -386,12 +692,22 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       role: 'model',
       content: content
     });
+
+    const sessionId = this.currentSessionId();
+    if (sessionId) {
+      const message: ChatMessage = {
+        role: 'model',
+        content,
+        timestamp: new Date(timestamp)
+      };
+      void this.persistMessageToSession(sessionId, message);
+    }
   }
 
   private getGoalTitle(goal: RocketGoal): string {
     return goal.answers?.['goal_title_label'] ||
-           goal.answers?.['custom_goal_title'] ||
-           goal.primaryGoal ||
-           'Untitled Goal';
+      goal.answers?.['custom_goal_title'] ||
+      goal.primaryGoal ||
+      'Untitled Goal';
   }
 }

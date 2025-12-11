@@ -88,25 +88,39 @@
           <p class="eyebrow">History</p>
           <h3 class="history-title">Chat log</h3>
         </div>
-        <button type="button" class="ghost-btn small" (click)="clearConversation()">Clear</button>
+        <div class="flex items-center gap-2">
+          <button type="button" class="ghost-btn small" (click)="startNewChat()">New chat</button>
+        </div>
       </div>
       <div class="history-list">
-        <div *ngIf="interactions().length === 0" class="history-empty">
+        <div *ngIf="sessionsError()" class="history-empty">
+          <p>{{ sessionsError() }}</p>
+        </div>
+        <div *ngIf="sessionsLoading()" class="history-empty">
+          <p>Loading chat history…</p>
+        </div>
+        <div *ngIf="!sessionsLoading() && sessions().length === 0" class="history-empty">
           <p>No chats yet. Start a conversation.</p>
         </div>
-        <div *ngFor="let interaction of interactions(); trackBy: trackByInteraction" class="history-item">
+        <div *ngFor="let session of sessions(); trackBy: trackBySession" class="history-item"
+          [class.active]="session.id === currentSessionId()" (click)="openSession(session.id)">
           <div class="dot"></div>
           <div class="history-body">
-            <p class="history-label">{{ interaction.timestamp | date: 'short' }}</p>
-            <p class="history-question" *ngIf="interaction.user">
-              {{ interaction.user.content | slice:0:120 }}<span
-                *ngIf="(interaction.user.content?.length || 0) > 120">…</span>
+            <p class="history-label">{{ session.updatedAt | date: 'short' }}</p>
+            <p class="history-question">
+              {{ session.title || 'Chat' }}
             </p>
-            <p class="history-answer" *ngIf="interaction.ai">
-              {{ interaction.ai.content | slice:0:120 }}<span
-                *ngIf="(interaction.ai.content?.length || 0) > 120">…</span>
+            <p class="history-answer" *ngIf="session.lastMessage">
+              {{ session.lastMessage | slice:0:120 }}<span *ngIf="(session.lastMessage?.length || 0) > 120">…</span>
             </p>
           </div>
+          <button type="button" class="ghost-btn icon-btn" aria-label="Delete chat"
+            (click)="deleteSession(session.id); $event.stopPropagation()">
+            <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
