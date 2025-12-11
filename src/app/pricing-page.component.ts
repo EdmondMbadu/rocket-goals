@@ -50,7 +50,7 @@ import { RouterModule } from '@angular/router';
               <!-- Launch -->
               <div class="pricing-card">
                 <div class="card-top">
-                  <span class="rocket-emoji rocket-size-1">🚀</span>
+                  <span class="rocket-emoji rocket-size-1 rocket-green">🚀</span>
                   <div class="badge bg-gray-900 text-white">Free</div>
                 </div>
                 <div class="space-y-2">
@@ -70,7 +70,7 @@ import { RouterModule } from '@angular/router';
               <!-- Moonshot -->
               <div class="pricing-card highlight">
                 <div class="card-top">
-                  <span class="rocket-emoji rocket-size-2">🚀</span>
+                  <span class="rocket-emoji rocket-size-2 rocket-orange">🚀</span>
                   <div class="badge bg-black text-white">Most Popular</div>
                 </div>
                 <div class="space-y-2">
@@ -90,7 +90,7 @@ import { RouterModule } from '@angular/router';
               <!-- Interplanetary -->
               <div class="pricing-card">
                 <div class="card-top">
-                  <span class="rocket-emoji rocket-size-3">🚀</span>
+                  <span class="rocket-emoji rocket-size-3 rocket-red">🚀</span>
                   <div class="badge bg-red-600 text-white">Performance</div>
                 </div>
                 <div class="space-y-2">
@@ -110,7 +110,7 @@ import { RouterModule } from '@angular/router';
               <!-- Galactic -->
               <div class="pricing-card">
                 <div class="card-top">
-                  <span class="rocket-emoji rocket-size-4">🚀</span>
+                  <span class="rocket-emoji rocket-size-4 rocket-gray">🚀</span>
                   <div class="badge bg-gray-900 text-white">Elite</div>
                 </div>
                 <div class="space-y-2">
@@ -172,8 +172,7 @@ import { RouterModule } from '@angular/router';
     }
     .rocket-emoji {
       display: inline-block;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, filter 0.3s ease;
     }
     .rocket-emoji:hover {
       transform: scale(1.15) rotate(-10deg);
@@ -189,6 +188,18 @@ import { RouterModule } from '@angular/router';
     }
     .rocket-size-4 {
       font-size: 52px;
+    }
+    .rocket-green {
+      filter: hue-rotate(85deg) saturate(2.5) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+    .rocket-orange {
+      filter: hue-rotate(-25deg) saturate(3) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+    .rocket-red {
+      filter: hue-rotate(-50deg) saturate(3.5) brightness(1) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+    .rocket-gray {
+      filter: grayscale(1) brightness(1.2) contrast(0.9) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
     }
     .badge {
       padding: 6px 10px;
