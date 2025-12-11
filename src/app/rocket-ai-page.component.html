@@ -114,8 +114,8 @@
               {{ session.lastMessage | slice:0:120 }}<span *ngIf="(session.lastMessage?.length || 0) > 120">…</span>
             </p>
           </div>
-          <div class="flex items-center gap-1">
-            <div class="relative group">
+          <div class="flex items-center gap-2">
+            <div class="relative group hidden sm:block">
               <button type="button"
                 class="ghost-btn icon-btn hover:bg-blue-50 transition-colors flex items-center justify-center"
                 aria-label="Start new chat" (click)="startNewChat(); $event.stopPropagation()">
@@ -130,7 +130,7 @@
                 New chat
               </div>
             </div>
-            <div class="relative group">
+            <div class="relative group hidden sm:block">
               <button type="button"
                 class="ghost-btn icon-btn hover:bg-red-50 transition-colors flex items-center justify-center"
                 aria-label="Delete chat" (click)="openDeleteModal(session.id, $event)">
@@ -145,6 +145,8 @@
                 Delete chat
               </div>
             </div>
+            <span class="ml-2 whitespace-nowrap text-[11px] text-gray-400 hidden sm:inline">{{ session.updatedAt | date:
+              'shortTime' }}</span>
           </div>
         </div>
       </div>
