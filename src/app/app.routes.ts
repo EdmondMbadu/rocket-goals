@@ -11,6 +11,7 @@ import { AiStatsComponent } from './admin/ai-stats.component';
 import { RocketAiPageComponent } from './rocket-ai-page.component';
 import { PricingPageComponent } from './pricing-page.component';
 import { ContactPageComponent } from './contact-page.component';
+import { authGuard } from './auth.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingBridgeComponent, pathMatch: 'full' },
@@ -23,7 +24,7 @@ export const routes: Routes = [
   { path: 'admin/ai-stats', component: AiStatsComponent },
   { path: 'admin', component: AdminComponent },
   { path: 'ai', component: RocketAiPageComponent },
-  { path: 'pricing', component: PricingPageComponent },
+  { path: 'pricing', component: PricingPageComponent, canActivate: [authGuard] },
   { path: 'contact', component: ContactPageComponent },
   { path: '**', redirectTo: '' }
 ];

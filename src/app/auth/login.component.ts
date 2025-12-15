@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -15,6 +15,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -38,7 +39,7 @@ export class LoginComponent {
         this.loginForm.controls.email.value,
         this.loginForm.controls.password.value
       );
-      await this.router.navigateByUrl('/ai');
+      await this.router.navigateByUrl(this.redirectUrl);
     } catch (error) {
       this.serverError.set(this.authService.authError());
     }
@@ -51,7 +52,7 @@ export class LoginComponent {
     this.serverError.set(null);
     try {
       await this.authService.signInWithGoogle();
-      await this.router.navigateByUrl('/ai');
+      await this.router.navigateByUrl(this.redirectUrl);
     } catch (error) {
       this.serverError.set(this.authService.authError());
     }
@@ -91,5 +92,9 @@ export class LoginComponent {
     if (control.hasError('required')) return 'Password is required';
     if (control.hasError('minlength')) return 'Password must be at least 6 characters';
     return null;
+  }
+
+  private get redirectUrl() {
+    return this.route.snapshot.queryParamMap.get('redirectTo') || '/ai';
   }
 }

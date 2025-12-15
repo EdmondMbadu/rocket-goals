@@ -124,6 +124,43 @@ export class AuthService {
     await sendEmailVerification(auth.currentUser);
   }
 
+  async getCurrentUser(): Promise<User | null> {
+    const { auth } = await this.ensureFirebase();
+    if (auth.currentUser) {
+      this.user.set(auth.currentUser);
+      return auth.currentUser;
+    }
+    const authModule = await import('firebase/auth');
+    return new Promise((resolve) => {
+      let settled = false;
+      const unsubscribe = authModule.onAuthStateChanged(
+        auth,
+        (user) => {
+          if (settled) return;
+          settled = true;
+          unsubscribe();
+          if (user) {
+            this.user.set(user);
+          }
+          resolve(user);
+        },
+        () => {
+          if (settled) return;
+          settled = true;
+          unsubscribe();
+          resolve(null);
+        }
+      );
+
+      setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        unsubscribe();
+        resolve(auth.currentUser);
+      }, 1500);
+    });
+  }
+
   async reloadCurrentUser() {
     const { auth } = await this.ensureFirebase();
     if (!auth.currentUser) {
