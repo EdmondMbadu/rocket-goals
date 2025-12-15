@@ -236,7 +236,13 @@
 
         <!-- Join Button Section -->
         <div class="join-section glass">
-          <a routerLink="/signup" class="join-button-primary">Join RocketGoals Now</a>
+          <div class="join-buttons-wrapper">
+            <a routerLink="/quiz" class="join-button-quiz">
+              <span class="quiz-btn-icon">🚀</span>
+              <span>Take ROCKET Quiz</span>
+            </a>
+            <a routerLink="/signup" class="join-button-primary">Join RocketGoals Now</a>
+          </div>
         </div>
 
         <!-- Why Joining is a Win Section -->
@@ -689,7 +695,7 @@
             </ul>
 
             <div class="quiz-cta-buttons">
-              <a routerLink="/signup" class="quiz-primary-btn">
+              <a routerLink="/quiz" class="quiz-primary-btn">
                 <span class="btn-icon">🚀</span>
                 <span class="btn-text">Take the ROCKET Quiz Now</span>
                 <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

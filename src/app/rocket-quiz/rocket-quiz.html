@@ -1,0 +1,229 @@
+<div class="quiz-shell">
+  <div class="quiz-background"></div>
+
+  <!-- Header -->
+  <header class="quiz-header">
+    <a routerLink="/" class="quiz-logo-link">
+      <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="quiz-logo" />
+      <div class="quiz-logo-text">
+        <span>ROCKET</span><span class="accent">GOALS</span>
+      </div>
+    </a>
+  </header>
+
+  <!-- Intro Screen -->
+  <div class="quiz-content" *ngIf="currentStep() === 0">
+    <div class="quiz-intro-card">
+      <div class="intro-badge">
+        <span class="badge-pulse"></span>
+        <span>FREE 2-Minute Assessment</span>
+      </div>
+
+      <h1 class="intro-title">
+        ROCKET Goals <span class="gradient-text">Readiness Quiz</span>
+      </h1>
+
+      <p class="intro-subtitle">
+        Discover exactly what's holding you back from achieving your biggest goals—and what to do about it.
+      </p>
+
+      <div class="intro-features">
+        <div class="intro-feature">
+          <div class="feature-icon">✨</div>
+          <div>
+            <h3>15 Research-Backed Questions</h3>
+            <p>Based on decades of performance training and neuro research</p>
+          </div>
+        </div>
+
+        <div class="intro-feature">
+          <div class="feature-icon">🎯</div>
+          <div>
+            <h3>Personalized Insights</h3>
+            <p>Get your custom ROCKET score and tailored recommendations</p>
+          </div>
+        </div>
+
+        <div class="intro-feature">
+          <div class="feature-icon">🚀</div>
+          <div>
+            <h3>Immediate Action Plan</h3>
+            <p>Launch pad ready strategies to accelerate your goals</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="quiz-start-btn" (click)="startQuiz()">
+        <span class="btn-rocket">🚀</span>
+        <span>Start Your Assessment</span>
+        <svg class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </button>
+
+      <p class="intro-note">
+        <svg class="lock-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        100% Free • No Credit Card Required • Takes 2 Minutes
+      </p>
+    </div>
+  </div>
+
+  <!-- Question Screen -->
+  <div class="quiz-content" *ngIf="currentStep() > 0 && currentStep() <= 15 && currentQuestion">
+    <div class="quiz-question-card">
+      <!-- Progress Bar -->
+      <div class="progress-container">
+        <div class="progress-info">
+          <span class="progress-text">Question {{ currentStep() }} of 15</span>
+          <span class="progress-percent">{{ progressPercentage }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progressPercentage"></div>
+        </div>
+      </div>
+
+      <!-- Section Badge -->
+      <div class="question-section">
+        <div class="section-letter">{{ currentQuestion.sectionLetter }}</div>
+        <span class="section-name">{{ currentQuestion.section }}</span>
+      </div>
+
+      <!-- Question -->
+      <h2 class="question-text">{{ currentQuestion.question }}</h2>
+
+      <!-- Answer Input -->
+      <div class="answer-section">
+        <!-- Scale Type (1-10) -->
+        <div *ngIf="currentQuestion.type === 'scale'" class="scale-input">
+          <div class="scale-options">
+            <button *ngFor="let num of [1,2,3,4,5,6,7,8,9,10]"
+                    class="scale-btn"
+                    [class.selected]="currentAnswer() === num"
+                    (click)="currentAnswer.set(num)">
+              {{ num }}
+            </button>
+          </div>
+          <div class="scale-labels">
+            <span>Low</span>
+            <span>High</span>
+          </div>
+        </div>
+
+        <!-- Multiple Choice -->
+        <div *ngIf="currentQuestion.type === 'frequency' || currentQuestion.type === 'yesno' || currentQuestion.type === 'time'"
+             class="choice-input">
+          <button *ngFor="let option of currentQuestion.options"
+                  class="choice-btn"
+                  [class.selected]="currentAnswer() === option"
+                  (click)="currentAnswer.set(option)">
+            <div class="choice-radio" [class.checked]="currentAnswer() === option">
+              <div class="radio-dot"></div>
+            </div>
+            <span>{{ option }}</span>
+          </button>
+        </div>
+
+        <!-- Text Input -->
+        <div *ngIf="currentQuestion.type === 'text'" class="text-input">
+          <textarea
+            [(ngModel)]="currentAnswer"
+            placeholder="Share your thoughts..."
+            rows="4"
+            class="text-area"></textarea>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="question-nav">
+        <button class="nav-btn secondary"
+                (click)="previousQuestion()"
+                [disabled]="currentStep() === 1">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Back</span>
+        </button>
+
+        <button class="nav-btn primary"
+                (click)="nextQuestion()"
+                [disabled]="!canProceed()">
+          <span>{{ currentStep() === 15 ? 'See Results' : 'Next' }}</span>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Screen -->
+  <div class="quiz-content" *ngIf="currentStep() === 16">
+    <div class="quiz-results-card">
+      <div class="results-celebration">
+        <div class="celebration-icon">🎉</div>
+        <h1 class="results-title">Assessment Complete!</h1>
+        <p class="results-subtitle">You're one step closer to unstoppable momentum</p>
+      </div>
+
+      <div class="results-cta-box">
+        <h2 class="cta-box-title">Get Your Personalized ROCKET Report</h2>
+        <p class="cta-box-text">
+          Enter your details below to receive your custom assessment, tailored recommendations,
+          and access to the FREE ROCKET Goals Launch System.
+        </p>
+
+        <div class="results-form">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" [(ngModel)]="name" placeholder="Your name" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" [(ngModel)]="email" placeholder="your@email.com" class="form-input" />
+          </div>
+
+          <button class="submit-btn" (click)="submitQuiz()" [disabled]="!name() || !email()">
+            <span class="btn-rocket">🚀</span>
+            <span>Get My ROCKET Report</span>
+          </button>
+        </div>
+
+        <div class="results-bonuses">
+          <h3 class="bonuses-title">You'll Also Receive:</h3>
+          <ul class="bonuses-list">
+            <li>
+              <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>FREE 20-minute ROCKET Alignment Call</span>
+            </li>
+            <li>
+              <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Complimentary "Surge" eBook (exclusive!)</span>
+            </li>
+            <li>
+              <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Access to 100% FREE ROCKET Goals Launch System</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <button class="restart-btn" (click)="restartQuiz()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span>Restart Quiz</span>
+      </button>
+    </div>
+  </div>
+</div>
