@@ -1,24 +1,58 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 
 @Component({
   selector: 'app-pricing-page',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, CommonModule, AvatarDropdownComponent],
   template: `
     <div class="min-h-screen bg-white text-black flex flex-col">
-      <header class="border-b border-black/5">
-        <div class="container mx-auto px-6 py-5 flex items-center justify-between">
-          <a routerLink="/" class="flex items-center gap-3 group">
-            <div class="relative w-12 h-12">
-              <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
-              <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="relative w-12 h-12 object-contain" />
+      <header class="relative z-40 px-6 md:px-8 py-6 flex-none border-b border-gray-200/50 bg-white/90 backdrop-blur-xl">
+        <div class="flex items-center justify-between max-w-7xl mx-auto w-full gap-6">
+          <a routerLink="/goals" class="flex items-center gap-3 group flex-none">
+            <div class="relative">
+              <div
+                class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500">
+              </div>
+              <img src="/assets/rocket-goals.png" alt="Rocket Goals"
+                class="relative w-14 h-14 md:w-16 md:h-16 object-contain transform group-hover:scale-105 transition-transform" />
             </div>
-            <span class="text-xl font-black tracking-tighter">ROCKET<span class="text-red-600">GOALS</span></span>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter text-black hidden sm:block">
+              ROCKET<span class="text-red-600">GOALS</span>
+            </span>
           </a>
-          <div class="flex items-center gap-3">
-            <a routerLink="/login" class="px-4 py-2 text-sm font-bold rounded-full border border-black/10 hover:border-black transition">Log in</a>
-            <a routerLink="/signup" class="px-4 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition shadow-lg">Start Free</a>
+          <div class="flex-1 flex items-center justify-center gap-6">
+            <a routerLink="/goals" routerLinkActive="text-red-600 border-b-2 border-red-600"
+              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Home
+            </a>
+            <a routerLink="/ai" routerLinkActive="text-red-600 border-b-2 border-red-600"
+              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              AI
+            </a>
+            <a routerLink="/profile" routerLinkActive="text-red-600 border-b-2 border-red-600"
+              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profile
+            </a>
+          </div>
+          <div class="flex items-center gap-3 flex-none">
+            <app-avatar-dropdown />
           </div>
         </div>
       </header>

@@ -19,3 +19,4 @@ export const authGuard: CanActivateFn = async (_route, state) => {
     queryParams: { redirectTo: state.url }
   });
 };
+
