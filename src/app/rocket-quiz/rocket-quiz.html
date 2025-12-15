@@ -184,8 +184,23 @@
           and access to the FREE ROCKET Goals Launch System.
         </p>
 
+        <div class="results-auth-toggle" role="tablist">
+          <button type="button"
+                  class="auth-toggle-btn"
+                  [class.active]="authMode() === 'signup'"
+                  (click)="setAuthMode('signup')">
+            Create a Free Account
+          </button>
+          <button type="button"
+                  class="auth-toggle-btn"
+                  [class.active]="authMode() === 'login'"
+                  (click)="setAuthMode('login')">
+            I Already Have an Account
+          </button>
+        </div>
+
         <div class="results-form">
-          <div class="form-group">
+          <div class="form-group" *ngIf="authMode() === 'signup'">
             <label for="name">Full Name</label>
             <input type="text" id="name" [(ngModel)]="name" placeholder="Your name" class="form-input" />
           </div>
@@ -195,9 +210,31 @@
             <input type="email" id="email" [(ngModel)]="email" placeholder="your@email.com" class="form-input" />
           </div>
 
-          <button class="submit-btn" (click)="submitQuiz()" [disabled]="!name() || !email()">
+          <div class="form-group">
+            <label for="password">
+              {{ authMode() === 'signup' ? 'Create a Password' : 'Your Password' }}
+            </label>
+            <input type="password"
+                   id="password"
+                   [(ngModel)]="password"
+                   placeholder="Minimum 6 characters"
+                   class="form-input" />
+          </div>
+
+          <p class="form-error" *ngIf="authService.authError()">
+            {{ authService.authError() }}
+          </p>
+
+          <button class="submit-btn"
+                  (click)="submitQuiz()"
+                  [disabled]="!canSubmitResults() || authService.authLoading()">
             <span class="btn-rocket">🚀</span>
-            <span>Get My ROCKET Report</span>
+            <span>
+              {{ authMode() === 'signup' ? 'Get My ROCKET Report' : 'Log In & View Results' }}
+            </span>
+            <svg class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </button>
         </div>
 

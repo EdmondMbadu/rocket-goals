@@ -1,7 +1,8 @@
-import { Component, signal, HostBinding, OnInit } from '@angular/core';
+import { Component, signal, HostBinding, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../auth.service';
 
 interface QuizQuestion {
   id: number;
@@ -24,12 +25,16 @@ interface QuizAnswer {
   styleUrl: './rocket-quiz.css',
 })
 export class RocketQuiz implements OnInit {
+  protected authService = inject(AuthService);
+  private router = inject(Router);
   currentStep = signal(0); // 0 = intro, 1-15 = questions, 16 = results
   answers = signal<QuizAnswer[]>([]);
   currentAnswer = signal<string | number>('');
   showResults = signal(false);
   email = signal('');
   name = signal('');
+  password = signal('');
+  authMode = signal<'signup' | 'login'>('signup');
   isLightMode = signal(true);
 
   @HostBinding('class.light-mode') get lightMode() {
@@ -246,16 +251,49 @@ export class RocketQuiz implements OnInit {
     return answer !== '' && answer !== null && answer !== undefined;
   }
 
-  submitQuiz() {
-    // Here you would send the quiz results to your backend
+  setAuthMode(mode: 'signup' | 'login') {
+    this.authMode.set(mode);
+  }
+
+  canSubmitResults(): boolean {
+    const email = this.email().trim();
+    const password = this.password();
+    if (!email || !password) {
+      return false;
+    }
+    if (this.authMode() === 'signup') {
+      return !!this.name().trim();
+    }
+    return true;
+  }
+
+  async submitQuiz() {
+    if (!this.canSubmitResults() || this.authService.authLoading()) {
+      return;
+    }
+
     console.log('Quiz completed!', {
       name: this.name(),
       email: this.email(),
       answers: this.answers()
     });
 
-    // For now, just show a success message
-    alert('Thank you for completing the ROCKET Quiz! Your results have been saved. Check your email for your personalized report and next steps.');
+    try {
+      if (this.authMode() === 'signup') {
+        const { firstName, lastName } = this.extractNames(this.name().trim());
+        await this.authService.signUpWithEmail({
+          firstName,
+          lastName,
+          email: this.email().trim(),
+          password: this.password()
+        });
+      } else {
+        await this.authService.signInWithEmail(this.email().trim(), this.password());
+      }
+      await this.router.navigateByUrl('/ai');
+    } catch (error) {
+      console.error('Quiz auth error:', error);
+    }
   }
 
   restartQuiz() {
@@ -265,5 +303,17 @@ export class RocketQuiz implements OnInit {
     this.showResults.set(false);
     this.email.set('');
     this.name.set('');
+    this.password.set('');
+    this.authMode.set('signup');
+  }
+
+  private extractNames(fullName: string) {
+    const parts = fullName.split(/\s+/).filter(Boolean);
+    if (!parts.length) {
+      return { firstName: 'Rocket', lastName: 'Member' };
+    }
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ') || 'Member';
+    return { firstName, lastName };
   }
 }
