@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, HostBinding, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -23,13 +23,33 @@ interface QuizAnswer {
   templateUrl: './rocket-quiz.html',
   styleUrl: './rocket-quiz.css',
 })
-export class RocketQuiz {
+export class RocketQuiz implements OnInit {
   currentStep = signal(0); // 0 = intro, 1-15 = questions, 16 = results
   answers = signal<QuizAnswer[]>([]);
   currentAnswer = signal<string | number>('');
   showResults = signal(false);
   email = signal('');
   name = signal('');
+  isLightMode = signal(true);
+
+  @HostBinding('class.light-mode') get lightMode() {
+    return this.isLightMode();
+  }
+
+  @HostBinding('class.dark-mode') get darkMode() {
+    return !this.isLightMode();
+  }
+
+  ngOnInit() {
+    // Detect system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      this.isLightMode.set(false);
+    }
+  }
+
+  toggleTheme() {
+    this.isLightMode.update(current => !current);
+  }
 
   questions: QuizQuestion[] = [
     // Section 1: R – Remember Your Future Self

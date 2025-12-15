@@ -727,6 +727,274 @@
   transform: translateY(-2px);
 }
 
+/* Theme Toggle Button */
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.theme-icon {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ========================================
+   LIGHT MODE STYLES
+   ======================================== */
+
+:host.light-mode .quiz-shell {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 60%, #ffffff 100%);
+  color: #0f172a;
+}
+
+:host.light-mode .quiz-background {
+  background: radial-gradient(circle at 30% 30%, rgba(239, 68, 68, 0.08), transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(59, 130, 246, 0.08), transparent 45%);
+  filter: blur(80px);
+  opacity: 0.7;
+}
+
+:host.light-mode .quiz-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+:host.light-mode .quiz-logo-text {
+  color: #0f172a;
+}
+
+:host.light-mode .quiz-logo-text .accent {
+  color: #ef4444;
+}
+
+:host.light-mode .theme-toggle-btn {
+  border-color: rgba(15, 23, 42, 0.15);
+  background: rgba(15, 23, 42, 0.05);
+}
+
+:host.light-mode .theme-toggle-btn:hover {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+:host.light-mode .theme-icon {
+  color: #0f172a;
+}
+
+/* Intro Card */
+:host.light-mode .quiz-intro-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.12);
+}
+
+:host.light-mode .intro-badge {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(59, 130, 246, 0.08));
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+:host.light-mode .intro-title {
+  color: #0f172a;
+}
+
+:host.light-mode .intro-subtitle {
+  color: rgba(15, 23, 42, 0.8);
+}
+
+:host.light-mode .intro-feature {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+:host.light-mode .intro-feature:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+:host.light-mode .intro-feature h3 {
+  color: #0f172a;
+}
+
+:host.light-mode .intro-feature p {
+  color: rgba(15, 23, 42, 0.7);
+}
+
+:host.light-mode .intro-note {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+/* Question Card */
+:host.light-mode .quiz-question-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.12);
+}
+
+:host.light-mode .progress-text {
+  color: rgba(15, 23, 42, 0.8);
+}
+
+:host.light-mode .progress-bar {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+:host.light-mode .question-section {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+:host.light-mode .section-name {
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .question-text {
+  color: #0f172a;
+}
+
+/* Scale Input */
+:host.light-mode .scale-btn {
+  border-color: rgba(15, 23, 42, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 23, 42, 0.8);
+}
+
+:host.light-mode .scale-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+:host.light-mode .scale-labels {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+/* Choice Input */
+:host.light-mode .choice-btn {
+  border-color: rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .choice-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:host.light-mode .choice-btn.selected {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+:host.light-mode .choice-radio {
+  border-color: rgba(15, 23, 42, 0.3);
+}
+
+/* Text Input */
+:host.light-mode .text-area {
+  border-color: rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .text-area::placeholder {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+:host.light-mode .text-area:focus {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Navigation */
+:host.light-mode .nav-btn.secondary {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .nav-btn.secondary:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+/* Results Card */
+:host.light-mode .quiz-results-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.12);
+}
+
+:host.light-mode .results-title {
+  color: #0f172a;
+}
+
+:host.light-mode .results-subtitle {
+  color: rgba(15, 23, 42, 0.8);
+}
+
+:host.light-mode .results-cta-box {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(59, 130, 246, 0.05));
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+:host.light-mode .cta-box-title {
+  color: #0f172a;
+}
+
+:host.light-mode .cta-box-text {
+  color: rgba(15, 23, 42, 0.8);
+}
+
+:host.light-mode .form-group label {
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .form-input {
+  border-color: rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .form-input::placeholder {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+:host.light-mode .form-input:focus {
+  background: rgba(255, 255, 255, 1);
+}
+
+:host.light-mode .bonuses-title {
+  color: #0f172a;
+}
+
+:host.light-mode .bonuses-list li {
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .restart-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: rgba(15, 23, 42, 0.9);
+}
+
+:host.light-mode .restart-btn:hover {
+  background: rgba(15, 23, 42, 0.1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .quiz-intro-card,
