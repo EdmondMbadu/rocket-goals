@@ -1,43 +1,43 @@
-<div class="min-h-screen bg-white flex flex-col">
-  <nav class="px-6 py-6 flex items-center justify-between border-b border-black/5">
+<div class="min-h-screen bg-white dark:bg-slate-950 dark:text-slate-100 flex flex-col transition-colors duration-300">
+  <nav class="px-6 py-6 flex items-center justify-between border-b border-black/5 dark:border-white/10">
     <a routerLink="/" class="flex items-center gap-3 group">
       <div class="relative">
         <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-25"></div>
         <img src="/assets/rocket-goals.png" alt="Rocket Goals"
           class="relative w-14 h-14 object-contain transform group-hover:scale-105 transition-transform" />
       </div>
-      <span class="text-2xl font-black tracking-tight">
+      <span class="text-2xl font-black tracking-tight text-black dark:text-white">
         ROCKET<span class="text-red-600">GOALS</span>
       </span>
     </a>
     <a routerLink="/"
-      class="px-5 py-2 rounded-full border border-black/10 font-semibold text-sm hover:bg-black hover:text-white transition">
+      class="px-5 py-2 rounded-full border border-black/10 dark:border-white/10 font-semibold text-sm text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition">
       Back to landing
     </a>
   </nav>
 
   <main class="flex-1 flex flex-col items-center justify-center px-6 text-center space-y-8">
     <div
-      class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-gray-100 border border-gray-200 text-xs uppercase tracking-[0.4em] font-semibold text-black/60">
+      class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-gray-100 border border-gray-200 text-xs uppercase tracking-[0.4em] font-semibold text-black/60 dark:bg-white/5 dark:border-white/10 dark:text-slate-200">
       <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
       Welcome Aboard
     </div>
 
-    <h1 class="text-5xl md:text-6xl font-black tracking-tight leading-tight">
+    <h1 class="text-5xl md:text-6xl font-black tracking-tight leading-tight text-black dark:text-white">
       Welcome back, <span class="text-red-600">{{ displayName }}</span>
     </h1>
 
-    <p class="text-lg text-black/70 max-w-2xl leading-relaxed">
+    <p class="text-lg text-black/70 dark:text-slate-300 max-w-2xl leading-relaxed">
       Your RocketPrompt identity is synced. You're cleared to access the RocketGoals launch challenge, save new goals,
       and keep collaborating with your AI strategist.
     </p>
 
     <div class="flex flex-col sm:flex-row gap-4">
-      <a routerLink="/" class="px-8 py-4 rounded-full bg-black text-white font-black text-lg tracking-widest">
+      <a routerLink="/" class="px-8 py-4 rounded-full bg-black text-white font-black text-lg tracking-widest hover:bg-red-600 transition-colors">
         Go to Dashboard
       </a>
       <a routerLink="/login"
-        class="px-8 py-4 rounded-full border border-black/10 text-black font-semibold tracking-widest hover:border-black hover:bg-black hover:text-white transition">
+        class="px-8 py-4 rounded-full border border-black/10 text-black dark:text-white font-semibold tracking-widest hover:border-black hover:bg-black hover:text-white dark:border-white/10 dark:hover:bg-white dark:hover:text-black transition">
         Switch Account
       </a>
     </div>
