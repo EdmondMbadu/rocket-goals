@@ -58,7 +58,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   eventModalDate = signal<Date>(new Date());
   private countdownInterval: any;
   private fanInviteSearchTimeout?: any;
-  activePrimaryTab = signal<'fans' | 'calendar'>('fans');
+  activePrimaryTab = signal<'fans' | 'tasks' | 'calendar'>('fans');
   currentFanInviteEmail = signal('');
   currentFanInviteName = signal('');
   fanInviteSuggestions = signal<{ email: string; name: string }[]>([]);
@@ -662,7 +662,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return null;
   }
 
-  selectPrimaryTab(tab: 'fans' | 'calendar') {
+  selectPrimaryTab(tab: 'fans' | 'tasks' | 'calendar') {
     this.activePrimaryTab.set(tab);
   }
 

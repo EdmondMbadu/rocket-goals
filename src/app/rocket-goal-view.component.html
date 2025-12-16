@@ -413,207 +413,8 @@
             </p>
           </div>
 
-          <!-- TODAY'S ACTION ITEMS CARD -->
-          <div class="hud-card action-items-card shimmer p-5 md:p-6">
-            <div class="scanline"></div>
-
-            <!-- Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-              <div class="flex items-center gap-3">
-                <h3 class="timeline-badge text-red-500">
-                  @if (viewAllTasks()) {
-                    ALL TASKS
-                  } @else {
-                    DAY {{ getCurrentMissionDay() }} ACTIONS
-                  }
-                </h3>
-                <span class="task-counter">
-                  {{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }} COMPLETE
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <!-- View Toggle -->
-                <button (click)="toggleViewAllTasks()"
-                  class="view-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  [class.active]="viewAllTasks()">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    @if (viewAllTasks()) {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    } @else {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    }
-                  </svg>
-                  {{ viewAllTasks() ? 'Today' : 'All' }}
-                </button>
-                <!-- Add Task Button -->
-                <button (click)="openAddActionItem()"
-                  class="add-task-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Task
-                </button>
-              </div>
-            </div>
-
-            <!-- Action Items List -->
-            <div class="action-items-list space-y-3">
-              @if (loadingActionItems()) {
-              <div class="flex items-center justify-center py-8">
-                <div class="w-8 h-8 border-3 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
-              </div>
-              } @else if (getDisplayedTasks().length === 0) {
-              <div class="empty-tasks-state text-center py-10">
-                <div class="text-6xl mb-4">🎯</div>
-                <h4 class="text-lg font-bold text-white mb-2">No tasks yet</h4>
-                <p class="text-gray-400 mb-6">
-                  @if (viewAllTasks()) {
-                    Start planning your mission by adding tasks!
-                  } @else {
-                    No action items for Day {{ getCurrentMissionDay() }}.
-                  }
-                </p>
-                <button (click)="openAddActionItem()"
-                  class="add-first-task-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Your First Task
-                </button>
-              </div>
-              } @else {
-              <!-- Existing Items -->
-              @for (item of getDisplayedTasks(); track item.id) {
-              <div class="task-card" [class.completed]="item.completed">
-                <div class="task-card-main">
-                  <!-- Checkbox -->
-                  <button (click)="toggleActionItemComplete(item)"
-                    class="task-checkbox"
-                    [class.checked]="item.completed">
-                    @if (item.completed) {
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                    }
-                  </button>
-
-                  <!-- Main content -->
-                  <div class="task-content">
-                    <!-- Title row -->
-                    @if (editingActionItemId() === item.id) {
-                    <div class="flex items-center gap-2">
-                      <input type="text"
-                        class="task-edit-input"
-                        [ngModel]="editingActionItemTitle()"
-                        (ngModelChange)="editingActionItemTitle.set($event)"
-                        (keyup.enter)="saveEditingActionItem()"
-                        (keyup.escape)="cancelEditingActionItem()"
-                        placeholder="Enter task..." />
-                      <button (click)="saveEditingActionItem()" class="task-action-btn save">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      <button (click)="cancelEditingActionItem()" class="task-action-btn cancel">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    } @else {
-                    <div class="task-header">
-                      <div class="task-title-row">
-                        <span class="task-title" [class.completed]="item.completed">
-                          {{ item.title }}
-                        </span>
-                        <!-- Day badge when viewing all tasks -->
-                        @if (viewAllTasks()) {
-                        <span class="task-day-badge" [class.current]="item.dayNumber === getCurrentMissionDay()">
-                          Day {{ item.dayNumber }}
-                        </span>
-                        }
-                      </div>
-
-                      <!-- Actions -->
-                      <div class="task-actions">
-                        <!-- Notes toggle -->
-                        <button (click)="toggleNoteExpanded(item.id)"
-                          class="task-action-btn"
-                          [class.has-note]="item.notes"
-                          [title]="item.notes ? 'View note' : 'Add note'">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                          </svg>
-                        </button>
-                        <!-- Edit -->
-                        <button (click)="startEditingActionItem(item)" class="task-action-btn">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <!-- Delete -->
-                        <button (click)="deleteActionItem(item)" class="task-action-btn delete">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Notes preview if exists -->
-                    @if (item.notes && expandedNoteItemId() !== item.id) {
-                    <p class="task-note-preview">{{ item.notes }}</p>
-                    }
-                    }
-                  </div>
-                </div>
-
-                <!-- Notes section (expandable) -->
-                @if (expandedNoteItemId() === item.id) {
-                <div class="task-note-section">
-                  @if (editingNoteItemId() === item.id) {
-                  <div class="note-edit-form">
-                    <textarea
-                      class="note-textarea"
-                      rows="4"
-                      [ngModel]="editingNoteValue()"
-                      (ngModelChange)="editingNoteValue.set($event)"
-                      placeholder="Add a note about this task..."
-                      autofocus></textarea>
-                    <div class="note-edit-actions">
-                      <button (click)="cancelEditingNote()" class="note-btn cancel">Cancel</button>
-                      <button (click)="saveNote()" class="note-btn save">Save Note</button>
-                    </div>
-                  </div>
-                  } @else {
-                  <div class="note-display">
-                    @if (item.notes) {
-                    <p class="note-text">{{ item.notes }}</p>
-                    } @else {
-                    <p class="note-empty">No note yet. Click to add one.</p>
-                    }
-                    <button (click)="startEditingNote(item)" class="note-edit-btn">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
-                    </button>
-                  </div>
-                  }
-                </div>
-                }
-              </div>
-              }
-              }
-            </div>
-          </div>
-
-          <!-- COMMUNITY + CALENDAR TABS -->
-          <div class="mission-collab mt-10" id="fan-mission-panel">
+          <!-- TABS: FANS, TASKS, CALENDAR -->
+          <div class="mission-collab" id="fan-mission-panel">
             <div class="collab-tabs">
               <button class="collab-tab"
                 [class.active]="activePrimaryTab() === 'fans'"
@@ -624,9 +425,17 @@
                 }
               </button>
               <button class="collab-tab"
+                [class.active]="activePrimaryTab() === 'tasks'"
+                (click)="selectPrimaryTab('tasks')">
+                <span>Tasks</span>
+                @if (getTotalItemsCount() > 0) {
+                  <span class="tab-pill">{{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }}</span>
+                }
+              </button>
+              <button class="collab-tab"
                 [class.active]="activePrimaryTab() === 'calendar'"
                 (click)="selectPrimaryTab('calendar')">
-                <span>Mission Calendar</span>
+                <span>Calendar</span>
                 <span class="tab-pill tab-pill-muted">View</span>
               </button>
             </div>
@@ -822,7 +631,207 @@
                   </div>
                 </div>
               </div>
+              } @else if (activePrimaryTab() === 'tasks') {
+              <!-- TASKS TAB -->
+              <div class="hud-card action-items-card shimmer p-6 md:p-8">
+                <div class="scanline"></div>
+
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div class="flex items-center gap-3">
+                    <h3 class="timeline-badge text-red-500">
+                      @if (viewAllTasks()) {
+                        ALL TASKS
+                      } @else {
+                        DAY {{ getCurrentMissionDay() }} ACTIONS
+                      }
+                    </h3>
+                    <span class="task-counter">
+                      {{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }} COMPLETE
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <!-- View Toggle -->
+                    <button (click)="toggleViewAllTasks()"
+                      class="view-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                      [class.active]="viewAllTasks()">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if (viewAllTasks()) {
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        } @else {
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        }
+                      </svg>
+                      {{ viewAllTasks() ? 'Today' : 'All' }}
+                    </button>
+                    <!-- Add Task Button -->
+                    <button (click)="openAddActionItem()"
+                      class="add-task-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Task
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Action Items List -->
+                <div class="action-items-list space-y-4">
+                  @if (loadingActionItems()) {
+                  <div class="flex items-center justify-center py-8">
+                    <div class="w-8 h-8 border-3 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+                  </div>
+                  } @else if (getDisplayedTasks().length === 0) {
+                  <div class="empty-tasks-state text-center py-10">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h4 class="text-lg font-bold text-white mb-2">No tasks yet</h4>
+                    <p class="text-gray-400 mb-6">
+                      @if (viewAllTasks()) {
+                        Start planning your mission by adding tasks!
+                      } @else {
+                        No action items for Day {{ getCurrentMissionDay() }}.
+                      }
+                    </p>
+                    <button (click)="openAddActionItem()"
+                      class="add-first-task-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Your First Task
+                    </button>
+                  </div>
+                  } @else {
+                  <!-- Existing Items -->
+                  @for (item of getDisplayedTasks(); track item.id) {
+                  <div class="task-card" [class.completed]="item.completed">
+                    <div class="task-card-main">
+                      <!-- Checkbox -->
+                      <button (click)="toggleActionItemComplete(item)"
+                        class="task-checkbox"
+                        [class.checked]="item.completed">
+                        @if (item.completed) {
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                        }
+                      </button>
+
+                      <!-- Main content -->
+                      <div class="task-content">
+                        <!-- Title row -->
+                        @if (editingActionItemId() === item.id) {
+                        <div class="flex items-center gap-2">
+                          <input type="text"
+                            class="task-edit-input"
+                            [ngModel]="editingActionItemTitle()"
+                            (ngModelChange)="editingActionItemTitle.set($event)"
+                            (keyup.enter)="saveEditingActionItem()"
+                            (keyup.escape)="cancelEditingActionItem()"
+                            placeholder="Enter task..." />
+                          <button (click)="saveEditingActionItem()" class="task-action-btn save">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                          <button (click)="cancelEditingActionItem()" class="task-action-btn cancel">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        } @else {
+                        <div class="task-header">
+                          <div class="task-title-row">
+                            <span class="task-title" [class.completed]="item.completed">
+                              {{ item.title }}
+                            </span>
+                            <!-- Day badge when viewing all tasks -->
+                            @if (viewAllTasks()) {
+                            <span class="task-day-badge" [class.current]="item.dayNumber === getCurrentMissionDay()">
+                              Day {{ item.dayNumber }}
+                            </span>
+                            }
+                          </div>
+
+                          <!-- Actions -->
+                          <div class="task-actions">
+                            <!-- Notes toggle -->
+                            <button (click)="toggleNoteExpanded(item.id)"
+                              class="task-action-btn"
+                              [class.has-note]="item.notes"
+                              [title]="item.notes ? 'View note' : 'Add note'">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                              </svg>
+                            </button>
+                            <!-- Edit -->
+                            <button (click)="startEditingActionItem(item)" class="task-action-btn">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <!-- Delete -->
+                            <button (click)="deleteActionItem(item)" class="task-action-btn delete">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Notes preview if exists -->
+                        @if (item.notes && expandedNoteItemId() !== item.id) {
+                        <p class="task-note-preview">{{ item.notes }}</p>
+                        }
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Notes section (expandable) -->
+                    @if (expandedNoteItemId() === item.id) {
+                    <div class="task-note-section">
+                      @if (editingNoteItemId() === item.id) {
+                      <div class="note-edit-form">
+                        <textarea
+                          class="note-textarea"
+                          rows="4"
+                          [ngModel]="editingNoteValue()"
+                          (ngModelChange)="editingNoteValue.set($event)"
+                          placeholder="Add a note about this task..."
+                          autofocus></textarea>
+                        <div class="note-edit-actions">
+                          <button (click)="cancelEditingNote()" class="note-btn cancel">Cancel</button>
+                          <button (click)="saveNote()" class="note-btn save">Save Note</button>
+                        </div>
+                      </div>
+                      } @else {
+                      <div class="note-display">
+                        @if (item.notes) {
+                        <p class="note-text">{{ item.notes }}</p>
+                        } @else {
+                        <p class="note-empty">No note yet. Click to add one.</p>
+                        }
+                        <button (click)="startEditingNote(item)" class="note-edit-btn">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit
+                        </button>
+                      </div>
+                      }
+                    </div>
+                    }
+                  </div>
+                  }
+                  }
+                </div>
+              </div>
               } @else {
+              <!-- CALENDAR TAB -->
               <div class="calendar-panel">
                 <app-mission-calendar 
                   [events]="calendarEvents()"
