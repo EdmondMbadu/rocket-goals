@@ -72,6 +72,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   reactionsLoading = signal(false);
   fanCommentInput = signal('');
   fanCommentEmoji = signal('');
+  fanCommentError = signal<string | null>(null);
+  fanCommentSubmitting = signal(false);
   readonly fanReactionPalette = ['🚀', '🔥', '👏', '💯', '❤️', '🌟'];
 
   // Action Items state
@@ -627,6 +629,28 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return !!goal?.userId && !!profile?.userId && goal.userId === profile.userId;
   }
 
+  private getFeedbackIdentity(): { email: string; name: string } | null {
+    const profile = this.authService.profile();
+    if (profile?.email) {
+      const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+      return {
+        email: profile.email,
+        name: fullName || profile.email
+      };
+    }
+
+    const goal = this.goal();
+    if (goal && this.isGoalOwner() && goal.participant?.email) {
+      const participantName = `${goal.participant.firstName || ''} ${goal.participant.lastName || ''}`.trim();
+      return {
+        email: goal.participant.email,
+        name: participantName || goal.participant.email
+      };
+    }
+
+    return null;
+  }
+
   selectPrimaryTab(tab: 'fans' | 'calendar') {
     this.activePrimaryTab.set(tab);
   }
@@ -743,38 +767,44 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   async submitFanComment() {
     const goal = this.goal();
-    const profile = this.authService.profile();
-    if (!goal?.id || !profile?.email) {
+    const identity = this.getFeedbackIdentity();
+    if (!goal?.id || !identity?.email) {
+      this.fanCommentError.set('Please sign in to post updates.');
       return;
     }
 
     const content = this.fanCommentInput().trim();
     if (!content) {
+      this.fanCommentError.set('Add a short note before posting.');
       return;
     }
 
+    this.fanCommentSubmitting.set(true);
+    this.fanCommentError.set(null);
+
     try {
       const emoji = this.fanCommentEmoji().trim() || undefined;
-      const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email;
-      await this.fansService.addComment(goal.id, profile.email, content, name, emoji);
+      await this.fansService.addComment(goal.id, identity.email, content, identity.name, emoji);
       this.fanCommentInput.set('');
       this.fanCommentEmoji.set('');
       await this.loadFanComments(goal.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting fan comment:', error);
+      this.fanCommentError.set(error?.message || 'Unable to post your update right now.');
+    } finally {
+      this.fanCommentSubmitting.set(false);
     }
   }
 
   async toggleFanReaction(emoji: string) {
     const goal = this.goal();
-    const profile = this.authService.profile();
-    if (!goal?.id || !profile?.email) {
+    const identity = this.getFeedbackIdentity();
+    if (!goal?.id || !identity?.email) {
       return;
     }
 
     try {
-      const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email;
-      await this.fansService.addReaction(goal.id, profile.email, emoji, name);
+      await this.fansService.addReaction(goal.id, identity.email, emoji, identity.name);
       await this.loadFanReactions(goal.id);
     } catch (error) {
       console.error('Error toggling fan reaction:', error);
@@ -782,7 +812,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   canCurrentUserLeaveFeedback(): boolean {
-    return !!this.authService.profile()?.email;
+    return !!this.getFeedbackIdentity();
   }
 
   getFanStatusLabel(status: Fan['status']) {

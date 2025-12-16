@@ -1807,10 +1807,19 @@
   transition: all 0.25s ease;
 }
 
+.light-mode .collab-tab {
+  color: rgba(15, 23, 42, 0.7);
+}
+
 .collab-tab.active {
   background: linear-gradient(120deg, rgba(220, 38, 38, 0.85), rgba(139, 92, 246, 0.85));
   color: #fff;
   box-shadow: 0 12px 25px rgba(220, 38, 38, 0.25);
+}
+
+.light-mode .collab-tab.active {
+  background: linear-gradient(120deg, rgba(239, 68, 68, 0.9), rgba(245, 158, 11, 0.9));
+  color: #fff;
 }
 
 .tab-pill {
@@ -2187,6 +2196,12 @@
 .comment-actions input {
   width: 80px;
   text-align: center;
+}
+
+.comment-error {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #f87171;
 }
 
 .fan-comments {

@@ -670,11 +670,14 @@
                         [ngModel]="fanCommentEmoji()"
                         (ngModelChange)="fanCommentEmoji.set($event)"
                         [disabled]="!canCurrentUserLeaveFeedback()" />
-                      <button (click)="submitFanComment()"
-                        [disabled]="!fanCommentInput().trim() || !canCurrentUserLeaveFeedback()">
-                        Post update
+                      <button type="button" (click)="submitFanComment()"
+                        [disabled]="fanCommentSubmitting() || !fanCommentInput().trim() || !canCurrentUserLeaveFeedback()">
+                        {{ fanCommentSubmitting() ? 'Posting...' : 'Post update' }}
                       </button>
                     </div>
+                    @if (fanCommentError()) {
+                      <p class="comment-error">{{ fanCommentError() }}</p>
+                    }
                   </div>
                   <div class="fan-comments">
                     @if (commentsLoading()) {
