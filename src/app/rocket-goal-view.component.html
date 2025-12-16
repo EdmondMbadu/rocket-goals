@@ -884,7 +884,7 @@
 
 <!-- Task Modal -->
 @if (showTaskModal()) {
-<div class="task-modal-overlay" (click)="closeTaskModal()">
+<div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="closeTaskModal()">
   <div class="task-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="task-modal-header">
