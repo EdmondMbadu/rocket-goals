@@ -75,8 +75,7 @@
         <!-- Headline -->
         <h1 class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none mb-6 text-black dark:text-white">
           IGNITE YOUR <br />
-          <span
-            class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-black to-red-600 dark:from-red-500 dark:via-white dark:to-red-500 animate-gradient-x">
+          <span class="hero-gradient-text">
             POTENTIAL
           </span>
         </h1>
@@ -1040,6 +1039,24 @@
       </div>
     </div>
   </section>
+
+  <!-- Hero Gradient Text Styles -->
+  <style>
+    .hero-gradient-text {
+      display: inline-block;
+      background: linear-gradient(90deg, #dc2626 0%, #000000 50%, #dc2626 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .dark .hero-gradient-text {
+      background: linear-gradient(90deg, #ef4444 0%, #f87171 20%, #fca5a5 40%, #fca5a5 60%, #f87171 80%, #ef4444 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  </style>
 
   <!-- Pricing Styles -->
   <style>
