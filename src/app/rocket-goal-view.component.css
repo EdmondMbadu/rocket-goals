@@ -185,6 +185,43 @@
   background: linear-gradient(90deg, transparent 0%, rgba(220, 38, 38, 0.5) 50%, transparent 100%);
 }
 
+/* ===== NAVIGATION LINKS ===== */
+.nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  border-bottom: 2px solid transparent;
+}
+
+.dark-mode .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dark-mode .nav-link:hover {
+  color: #ef4444;
+}
+
+.light-mode .nav-link {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.light-mode .nav-link:hover {
+  color: #dc2626;
+}
+
+.nav-link-active {
+  color: #ef4444 !important;
+  border-bottom-color: #ef4444 !important;
+}
+
+.dark-mode .nav-link-active {
+  color: #ef4444 !important;
+  border-bottom-color: #ef4444 !important;
+}
+
+.light-mode .nav-link-active {
+  color: #dc2626 !important;
+  border-bottom-color: #dc2626 !important;
+}
+
 /* ===== LOGO TEXT STYLING ===== */
 .logo-text {
   transition: all 0.3s ease;
