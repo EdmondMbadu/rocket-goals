@@ -43,9 +43,24 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   private scrollInterval: any = null;
 
   ngOnInit(): void {
-    const profile = this.authService.profile();
-    if (profile?.userId && this.aiService.sessions().length === 0) {
-      void this.aiService.loadSessionsForCurrentUser();
+    // If we have a goal context, load conversation for that goal
+    if (this.goalContext?.id) {
+      void this.aiService.loadConversationForGoal(this.goalContext.id).then(() => {
+        // After loading, check if we should show greeting
+        // Wait a bit for messages to load, then check
+        setTimeout(() => {
+          // Only show greeting if there are NO messages (fresh conversation)
+          if (this.embedded && this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
+            this.triggerGreeting();
+          }
+        }, 1200);
+      });
+    } else {
+      // Otherwise, load general sessions
+      const profile = this.authService.profile();
+      if (profile?.userId && this.aiService.sessions().length === 0) {
+        void this.aiService.loadSessionsForCurrentUser();
+      }
     }
 
     // If embedded mode and no goal context, show a greeting for non-logged-in users
@@ -65,10 +80,27 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // When embedded and goal context becomes available, trigger a greeting
-    // Only if we haven't greeted AND there are no existing messages
-    if (changes['goalContext'] && this.embedded && this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
-      this.triggerGreeting();
+    // When goal context becomes available or changes, load the conversation for that goal
+    if (changes['goalContext']) {
+      const previousGoalId = changes['goalContext'].previousValue?.id;
+      const currentGoalId = this.goalContext?.id;
+      
+      // Only reload if the goal actually changed
+      if (currentGoalId && currentGoalId !== previousGoalId) {
+        // Reset greeting state when switching goals
+        this.hasGreeted.set(false);
+        // Load conversation specific to this goal
+        void this.aiService.loadConversationForGoal(currentGoalId).then(() => {
+          // After loading, check if we should show greeting
+          // Wait a bit for messages to load, then check
+          setTimeout(() => {
+            // Only show greeting if there are NO messages (fresh conversation)
+            if (this.embedded && this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
+              this.triggerGreeting();
+            }
+          }, 1200);
+        });
+      }
     }
   }
 
@@ -108,11 +140,25 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   }
 
   private async triggerGreeting(): Promise<void> {
-    if (this.hasGreeted() || !this.goalContext || this.messages().length > 0) return;
+    // Prevent duplicate greetings - check multiple conditions
+    // IMPORTANT: Only show greeting if there are NO existing messages
+    if (this.hasGreeted() || !this.goalContext || this.messages().length > 0) {
+      return;
+    }
+    
+    // Set greeting flag immediately to prevent duplicates
     this.hasGreeted.set(true);
 
-    // Wait a moment for the UI to settle
+    // Wait a moment for the UI to settle and for any messages to finish loading
     await new Promise(resolve => setTimeout(resolve, 800));
+
+    // CRITICAL: Double-check messages are still empty before proceeding
+    // This prevents greeting from appearing after existing conversation loads
+    if (this.messages().length > 0) {
+      // Messages were loaded while we waited - don't show greeting
+      this.hasGreeted.set(false); // Reset flag so it can show next time if needed
+      return;
+    }
 
     // Check if user is signed in
     const currentUser = this.authService.profile();

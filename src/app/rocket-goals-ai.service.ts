@@ -18,6 +18,7 @@ export interface ChatSessionMeta {
   createdAt: Date;
   updatedAt: Date;
   lastMessage?: string;
+  goalId?: string; // Optional: links conversation to a specific goal
 }
 
 type FirestoreSessionDoc = {
@@ -25,6 +26,7 @@ type FirestoreSessionDoc = {
   createdAt?: any;
   updatedAt?: any;
   lastMessage?: string;
+  goalId?: string; // Optional: links conversation to a specific goal
 };
 
 type FirestoreMessageDoc = {
@@ -114,6 +116,7 @@ export class RocketGoalsAIService {
   private conversationHistory: { role: 'user' | 'model'; content: string }[] = [];
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
   private currentUserId: string | null = null;
+  private currentGoalId: string | null = null; // Track which goal's conversation is currently loaded
 
   private readonly systemPrompt = `You are RocketGoals AI, a helpful assistant for goal-setting and achievement. You help users create, manage, and achieve their goals using the 7-day Rocket Goal challenge methodology.
 
@@ -171,6 +174,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
 
   private resetClientState(): void {
     this.startNewSession();
+    this.currentGoalId = null; // Clear goal tracking on auth change
     this.sessions.set([]);
     this.sessionsError.set(null);
     this.sessionsLoading.set(false);
@@ -204,7 +208,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isOpen.set(false);
   }
 
-  async loadSessionsForCurrentUser(selectMostRecent: boolean = true): Promise<void> {
+  async loadSessionsForCurrentUser(selectMostRecent: boolean = true, goalId?: string): Promise<void> {
     const profile = this.authService.profile();
     if (!profile?.userId) {
       this.sessions.set([]);
@@ -217,25 +221,70 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     try {
       const firestore = await this.ensureFirestore();
       const firestoreModule = await import('firebase/firestore');
-      const sessionsQuery = firestoreModule.query(
-        firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
-        firestoreModule.orderBy('updatedAt', 'desc')
-      );
-      const snapshot = await firestoreModule.getDocs(sessionsQuery);
-      const mapped: ChatSessionMeta[] = snapshot.docs.map(doc => {
+      
+      let snapshot;
+      
+      // If goalId is provided, try to filter by goalId
+      if (goalId) {
+        try {
+          // Try query with goalId filter and orderBy
+          const sessionsQuery = firestoreModule.query(
+            firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
+            firestoreModule.where('goalId', '==', goalId),
+            firestoreModule.orderBy('updatedAt', 'desc')
+          );
+          snapshot = await firestoreModule.getDocs(sessionsQuery);
+        } catch (queryError: any) {
+          // If query fails (e.g., missing index), fall back to loading all and filtering client-side
+          console.warn('Query with goalId filter failed, falling back to client-side filter:', queryError);
+          const allSessionsQuery = firestoreModule.query(
+            firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
+            firestoreModule.orderBy('updatedAt', 'desc')
+          );
+          const allSnapshot = await firestoreModule.getDocs(allSessionsQuery);
+          // Filter client-side
+          snapshot = {
+            docs: allSnapshot.docs.filter(doc => {
+              const data = doc.data() as FirestoreSessionDoc;
+              return data.goalId === goalId;
+            })
+          } as any;
+        }
+      } else {
+        // Load all sessions
+        const sessionsQuery = firestoreModule.query(
+          firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
+          firestoreModule.orderBy('updatedAt', 'desc')
+        );
+        snapshot = await firestoreModule.getDocs(sessionsQuery);
+      }
+      
+      const mapped: ChatSessionMeta[] = snapshot.docs.map((doc: any) => {
         const data = doc.data() as FirestoreSessionDoc;
         return {
           id: doc.id,
           title: data.title || 'Chat',
           createdAt: this.convertToDate(data.createdAt),
           updatedAt: this.convertToDate(data.updatedAt),
-          lastMessage: data.lastMessage
+          lastMessage: data.lastMessage,
+          goalId: data.goalId
         };
       });
       this.sessions.set(mapped);
 
-      if (selectMostRecent && mapped.length > 0 && !this.currentSessionId()) {
-        await this.loadSession(mapped[0].id);
+      if (selectMostRecent && mapped.length > 0) {
+        // If we're loading for a specific goal and already have a session for that goal, use it
+        // Otherwise, load the most recent session
+        const targetSessionId = this.currentSessionId() && 
+          mapped.find(s => s.id === this.currentSessionId() && s.goalId === goalId)?.id;
+        
+        if (targetSessionId) {
+          // Already have the right session loaded
+          return;
+        } else {
+          // Load the most recent session for this goal
+          await this.loadSession(mapped[0].id);
+        }
       }
     } catch (error: any) {
       console.error('Failed to load chat sessions', error);
@@ -284,6 +333,58 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
   }
 
+  /**
+   * Load conversation for a specific goal
+   * If a conversation exists for this goal, load it; otherwise start fresh
+   */
+  async loadConversationForGoal(goalId: string): Promise<void> {
+    // If we're already viewing this goal's conversation, don't reload
+    if (this.currentGoalId === goalId && this.currentSessionId()) {
+      return;
+    }
+
+    // Track that we're switching to this goal
+    const previousGoalId = this.currentGoalId;
+    this.currentGoalId = goalId;
+
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      // If not logged in, just start a new session
+      this.startNewSession();
+      return;
+    }
+
+    try {
+      // Try to load sessions for this specific goal (without auto-selecting)
+      await this.loadSessionsForCurrentUser(false, goalId);
+      
+      // If a session exists for this goal, load it
+      if (this.sessions().length > 0) {
+        // Clear old messages only if we're switching from a different goal
+        if (previousGoalId && previousGoalId !== goalId) {
+          this.messages.set([]);
+          this.conversationHistory = [];
+        }
+        // Load the most recent session for this goal
+        await this.loadSession(this.sessions()[0].id);
+      } else {
+        // No session found for this goal - clear and start fresh
+        // Only clear if we're switching from a different goal
+        if (previousGoalId && previousGoalId !== goalId) {
+          this.messages.set([]);
+          this.conversationHistory = [];
+        }
+        this.startNewSession();
+      }
+    } catch (error: any) {
+      console.error('Failed to load conversation for goal', error);
+      // On error, clear and start fresh
+      this.messages.set([]);
+      this.conversationHistory = [];
+      this.startNewSession();
+    }
+  }
+
   startNewSession(): void {
     this.messages.set([]);
     this.conversationHistory = [];
@@ -292,6 +393,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.currentSessionId.set(null);
     this.currentSessionTitle.set(null);
     this.currentSessionCreatedAt.set(null);
+    // Don't clear currentGoalId here - it should persist until explicitly changed
   }
 
   async deleteSession(sessionId: string): Promise<void> {
@@ -329,7 +431,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
   }
 
-  private async ensureActiveSession(initialUserMessage?: string): Promise<string | null> {
+  private async ensureActiveSession(initialUserMessage?: string, goalId?: string): Promise<string | null> {
     const profile = this.authService.profile();
     if (!profile?.userId) return null;
 
@@ -342,14 +444,21 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       const firestoreModule = await import('firebase/firestore');
       const title = this.buildTitleFromMessage(initialUserMessage || 'New chat');
       const now = firestoreModule.serverTimestamp();
+      const sessionData: any = {
+        title,
+        createdAt: now,
+        updatedAt: now,
+        lastMessage: initialUserMessage || 'New chat'
+      };
+      
+      // Add goalId if provided
+      if (goalId) {
+        sessionData.goalId = goalId;
+      }
+      
       const docRef = await firestoreModule.addDoc(
         firestoreModule.collection(firestore, 'userProfiles', profile.userId, 'aiChats'),
-        {
-          title,
-          createdAt: now,
-          updatedAt: now,
-          lastMessage: initialUserMessage || 'New chat'
-        }
+        sessionData
       );
 
       this.currentSessionId.set(docRef.id);
@@ -357,7 +466,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       this.currentSessionCreatedAt.set(new Date());
 
       // Refresh session list but don't override selection
-      void this.loadSessionsForCurrentUser(false);
+      void this.loadSessionsForCurrentUser(false, goalId);
 
       return docRef.id;
     } catch (error) {
@@ -448,7 +557,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isLoading.set(true);
     this.error.set(null);
 
-    const sessionId = await this.ensureActiveSession(userMessage);
+    const sessionId = await this.ensureActiveSession(userMessage, goalContext?.id);
 
     // Add user message to conversation
     const userChatMessage: ChatMessage = {
@@ -554,7 +663,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.isLoading.set(true);
     this.error.set(null);
 
-    const sessionId = await this.ensureActiveSession(userMessage);
+    const sessionId = await this.ensureActiveSession(userMessage, goalContext?.id);
 
     // Add user message to conversation
     const userChatMessage: ChatMessage = {
