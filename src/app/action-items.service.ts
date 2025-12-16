@@ -7,6 +7,7 @@ export interface ActionItem {
   goalId: string;
   title: string;
   description?: string;
+  notes?: string; // User notes/comments on the task
   dayNumber: number; // Which day of the mission this is for (1-based)
   completed: boolean;
   order: number; // For sorting within a day

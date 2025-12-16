@@ -83,7 +83,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   editingActionItemId = signal<string | null>(null);
   editingActionItemTitle = signal('');
   newActionItemTitle = signal('');
-  showAddActionItem = signal(false);
+  newActionItemNotes = signal('');
+  showTaskModal = signal(false);
+  selectedDayForNewTask = signal<number>(1);
+  expandedNoteItemId = signal<string | null>(null);
+  editingNoteItemId = signal<string | null>(null);
+  editingNoteValue = signal('');
+  viewAllTasks = signal(false);
+  savingTask = signal(false);
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -944,13 +951,16 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   openAddActionItem() {
-    this.showAddActionItem.set(true);
+    this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
+    this.newActionItemNotes.set('');
+    this.selectedDayForNewTask.set(this.getCurrentMissionDay());
   }
 
-  cancelAddActionItem() {
-    this.showAddActionItem.set(false);
+  closeTaskModal() {
+    this.showTaskModal.set(false);
     this.newActionItemTitle.set('');
+    this.newActionItemNotes.set('');
   }
 
   async addNewActionItem() {
@@ -960,15 +970,19 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const title = this.newActionItemTitle().trim();
     if (!title) return;
 
-    const currentDay = this.getCurrentMissionDay();
-    const existingItems = this.getActionItemsForCurrentDay();
+    this.savingTask.set(true);
+
+    const selectedDay = this.selectedDayForNewTask();
+    const notes = this.newActionItemNotes().trim();
+    const existingItems = this.getActionItemsForDay(selectedDay);
     const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
 
     try {
       const newId = await this.actionItemsService.createActionItem({
         goalId: goal.id,
         title,
-        dayNumber: currentDay,
+        notes: notes || undefined,
+        dayNumber: selectedDay,
         completed: false,
         order: nextOrder
       });
@@ -978,17 +992,100 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         id: newId,
         goalId: goal.id,
         title,
-        dayNumber: currentDay,
+        notes: notes || undefined,
+        dayNumber: selectedDay,
         completed: false,
         order: nextOrder,
         createdAt: new Date(),
         updatedAt: new Date()
       };
       this.actionItems.update(items => [...items, newItem]);
-      this.cancelAddActionItem();
+      this.closeTaskModal();
     } catch (error) {
       console.error('Error adding action item:', error);
+    } finally {
+      this.savingTask.set(false);
     }
+  }
+
+  // Get action items for a specific day
+  getActionItemsForDay(day: number): ActionItem[] {
+    return this.actionItems().filter(item => item.dayNumber === day);
+  }
+
+  // Get task count for a specific day (for timeline indicators)
+  getTaskCountForDay(day: number): number {
+    return this.getActionItemsForDay(day).length;
+  }
+
+  // Get completed task count for a specific day
+  getCompletedTaskCountForDay(day: number): number {
+    return this.getActionItemsForDay(day).filter(item => item.completed).length;
+  }
+
+  // Check if all tasks for a day are completed
+  isAllTasksCompletedForDay(day: number): boolean {
+    const tasks = this.getActionItemsForDay(day);
+    return tasks.length > 0 && tasks.every(item => item.completed);
+  }
+
+  // Toggle viewing all tasks vs current day only
+  toggleViewAllTasks() {
+    this.viewAllTasks.update(v => !v);
+  }
+
+  // Get tasks to display based on view mode
+  getDisplayedTasks(): ActionItem[] {
+    if (this.viewAllTasks()) {
+      return this.actionItems();
+    }
+    return this.getActionItemsForCurrentDay();
+  }
+
+  // Notes functionality
+  toggleNoteExpanded(itemId: string) {
+    if (this.expandedNoteItemId() === itemId) {
+      this.expandedNoteItemId.set(null);
+    } else {
+      this.expandedNoteItemId.set(itemId);
+    }
+  }
+
+  startEditingNote(item: ActionItem) {
+    this.editingNoteItemId.set(item.id);
+    this.editingNoteValue.set(item.notes || '');
+  }
+
+  cancelEditingNote() {
+    this.editingNoteItemId.set(null);
+    this.editingNoteValue.set('');
+  }
+
+  async saveNote() {
+    const goal = this.goal();
+    const itemId = this.editingNoteItemId();
+    if (!goal?.id || !itemId) return;
+
+    const notes = this.editingNoteValue().trim();
+
+    try {
+      await this.actionItemsService.updateActionItem(goal.id, itemId, { notes: notes || undefined });
+      // Update local state
+      this.actionItems.update(items =>
+        items.map(i => i.id === itemId ? { ...i, notes: notes || undefined } : i)
+      );
+      this.cancelEditingNote();
+    } catch (error) {
+      console.error('Error saving note:', error);
+    }
+  }
+
+  // Add task directly to a timeline day (when clicking on timeline)
+  addTaskToDay(day: number) {
+    this.selectedDayForNewTask.set(day);
+    this.showTaskModal.set(true);
+    this.newActionItemTitle.set('');
+    this.newActionItemNotes.set('');
   }
 
   private scrollFansIntoView() {
