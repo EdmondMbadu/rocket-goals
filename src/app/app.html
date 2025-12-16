@@ -1,10 +1,11 @@
 @if (isAuthRoute()) {
 <router-outlet />
 } @else {
-<div class="min-h-screen bg-white font-sans selection:bg-red-600 selection:text-white">
+<div class="landing-page min-h-screen bg-white text-black dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-red-600 selection:text-white"
+  [class.landing-dark]="isDarkMode()">
   <!-- Navigation -->
   <nav
-    class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/90 backdrop-blur-md border-b border-black/5">
+    class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-b border-black/5 dark:border-white/10">
     <div class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between gap-6">
         <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'"
@@ -16,15 +17,30 @@
             <img src="/assets/rocket-goals.png" alt="Rocket Goals"
               class="relative w-16 h-16 md:w-20 md:h-20 object-contain transform transition-transform duration-500 group-hover:scale-110" />
           </div>
-          <span class="text-2xl font-black tracking-tighter text-black hidden sm:block">
+          <span class="text-2xl font-black tracking-tighter text-black dark:text-white hidden sm:block">
             ROCKET<span class="text-red-600">GOALS</span>
           </span>
         </a>
 
         <div class="flex-1"></div>
         <div class="flex items-center gap-4">
+          <button type="button" (click)="toggleDarkMode()" [attr.aria-pressed]="isDarkMode()"
+            class="p-3 rounded-full border border-black/10 dark:border-white/20 text-black dark:text-white hover:text-white hover:bg-black dark:hover:bg-white dark:hover:text-black transition-colors"
+            title="Toggle dark mode">
+            @if (isDarkMode()) {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.021 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            } @else {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+            </svg>
+            }
+          </button>
           <a routerLink="/login"
-            class="px-6 py-2.5 text-sm font-bold text-black bg-white border-2 border-black/10 rounded-full hover:border-black hover:bg-black hover:text-white transition-all duration-300">
+            class="px-6 py-2.5 text-sm font-bold text-black dark:text-white bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-full hover:border-black hover:bg-black hover:text-white transition-all duration-300">
             Log in
           </a>
           <a routerLink="/signup"
@@ -37,7 +53,7 @@
   </nav>
 
   <!-- Hero Section -->
-  <div class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white">
+  <div class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white dark:bg-slate-950">
     <!-- Background Animation -->
     <div class="absolute inset-0 z-0">
       <canvas #rocketCanvas class="w-full h-full object-cover"></canvas>
@@ -1199,6 +1215,40 @@
 
     .rocket-gray {
       filter: grayscale(1) brightness(1.2) contrast(0.9) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    }
+
+    .landing-dark .pricing-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.5);
+    }
+
+    .landing-dark .pricing-card:hover {
+      border-color: rgba(226, 232, 240, 0.4);
+      box-shadow: 0 20px 40px rgba(2, 6, 23, 0.65);
+    }
+
+    .landing-dark .pricing-card.highlight {
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.9));
+      border-color: rgba(248, 113, 113, 0.35);
+      box-shadow: 0 20px 45px rgba(248, 113, 113, 0.3);
+    }
+
+    .landing-dark .pricing-card .sub,
+    .landing-dark .pricing-card .desc,
+    .landing-dark .pricing-card .features li {
+      color: rgba(226, 232, 240, 0.8);
+    }
+
+    .landing-dark .pricing-card .btn-outline {
+      border-color: rgba(248, 250, 252, 0.4);
+      color: #f8fafc;
+      background: transparent;
+    }
+
+    .landing-dark .pricing-card .btn-outline:hover {
+      background: #f8fafc;
+      color: #0f172a;
     }
   </style>
 

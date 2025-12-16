@@ -23,6 +23,7 @@ type ChallengeAuthStage = 'email' | 'existing-login' | 'new-profile' | 'verify' 
 })
 export class App implements AfterViewInit, OnDestroy {
   protected readonly title = signal('rocket-goals');
+  protected readonly isDarkMode = signal(false);
 
   @ViewChild('rocketCanvas') rocketCanvas!: ElementRef<HTMLCanvasElement>;
   private renderer!: THREE.WebGLRenderer;
@@ -132,6 +133,30 @@ export class App implements AfterViewInit, OnDestroy {
       this.checkAndStartChallenge(this.router.url);
     });
 
+    // Initialize theme preference
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem('rocketGoalsTheme');
+      if (storedTheme === 'dark') {
+        this.isDarkMode.set(true);
+      } else if (storedTheme === 'light') {
+        this.isDarkMode.set(false);
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        this.isDarkMode.set(prefersDark);
+      }
+    }
+
+    effect(() => {
+      const darkModeEnabled = this.isDarkMode();
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('rocketGoalsTheme', darkModeEnabled ? 'dark' : 'light');
+        } catch (error) {
+          console.warn('Unable to persist theme preference', error);
+        }
+      }
+    });
+
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
@@ -159,6 +184,10 @@ export class App implements AfterViewInit, OnDestroy {
         }, 150);
       }
     });
+  }
+
+  toggleDarkMode() {
+    this.isDarkMode.update(mode => !mode);
   }
 
   private checkAndStartChallenge(urlString: string) {

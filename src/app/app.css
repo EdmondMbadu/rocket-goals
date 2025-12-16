@@ -4,6 +4,79 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+.landing-page {
+  --landing-bg: #ffffff;
+  --landing-surface: rgba(255, 255, 255, 0.92);
+  --landing-surface-muted: rgba(248, 250, 252, 0.8);
+  --landing-text: #0f172a;
+  --landing-text-muted: rgba(15, 23, 42, 0.7);
+  --landing-border: rgba(15, 23, 42, 0.12);
+}
+
+.landing-page.landing-dark {
+  --landing-bg: #020617;
+  --landing-surface: rgba(2, 6, 23, 0.9);
+  --landing-surface-muted: rgba(15, 23, 42, 0.85);
+  --landing-text: #f8fafc;
+  --landing-text-muted: rgba(226, 232, 240, 0.75);
+  --landing-border: rgba(148, 163, 184, 0.35);
+}
+
+.landing-page {
+  background-color: var(--landing-bg);
+  color: var(--landing-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.landing-page.landing-dark [class*="bg-white"] {
+  background-color: var(--landing-surface);
+}
+
+.landing-page.landing-dark [class*="bg-gray-50"],
+.landing-page.landing-dark [class*="bg-gray-100"],
+.landing-page.landing-dark [class*="bg-gray-200"] {
+  background-color: var(--landing-surface-muted);
+}
+
+.landing-page.landing-dark .bg-white-space {
+  background-color: rgba(2, 6, 23, 0.98);
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+    radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+}
+
+.landing-page.landing-dark .hud-card-white,
+.landing-page.landing-dark .terminal-window-white,
+.landing-page.landing-dark .hud-card-white .bg-gray-50 {
+  border-color: var(--landing-border);
+  background-color: rgba(15, 23, 42, 0.85);
+}
+
+.landing-page.landing-dark [class*="border-black"],
+.landing-page.landing-dark [class*="border-gray"] {
+  border-color: var(--landing-border);
+}
+
+.landing-page.landing-dark [class*="text-black/"] {
+  color: var(--landing-text-muted);
+}
+
+.landing-page.landing-dark .text-black {
+  color: var(--landing-text);
+}
+
+.landing-page.landing-dark [class*="text-gray"] {
+  color: var(--landing-text-muted);
+}
+
+.landing-page.landing-dark .hover\:bg-white:hover {
+  background-color: rgba(248, 250, 252, 0.1);
+}
+
+.landing-page.landing-dark .hover\:text-black:hover {
+  color: var(--landing-text);
+}
+
 .rocket-container {
   animation: rocket-container-float 4s linear infinite
 }
