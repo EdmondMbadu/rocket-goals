@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, effect } from '@angular/core';
 import { Functions, getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 import { AuthService } from './auth.service';
@@ -113,6 +113,7 @@ export class RocketGoalsAIService {
 
   private conversationHistory: { role: 'user' | 'model'; content: string }[] = [];
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
+  private currentUserId: string | null = null;
 
   private readonly systemPrompt = `You are RocketGoals AI, a helpful assistant for goal-setting and achievement. You help users create, manage, and achieve their goals using the 7-day Rocket Goal challenge methodology.
 
@@ -136,6 +137,19 @@ If asked about technical issues or features, explain them clearly and suggest so
 
 Remember: Users are on a 7-day journey to transform their goals into reality. Help them launch successfully and stay on course!`;
 
+  constructor() {
+    effect(() => {
+      const profile = this.authService.profile();
+      const nextUserId = profile?.userId ?? null;
+
+      if (nextUserId === this.currentUserId) {
+        return;
+      }
+
+      this.handleAuthChange(nextUserId);
+    });
+  }
+
   private async ensureFirestore() {
     if (!this.firestorePromise) {
       this.firestorePromise = (async () => {
@@ -144,6 +158,22 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       })();
     }
     return this.firestorePromise;
+  }
+
+  private handleAuthChange(userId: string | null): void {
+    this.currentUserId = userId;
+    this.resetClientState();
+
+    if (userId) {
+      void this.loadSessionsForCurrentUser();
+    }
+  }
+
+  private resetClientState(): void {
+    this.startNewSession();
+    this.sessions.set([]);
+    this.sessionsError.set(null);
+    this.sessionsLoading.set(false);
   }
 
   private buildTitleFromMessage(message: string) {
