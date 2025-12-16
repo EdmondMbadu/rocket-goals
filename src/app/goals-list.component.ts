@@ -243,6 +243,13 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     return 'Mission Commander';
   }
 
+  scrollToFanMissions() {
+    const section = document.getElementById('fan-missions-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   getGoalTheme(goal: RocketGoal): string {
     return goal.answers['goal_theme_label'] || 'Personal Growth';
   }

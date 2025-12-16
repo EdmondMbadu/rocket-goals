@@ -75,6 +75,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   fanCommentError = signal<string | null>(null);
   fanCommentSubmitting = signal(false);
   readonly fanReactionPalette = ['🚀', '🔥', '👏', '💯', '❤️', '🌟'];
+  private readonly fanSectionId = 'fan-mission-panel';
 
   // Action Items state
   actionItems = signal<ActionItem[]>([]);
@@ -266,6 +267,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         await this.loadFans(currentGoal.id);
         await this.loadFanComments(currentGoal.id);
         await this.loadFanReactions(currentGoal.id);
+        if (!this.isGoalOwner()) {
+          this.scrollFansIntoView();
+        }
       }
       } else {
         this.error.set('Goal not found');
@@ -984,6 +988,13 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       this.cancelAddActionItem();
     } catch (error) {
       console.error('Error adding action item:', error);
+    }
+  }
+
+  private scrollFansIntoView() {
+    const section = document.getElementById(this.fanSectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 }
