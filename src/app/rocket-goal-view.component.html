@@ -500,13 +500,225 @@
             </div>
           </div>
 
-          <!-- MISSION CALENDAR -->
-          <app-mission-calendar 
-            [events]="calendarEvents()"
-            (dateSelected)="onCalendarDateSelected($event)"
-            (eventClicked)="onCalendarEventClicked($event)"
-            (createEvent)="onCalendarCreateEvent($event)">
-          </app-mission-calendar>
+          <!-- COMMUNITY + CALENDAR TABS -->
+          <div class="mission-collab mt-10">
+            <div class="collab-tabs">
+              <button class="collab-tab"
+                [class.active]="activePrimaryTab() === 'fans'"
+                (click)="selectPrimaryTab('fans')">
+                <span>Fans &amp; Supporters</span>
+                @if (fans().length) {
+                  <span class="tab-pill">{{ fans().length }}</span>
+                }
+              </button>
+              <button class="collab-tab"
+                [class.active]="activePrimaryTab() === 'calendar'"
+                (click)="selectPrimaryTab('calendar')">
+                <span>Mission Calendar</span>
+                <span class="tab-pill tab-pill-muted">View</span>
+              </button>
+            </div>
+
+            <div class="collab-panel">
+              @if (activePrimaryTab() === 'fans') {
+              <div class="fans-grid">
+                <div class="fans-card invite-card">
+                  <div class="card-header">
+                    <div>
+                      <p class="card-title">Invite your hype crew</p>
+                      <p class="card-subtitle">Send a quick invite so friends can react &amp; cheer.</p>
+                    </div>
+                    <span class="card-icon">✨</span>
+                  </div>
+                  <div class="invite-form">
+                    <div class="input-group">
+                      <label>Email</label>
+                      <input type="email"
+                        placeholder="fan@missioncontrol.com"
+                        [ngModel]="currentFanInviteEmail()"
+                        (ngModelChange)="onFanInviteEmailChange($event)"
+                        [disabled]="!isGoalOwner()" />
+                    </div>
+                    <div class="input-group">
+                      <label>Name (auto when available)</label>
+                      <input type="text"
+                        placeholder="Optional"
+                        [ngModel]="currentFanInviteName()"
+                        (ngModelChange)="currentFanInviteName.set($event)"
+                        [disabled]="!isGoalOwner()" />
+                    </div>
+                    <button class="invite-btn"
+                      (click)="inviteFan()"
+                      [disabled]="fanInviteLoading() || !currentFanInviteEmail().trim() || !isGoalOwner()">
+                      @if (fanInviteLoading()) {
+                        <span>Sending...</span>
+                      } @else {
+                        <span>Send invite</span>
+                      }
+                    </button>
+                  </div>
+                  @if (!isGoalOwner()) {
+                    <p class="text-xs text-gray-400 mt-2">Only the goal owner can invite new fans.</p>
+                  }
+                  @if (fanInviteSuggestions().length) {
+                    <div class="fan-suggestions">
+                      <p class="suggestion-label">Matches</p>
+                      <div class="suggestion-pills">
+                        @for (suggestion of fanInviteSuggestions(); track suggestion.email) {
+                          <button type="button"
+                            (click)="applyFanSuggestion(suggestion)"
+                            class="suggestion-pill">
+                            <span class="suggestion-name">{{ suggestion.name || suggestion.email }}</span>
+                            <span class="suggestion-email">{{ suggestion.email }}</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                  @if (fanInviteError()) {
+                    <p class="invite-error">{{ fanInviteError() }}</p>
+                  }
+                </div>
+
+                <div class="fans-card fan-list-card">
+                  <div class="card-header">
+                    <div>
+                      <p class="card-title">Mission fans</p>
+                      <p class="card-subtitle">Who&rsquo;s watching your progress</p>
+                    </div>
+                    <span class="card-pill">{{ fans().length }} total</span>
+                  </div>
+                  <div class="fan-list">
+                    @if (fansLoading()) {
+                      <div class="fan-empty">
+                        <span class="loader"></span>
+                        <p>Fetching fans...</p>
+                      </div>
+                    } @else if (fans().length === 0) {
+                      <div class="fan-empty">
+                        <span>🚀</span>
+                        <p>No fans yet &mdash; invite someone awesome!</p>
+                      </div>
+                    } @else {
+                      @for (fan of fans(); track fan.id) {
+                      <div class="fan-pill-row">
+                        <div class="fan-avatar">{{ getFanInitials(fan.name, fan.email) }}</div>
+                        <div class="fan-meta">
+                          <p class="fan-name">{{ getFanDisplayName(fan.name, fan.email) }}</p>
+                          <p class="fan-email">{{ fan.email }}</p>
+                        </div>
+                        <span class="fan-status" [class.fan-status-active]="fan.status === 'accepted'">
+                          {{ getFanStatusLabel(fan.status) }}
+                        </span>
+                      </div>
+                      }
+                    }
+                  </div>
+                </div>
+
+                <div class="fans-card reactions-card">
+                  <div class="card-header">
+                    <div>
+                      <p class="card-title">Emoji boosts</p>
+                      <p class="card-subtitle">Tap to leave a quick cheer</p>
+                    </div>
+                    <span class="card-icon">💬</span>
+                  </div>
+                  <div class="reaction-buttons" [class.disabled]="!canCurrentUserLeaveFeedback()">
+                    @for (emoji of fanReactionPalette; track emoji) {
+                      <button type="button"
+                        (click)="toggleFanReaction(emoji)"
+                        [disabled]="!canCurrentUserLeaveFeedback()"
+                        class="reaction-button">
+                        <span class="emoji">{{ emoji }}</span>
+                        <span class="count">{{ getReactionCount(emoji) }}</span>
+                      </button>
+                    }
+                  </div>
+                  <div class="reaction-summary">
+                    @if (reactionsLoading()) {
+                      <p class="text-sm text-gray-400">Loading reactions...</p>
+                    } @else if (fanReactions().length === 0) {
+                      <p class="text-sm text-gray-400">No reactions yet. Invite fans to get instant boosts.</p>
+                    } @else {
+                      <p class="text-sm text-gray-300">
+                        Top cheer: <span class="font-semibold">{{ fanReactions()[0]?.emoji }}</span>
+                        with {{ fanReactions()[0]?.count }} reactions
+                      </p>
+                    }
+                  </div>
+                </div>
+
+                <div class="fans-card comments-card">
+                  <div class="card-header">
+                    <div>
+                      <p class="card-title">Fan log</p>
+                      <p class="card-subtitle">Notes and emoji check-ins</p>
+                    </div>
+                    <span class="card-icon">📣</span>
+                  </div>
+                  <div class="comment-form" [class.disabled]="!canCurrentUserLeaveFeedback()">
+                    <textarea rows="3"
+                      placeholder="Celebrate the latest win or drop a reminder..."
+                      [ngModel]="fanCommentInput()"
+                      (ngModelChange)="fanCommentInput.set($event)"
+                      [disabled]="!canCurrentUserLeaveFeedback()"></textarea>
+                    <div class="comment-actions">
+                      <input type="text"
+                        maxlength="2"
+                        placeholder="Emoji"
+                        [ngModel]="fanCommentEmoji()"
+                        (ngModelChange)="fanCommentEmoji.set($event)"
+                        [disabled]="!canCurrentUserLeaveFeedback()" />
+                      <button (click)="submitFanComment()"
+                        [disabled]="!fanCommentInput().trim() || !canCurrentUserLeaveFeedback()">
+                        Post update
+                      </button>
+                    </div>
+                  </div>
+                  <div class="fan-comments">
+                    @if (commentsLoading()) {
+                      <div class="fan-empty">
+                        <span class="loader"></span>
+                        <p>Loading feedback...</p>
+                      </div>
+                    } @else if (fanComments().length === 0) {
+                      <div class="fan-empty">
+                        <span>💌</span>
+                        <p>No fan notes yet. Invite folks to drop some encouragement.</p>
+                      </div>
+                    } @else {
+                      @for (comment of fanComments(); track comment.id) {
+                      <div class="fan-comment">
+                        <div class="fan-avatar small">{{ getFanInitials(comment.fanName, comment.fanEmail) }}</div>
+                        <div class="comment-body">
+                          <div class="comment-meta">
+                            <p class="comment-name">{{ getFanDisplayName(comment.fanName, comment.fanEmail) }}</p>
+                            <span class="comment-time">{{ formatFanTimestamp(comment.createdAt) }}</span>
+                          </div>
+                          <p class="comment-text">{{ comment.content }}</p>
+                          @if (comment.emoji) {
+                            <span class="comment-emoji">{{ comment.emoji }}</span>
+                          }
+                        </div>
+                      </div>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+              } @else {
+              <div class="calendar-panel">
+                <app-mission-calendar 
+                  [events]="calendarEvents()"
+                  (dateSelected)="onCalendarDateSelected($event)"
+                  (eventClicked)="onCalendarEventClicked($event)"
+                  (createEvent)="onCalendarCreateEvent($event)">
+                </app-mission-calendar>
+              </div>
+              }
+            </div>
+          </div>
         </div>
 
         <!-- RIGHT COLUMN: AI Co-Pilot (Fixed width on desktop) -->

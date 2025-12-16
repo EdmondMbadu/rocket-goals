@@ -14,6 +14,7 @@ import type { RocketGoal } from './models/rocket-goal';
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
+import { FansService, Fan, FanComment } from './fans.service';
 
 @Component({
   selector: 'app-rocket-goal-view',
@@ -28,6 +29,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private rocketGoalsService = inject(RocketGoalsService);
   private calendarEventsService = inject(CalendarEventsService);
   private actionItemsService = inject(ActionItemsService);
+  private fansService = inject(FansService);
   authService = inject(AuthService); // Make public for template access
   private themeService = inject(ThemeService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
@@ -55,6 +57,22 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   showEventModal = signal(false);
   eventModalDate = signal<Date>(new Date());
   private countdownInterval: any;
+  private fanInviteSearchTimeout?: any;
+  activePrimaryTab = signal<'fans' | 'calendar'>('fans');
+  currentFanInviteEmail = signal('');
+  currentFanInviteName = signal('');
+  fanInviteSuggestions = signal<{ email: string; name: string }[]>([]);
+  fanInviteLoading = signal(false);
+  fanInviteError = signal<string | null>(null);
+  fans = signal<Fan[]>([]);
+  fanComments = signal<FanComment[]>([]);
+  fanReactions = signal<{ emoji: string; count: number }[]>([]);
+  commentsLoading = signal(false);
+  fansLoading = signal(false);
+  reactionsLoading = signal(false);
+  fanCommentInput = signal('');
+  fanCommentEmoji = signal('');
+  readonly fanReactionPalette = ['🚀', '🔥', '👏', '💯', '❤️', '🌟'];
 
   // Action Items state
   actionItems = signal<ActionItem[]>([]);
@@ -87,6 +105,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   ngOnDestroy() {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
+    }
+    if (this.fanInviteSearchTimeout) {
+      clearTimeout(this.fanInviteSearchTimeout);
     }
   }
 
@@ -240,6 +261,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       if (currentGoal?.id) {
         await this.loadCalendarEvents(currentGoal.id);
         await this.loadActionItems(currentGoal.id);
+        await this.loadFans(currentGoal.id);
+        await this.loadFanComments(currentGoal.id);
+        await this.loadFanReactions(currentGoal.id);
       }
       } else {
         this.error.set('Goal not found');
@@ -594,6 +618,208 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       await this.loadCalendarEvents(goal.id);
       console.log('Calendar refreshed');
     }
+  }
+
+  // Fans + Community Methods
+  isGoalOwner(): boolean {
+    const goal = this.goal();
+    const profile = this.authService.profile();
+    return !!goal?.userId && !!profile?.userId && goal.userId === profile.userId;
+  }
+
+  selectPrimaryTab(tab: 'fans' | 'calendar') {
+    this.activePrimaryTab.set(tab);
+  }
+
+  onFanInviteEmailChange(value: string) {
+    this.currentFanInviteEmail.set(value);
+    this.fanInviteError.set(null);
+    if (this.fanInviteSearchTimeout) {
+      clearTimeout(this.fanInviteSearchTimeout);
+    }
+    const trimmed = value.trim();
+    if (trimmed.length < 3) {
+      this.fanInviteSuggestions.set([]);
+      return;
+    }
+
+    this.fanInviteSearchTimeout = setTimeout(async () => {
+      try {
+        const suggestions = await this.fansService.searchUsersByEmail(trimmed);
+        this.fanInviteSuggestions.set(suggestions);
+        if (suggestions.length === 1 && !this.currentFanInviteName().trim()) {
+          this.currentFanInviteName.set(suggestions[0].name);
+        }
+      } catch (error) {
+        console.error('Error fetching fan suggestions:', error);
+        this.fanInviteSuggestions.set([]);
+      }
+    }, 250);
+  }
+
+  applyFanSuggestion(suggestion: { email: string; name: string }) {
+    this.currentFanInviteEmail.set(suggestion.email);
+    this.currentFanInviteName.set(suggestion.name);
+    this.fanInviteSuggestions.set([]);
+  }
+
+  async inviteFan() {
+    const goal = this.goal();
+    if (!goal?.id) {
+      this.fanInviteError.set('Select a goal before inviting fans.');
+      return;
+    }
+
+    if (!this.isGoalOwner()) {
+      this.fanInviteError.set('Only the goal owner can invite fans.');
+      return;
+    }
+
+    const email = this.currentFanInviteEmail().trim().toLowerCase();
+    const name = this.currentFanInviteName().trim();
+    if (!email) {
+      this.fanInviteError.set('Enter an email to send an invite.');
+      return;
+    }
+
+    this.fanInviteLoading.set(true);
+    this.fanInviteError.set(null);
+
+    try {
+      await this.fansService.inviteFan(goal.id, email, name || undefined);
+      this.currentFanInviteEmail.set('');
+      this.currentFanInviteName.set('');
+      this.fanInviteSuggestions.set([]);
+      await this.loadFans(goal.id);
+    } catch (error: any) {
+      console.error('Error inviting fan:', error);
+      this.fanInviteError.set(error?.message || 'Unable to send invite right now.');
+    } finally {
+      this.fanInviteLoading.set(false);
+    }
+  }
+
+  async loadFans(goalId: string) {
+    this.fansLoading.set(true);
+    try {
+      const fans = await this.fansService.getFansByGoalId(goalId);
+      this.fans.set(fans);
+    } catch (error) {
+      console.error('Error loading fans:', error);
+    } finally {
+      this.fansLoading.set(false);
+    }
+  }
+
+  async loadFanComments(goalId: string) {
+    this.commentsLoading.set(true);
+    try {
+      const comments = await this.fansService.getCommentsByGoalId(goalId);
+      this.fanComments.set(comments);
+    } catch (error) {
+      console.error('Error loading fan comments:', error);
+    } finally {
+      this.commentsLoading.set(false);
+    }
+  }
+
+  async loadFanReactions(goalId: string) {
+    this.reactionsLoading.set(true);
+    try {
+      const counts = await this.fansService.getReactionCounts(goalId);
+      const summary = Array.from(counts.entries()).map(([emoji, count]) => ({ emoji, count }));
+      summary.sort((a, b) => b.count - a.count);
+      this.fanReactions.set(summary);
+    } catch (error) {
+      console.error('Error loading fan reactions:', error);
+    } finally {
+      this.reactionsLoading.set(false);
+    }
+  }
+
+  getReactionCount(emoji: string): number {
+    return this.fanReactions().find(reaction => reaction.emoji === emoji)?.count || 0;
+  }
+
+  async submitFanComment() {
+    const goal = this.goal();
+    const profile = this.authService.profile();
+    if (!goal?.id || !profile?.email) {
+      return;
+    }
+
+    const content = this.fanCommentInput().trim();
+    if (!content) {
+      return;
+    }
+
+    try {
+      const emoji = this.fanCommentEmoji().trim() || undefined;
+      const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email;
+      await this.fansService.addComment(goal.id, profile.email, content, name, emoji);
+      this.fanCommentInput.set('');
+      this.fanCommentEmoji.set('');
+      await this.loadFanComments(goal.id);
+    } catch (error) {
+      console.error('Error submitting fan comment:', error);
+    }
+  }
+
+  async toggleFanReaction(emoji: string) {
+    const goal = this.goal();
+    const profile = this.authService.profile();
+    if (!goal?.id || !profile?.email) {
+      return;
+    }
+
+    try {
+      const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email;
+      await this.fansService.addReaction(goal.id, profile.email, emoji, name);
+      await this.loadFanReactions(goal.id);
+    } catch (error) {
+      console.error('Error toggling fan reaction:', error);
+    }
+  }
+
+  canCurrentUserLeaveFeedback(): boolean {
+    return !!this.authService.profile()?.email;
+  }
+
+  getFanStatusLabel(status: Fan['status']) {
+    if (status === 'accepted') return 'Active';
+    return 'Invited';
+  }
+
+  getFanDisplayName(name?: string, email?: string): string {
+    if (name) return name;
+    if (email) return email.split('@')[0];
+    return 'Supporter';
+  }
+
+  getFanInitials(name?: string, email?: string): string {
+    const displayName = name || email || 'Fan';
+    const parts = displayName.trim().split(' ').filter(Boolean);
+    if (parts.length === 0) return displayName.slice(0, 2).toUpperCase();
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+
+  formatFanTimestamp(raw: unknown): string {
+    if (!raw) return 'Just now';
+    try {
+      if (raw instanceof Date) {
+        return raw.toLocaleString();
+      }
+      if (typeof raw === 'number') {
+        return new Date(raw).toLocaleString();
+      }
+      if (typeof raw === 'object' && raw !== null && 'toDate' in raw && typeof (raw as any).toDate === 'function') {
+        return (raw as any).toDate().toLocaleString();
+      }
+    } catch {
+      return 'Just now';
+    }
+    return 'Just now';
   }
 
   // Action Items Methods
