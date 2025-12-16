@@ -7,6 +7,7 @@ import { UserProfile } from './models/user-profile';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-profile',
@@ -19,8 +20,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
+  protected theme = inject(ThemeService);
   private storage: any = null;
-  isLightMode = signal(true);
   
   profile = signal<UserProfile | null>(null);
   loading = signal(false);
@@ -325,7 +326,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   toggleTheme(): void {
-    this.isLightMode.update(v => !v);
+    this.theme.toggleDarkMode();
   }
 
   startEditingGoal(goal: RocketGoal) {
@@ -425,4 +426,3 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 }
-

@@ -1,8 +1,9 @@
-import { Component, signal, HostBinding, OnInit, inject } from '@angular/core';
+import { Component, signal, HostBinding, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { ThemeService } from '../theme.service';
 
 interface QuizQuestion {
   id: number;
@@ -24,8 +25,9 @@ interface QuizAnswer {
   templateUrl: './rocket-quiz.html',
   styleUrl: './rocket-quiz.css',
 })
-export class RocketQuiz implements OnInit {
+export class RocketQuiz {
   protected authService = inject(AuthService);
+  protected theme = inject(ThemeService);
   private router = inject(Router);
   currentStep = signal(0); // 0 = intro, 1-15 = questions, 16 = results
   answers = signal<QuizAnswer[]>([]);
@@ -35,25 +37,16 @@ export class RocketQuiz implements OnInit {
   name = signal('');
   password = signal('');
   authMode = signal<'signup' | 'login'>('signup');
-  isLightMode = signal(true);
-
   @HostBinding('class.light-mode') get lightMode() {
-    return this.isLightMode();
+    return !this.theme.isDarkMode();
   }
 
   @HostBinding('class.dark-mode') get darkMode() {
-    return !this.isLightMode();
-  }
-
-  ngOnInit() {
-    // Detect system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      this.isLightMode.set(false);
-    }
+    return this.theme.isDarkMode();
   }
 
   toggleTheme() {
-    this.isLightMode.update(current => !current);
+    this.theme.toggleDarkMode();
   }
 
   questions: QuizQuestion[] = [

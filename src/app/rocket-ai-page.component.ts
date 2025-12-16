@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-rocket-ai-page',
@@ -16,7 +17,8 @@ import { RocketGoalsAIService } from './rocket-goals-ai.service';
 export class RocketAiPageComponent implements OnInit {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
-  protected readonly isLightMode = signal(true); // default to light mode
+  private readonly theme = inject(ThemeService);
+  protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly showHistory = signal(true);
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
   protected readonly sessions = this.aiService.sessions;
@@ -77,11 +79,10 @@ export class RocketAiPageComponent implements OnInit {
   }
 
   protected toggleTheme(): void {
-    this.isLightMode.update((current) => !current);
+    this.theme.toggleDarkMode();
   }
 
   protected toggleHistory(): void {
     this.showHistory.update((current) => !current);
   }
 }
-

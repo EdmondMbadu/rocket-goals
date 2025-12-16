@@ -12,6 +12,7 @@ import { CalendarEventsService } from './calendar-events.service';
 import type { RocketGoal } from './models/rocket-goal';
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-rocket-goal-view',
@@ -26,6 +27,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private rocketGoalsService = inject(RocketGoalsService);
   private calendarEventsService = inject(CalendarEventsService);
   authService = inject(AuthService); // Make public for template access
+  private themeService = inject(ThemeService);
+  protected readonly isDarkMode = this.themeService.isDarkMode;
 
   @ViewChild('titleInput') titleInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('goalTitleInput') goalTitleInputRef?: ElementRef<HTMLInputElement>;
@@ -45,7 +48,6 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   countdown = signal('23:59:59');
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
-  isDarkMode = signal(true); // Default to dark mode
   calendarEvents = signal<CalendarEvent[]>([]);
   selectedEvent = signal<CalendarEvent | null>(null);
   showEventModal = signal(false);
@@ -57,12 +59,6 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const savedTitle = localStorage.getItem('dashboardTitle');
     if (savedTitle) {
       this.dashboardTitle.set(savedTitle);
-    }
-
-    // Load dark mode preference from localStorage (default to true/dark)
-    const savedDarkMode = localStorage.getItem('rocketGoalDarkMode');
-    if (savedDarkMode !== null) {
-      this.isDarkMode.set(savedDarkMode === 'true');
     }
 
     const goalId = this.route.snapshot.paramMap.get('id');
@@ -358,9 +354,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   toggleDarkMode() {
-    const newValue = !this.isDarkMode();
-    this.isDarkMode.set(newValue);
-    localStorage.setItem('rocketGoalDarkMode', String(newValue));
+    this.themeService.toggleDarkMode();
   }
 
   startEditingGoalTitle() {
@@ -515,4 +509,3 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     }
   }
 }
-
