@@ -126,14 +126,17 @@ export class FansService {
     const firestoreModule = await import('firebase/firestore');
     const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'fanComments');
 
-    const commentData = {
+    const commentData: Record<string, unknown> = {
       goalId,
       fanEmail: fanEmail.toLowerCase(),
       fanName: fanName || undefined,
       content,
-      emoji: emoji || undefined,
       createdAt: firestoreModule.serverTimestamp()
     };
+
+    if (emoji && emoji.trim()) {
+      commentData['emoji'] = emoji.trim();
+    }
 
     const docRef = await firestoreModule.addDoc(collectionRef, commentData);
     await firestoreModule.updateDoc(docRef, { id: docRef.id });
