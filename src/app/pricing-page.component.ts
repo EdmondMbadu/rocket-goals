@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-pricing-page',
   standalone: true,
   imports: [RouterModule, CommonModule, AvatarDropdownComponent],
   template: `
-    <div class="min-h-screen bg-white text-black flex flex-col">
-      <header class="relative z-40 px-6 md:px-8 py-6 flex-none border-b border-gray-200/50 bg-white/90 backdrop-blur-xl">
+    <div class="min-h-screen bg-white text-black flex flex-col transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+      <header class="relative z-40 px-6 md:px-8 py-6 flex-none border-b border-gray-200/50 bg-white/90 backdrop-blur-xl dark:bg-slate-900/70 dark:border-white/10">
         <div class="flex items-center justify-between max-w-7xl mx-auto w-full gap-6">
           <a routerLink="/goals" class="flex items-center gap-3 group flex-none">
             <div class="relative">
@@ -19,13 +20,13 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               <img src="/assets/rocket-goals.png" alt="Rocket Goals"
                 class="relative w-14 h-14 md:w-16 md:h-16 object-contain transform group-hover:scale-105 transition-transform" />
             </div>
-            <span class="text-2xl md:text-3xl font-black tracking-tighter text-black hidden sm:block">
+            <span class="text-2xl md:text-3xl font-black tracking-tighter text-black hidden sm:block dark:text-white">
               ROCKET<span class="text-red-600">GOALS</span>
             </span>
           </a>
           <div class="flex-1 flex items-center justify-center gap-6">
             <a routerLink="/goals" routerLinkActive="text-red-600 border-b-2 border-red-600"
-              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
+              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -33,7 +34,7 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               Home
             </a>
             <a routerLink="/ai" routerLinkActive="text-red-600 border-b-2 border-red-600"
-              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
+              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -43,7 +44,7 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               AI
             </a>
             <a routerLink="/profile" routerLinkActive="text-red-600 border-b-2 border-red-600"
-              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2">
+              class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -52,6 +53,21 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
             </a>
           </div>
           <div class="flex items-center gap-3 flex-none">
+            <button type="button" (click)="toggleDarkMode()" [attr.aria-pressed]="isDarkMode()"
+              class="p-2.5 rounded-full border border-black/10 text-black/70 hover:bg-black/5 transition-colors dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+              title="Toggle appearance">
+              @if (isDarkMode()) {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+              } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0-1.414 1.414M7.05 16.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              </svg>
+              }
+            </button>
             <app-avatar-dropdown />
           </div>
         </div>
@@ -60,19 +76,19 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
       <main class="flex-1">
         <section class="relative overflow-hidden">
           <div class="absolute inset-0 opacity-20 pointer-events-none">
-            <div class="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-red-600/15 rounded-full blur-[140px]"></div>
-            <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px]"></div>
+            <div class="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-red-600/15 rounded-full blur-[140px] dark:bg-red-600/25"></div>
+            <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px] dark:bg-white/10"></div>
           </div>
 
           <div class="container mx-auto px-6 py-16 relative z-10 space-y-10 text-center">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 dark:bg-white/5 dark:border-white/10">
               <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-              <span class="text-xs font-bold text-gray-600 tracking-wider uppercase">Pricing</span>
+              <span class="text-xs font-bold text-gray-600 tracking-wider uppercase dark:text-slate-300">Pricing</span>
             </div>
-            <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight dark:text-white">
               Pick the mission that matches your orbit
             </h1>
-            <p class="text-lg md:text-xl text-black/60 max-w-3xl mx-auto">
+            <p class="text-lg md:text-xl text-black/60 max-w-3xl mx-auto dark:text-slate-300">
               Emotionally intelligent reminders, predictive coaching, and accountability built for every stage of your journey.
             </p>
           </div>
@@ -82,18 +98,18 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
           <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <!-- Launch -->
-              <div class="pricing-card">
+              <div class="pricing-card dark:bg-slate-900/80 dark:border-white/10 dark:text-slate-100">
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-1 rocket-green">🚀</span>
                   <div class="badge bg-gray-900 text-white">Free</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title">1. Launch Mode</div>
-                  <div class="price">Free</div>
-                  <div class="sub">Activate momentum</div>
-                  <p class="desc">Early wins and streaks to feel momentum fast.</p>
+                  <div class="title dark:text-white">1. Launch Mode</div>
+                  <div class="price dark:text-white">Free</div>
+                  <div class="sub dark:text-slate-400">Activate momentum</div>
+                  <p class="desc dark:text-slate-300">Early wins and streaks to feel momentum fast.</p>
                 </div>
-                <ul class="features">
+                <ul class="features dark:text-slate-200">
                   <li><span></span>Daily alignment + micro-wins</li>
                   <li><span></span>Mood slider + weekly reset</li>
                   <li><span></span>Starter dashboard, streaks, mini Blast</li>
@@ -102,18 +118,18 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               </div>
 
               <!-- Moonshot -->
-              <div class="pricing-card highlight">
+              <div class="pricing-card highlight dark:bg-slate-900 dark:border-red-400/40 dark:text-slate-100">
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-2 rocket-orange">🚀</span>
                   <div class="badge bg-black text-white">Most Popular</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title text-red-600">2. Moonshot</div>
-                  <div class="price">$9.99</div>
-                  <div class="sub">per month</div>
-                  <p class="desc">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
+                  <div class="title text-red-600 dark:text-red-400">2. Moonshot</div>
+                  <div class="price dark:text-white">$9.99</div>
+                  <div class="sub dark:text-slate-400">per month</div>
+                  <p class="desc dark:text-slate-300">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
                 </div>
-                <ul class="features">
+                <ul class="features dark:text-slate-200">
                   <li><span></span>Custom reminders + AI encouragement</li>
                   <li><span></span>Weekly PDF + bottleneck nudges</li>
                   <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
@@ -122,18 +138,18 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               </div>
 
               <!-- Interplanetary -->
-              <div class="pricing-card">
+              <div class="pricing-card dark:bg-slate-900/80 dark:border-white/10 dark:text-slate-100">
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-3 rocket-red">🚀</span>
                   <div class="badge bg-red-600 text-white">Performance</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title">3. Interplanetary</div>
-                  <div class="price">$29.99</div>
-                  <div class="sub">per month</div>
-                  <p class="desc">Predictive, multi-channel coaching for high-performers.</p>
+                  <div class="title dark:text-white">3. Interplanetary</div>
+                  <div class="price dark:text-white">$29.99</div>
+                  <div class="sub dark:text-slate-400">per month</div>
+                  <p class="desc dark:text-slate-300">Predictive, multi-channel coaching for high-performers.</p>
                 </div>
-                <ul class="features">
+                <ul class="features dark:text-slate-200">
                   <li><span></span>App + Email + SMS reminders</li>
                   <li><span></span>Personality-coached, predictive nudges</li>
                   <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
@@ -142,23 +158,23 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               </div>
 
               <!-- Galactic -->
-              <div class="pricing-card">
+              <div class="pricing-card dark:bg-slate-900/80 dark:border-white/10 dark:text-slate-100">
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-4 rocket-gray">🚀</span>
                   <div class="badge bg-gray-900 text-white">Elite</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title text-gray-800">4. Galactic</div>
-                  <div class="price">$499</div>
-                  <div class="sub">per month</div>
-                  <p class="desc">Hybrid human + AI leadership system with elite accountability.</p>
+                  <div class="title text-gray-800 dark:text-white">4. Galactic</div>
+                  <div class="price dark:text-white">$499</div>
+                  <div class="sub dark:text-slate-400">per month</div>
+                  <p class="desc dark:text-slate-300">Hybrid human + AI leadership system with elite accountability.</p>
                 </div>
-                <ul class="features">
+                <ul class="features dark:text-slate-200">
                   <li><span></span>Mentor nudges + leadership dashboards</li>
                   <li><span></span>Build templates, lead pods/masterminds</li>
                   <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
                 </ul>
-                <a routerLink="/contact" class="btn-outline">Talk to Sales</a>
+                <a routerLink="/contact" class="btn-outline dark:border-white/30 dark:text-white dark:hover:bg-white dark:hover:text-black">Talk to Sales</a>
               </div>
             </div>
           </div>
@@ -289,6 +305,25 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
       box-shadow: 0 0 0 6px rgba(220,38,38,0.08);
       flex-shrink: 0;
     }
+    :host-context(.dark) .pricing-card {
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: 0 30px 60px rgba(2,6,23,0.7);
+    }
+    :host-context(.dark) .pricing-card.highlight {
+      background: linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.9));
+      border-color: rgba(248,113,113,0.35);
+      box-shadow: 0 35px 70px rgba(248,113,113,0.25);
+    }
+    :host-context(.dark) .pricing-card .sub,
+    :host-context(.dark) .pricing-card .desc,
+    :host-context(.dark) .pricing-card .features li {
+      color: rgba(226,232,240,0.8);
+    }
+    :host-context(.dark) .pricing-card .btn-primary,
+    :host-context(.dark) .pricing-card .btn-accent {
+      box-shadow: 0 20px 45px rgba(2,6,23,0.6);
+    }
     .btn-primary, .btn-accent, .btn-outline {
       display: inline-flex;
       align-items: center;
@@ -320,5 +355,11 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
     .btn-outline:hover { background: black; color: white; transform: translateY(-2px); }
   `]
 })
-export class PricingPageComponent { }
+export class PricingPageComponent {
+  private readonly theme = inject(ThemeService);
+  protected readonly isDarkMode = this.theme.isDarkMode;
 
+  protected toggleDarkMode() {
+    this.theme.toggleDarkMode();
+  }
+}
