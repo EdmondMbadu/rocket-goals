@@ -1112,7 +1112,7 @@ export const sendGoalCreatedEmail = functions.runWith({
 
     // Map timeframe to readable text
     const timeframeText = timeframe === 'week' ? '7 days' :
-                          timeframe === 'month' ? '30 days' : '6 months';
+        timeframe === 'month' ? '30 days' : '6 months';
 
     try {
         // Initialize SendGrid with API key
@@ -1127,7 +1127,7 @@ export const sendGoalCreatedEmail = functions.runWith({
             to: userEmail,
             from: 'missioncontrol@rocketgoals.com',
             subject: `🚀 Your RocketGoal "${goalTitle}" has launched!`,
-            text: `Hi ${userName},\n\nCongratulations! You've just created a new RocketGoal: "${goalTitle}"\n\nYour mission timeframe: ${timeframeText}\n\nYour AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!\n\nView your goal: https://rocketgoals.com/rocketgoal/${goalId}\n\nRemember: Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!\n\nTo your success,\nThe Rocket Goals Team`,
+            text: `Hi ${userName},\n\nCongratulations! You've just created a new RocketGoal: "${goalTitle}"\n\nYour mission timeframe: ${timeframeText}\n\nYour AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!\n\nView your goal: https://rocket-goals.web.app/rocketgoal/${goalId}\n\nRemember: Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!\n\nTo your success,\nThe Rocket Goals Team`,
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0;">
                     <!-- Header -->
@@ -1159,7 +1159,7 @@ export const sendGoalCreatedEmail = functions.runWith({
 
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="https://rocketgoals.com/rocketgoal/${goalId}"
+                            <a href="https://rocket-goals.web.app/rocketgoal/${goalId}"
                                style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);">
                                 View Your RocketGoal →
                             </a>
