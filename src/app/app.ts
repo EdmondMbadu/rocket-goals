@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { stripMarkdownForTTS } from './text-utils';
+import { ThemeService } from './theme.service';
 import * as THREE from 'three';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -23,7 +24,6 @@ type ChallengeAuthStage = 'email' | 'existing-login' | 'new-profile' | 'verify' 
 })
 export class App implements AfterViewInit, OnDestroy {
   protected readonly title = signal('rocket-goals');
-  protected readonly isDarkMode = signal(false);
 
   @ViewChild('rocketCanvas') rocketCanvas!: ElementRef<HTMLCanvasElement>;
   private renderer!: THREE.WebGLRenderer;
@@ -89,6 +89,8 @@ export class App implements AfterViewInit, OnDestroy {
   private firestoreAIService = inject(FirestoreAIService);
   protected authService = inject(AuthService);
   private rocketGoalsService = inject(RocketGoalsService);
+  private themeService = inject(ThemeService);
+  protected readonly isDarkMode = this.themeService.isDarkMode;
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
@@ -133,30 +135,6 @@ export class App implements AfterViewInit, OnDestroy {
       this.checkAndStartChallenge(this.router.url);
     });
 
-    // Initialize theme preference
-    if (typeof window !== 'undefined') {
-      const storedTheme = localStorage.getItem('rocketGoalsTheme');
-      if (storedTheme === 'dark') {
-        this.isDarkMode.set(true);
-      } else if (storedTheme === 'light') {
-        this.isDarkMode.set(false);
-      } else {
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        this.isDarkMode.set(prefersDark);
-      }
-    }
-
-    effect(() => {
-      const darkModeEnabled = this.isDarkMode();
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('rocketGoalsTheme', darkModeEnabled ? 'dark' : 'light');
-        } catch (error) {
-          console.warn('Unable to persist theme preference', error);
-        }
-      }
-    });
-
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
@@ -187,7 +165,7 @@ export class App implements AfterViewInit, OnDestroy {
   }
 
   toggleDarkMode() {
-    this.isDarkMode.update(mode => !mode);
+    this.themeService.toggleDarkMode();
   }
 
   private checkAndStartChallenge(urlString: string) {
