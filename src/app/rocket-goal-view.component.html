@@ -309,50 +309,194 @@
           <!-- MISSION TIMELINE CARD -->
           <div class="hud-card timeline-card shimmer p-5 md:p-6">
             <div class="scanline"></div>
-            
+
             <!-- Header Row -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div class="flex items-center gap-4">
-                <h3 class="timeline-badge text-red-500">MISSION TIMELINE</h3>
+                <h3 class="timeline-badge text-red-500">{{ getTimeframeDisplay() }}</h3>
                 <div class="countdown-timer text-xl md:text-2xl text-white tracking-tight">
                   T-MINUS <span class="text-red-500">{{ countdown() }}</span>
                 </div>
               </div>
-              <div class="barcode w-20 hidden sm:block"></div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500" style="font-family: 'Orbitron', monospace;">DAY {{ getCurrentMissionDay() }} of {{ getTimeframeDays() }}</span>
+                <div class="barcode w-16 hidden sm:block"></div>
+              </div>
             </div>
 
             <!-- Timeline Track -->
             <div class="relative py-6">
               <!-- Background Line -->
               <div class="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-red-600/80 via-gray-700/50 to-gray-800/30 -translate-y-1/2 rounded-full"></div>
-              
-              <!-- Glowing active segment -->
-              <div class="absolute top-1/2 left-0 w-[14%] h-1 bg-red-500 -translate-y-1/2 rounded-full shadow-lg shadow-red-500/50"></div>
+
+              <!-- Glowing active segment (dynamic based on progress) -->
+              <div class="absolute top-1/2 left-0 h-1 bg-red-500 -translate-y-1/2 rounded-full shadow-lg shadow-red-500/50 transition-all duration-500"
+                   [style.width.%]="getTimelineProgress()"></div>
 
               <!-- Timeline Nodes -->
               <div class="flex items-center justify-between relative z-10">
-                @for (day of [1,2,3,4,5,6,7]; track day) {
-                <div class="timeline-node flex flex-col items-center gap-2" 
-                     [class.timeline-node-active]="day === 1"
-                     [class.timeline-node-inactive]="day > 1">
+                @for (marker of getTimelineMarkers(); track marker.day; let i = $index) {
+                <div class="timeline-node flex flex-col items-center gap-2"
+                     [class.timeline-node-active]="getCurrentMissionDay() >= marker.day"
+                     [class.timeline-node-inactive]="getCurrentMissionDay() < marker.day">
                   <div class="timeline-node-circle-sm">
-                    @if(day === 1) {
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    @if(i === 0 || getCurrentMissionDay() >= marker.day) {
+                    <svg class="w-4 h-4" [class.text-white]="getCurrentMissionDay() >= marker.day" [class.text-gray-500]="getCurrentMissionDay() < marker.day" fill="currentColor" viewBox="0 0 24 24">
+                      @if (getCurrentMissionDay() >= marker.day && i > 0) {
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                      } @else {
                       <path d="M12 2.5c-.28 0-.5.22-.5.5v1c0 .28.22.5.5.5s.5-.22.5-.5v-1c0-.28-.22-.5-.5-.5zm0 4c-2.76 0-5 2.24-5 5 0 2.21 1.49 4.07 3.5 4.67V20h3v-3.83c2.01-.6 3.5-2.46 3.5-4.67 0-2.76-2.24-5-5-5z"/>
+                      }
                     </svg>
                     } @else {
-                    <span class="text-[10px] text-gray-500 font-bold" style="font-family: 'Orbitron', monospace;">{{ day }}</span>
+                    <span class="text-[10px] text-gray-500 font-bold" style="font-family: 'Orbitron', monospace;">{{ i + 1 }}</span>
                     }
                   </div>
-                  <span class="timeline-day-label-sm hidden sm:block" 
-                        [class.text-white]="day === 1" 
-                        [class.font-bold]="day === 1"
-                        [class.text-gray-600]="day > 1">
-                    DAY {{ day }}
+                  <span class="timeline-day-label-sm hidden sm:block text-[9px]"
+                        [class.text-white]="getCurrentMissionDay() >= marker.day"
+                        [class.font-bold]="getCurrentMissionDay() >= marker.day"
+                        [class.text-gray-600]="getCurrentMissionDay() < marker.day">
+                    {{ marker.label }}
                   </span>
                 </div>
                 }
               </div>
+            </div>
+          </div>
+
+          <!-- TODAY'S ACTION ITEMS CARD -->
+          <div class="hud-card action-items-card shimmer p-5 md:p-6">
+            <div class="scanline"></div>
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-5">
+              <div class="flex items-center gap-3">
+                <h3 class="timeline-badge text-red-500">TODAY'S ACTIONS</h3>
+                <span class="text-xs text-gray-500" style="font-family: 'Orbitron', monospace;">
+                  {{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }} COMPLETE
+                </span>
+              </div>
+              <button (click)="openAddActionItem()"
+                class="add-action-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Task
+              </button>
+            </div>
+
+            <!-- Action Items List -->
+            <div class="action-items-list space-y-2">
+              @if (loadingActionItems()) {
+              <div class="flex items-center justify-center py-6">
+                <div class="w-6 h-6 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+              </div>
+              } @else if (getActionItemsForCurrentDay().length === 0 && !showAddActionItem()) {
+              <div class="text-center py-8">
+                <div class="text-4xl mb-3 opacity-50">🎯</div>
+                <p class="text-sm text-gray-500 mb-4">No action items for Day {{ getCurrentMissionDay() }} yet.</p>
+                <button (click)="openAddActionItem()"
+                  class="text-red-500 text-sm font-semibold hover:text-red-400 transition-colors">
+                  + Add your first task
+                </button>
+              </div>
+              } @else {
+              <!-- Existing Items -->
+              @for (item of getActionItemsForCurrentDay(); track item.id) {
+              <div class="action-item flex items-center gap-3 p-3 rounded-xl transition-all"
+                   [class.completed]="item.completed">
+                <!-- Checkbox -->
+                <button (click)="toggleActionItemComplete(item)"
+                  class="action-checkbox flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                  [class.border-gray-600]="!item.completed"
+                  [class.border-green-500]="item.completed"
+                  [class.bg-green-500]="item.completed">
+                  @if (item.completed) {
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  }
+                </button>
+
+                <!-- Title (editable) -->
+                @if (editingActionItemId() === item.id) {
+                <div class="flex-1 flex items-center gap-2">
+                  <input type="text"
+                    class="action-item-input flex-1 px-3 py-1.5 rounded-lg text-sm"
+                    [ngModel]="editingActionItemTitle()"
+                    (ngModelChange)="editingActionItemTitle.set($event)"
+                    (keyup.enter)="saveEditingActionItem()"
+                    (keyup.escape)="cancelEditingActionItem()"
+                    placeholder="Enter task..." />
+                  <button (click)="saveEditingActionItem()"
+                    class="text-green-500 hover:text-green-400 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <button (click)="cancelEditingActionItem()"
+                    class="text-gray-500 hover:text-red-400 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                } @else {
+                <span class="action-item-title flex-1 text-sm"
+                      [class.line-through]="item.completed"
+                      [class.text-gray-500]="item.completed">
+                  {{ item.title }}
+                </span>
+
+                <!-- Actions -->
+                <div class="action-item-actions flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button (click)="startEditingActionItem(item)"
+                    class="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button (click)="deleteActionItem(item)"
+                    class="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+                }
+              </div>
+              }
+
+              <!-- Add new item form -->
+              @if (showAddActionItem()) {
+              <div class="action-item flex items-center gap-3 p-3 rounded-xl new-item">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 border-dashed border-gray-600"></div>
+                <input type="text"
+                  class="action-item-input flex-1 px-3 py-1.5 rounded-lg text-sm"
+                  [ngModel]="newActionItemTitle()"
+                  (ngModelChange)="newActionItemTitle.set($event)"
+                  (keyup.enter)="addNewActionItem()"
+                  (keyup.escape)="cancelAddActionItem()"
+                  placeholder="What do you need to do today?"
+                  autofocus />
+                <button (click)="addNewActionItem()"
+                  class="text-green-500 hover:text-green-400 p-1"
+                  [disabled]="!newActionItemTitle().trim()">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <button (click)="cancelAddActionItem()"
+                  class="text-gray-500 hover:text-red-400 p-1">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              }
+              }
             </div>
           </div>
 

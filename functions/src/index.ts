@@ -1131,7 +1131,7 @@ export const sendGoalCreatedEmail = functions.runWith({
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0;">
                     <!-- Header -->
-                    <div style="background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); padding: 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
                         <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">Your Mission Has Launched!</h1>
                     </div>
@@ -1146,9 +1146,9 @@ export const sendGoalCreatedEmail = functions.runWith({
                         </p>
 
                         <!-- Goal Card -->
-                        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%); border: 2px solid #fecaca; border-radius: 12px; padding: 24px; margin-bottom: 25px;">
+                        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fecaca; border-radius: 12px; padding: 24px; margin-bottom: 25px;">
                             <h2 style="color: #dc2626; margin: 0 0 10px; font-size: 22px; font-weight: 700;">"${goalTitle}"</h2>
-                            <p style="color: #92400e; margin: 0; font-size: 14px; font-weight: 600;">
+                            <p style="color: #991b1b; margin: 0; font-size: 14px; font-weight: 600;">
                                 ⏱️ Mission Timeframe: <strong>${timeframeText}</strong>
                             </p>
                         </div>
@@ -1160,13 +1160,13 @@ export const sendGoalCreatedEmail = functions.runWith({
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="https://rocket-goals.web.app/rocketgoal/${goalId}"
-                               style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);">
+                               style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);">
                                 View Your RocketGoal →
                             </a>
                         </div>
 
                         <!-- Motivation -->
-                        <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-top: 25px; border-left: 4px solid #dc2626;">
+                        <div style="background: #fef2f2; border-radius: 8px; padding: 20px; margin-top: 25px; border-left: 4px solid #dc2626;">
                             <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin: 0; font-style: italic;">
                                 💡 <strong>Remember:</strong> Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!
                             </p>

@@ -9,6 +9,7 @@ import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { MissionCalendarComponent } from './mission-calendar.component';
 import { EventModalComponent } from './event-modal.component';
 import { CalendarEventsService } from './calendar-events.service';
+import { ActionItemsService, ActionItem } from './action-items.service';
 import type { RocketGoal } from './models/rocket-goal';
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
@@ -26,6 +27,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
   private calendarEventsService = inject(CalendarEventsService);
+  private actionItemsService = inject(ActionItemsService);
   authService = inject(AuthService); // Make public for template access
   private themeService = inject(ThemeService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
@@ -54,6 +56,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   eventModalDate = signal<Date>(new Date());
   private countdownInterval: any;
 
+  // Action Items state
+  actionItems = signal<ActionItem[]>([]);
+  loadingActionItems = signal(false);
+  editingActionItemId = signal<string | null>(null);
+  editingActionItemTitle = signal('');
+  newActionItemTitle = signal('');
+  showAddActionItem = signal(false);
+
   ngOnInit() {
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
@@ -80,6 +90,81 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     }
   }
 
+  // Get the timeframe duration in days from the goal
+  getTimeframeDays(): number {
+    const goal = this.goal();
+    if (!goal) return 7;
+
+    // Check for timeframe in answers (from AI chat created goals)
+    const timeframeDays = goal.answers?.['timeframe_days'];
+    if (timeframeDays) return timeframeDays;
+
+    const timeframe = goal.answers?.['timeframe'];
+    if (timeframe === 'week') return 7;
+    if (timeframe === 'month') return 30;
+    if (timeframe === '6months') return 180;
+
+    return 7; // Default to 7 days
+  }
+
+  // Get timeline markers based on timeframe
+  getTimelineMarkers(): { label: string; day: number }[] {
+    const days = this.getTimeframeDays();
+
+    if (days <= 7) {
+      // 7-day sprint: show all 7 days
+      return [1, 2, 3, 4, 5, 6, 7].map(d => ({ label: `DAY ${d}`, day: d }));
+    } else if (days <= 30) {
+      // 30-day journey: show weeks
+      return [
+        { label: 'WEEK 1', day: 1 },
+        { label: 'WEEK 2', day: 8 },
+        { label: 'WEEK 3', day: 15 },
+        { label: 'WEEK 4', day: 22 },
+        { label: 'FINISH', day: 30 }
+      ];
+    } else {
+      // 6-month transformation: show months
+      return [
+        { label: 'MONTH 1', day: 1 },
+        { label: 'MONTH 2', day: 31 },
+        { label: 'MONTH 3', day: 61 },
+        { label: 'MONTH 4', day: 91 },
+        { label: 'MONTH 5', day: 121 },
+        { label: 'MONTH 6', day: 151 },
+        { label: 'FINISH', day: 180 }
+      ];
+    }
+  }
+
+  // Get the current day in the mission
+  getCurrentMissionDay(): number {
+    const goal = this.goal();
+    if (!goal) return 1;
+
+    const startTime = goal.startTime || Date.now();
+    const now = Date.now();
+    const elapsed = now - startTime;
+    const daysPassed = Math.floor(elapsed / (24 * 60 * 60 * 1000)) + 1;
+
+    return Math.min(daysPassed, this.getTimeframeDays());
+  }
+
+  // Get progress percentage for the timeline
+  getTimelineProgress(): number {
+    const currentDay = this.getCurrentMissionDay();
+    const totalDays = this.getTimeframeDays();
+    return Math.min((currentDay / totalDays) * 100, 100);
+  }
+
+  // Get timeframe display text
+  getTimeframeDisplay(): string {
+    const days = this.getTimeframeDays();
+    if (days <= 7) return '7-DAY SPRINT';
+    if (days <= 30) return '30-DAY JOURNEY';
+    return '6-MONTH TRANSFORMATION';
+  }
+
   startCountdown() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
 
@@ -88,7 +173,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
     // Use startTime from goal, or default to now if not set
     const startTime = goal.startTime || Date.now();
-    const challengeDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    const timeframeDays = this.getTimeframeDays();
+    const challengeDuration = timeframeDays * 24 * 60 * 60 * 1000; // Duration in milliseconds
     const endTime = startTime + challengeDuration;
 
     const updateCountdown = () => {
@@ -150,9 +236,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         this.loadUserGoals(currentGoal.userId);
       }
       
-      // Load calendar events
+      // Load calendar events and action items
       if (currentGoal?.id) {
         await this.loadCalendarEvents(currentGoal.id);
+        await this.loadActionItems(currentGoal.id);
       }
       } else {
         this.error.set('Goal not found');
@@ -506,6 +593,141 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       await new Promise(resolve => setTimeout(resolve, 300));
       await this.loadCalendarEvents(goal.id);
       console.log('Calendar refreshed');
+    }
+  }
+
+  // Action Items Methods
+  async loadActionItems(goalId: string) {
+    this.loadingActionItems.set(true);
+    try {
+      const items = await this.actionItemsService.getActionItemsByGoalId(goalId);
+      this.actionItems.set(items);
+    } catch (error) {
+      console.error('Error loading action items:', error);
+    } finally {
+      this.loadingActionItems.set(false);
+    }
+  }
+
+  getActionItemsForCurrentDay(): ActionItem[] {
+    const currentDay = this.getCurrentMissionDay();
+    return this.actionItems().filter(item => item.dayNumber === currentDay);
+  }
+
+  getCompletedItemsCount(): number {
+    return this.actionItems().filter(item => item.completed).length;
+  }
+
+  getTotalItemsCount(): number {
+    return this.actionItems().length;
+  }
+
+  async toggleActionItemComplete(item: ActionItem) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    try {
+      await this.actionItemsService.toggleActionItemComplete(goal.id, item.id, !item.completed);
+      // Update local state
+      this.actionItems.update(items =>
+        items.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i)
+      );
+    } catch (error) {
+      console.error('Error toggling action item:', error);
+    }
+  }
+
+  startEditingActionItem(item: ActionItem) {
+    this.editingActionItemId.set(item.id);
+    this.editingActionItemTitle.set(item.title);
+  }
+
+  async saveEditingActionItem() {
+    const goal = this.goal();
+    const itemId = this.editingActionItemId();
+    if (!goal?.id || !itemId) return;
+
+    const newTitle = this.editingActionItemTitle().trim();
+    if (!newTitle) {
+      this.cancelEditingActionItem();
+      return;
+    }
+
+    try {
+      await this.actionItemsService.updateActionItem(goal.id, itemId, { title: newTitle });
+      // Update local state
+      this.actionItems.update(items =>
+        items.map(i => i.id === itemId ? { ...i, title: newTitle } : i)
+      );
+      this.cancelEditingActionItem();
+    } catch (error) {
+      console.error('Error updating action item:', error);
+    }
+  }
+
+  cancelEditingActionItem() {
+    this.editingActionItemId.set(null);
+    this.editingActionItemTitle.set('');
+  }
+
+  async deleteActionItem(item: ActionItem) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    try {
+      await this.actionItemsService.deleteActionItem(goal.id, item.id);
+      // Update local state
+      this.actionItems.update(items => items.filter(i => i.id !== item.id));
+    } catch (error) {
+      console.error('Error deleting action item:', error);
+    }
+  }
+
+  openAddActionItem() {
+    this.showAddActionItem.set(true);
+    this.newActionItemTitle.set('');
+  }
+
+  cancelAddActionItem() {
+    this.showAddActionItem.set(false);
+    this.newActionItemTitle.set('');
+  }
+
+  async addNewActionItem() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const title = this.newActionItemTitle().trim();
+    if (!title) return;
+
+    const currentDay = this.getCurrentMissionDay();
+    const existingItems = this.getActionItemsForCurrentDay();
+    const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
+
+    try {
+      const newId = await this.actionItemsService.createActionItem({
+        goalId: goal.id,
+        title,
+        dayNumber: currentDay,
+        completed: false,
+        order: nextOrder
+      });
+
+      // Update local state
+      const newItem: ActionItem = {
+        id: newId,
+        goalId: goal.id,
+        title,
+        dayNumber: currentDay,
+        completed: false,
+        order: nextOrder,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.actionItems.update(items => [...items, newItem]);
+      this.cancelAddActionItem();
+    } catch (error) {
+      console.error('Error adding action item:', error);
     }
   }
 }

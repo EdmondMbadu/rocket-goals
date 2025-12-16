@@ -1643,3 +1643,120 @@
 .neon-border:hover::before {
   opacity: 1;
 }
+
+/* =====================================================
+   ACTION ITEMS CARD
+   ===================================================== */
+
+.action-items-card {
+  position: relative;
+}
+
+.add-action-btn {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.add-action-btn:hover {
+  background: rgba(220, 38, 38, 0.25);
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.action-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.action-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.action-item:hover .action-item-actions {
+  opacity: 1 !important;
+}
+
+.action-item.completed {
+  background: rgba(34, 197, 94, 0.05);
+  border-color: rgba(34, 197, 94, 0.1);
+}
+
+.action-item.new-item {
+  background: rgba(220, 38, 38, 0.05);
+  border: 1px dashed rgba(220, 38, 38, 0.3);
+}
+
+.action-checkbox {
+  cursor: pointer;
+}
+
+.action-checkbox:hover {
+  transform: scale(1.1);
+}
+
+.action-item-title {
+  color: #e5e7eb;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.action-item-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e5e7eb;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.action-item-input:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+.action-item-input::placeholder {
+  color: #6b7280;
+}
+
+/* Light mode styles */
+.light-mode .action-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .action-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.light-mode .action-item.completed {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+.light-mode .action-item.new-item {
+  background: rgba(220, 38, 38, 0.03);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.light-mode .action-item-title {
+  color: #1f2937;
+}
+
+.light-mode .action-item-input {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #1f2937;
+}
+
+.light-mode .action-item-input:focus {
+  background: #ffffff;
+}
+
+.light-mode .action-checkbox {
+  border-color: #9ca3af !important;
+}
+
+.light-mode .action-item.completed .action-checkbox {
+  border-color: #22c55e !important;
+}
