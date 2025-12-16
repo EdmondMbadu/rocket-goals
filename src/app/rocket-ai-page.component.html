@@ -220,11 +220,24 @@
               <h1 class="hero-title">Instant Coaching. No Fluff.</h1>
               <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
             </div>
-            <div class="status-pill">
-              <span class="status-dot"></span>
-              <div>
-                <p class="status-label">Live</p>
-                <p class="status-text">Gemini-powered</p>
+            <div class="flex items-center gap-3">
+              <!-- Turn into RocketGoal button (redirects to login) -->
+              <button type="button"
+                class="turn-into-goal-btn flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:scale-105"
+                (click)="openGoalModal()"
+                [disabled]="aiService.messages().length === 0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Turn into RocketGoal</span>
+              </button>
+              <div class="status-pill">
+                <span class="status-dot"></span>
+                <div>
+                  <p class="status-label">Live</p>
+                  <p class="status-text">Gemini-powered</p>
+                </div>
               </div>
             </div>
           </div>
@@ -402,11 +415,24 @@
             <h1 class="hero-title">Instant Coaching. No Fluff.</h1>
             <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
           </div>
-          <div class="status-pill">
-            <span class="status-dot"></span>
-            <div>
-              <p class="status-label">Live</p>
-              <p class="status-text">Gemini-powered</p>
+          <div class="flex items-center gap-3">
+            <!-- Turn into RocketGoal button -->
+            <button type="button"
+              class="turn-into-goal-btn flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:scale-105"
+              (click)="openGoalModal()"
+              [disabled]="aiService.messages().length === 0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Turn into RocketGoal</span>
+            </button>
+            <div class="status-pill">
+              <span class="status-dot"></span>
+              <div>
+                <p class="status-label">Live</p>
+                <p class="status-text">Gemini-powered</p>
+              </div>
             </div>
           </div>
         </div>
@@ -736,13 +762,162 @@
         </div>
         <div class="flex-1">
           <h3 class="text-base font-semibold text-black">Delete this chat?</h3>
-          <p class="mt-1 text-sm text-gray-600">This action can’t be undone. The chat history will be removed.</p>
+          <p class="mt-1 text-sm text-gray-600">This action can't be undone. The chat history will be removed.</p>
         </div>
       </div>
       <div class="mt-6 flex justify-end gap-2">
         <button type="button" class="ghost-btn" (click)="cancelDelete()">Cancel</button>
         <button type="button" class="solid-btn bg-red-600 hover:bg-red-700 text-white"
           (click)="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal Creation Modal -->
+  <div *ngIf="showGoalModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <div class="goal-modal w-full max-w-md rounded-2xl bg-white p-0 shadow-2xl overflow-hidden" [class.dark-mode]="isDarkMode()">
+      <!-- Modal Header -->
+      <div class="goal-modal-header px-6 py-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-900">Turn Chat into RocketGoal</h3>
+              <p class="text-sm text-gray-500">Step {{ goalModalStep() }} of 2</p>
+            </div>
+          </div>
+          <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+            (click)="closeGoalModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <!-- Progress bar -->
+        <div class="mt-4 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300"
+            [style.width]="goalModalStep() === 1 ? '50%' : '100%'"></div>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="px-6 py-6">
+        <!-- Step 1: Goal Description -->
+        <div *ngIf="goalModalStep() === 1" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              What is the goal you're trying to achieve?
+            </label>
+            <p class="text-xs text-gray-500 mb-3">
+              Based on your conversation, describe the main goal you want to accomplish.
+            </p>
+            <textarea
+              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
+              rows="4"
+              placeholder="e.g., Learn to play guitar, Run a marathon, Launch my business..."
+              [ngModel]="goalDescription()"
+              (ngModelChange)="goalDescription.set($event)"></textarea>
+          </div>
+        </div>
+
+        <!-- Step 2: Timeframe Selection -->
+        <div *ngIf="goalModalStep() === 2" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              When are you planning to achieve this goal?
+            </label>
+            <p class="text-xs text-gray-500 mb-4">
+              Choose a timeframe that challenges you but is realistic.
+            </p>
+            <div class="space-y-3">
+              <button *ngFor="let option of timeframeOptions" type="button"
+                class="timeframe-option w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200"
+                [class.selected]="selectedTimeframe() === option.value"
+                [class.border-gray-200]="selectedTimeframe() !== option.value"
+                [class.border-red-500]="selectedTimeframe() === option.value"
+                [class.bg-red-50]="selectedTimeframe() === option.value"
+                (click)="selectTimeframe(option.value)">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
+                  [class.bg-gray-100]="selectedTimeframe() !== option.value"
+                  [class.bg-red-500]="selectedTimeframe() === option.value"
+                  [class.text-gray-500]="selectedTimeframe() !== option.value"
+                  [class.text-white]="selectedTimeframe() === option.value">
+                  <svg *ngIf="option.value === 'week'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <svg *ngIf="option.value === 'month'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <svg *ngIf="option.value === '6months'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div class="flex-1 text-left">
+                  <p class="font-semibold text-gray-900">{{ option.label }}</p>
+                  <p class="text-xs text-gray-500">{{ option.description }}</p>
+                </div>
+                <div *ngIf="selectedTimeframe() === option.value" class="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="goalCreationError()" class="mt-4 p-3 rounded-lg bg-red-50 border border-red-200">
+          <p class="text-sm text-red-600">{{ goalCreationError() }}</p>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="goal-modal-footer px-6 py-4 flex justify-between items-center">
+        <button *ngIf="goalModalStep() === 2" type="button"
+          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition"
+          (click)="goBackToStep1()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+        <div *ngIf="goalModalStep() === 1"></div>
+
+        <div class="flex gap-3">
+          <button type="button" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition"
+            (click)="closeGoalModal()">
+            Cancel
+          </button>
+
+          <button *ngIf="goalModalStep() === 1" type="button"
+            class="goal-next-btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            [disabled]="!goalDescription().trim()"
+            (click)="goToStep2()">
+            Next
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <button *ngIf="goalModalStep() === 2" type="button"
+            class="goal-create-btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            [disabled]="!selectedTimeframe() || isCreatingGoal()"
+            (click)="createGoalFromChat()">
+            <svg *ngIf="isCreatingGoal()" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <svg *ngIf="!isCreatingGoal()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            {{ isCreatingGoal() ? 'Creating...' : 'Launch RocketGoal' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>

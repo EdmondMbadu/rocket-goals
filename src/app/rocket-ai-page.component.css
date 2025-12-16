@@ -2770,3 +2770,181 @@
 .light-mode .final-cta-note {
   color: rgba(15, 23, 42, 0.5);
 }
+
+/* =====================================================
+   TURN INTO ROCKETGOAL BUTTON
+   ===================================================== */
+
+.turn-into-goal-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.turn-into-goal-btn:hover {
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+.turn-into-goal-btn:disabled {
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.turn-into-goal-btn:disabled:hover {
+  transform: none;
+}
+
+/* Light mode adjustments */
+.light-mode .turn-into-goal-btn {
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.25);
+}
+
+/* =====================================================
+   GOAL CREATION MODAL
+   ===================================================== */
+
+.goal-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.goal-modal-header {
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.goal-modal-footer {
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+.goal-input {
+  background: #ffffff;
+  color: #111827;
+}
+
+.goal-input:focus {
+  outline: none;
+}
+
+.goal-input::placeholder {
+  color: #9ca3af;
+}
+
+.timeframe-option {
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.timeframe-option:hover {
+  border-color: #fca5a5 !important;
+  background: #fef2f2;
+}
+
+.timeframe-option.selected {
+  border-color: #dc2626 !important;
+  background: #fef2f2 !important;
+}
+
+.goal-next-btn,
+.goal-create-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.goal-next-btn:hover,
+.goal-create-btn:hover {
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.goal-next-btn:disabled,
+.goal-create-btn:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%);
+  box-shadow: none;
+}
+
+/* Dark mode modal styles */
+.goal-modal.dark-mode {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.goal-modal.dark-mode .goal-modal-header {
+  background: linear-gradient(135deg, #1e2433 0%, #1a1f2e 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.goal-modal.dark-mode .goal-modal-header h3 {
+  color: #f3f4f6;
+}
+
+.goal-modal.dark-mode .goal-modal-header p {
+  color: #9ca3af;
+}
+
+.goal-modal.dark-mode .goal-modal-footer {
+  background: #1e2433;
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.goal-modal.dark-mode label {
+  color: #e5e7eb;
+}
+
+.goal-modal.dark-mode .goal-input {
+  background: #0f1320;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f3f4f6;
+}
+
+.goal-modal.dark-mode .goal-input:focus {
+  border-color: #dc2626;
+}
+
+.goal-modal.dark-mode .goal-input::placeholder {
+  color: #6b7280;
+}
+
+.goal-modal.dark-mode .timeframe-option {
+  background: #0f1320;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.goal-modal.dark-mode .timeframe-option:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3) !important;
+}
+
+.goal-modal.dark-mode .timeframe-option.selected {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: #dc2626 !important;
+}
+
+.goal-modal.dark-mode .timeframe-option p.font-semibold {
+  color: #f3f4f6;
+}
+
+.goal-modal.dark-mode .timeframe-option p.text-xs {
+  color: #9ca3af;
+}
+
+.goal-modal.dark-mode .timeframe-option .bg-gray-100 {
+  background: #1e2433;
+}
+
+.goal-modal.dark-mode .timeframe-option .text-gray-500 {
+  color: #9ca3af;
+}

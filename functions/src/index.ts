@@ -1071,6 +1071,150 @@ export const sendTestEmail = functions.runWith({
     }
 });
 
+/**
+ * Cloud Function to send email notification when a goal is created from AI chat
+ * Accessible by authenticated users only
+ */
+export const sendGoalCreatedEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: {
+    goalId: string;
+    goalTitle: string;
+    timeframe: string;
+    userEmail: string;
+    userName: string;
+}, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send goal notifications.'
+        );
+    }
+
+    // Validate input
+    const { goalId, goalTitle, timeframe, userEmail, userName } = data;
+    if (!goalId || !goalTitle || !timeframe || !userEmail) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: goalId, goalTitle, timeframe, userEmail'
+        );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid email address format'
+        );
+    }
+
+    // Map timeframe to readable text
+    const timeframeText = timeframe === 'week' ? '7 days' :
+                          timeframe === 'month' ? '30 days' : '6 months';
+
+    try {
+        // Initialize SendGrid with API key
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set.');
+        }
+        sgMail.setApiKey(apiKey);
+
+        // Create email message
+        const msg = {
+            to: userEmail,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: `🚀 Your RocketGoal "${goalTitle}" has launched!`,
+            text: `Hi ${userName},\n\nCongratulations! You've just created a new RocketGoal: "${goalTitle}"\n\nYour mission timeframe: ${timeframeText}\n\nYour AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!\n\nView your goal: https://rocketgoals.com/rocketgoal/${goalId}\n\nRemember: Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!\n\nTo your success,\nThe Rocket Goals Team`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0;">
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); padding: 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
+                        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">Your Mission Has Launched!</h1>
+                    </div>
+
+                    <!-- Body -->
+                    <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none;">
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                            Hi <strong>${userName}</strong>,
+                        </p>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                            Congratulations! You've just created a new RocketGoal:
+                        </p>
+
+                        <!-- Goal Card -->
+                        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%); border: 2px solid #fecaca; border-radius: 12px; padding: 24px; margin-bottom: 25px;">
+                            <h2 style="color: #dc2626; margin: 0 0 10px; font-size: 22px; font-weight: 700;">"${goalTitle}"</h2>
+                            <p style="color: #92400e; margin: 0; font-size: 14px; font-weight: 600;">
+                                ⏱️ Mission Timeframe: <strong>${timeframeText}</strong>
+                            </p>
+                        </div>
+
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                            Your AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!
+                        </p>
+
+                        <!-- CTA Button -->
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="https://rocketgoals.com/rocketgoal/${goalId}"
+                               style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);">
+                                View Your RocketGoal →
+                            </a>
+                        </div>
+
+                        <!-- Motivation -->
+                        <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-top: 25px; border-left: 4px solid #dc2626;">
+                            <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin: 0; font-style: italic;">
+                                💡 <strong>Remember:</strong> Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="background: #1f2937; padding: 25px 30px; border-radius: 0 0 16px 16px; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 14px; margin: 0 0 10px;">
+                            To your success,<br>
+                            <strong style="color: #f3f4f6;">The Rocket Goals Team</strong>
+                        </p>
+                        <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                            © ${new Date().getFullYear()} Rocket Goals. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            `,
+        };
+
+        // Send the email
+        await sgMail.send(msg);
+
+        console.log(`✅ Goal created email sent successfully to ${userEmail} for goal ${goalId}`);
+
+        return {
+            success: true,
+            message: `Goal notification email sent to ${userEmail}`
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending goal created email:', error);
+
+        // Handle SendGrid specific errors
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send email: ${error.message}`
+        );
+    }
+});
+
 // Callable: return auth metadata (last sign-in, creation time) for given UIDs
 export const getAuthMetadata = onCall({}, async (request) => {
     if (!request.auth) {
