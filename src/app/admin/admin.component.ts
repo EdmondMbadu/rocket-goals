@@ -7,6 +7,7 @@ import { AvatarDropdownComponent } from '../avatar-dropdown.component';
 import { UserProfile } from '../models/user-profile';
 import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
+import { ThemeService } from '../theme.service';
 
 type SectionKey = 'users' | 'email' | 'quickActions' | 'aiAnalytics';
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
@@ -40,6 +41,8 @@ type AiAnalytics = {
 export class AdminComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private readonly theme = inject(ThemeService);
+  protected readonly isDarkMode = this.theme.isDarkMode;
 
   // Email form state
   emailTo = signal('');
@@ -189,6 +192,10 @@ export class AdminComponent implements OnInit {
 
   toggleSection(key: SectionKey) {
     this.sections.update((state) => ({ ...state, [key]: !state[key] }));
+  }
+
+  toggleDarkMode() {
+    this.theme.toggleDarkMode();
   }
 
   formatDate(value: unknown) {
@@ -407,4 +414,3 @@ export class AdminComponent implements OnInit {
     }
   }
 }
-

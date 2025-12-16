@@ -1,2 +1,33 @@
 /* Admin component styles */
 
+:host-context(.dark) .admin-page {
+  background-image: linear-gradient(135deg, #020617, #0f172a 40%, #111827 100%);
+  color: #f8fafc;
+}
+
+:host-context(.dark) .admin-page [class~="text-slate-900"],
+:host-context(.dark) .admin-page [class*="text-slate-900"] {
+  color: #f8fafc;
+}
+
+:host-context(.dark) .admin-page [class*="text-slate-500"],
+:host-context(.dark) .admin-page [class*="text-slate-600"] {
+  color: rgba(203, 213, 225, 0.85);
+}
+
+:host-context(.dark) .admin-page [class*="border-slate-200"],
+:host-context(.dark) .admin-page [class*="border-slate-300"],
+:host-context(.dark) .admin-page [class*="border-gray-200"] {
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+:host-context(.dark) .admin-page [class*="bg-white"],
+:host-context(.dark) .admin-page [class*="bg-slate-50"],
+:host-context(.dark) .admin-page [class*="bg-slate-100"] {
+  background-color: rgba(15, 23, 42, 0.85);
+}
+
+:host-context(.dark) .admin-page .shadow-sm,
+:host-context(.dark) .admin-page .shadow-lg {
+  box-shadow: 0 30px 70px rgba(2, 6, 23, 0.7) !important;
+}
