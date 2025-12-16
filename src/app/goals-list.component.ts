@@ -10,6 +10,12 @@ import type { RocketGoal } from './models/rocket-goal';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ThemeService } from './theme.service';
+import { FansService, Fan } from './fans.service';
+
+interface FanMissionContext {
+  fan: Fan;
+  goal: RocketGoal | null;
+}
 
 @Component({
   selector: 'app-goals-list',
@@ -22,6 +28,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private rocketGoalsService = inject(RocketGoalsService);
+  private fansService = inject(FansService);
   // Expose authService for template access
   authService = inject(AuthService);
   private readonly theme = inject(ThemeService);
@@ -38,6 +45,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   workOnTitle = signal<string>('Work on Life Balance');
   isEditingWorkOnTitle = signal(false);
   editingWorkOnTitleValue = signal<string>('');
+  fanMemberships = signal<FanMissionContext[]>([]);
+  fanMembershipsLoading = signal(false);
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -153,6 +162,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
       console.log('Loaded goals:', goals);
       this.goals.set(goals as RocketGoal[]);
+      this.loadFanMemberships();
       if (goals.length === 0) {
         console.log('No goals found for user - showing empty state');
       }
@@ -164,8 +174,73 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  async loadFanMemberships() {
+    const profile = this.authService.profile();
+    const email = profile?.email?.toLowerCase();
+    if (!email) {
+      this.fanMemberships.set([]);
+      return;
+    }
+
+    this.fanMembershipsLoading.set(true);
+    try {
+      const memberships = await this.fansService.getFanMembershipsByEmail(email);
+      if (!memberships.length) {
+        this.fanMemberships.set([]);
+        return;
+      }
+
+      const goalIds = Array.from(new Set(memberships.map(membership => membership.goalId).filter(Boolean)));
+      const goalResults = await Promise.all(
+        goalIds.map(async goalId => {
+          try {
+            const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
+            return { goalId, goal: goal as RocketGoal | null };
+          } catch (error) {
+            console.warn('Unable to fetch goal for fan membership', goalId, error);
+            return { goalId, goal: null };
+          }
+        })
+      );
+
+      const goalMap = new Map(goalResults.map(entry => [entry.goalId, entry.goal]));
+      const entries: FanMissionContext[] = memberships.map(membership => {
+        const goal = goalMap.get(membership.goalId) ?? null;
+        if (goal && profile?.userId && goal.userId === profile.userId) {
+          return null;
+        }
+        return {
+          fan: membership,
+          goal
+        };
+      }).filter((entry): entry is FanMissionContext => entry !== null);
+
+      this.fanMemberships.set(entries);
+    } catch (error) {
+      console.error('Error loading fan memberships:', error);
+      this.fanMemberships.set([]);
+    } finally {
+      this.fanMembershipsLoading.set(false);
+    }
+  }
+
   getGoalTitle(goal: RocketGoal): string {
     return goal.answers['goal_title_label'] || goal.answers['custom_goal_title'] || goal.primaryGoal || 'Untitled Goal';
+  }
+
+  getFanGoalTitle(goal: RocketGoal | null, goalId: string): string {
+    if (goal) {
+      return this.getGoalTitle(goal);
+    }
+    const shortId = goalId ? goalId.substring(0, 6) : 'mission';
+    return `Mission ${shortId}…`;
+  }
+
+  getFanGoalOwner(goal: RocketGoal | null): string {
+    if (!goal) return 'Mission Commander';
+    const participantName = [goal.participant?.firstName, goal.participant?.lastName].filter(Boolean).join(' ').trim();
+    if (participantName) return participantName;
+    return 'Mission Commander';
   }
 
   getGoalTheme(goal: RocketGoal): string {

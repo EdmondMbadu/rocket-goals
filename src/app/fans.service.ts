@@ -264,4 +264,22 @@ export class FansService {
       return [];
     }
   }
+
+  async getFanMembershipsByEmail(email: string): Promise<Fan[]> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return [];
+
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const fansGroup = firestoreModule.collectionGroup(firestore, 'fans');
+    const q = firestoreModule.query(
+      fansGroup,
+      firestoreModule.where('email', '==', normalizedEmail)
+    );
+    const snapshot = await firestoreModule.getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Fan));
+  }
 }
