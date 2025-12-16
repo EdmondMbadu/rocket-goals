@@ -116,52 +116,6 @@
           Try Again
         </button>
       </div>
-      } @else if (goals().length === 0) {
-      <!-- Beautiful Empty State -->
-      <div class="text-center py-20 md:py-32">
-        <div class="relative inline-block mb-8">
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-red-600 to-black rounded-full blur-2xl opacity-20 animate-pulse">
-          </div>
-          <div class="relative w-32 h-32 md:w-40 md:h-40 mx-auto">
-            <img src="/assets/rocket-3d.png" alt="Rocket" class="w-full h-full object-contain animate-bounce-slow">
-          </div>
-        </div>
-        <h2 class="text-4xl md:text-6xl font-black text-black mb-4 tracking-tight">
-          Ready to <span class="text-red-600">Launch</span>?
-        </h2>
-        <p class="text-xl md:text-2xl text-gray-600 mb-4 max-w-2xl mx-auto leading-relaxed">
-          Your mission control is ready. Start your first 7-day Rocket Goal challenge and transform your vision into
-          reality.
-        </p>
-        <p class="text-gray-500 mb-12 max-w-xl mx-auto">
-          Join thousands who've already launched their goals. It's free, takes less than 3 minutes, and you'll get your
-          personalized action plan instantly.
-        </p>
-        <button (click)="startChallenge()"
-          class="group relative px-10 py-5 bg-gradient-to-r from-black to-gray-900 text-white font-black text-lg md:text-xl rounded-full overflow-hidden shadow-2xl hover:shadow-red-600/30 transition-all duration-300 hover:-translate-y-2 transform">
-          <span class="relative z-10 flex items-center gap-3">
-            <svg class="w-6 h-6 md:w-7 md:h-7 transform group-hover:rotate-12 transition-transform" fill="none"
-              stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Launch 7-Day Challenge
-            <svg class="w-5 h-5 md:w-6 md:h-6 transform group-hover:translate-x-2 transition-transform" fill="none"
-              stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
-          </div>
-        </button>
-        <div class="mt-8 flex items-center justify-center gap-2 text-sm text-gray-500">
-          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Free • No credit card required</span>
-        </div>
-      </div>
       } @else {
       <!-- Goals Grid -->
       <div class="mb-8">
