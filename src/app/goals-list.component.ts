@@ -9,6 +9,7 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-goals-list',
@@ -23,6 +24,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private rocketGoalsService = inject(RocketGoalsService);
   // Expose authService for template access
   authService = inject(AuthService);
+  private readonly theme = inject(ThemeService);
+  protected readonly isDarkMode = this.theme.isDarkMode;
   private routerSubscription?: Subscription;
 
   goals = signal<RocketGoal[]>([]);
@@ -197,6 +200,10 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showAvatarDropdown.set(false);
   }
 
+  toggleDarkMode() {
+    this.theme.toggleDarkMode();
+  }
+
   navigateToGoal(goalId: string) {
     this.router.navigateByUrl(`/rocketgoal/${goalId}`);
     this.closeAvatarDropdown();
@@ -342,4 +349,3 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 }
-
