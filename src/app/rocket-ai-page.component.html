@@ -221,17 +221,6 @@
               <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
             </div>
             <div class="flex items-center gap-3">
-              <!-- Turn into RocketGoal button (redirects to login) -->
-              <button type="button"
-                class="turn-into-goal-btn flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:scale-105"
-                (click)="openGoalModal()"
-                [disabled]="aiService.messages().length === 0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Turn into RocketGoal</span>
-              </button>
               <div class="status-pill">
                 <span class="status-dot"></span>
                 <div>
@@ -247,14 +236,13 @@
           </div>
         </section>
 
-        <!-- Join Button Section -->
+        <!-- Launch Your GOAL Button Section -->
         <div class="join-section glass">
           <div class="join-buttons-wrapper">
-            <a routerLink="/quiz" class="join-button-quiz">
-              <span class="quiz-btn-icon">🚀</span>
-              <span>Take ROCKET Quiz</span>
-            </a>
-            <a routerLink="/signup" class="join-button-primary">Join RocketGoals Now</a>
+            <button type="button" class="launch-goal-btn" (click)="openGoalModal()">
+              <span class="launch-btn-icon">🚀</span>
+              <span>Launch Your GOAL</span>
+            </button>
           </div>
         </div>
 
@@ -416,16 +404,15 @@
             <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
           </div>
           <div class="flex items-center gap-3">
-            <!-- Turn into RocketGoal button -->
+            <!-- Launch Your GOAL button -->
             <button type="button"
-              class="turn-into-goal-btn flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:scale-105"
-              (click)="openGoalModal()"
-              [disabled]="aiService.messages().length === 0">
+              class="launch-goal-btn-header flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:scale-105"
+              (click)="openGoalModal()">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span>Turn into RocketGoal</span>
+              <span>Launch Your GOAL</span>
             </button>
             <div class="status-pill">
               <span class="status-dot"></span>
@@ -773,22 +760,19 @@
     </div>
   </div>
 
-  <!-- Goal Creation Modal -->
-  <div *ngIf="showGoalModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-    <div class="goal-modal w-full max-w-md rounded-2xl bg-white p-0 shadow-2xl overflow-hidden" [class.dark-mode]="isDarkMode()">
+  <!-- Launch Your GOAL Modal - Multi-step ROCKET Quiz -->
+  <div *ngIf="showGoalModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6 overflow-y-auto">
+    <div class="goal-modal w-full max-w-lg rounded-2xl bg-white p-0 shadow-2xl overflow-hidden my-auto" [class.dark-mode]="isDarkMode()">
       <!-- Modal Header -->
       <div class="goal-modal-header px-6 py-5">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg text-2xl">
+              🚀
             </div>
             <div>
-              <h3 class="text-lg font-bold text-gray-900">Turn Chat into RocketGoal</h3>
-              <p class="text-sm text-gray-500">Step {{ goalModalStep() }} of 2</p>
+              <h3 class="text-lg font-bold text-gray-900">Launch Your GOAL</h3>
+              <p class="text-sm text-gray-500">Step {{ goalModalStep() }} of {{ totalSteps }}</p>
             </div>
           </div>
           <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
@@ -801,32 +785,33 @@
         <!-- Progress bar -->
         <div class="mt-4 h-1.5 bg-gray-200 rounded-full overflow-hidden">
           <div class="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300"
-            [style.width]="goalModalStep() === 1 ? '50%' : '100%'"></div>
+            [style.width]="((goalModalStep() / totalSteps) * 100) + '%'"></div>
         </div>
       </div>
 
       <!-- Modal Body -->
-      <div class="px-6 py-6">
+      <div class="px-6 py-6 max-h-[60vh] overflow-y-auto">
+
         <!-- Step 1: Goal Description -->
-        <div *ngIf="goalModalStep() === 1" class="space-y-4">
+        <div *ngIf="goalModalStep() === 1 && !showAuthPrompt()" class="space-y-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">
               What is the goal you're trying to achieve?
             </label>
             <p class="text-xs text-gray-500 mb-3">
-              Based on your conversation, describe the main goal you want to accomplish.
+              Describe the main goal you want to accomplish. Be specific!
             </p>
             <textarea
               class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
               rows="4"
               placeholder="e.g., Learn to play guitar, Run a marathon, Launch my business..."
-              [ngModel]="goalDescription()"
-              (ngModelChange)="goalDescription.set($event)"></textarea>
+              [ngModel]="quizAnswers().goalDescription"
+              (ngModelChange)="updateQuizAnswer('goalDescription', $event)"></textarea>
           </div>
         </div>
 
         <!-- Step 2: Timeframe Selection -->
-        <div *ngIf="goalModalStep() === 2" class="space-y-4">
+        <div *ngIf="goalModalStep() === 2 && !showAuthPrompt()" class="space-y-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">
               When are you planning to achieve this goal?
@@ -837,23 +822,23 @@
             <div class="space-y-3">
               <button *ngFor="let option of timeframeOptions" type="button"
                 class="timeframe-option w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200"
-                [class.selected]="selectedTimeframe() === option.value"
-                [class.border-gray-200]="selectedTimeframe() !== option.value"
-                [class.border-red-500]="selectedTimeframe() === option.value"
-                [class.bg-red-50]="selectedTimeframe() === option.value"
-                (click)="selectTimeframe(option.value)">
+                [class.selected]="quizAnswers().timeframe === option.value"
+                [class.border-gray-200]="quizAnswers().timeframe !== option.value"
+                [class.border-red-500]="quizAnswers().timeframe === option.value"
+                [class.bg-red-50]="quizAnswers().timeframe === option.value"
+                (click)="updateQuizAnswer('timeframe', option.value)">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
-                  [class.bg-gray-100]="selectedTimeframe() !== option.value"
-                  [class.bg-red-500]="selectedTimeframe() === option.value"
-                  [class.text-gray-500]="selectedTimeframe() !== option.value"
-                  [class.text-white]="selectedTimeframe() === option.value">
+                  [class.bg-gray-100]="quizAnswers().timeframe !== option.value"
+                  [class.bg-red-500]="quizAnswers().timeframe === option.value"
+                  [class.text-gray-500]="quizAnswers().timeframe !== option.value"
+                  [class.text-white]="quizAnswers().timeframe === option.value">
                   <svg *ngIf="option.value === 'week'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   <svg *ngIf="option.value === 'month'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <svg *ngIf="option.value === '6months'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="option.value === '3months'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
@@ -861,13 +846,202 @@
                   <p class="font-semibold text-gray-900">{{ option.label }}</p>
                   <p class="text-xs text-gray-500">{{ option.description }}</p>
                 </div>
-                <div *ngIf="selectedTimeframe() === option.value" class="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white">
+                <div *ngIf="quizAnswers().timeframe === option.value" class="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Step 3: R – Remember Your Future Self -->
+        <div *ngIf="goalModalStep() === 3 && !showAuthPrompt()" class="space-y-4">
+          <div class="rocket-section-badge">R – Remember Your Future Self</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            On a scale of 1–10, how clearly can you visualize your Future Self living your ideal life?
+          </label>
+          <p class="text-xs text-gray-500 mb-4">
+            1 = Very unclear, 10 = Crystal clear vision
+          </p>
+          <div class="scale-slider-container">
+            <input type="range" min="1" max="10" step="1"
+              class="scale-slider w-full"
+              [ngModel]="quizAnswers().futureSelfClarity"
+              (ngModelChange)="updateQuizAnswer('futureSelfClarity', $event)" />
+            <div class="scale-labels">
+              <span>1</span>
+              <span class="scale-value">{{ quizAnswers().futureSelfClarity }}</span>
+              <span>10</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: O – Own Your ONE Thing -->
+        <div *ngIf="goalModalStep() === 4 && !showAuthPrompt()" class="space-y-4">
+          <div class="rocket-section-badge">O – Own Your ONE Thing</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            How much time daily do you devote to your ONE thing, without distractions?
+          </label>
+          <div class="space-y-3">
+            <button *ngFor="let option of dailyTimeOptions" type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().dailyTimeForGoal === option.value"
+              [class.border-gray-200]="quizAnswers().dailyTimeForGoal !== option.value"
+              [class.border-red-500]="quizAnswers().dailyTimeForGoal === option.value"
+              [class.bg-red-50]="quizAnswers().dailyTimeForGoal === option.value"
+              (click)="updateQuizAnswer('dailyTimeForGoal', option.value)">
+              <span class="font-medium text-gray-900">{{ option.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 5: C – Celebrate Change -->
+        <div *ngIf="goalModalStep() === 5 && !showAuthPrompt()" class="space-y-4">
+          <div class="rocket-section-badge">C – Celebrate Change</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            When challenges arise, do you see them as obstacles or signals of growth?
+          </label>
+          <div class="space-y-3">
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().challengePerception === 'obstacles'"
+              [class.border-gray-200]="quizAnswers().challengePerception !== 'obstacles'"
+              [class.border-red-500]="quizAnswers().challengePerception === 'obstacles'"
+              [class.bg-red-50]="quizAnswers().challengePerception === 'obstacles'"
+              (click)="updateQuizAnswer('challengePerception', 'obstacles')">
+              <span class="font-medium text-gray-900">Obstacles – they slow me down</span>
+            </button>
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().challengePerception === 'growth'"
+              [class.border-gray-200]="quizAnswers().challengePerception !== 'growth'"
+              [class.border-red-500]="quizAnswers().challengePerception === 'growth'"
+              [class.bg-red-50]="quizAnswers().challengePerception === 'growth'"
+              (click)="updateQuizAnswer('challengePerception', 'growth')">
+              <span class="font-medium text-gray-900">Signals of growth – they help me improve</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 6: K – Keep Kind Intentions -->
+        <div *ngIf="goalModalStep() === 6 && !showAuthPrompt()" class="space-y-4">
+          <div class="rocket-section-badge">K – Keep Kind Intentions</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Do you have tools or rituals that help you bounce back from emotional setbacks?
+          </label>
+          <div class="space-y-3">
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().emotionalResilience === 'yes'"
+              [class.border-gray-200]="quizAnswers().emotionalResilience !== 'yes'"
+              [class.border-red-500]="quizAnswers().emotionalResilience === 'yes'"
+              [class.bg-red-50]="quizAnswers().emotionalResilience === 'yes'"
+              (click)="updateQuizAnswer('emotionalResilience', 'yes')">
+              <span class="font-medium text-gray-900">Yes, I have strategies that work for me</span>
+            </button>
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().emotionalResilience === 'no'"
+              [class.border-gray-200]="quizAnswers().emotionalResilience !== 'no'"
+              [class.border-red-500]="quizAnswers().emotionalResilience === 'no'"
+              [class.bg-red-50]="quizAnswers().emotionalResilience === 'no'"
+              (click)="updateQuizAnswer('emotionalResilience', 'no')">
+              <span class="font-medium text-gray-900">No, I'm still figuring this out</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 7: E – Engage with Exponential Effort -->
+        <div *ngIf="goalModalStep() === 7 && !showAuthPrompt()" class="space-y-4">
+          <div class="rocket-section-badge">E – Engage with Exponential Effort</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            How consistent are you at showing up daily—even when motivation is low?
+          </label>
+          <div class="space-y-3">
+            <button *ngFor="let option of consistencyOptions" type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().dailyConsistency === option.value"
+              [class.border-gray-200]="quizAnswers().dailyConsistency !== option.value"
+              [class.border-red-500]="quizAnswers().dailyConsistency === option.value"
+              [class.bg-red-50]="quizAnswers().dailyConsistency === option.value"
+              (click)="updateQuizAnswer('dailyConsistency', option.value)">
+              <span class="font-medium text-gray-900">{{ option.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 8: T – Transform Time with Your Team -->
+        <div *ngIf="goalModalStep() === 8 && !showAuthPrompt()" class="space-y-4">
+          <div class="rocket-section-badge">T – Transform Time with Your Team</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Do you currently have an accountability partner, mentor, or supportive team helping you grow?
+          </label>
+          <div class="space-y-3">
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().hasAccountabilitySupport === 'yes'"
+              [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'yes'"
+              [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'yes'"
+              [class.bg-red-50]="quizAnswers().hasAccountabilitySupport === 'yes'"
+              (click)="updateQuizAnswer('hasAccountabilitySupport', 'yes')">
+              <span class="font-medium text-gray-900">Yes, I have support</span>
+            </button>
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().hasAccountabilitySupport === 'no'"
+              [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'no'"
+              [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'no'"
+              [class.bg-red-50]="quizAnswers().hasAccountabilitySupport === 'no'"
+              (click)="updateQuizAnswer('hasAccountabilitySupport', 'no')">
+              <span class="font-medium text-gray-900">No, I'm doing this solo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 9: Additional Notes -->
+        <div *ngIf="goalModalStep() === 9 && !showAuthPrompt()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Anything else we should know?
+            </label>
+            <p class="text-xs text-gray-500 mb-3">
+              Share any additional context, challenges, or thoughts about your goal. (Optional)
+            </p>
+            <textarea
+              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
+              rows="4"
+              placeholder="e.g., I've tried this before but struggled with..., I'm most motivated when..."
+              [ngModel]="quizAnswers().additionalNotes"
+              (ngModelChange)="updateQuizAnswer('additionalNotes', $event)"></textarea>
+          </div>
+        </div>
+
+        <!-- Auth Prompt for non-logged-in users -->
+        <div *ngIf="showAuthPrompt()" class="space-y-6 text-center">
+          <div class="auth-prompt-icon">
+            <svg class="w-16 h-16 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-xl font-bold text-gray-900 mb-2">Almost there!</h4>
+            <p class="text-gray-600">
+              Sign in or create an account to save your goal and start your journey.
+            </p>
+          </div>
+          <div class="space-y-3">
+            <button type="button"
+              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold hover:opacity-90 transition"
+              (click)="navigateToAuth('signup')">
+              Create Account
+            </button>
+            <button type="button"
+              class="w-full py-3 px-4 rounded-xl border-2 border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition"
+              (click)="navigateToAuth('login')">
+              I already have an account
+            </button>
           </div>
         </div>
 
@@ -878,10 +1052,10 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="goal-modal-footer px-6 py-4 flex justify-between items-center">
-        <button *ngIf="goalModalStep() === 2" type="button"
+      <div class="goal-modal-footer px-6 py-4 flex justify-between items-center" *ngIf="!showAuthPrompt()">
+        <button *ngIf="goalModalStep() > 1" type="button"
           class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition"
-          (click)="goBackToStep1()">
+          (click)="goToPreviousStep()">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -895,27 +1069,27 @@
             Cancel
           </button>
 
-          <button *ngIf="goalModalStep() === 1" type="button"
+          <!-- Next button for steps 1-8 -->
+          <button *ngIf="goalModalStep() < totalSteps" type="button"
             class="goal-next-btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
-            [disabled]="!goalDescription().trim()"
-            (click)="goToStep2()">
+            [disabled]="!canProceedToNextStep()"
+            (click)="goToNextStep()">
             Next
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
-          <button *ngIf="goalModalStep() === 2" type="button"
+          <!-- Final step button -->
+          <button *ngIf="goalModalStep() === totalSteps" type="button"
             class="goal-create-btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
-            [disabled]="!selectedTimeframe() || isCreatingGoal()"
-            (click)="createGoalFromChat()">
+            [disabled]="isCreatingGoal()"
+            (click)="goToNextStep()">
             <svg *ngIf="isCreatingGoal()" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <svg *ngIf="!isCreatingGoal()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            {{ isCreatingGoal() ? 'Creating...' : 'Launch RocketGoal' }}
+            <span class="text-lg">🚀</span>
+            {{ isCreatingGoal() ? 'Launching...' : 'Launch My GOAL' }}
           </button>
         </div>
       </div>

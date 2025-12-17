@@ -11,7 +11,19 @@ import { ThemeService } from './theme.service';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 
-export type GoalTimeframe = 'week' | 'month' | '6months';
+export type GoalTimeframe = 'week' | 'month' | '3months';
+
+export interface RocketQuizAnswers {
+  goalDescription: string;
+  timeframe: GoalTimeframe | null;
+  futureSelfClarity: number; // 1-10 scale
+  dailyTimeForGoal: string; // time option
+  challengePerception: string; // obstacles or growth
+  emotionalResilience: string; // yes/no
+  dailyConsistency: string; // consistency option
+  hasAccountabilitySupport: string; // yes/no
+  additionalNotes: string;
+}
 
 @Component({
   selector: 'app-rocket-ai-page',
@@ -37,13 +49,26 @@ export class RocketAiPageComponent implements OnInit {
   protected readonly currentSessionId = this.aiService.currentSessionId;
   protected readonly confirmingDeleteSessionId = signal<string | null>(null);
 
-  // Goal creation modal state
+  // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
-  protected readonly goalModalStep = signal<1 | 2>(1);
-  protected readonly goalDescription = signal('');
-  protected readonly selectedTimeframe = signal<GoalTimeframe | null>(null);
+  protected readonly goalModalStep = signal<number>(1);
+  protected readonly totalSteps = 9; // Total quiz steps
   protected readonly isCreatingGoal = signal(false);
   protected readonly goalCreationError = signal<string | null>(null);
+  protected readonly showAuthPrompt = signal(false);
+
+  // Quiz answers
+  protected readonly quizAnswers = signal<RocketQuizAnswers>({
+    goalDescription: '',
+    timeframe: null,
+    futureSelfClarity: 5,
+    dailyTimeForGoal: '',
+    challengePerception: '',
+    emotionalResilience: '',
+    dailyConsistency: '',
+    hasAccountabilitySupport: '',
+    additionalNotes: ''
+  });
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
 
@@ -57,12 +82,28 @@ export class RocketAiPageComponent implements OnInit {
   protected readonly timeframeOptions: { value: GoalTimeframe; label: string; description: string }[] = [
     { value: 'week', label: 'Within a week', description: '7-day intensive sprint' },
     { value: 'month', label: 'Within a month', description: '30-day focused journey' },
-    { value: '6months', label: 'Within 6 months', description: 'Long-term transformation' }
+    { value: '3months', label: 'Within 3 months', description: 'Sustained transformation' }
+  ];
+
+  protected readonly dailyTimeOptions = [
+    { value: 'less-than-30', label: 'Less than 30 minutes' },
+    { value: '30-60', label: '30–60 minutes' },
+    { value: '1-2-hours', label: '1–2 hours' },
+    { value: 'more-than-2', label: 'More than 2 hours' }
+  ];
+
+  protected readonly consistencyOptions = [
+    { value: 'rarely', label: 'Rarely – I struggle to show up' },
+    { value: 'sometimes', label: 'Sometimes – depends on the day' },
+    { value: 'often', label: 'Often – I have good habits' },
+    { value: 'always', label: 'Always – I never miss a day' }
   ];
 
   async ngOnInit() {
     if (this.isLoggedIn()) {
       await this.aiService.loadSessionsForCurrentUser();
+      // Check if user was redirected back after login with pending goal
+      await this.checkPendingGoalCreation();
     }
   }
 
@@ -110,63 +151,100 @@ export class RocketAiPageComponent implements OnInit {
     this.showHistory.update((current) => !current);
   }
 
-  // Goal creation modal methods
+  // Goal creation modal methods (Launch Your GOAL wizard)
   protected openGoalModal(): void {
-    if (!this.isLoggedIn()) {
-      // Redirect to login with return URL
-      this.router.navigate(['/login'], {
-        queryParams: { redirectTo: '/ai' }
-      });
-      return;
-    }
-
-    // Check if there's any chat content to turn into a goal
-    const messages = this.aiService.messages();
-    if (messages.length === 0) {
-      this.goalCreationError.set('Start a conversation first to turn it into a goal.');
-      return;
-    }
-
+    // Always open modal - auth check happens at the end
     this.showGoalModal.set(true);
     this.goalModalStep.set(1);
-    this.goalDescription.set('');
-    this.selectedTimeframe.set(null);
+    this.showAuthPrompt.set(false);
     this.goalCreationError.set(null);
+    this.quizAnswers.set({
+      goalDescription: '',
+      timeframe: null,
+      futureSelfClarity: 5,
+      dailyTimeForGoal: '',
+      challengePerception: '',
+      emotionalResilience: '',
+      dailyConsistency: '',
+      hasAccountabilitySupport: '',
+      additionalNotes: ''
+    });
   }
 
   protected closeGoalModal(): void {
     this.showGoalModal.set(false);
     this.goalModalStep.set(1);
-    this.goalDescription.set('');
-    this.selectedTimeframe.set(null);
+    this.showAuthPrompt.set(false);
     this.goalCreationError.set(null);
     this.isCreatingGoal.set(false);
   }
 
-  protected goToStep2(): void {
-    if (!this.goalDescription().trim()) {
-      this.goalCreationError.set('Please describe your goal.');
+  protected updateQuizAnswer<K extends keyof RocketQuizAnswers>(key: K, value: RocketQuizAnswers[K]): void {
+    this.quizAnswers.update(current => ({ ...current, [key]: value }));
+  }
+
+  protected canProceedToNextStep(): boolean {
+    const step = this.goalModalStep();
+    const answers = this.quizAnswers();
+
+    switch (step) {
+      case 1: return !!answers.goalDescription.trim();
+      case 2: return !!answers.timeframe;
+      case 3: return answers.futureSelfClarity >= 1 && answers.futureSelfClarity <= 10;
+      case 4: return !!answers.dailyTimeForGoal;
+      case 5: return !!answers.challengePerception;
+      case 6: return !!answers.emotionalResilience;
+      case 7: return !!answers.dailyConsistency;
+      case 8: return !!answers.hasAccountabilitySupport;
+      case 9: return true; // Additional notes is optional
+      default: return false;
+    }
+  }
+
+  protected goToNextStep(): void {
+    if (!this.canProceedToNextStep()) {
+      this.goalCreationError.set('Please answer this question to continue.');
       return;
     }
     this.goalCreationError.set(null);
-    this.goalModalStep.set(2);
-  }
 
-  protected goBackToStep1(): void {
-    this.goalModalStep.set(1);
-    this.goalCreationError.set(null);
-  }
-
-  protected selectTimeframe(timeframe: GoalTimeframe): void {
-    this.selectedTimeframe.set(timeframe);
-  }
-
-  protected async createGoalFromChat(): Promise<void> {
-    if (!this.selectedTimeframe()) {
-      this.goalCreationError.set('Please select a timeframe.');
-      return;
+    const currentStep = this.goalModalStep();
+    if (currentStep < this.totalSteps) {
+      this.goalModalStep.set(currentStep + 1);
+    } else {
+      // Last step - check auth and create goal
+      this.handleFinalStep();
     }
+  }
 
+  protected goToPreviousStep(): void {
+    this.goalCreationError.set(null);
+    this.showAuthPrompt.set(false);
+    const currentStep = this.goalModalStep();
+    if (currentStep > 1) {
+      this.goalModalStep.set(currentStep - 1);
+    }
+  }
+
+  protected handleFinalStep(): void {
+    if (!this.isLoggedIn()) {
+      // Show auth prompt within the modal
+      this.showAuthPrompt.set(true);
+    } else {
+      this.createGoalFromQuiz();
+    }
+  }
+
+  protected navigateToAuth(mode: 'login' | 'signup'): void {
+    // Store quiz answers in sessionStorage before redirecting
+    sessionStorage.setItem('pendingGoalQuiz', JSON.stringify(this.quizAnswers()));
+    this.closeGoalModal();
+    this.router.navigate([`/${mode}`], {
+      queryParams: { redirectTo: '/ai', createGoal: 'true' }
+    });
+  }
+
+  protected async createGoalFromQuiz(): Promise<void> {
     const profile = this.authService.profile();
     if (!profile?.userId) {
       this.goalCreationError.set('You must be logged in to create a goal.');
@@ -177,25 +255,39 @@ export class RocketAiPageComponent implements OnInit {
     this.goalCreationError.set(null);
 
     try {
-      // Get the chat context
+      const answers = this.quizAnswers();
+
+      // Get chat context if available
       const messages = this.aiService.messages();
-      const chatContext = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n\n');
+      const chatContext = messages.length > 0
+        ? messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n\n')
+        : '';
 
-      // Calculate the end date based on timeframe
+      // Calculate timeframe days
       const now = Date.now();
-      const timeframeDays = this.selectedTimeframe() === 'week' ? 7 :
-                           this.selectedTimeframe() === 'month' ? 30 : 180;
+      const timeframeDays = answers.timeframe === 'week' ? 7 :
+                           answers.timeframe === 'month' ? 30 : 90;
 
-      // Create the goal
+      // Create the goal with all quiz data points
       const goalId = await this.goalsService.createRocketGoal({
         userId: profile.userId,
-        primaryGoal: this.goalDescription(),
+        primaryGoal: answers.goalDescription,
         answers: {
-          goal_title_label: this.goalDescription(),
-          timeframe: this.selectedTimeframe(),
+          goal_title_label: answers.goalDescription,
+          timeframe: answers.timeframe,
           timeframe_days: timeframeDays,
           chat_context: chatContext,
-          source: 'ai_chat'
+          source: 'launch_your_goal_quiz',
+          // ROCKET quiz data points
+          rocket_quiz: {
+            futureSelfClarity: answers.futureSelfClarity,
+            dailyTimeForGoal: answers.dailyTimeForGoal,
+            challengePerception: answers.challengePerception,
+            emotionalResilience: answers.emotionalResilience,
+            dailyConsistency: answers.dailyConsistency,
+            hasAccountabilitySupport: answers.hasAccountabilitySupport,
+            additionalNotes: answers.additionalNotes
+          }
         },
         participant: {
           firstName: profile.firstName || '',
@@ -219,14 +311,13 @@ export class RocketAiPageComponent implements OnInit {
 
         await sendGoalEmail({
           goalId,
-          goalTitle: this.goalDescription(),
-          timeframe: this.selectedTimeframe()!,
+          goalTitle: answers.goalDescription,
+          timeframe: answers.timeframe!,
           userEmail: profile.email || '',
           userName: profile.firstName || 'Achiever'
         });
       } catch (emailError) {
         console.warn('Failed to send goal creation email:', emailError);
-        // Don't block goal creation if email fails
       }
 
       // Close modal and navigate to the new goal
@@ -237,6 +328,22 @@ export class RocketAiPageComponent implements OnInit {
       this.goalCreationError.set(error?.message || 'Failed to create goal. Please try again.');
     } finally {
       this.isCreatingGoal.set(false);
+    }
+  }
+
+  // Check for pending goal creation after login/signup
+  async checkPendingGoalCreation(): Promise<void> {
+    const pendingQuiz = sessionStorage.getItem('pendingGoalQuiz');
+    if (pendingQuiz && this.isLoggedIn()) {
+      try {
+        const answers = JSON.parse(pendingQuiz) as RocketQuizAnswers;
+        this.quizAnswers.set(answers);
+        sessionStorage.removeItem('pendingGoalQuiz');
+        await this.createGoalFromQuiz();
+      } catch (error) {
+        console.error('Failed to restore pending goal:', error);
+        sessionStorage.removeItem('pendingGoalQuiz');
+      }
     }
   }
 }
