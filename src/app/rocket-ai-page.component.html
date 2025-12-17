@@ -699,36 +699,45 @@
   </div>
 
   <!-- Launch Your GOAL Modal - Multi-step ROCKET Quiz -->
-  <div *ngIf="showGoalModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6 overflow-y-auto">
-    <div class="goal-modal w-full max-w-lg rounded-2xl bg-white p-0 shadow-2xl overflow-hidden my-auto" [class.dark-mode]="isDarkMode()">
+  <div *ngIf="showGoalModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md px-4 py-6 overflow-y-auto goal-modal-overlay">
+    <div class="goal-modal w-full max-w-2xl rounded-3xl bg-white p-0 shadow-2xl overflow-hidden my-auto goal-modal-container" [class.dark-mode]="isDarkMode()">
+      <!-- Premium Glow Effect -->
+      <div class="goal-modal-glow"></div>
+      
       <!-- Modal Header -->
-      <div class="goal-modal-header px-6 py-5">
+      <div class="goal-modal-header px-8 py-6 relative z-10">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg text-2xl">
-              🚀
+          <div class="flex items-center gap-4">
+            <div class="goal-modal-icon-wrapper">
+              <div class="goal-modal-icon">
+                <span class="goal-modal-rocket">🚀</span>
+              </div>
+              <div class="goal-modal-icon-glow"></div>
             </div>
             <div>
-              <h3 class="text-lg font-bold text-gray-900">Launch Your GOAL</h3>
-              <p class="text-sm text-gray-500">Step {{ goalModalStep() }} of {{ totalSteps }}</p>
+              <h3 class="goal-modal-title">Launch Your GOAL</h3>
+              <p class="goal-modal-subtitle">Step {{ goalModalStep() }} of {{ totalSteps }}</p>
             </div>
           </div>
-          <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+          <button type="button" class="goal-modal-close-btn"
             (click)="closeGoalModal()">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <!-- Progress bar -->
-        <div class="mt-4 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-          <div class="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300"
-            [style.width]="((goalModalStep() / totalSteps) * 100) + '%'"></div>
+        <!-- Enhanced Progress bar -->
+        <div class="mt-6 goal-modal-progress-container">
+          <div class="goal-modal-progress-bar">
+            <div class="goal-modal-progress-fill transition-all duration-500 ease-out"
+              [style.width]="((goalModalStep() / totalSteps) * 100) + '%'"></div>
+            <div class="goal-modal-progress-shine"></div>
+          </div>
         </div>
       </div>
 
       <!-- Modal Body -->
-      <div class="px-6 py-6 max-h-[60vh] overflow-y-auto">
+      <div class="px-8 py-8 max-h-[65vh] overflow-y-auto goal-modal-body">
 
         <!-- Step 1: Goal Description -->
         <div *ngIf="goalModalStep() === 1 && !showAuthPrompt()" class="space-y-4">
@@ -990,7 +999,7 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="goal-modal-footer px-6 py-4 flex justify-between items-center" *ngIf="!showAuthPrompt()">
+      <div class="goal-modal-footer px-8 py-6 flex justify-between items-center relative z-10" *ngIf="!showAuthPrompt()">
         <button *ngIf="goalModalStep() > 1" type="button"
           class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition"
           (click)="goToPreviousStep()">

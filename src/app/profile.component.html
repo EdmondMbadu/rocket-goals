@@ -76,9 +76,10 @@
       <div class="hero-body">
         <div class="avatar-wrap">
           <div class="avatar-frame">
-            @if (profileImagePreview() || profile()?.profilePictureUrl) {
-            <img [src]="profileImagePreview() || profile()?.profilePictureUrl!" alt="Profile"
-              (error)="onProfileImageError($event)" />
+            @if (getAvatarImageSrc()) {
+            <img [src]="getAvatarImageSrc()!" alt="Profile"
+              (error)="onProfileImageError($event)"
+              [attr.loading]="'eager'" />
             } @else {
             <div class="avatar-fallback">{{ getInitials() }}</div>
             }

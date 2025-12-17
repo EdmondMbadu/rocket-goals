@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -21,6 +21,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   router = inject(Router);
   private rocketGoalsService = inject(RocketGoalsService);
   protected theme = inject(ThemeService);
+  private cdr = inject(ChangeDetectorRef);
   private storage: any = null;
   
   profile = signal<UserProfile | null>(null);
@@ -77,11 +78,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
       const currentProfile = this.authService.profile();
       if (currentProfile && currentProfile.userId === profile.userId) {
         this.profile.set(currentProfile);
-        if (currentProfile.profilePictureUrl && currentProfile.profilePictureUrl !== this.profileImagePreview()) {
+        // Only override the preview with the stored image when we don't have a local
+        // selection in progress. This lets the user actually see the file they just picked.
+        if (!this.profileImageFile && currentProfile.profilePictureUrl && currentProfile.profilePictureUrl !== this.profileImagePreview()) {
           console.log('Profile image updated:', currentProfile.profilePictureUrl);
           this.profileImagePreview.set(currentProfile.profilePictureUrl);
         }
-        if (currentProfile.headerImageUrl && currentProfile.headerImageUrl !== this.headerImagePreview()) {
+        if (!this.headerImageFile && currentProfile.headerImageUrl && currentProfile.headerImageUrl !== this.headerImagePreview()) {
           this.headerImagePreview.set(currentProfile.headerImageUrl);
         }
       }
@@ -134,17 +137,27 @@ export class ProfileComponent implements OnInit, OnDestroy {
         setTimeout(() => this.error.set(null), 5000);
         return;
       }
-      // Clean up old preview URL if it was a blob URL
+      // Clean up old preview URL if it was a blob URL or data URL
       const oldPreview = this.profileImagePreview();
-      if (oldPreview && oldPreview.startsWith('blob:')) {
-        URL.revokeObjectURL(oldPreview);
+      if (oldPreview && (oldPreview.startsWith('blob:') || oldPreview.startsWith('data:'))) {
+        // For data URLs, we can't revoke them, but we'll clear the signal
+        if (oldPreview.startsWith('blob:')) {
+          URL.revokeObjectURL(oldPreview);
+        }
       }
       this.profileImageFile = file;
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.profileImagePreview.set(e.target?.result as string);
+        // Force update the preview immediately
+        const newPreview = e.target?.result as string;
+        this.profileImagePreview.set(newPreview);
+        // Clear any error/success messages
+        this.error.set(null);
+        this.success.set(null);
       };
       reader.readAsDataURL(file);
+      // Reset the input so the same file can be selected again if needed
+      input.value = '';
     }
   }
 
@@ -195,10 +208,30 @@ export class ProfileComponent implements OnInit, OnDestroy {
       await storageModule.uploadBytes(storageRef, this.profileImageFile);
       const downloadURL = await storageModule.getDownloadURL(storageRef);
       
-      await this.updateProfile({ profilePictureUrl: downloadURL });
+      // Update profile in Firestore first
+      const updatedProfile = await this.updateProfile({ profilePictureUrl: downloadURL });
+      
+      // Clear the file reference after successful upload
       this.profileImageFile = null;
-      // Update preview to show the uploaded image
-      this.profileImagePreview.set(downloadURL);
+      
+      // Update preview with the new URL - add cache busting to force browser reload
+      // This ensures the new image displays immediately instead of showing cached version
+      const timestamp = Date.now();
+      const cacheBustedURL = downloadURL.includes('?') 
+        ? `${downloadURL}&t=${timestamp}` 
+        : `${downloadURL}?t=${timestamp}`;
+      
+      // Set preview to the cache-busted URL to force immediate reload
+      this.profileImagePreview.set(cacheBustedURL);
+      
+      // Also update the profile signal to ensure it's in sync
+      if (updatedProfile) {
+        this.profile.set(updatedProfile);
+      }
+      
+      // Force change detection to ensure the view updates
+      this.cdr.detectChanges();
+      
       this.success.set('Profile image updated successfully!');
       setTimeout(() => this.success.set(null), 5000);
     } catch (error: any) {
@@ -243,9 +276,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
 
-  private async updateProfile(updates: Partial<UserProfile>) {
+  private async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
     const updatedProfile = await this.authService.updateUserProfile(updates);
     this.profile.set(updatedProfile);
+    return updatedProfile;
   }
 
   private async ensureFirebase() {
@@ -273,6 +307,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const first = profile.firstName.charAt(0).toUpperCase();
     const last = profile.lastName.charAt(0).toUpperCase();
     return first + last;
+  }
+
+  getAvatarImageSrc(): string | null {
+    // If a new file is selected (not yet uploaded), always show the preview (new image)
+    if (this.profileImageFile && this.profileImagePreview()) {
+      return this.profileImagePreview()!;
+    }
+    // If we have a preview (which might be the uploaded image), use it
+    // This ensures the preview shows immediately after upload
+    if (this.profileImagePreview()) {
+      return this.profileImagePreview()!;
+    }
+    // Fallback to profile picture URL
+    return this.profile()?.profilePictureUrl || null;
   }
 
   getFormattedCreatedDate(): string {
