@@ -234,17 +234,18 @@
           <div class="ai-panel glass inner">
             <app-rocket-goals-ai [embedded]="true" />
           </div>
-        </section>
 
-        <!-- Launch Your GOAL Button Section -->
-        <div class="join-section glass">
-          <div class="join-buttons-wrapper">
-            <button type="button" class="launch-goal-btn" (click)="openGoalModal()">
-              <span class="launch-btn-icon">🚀</span>
-              <span>Launch Your GOAL</span>
+          <!-- Launch Your GOAL Button - Prominent CTA below chat -->
+          <div class="launch-goal-cta-wrapper">
+            <button type="button" class="launch-goal-btn-prominent" (click)="openGoalModal()">
+              <span class="launch-btn-rocket">🚀</span>
+              <span class="launch-btn-text">Launch Your GOAL</span>
+              <svg class="launch-btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </button>
           </div>
-        </div>
+        </section>
 
         <!-- Why Joining is a Win Section -->
         <section class="why-join-section glass">
@@ -404,16 +405,6 @@
             <p class="hero-subtitle">Ask anything about your mission and get focused guidance fast.</p>
           </div>
           <div class="flex items-center gap-3">
-            <!-- Launch Your GOAL button -->
-            <button type="button"
-              class="launch-goal-btn-header flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:scale-105"
-              (click)="openGoalModal()">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>Launch Your GOAL</span>
-            </button>
             <div class="status-pill">
               <span class="status-dot"></span>
               <div>
@@ -426,6 +417,17 @@
 
         <div class="ai-panel glass inner">
           <app-rocket-goals-ai [embedded]="true" />
+        </div>
+
+        <!-- Launch Your GOAL Button - Prominent CTA below chat -->
+        <div class="launch-goal-cta-wrapper">
+          <button type="button" class="launch-goal-btn-prominent" (click)="openGoalModal()">
+            <span class="launch-btn-rocket">🚀</span>
+            <span class="launch-btn-text">Launch Your GOAL</span>
+            <svg class="launch-btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
         </div>
       </section>
     </section>

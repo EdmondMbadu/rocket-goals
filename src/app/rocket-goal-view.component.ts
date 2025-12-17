@@ -133,7 +133,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const timeframe = goal.answers?.['timeframe'];
     if (timeframe === 'week') return 7;
     if (timeframe === 'month') return 30;
-    if (timeframe === '6months') return 180;
+    if (timeframe === '3months') return 90;
+    if (timeframe === '6months') return 180; // Legacy support
 
     return 7; // Default to 7 days
   }
@@ -154,8 +155,16 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         { label: 'WEEK 4', day: 22 },
         { label: 'FINISH', day: 30 }
       ];
+    } else if (days <= 90) {
+      // 3-month transformation: show months
+      return [
+        { label: 'MONTH 1', day: 1 },
+        { label: 'MONTH 2', day: 31 },
+        { label: 'MONTH 3', day: 61 },
+        { label: 'FINISH', day: 90 }
+      ];
     } else {
-      // 6-month transformation: show months
+      // 6-month transformation (legacy): show months
       return [
         { label: 'MONTH 1', day: 1 },
         { label: 'MONTH 2', day: 31 },
