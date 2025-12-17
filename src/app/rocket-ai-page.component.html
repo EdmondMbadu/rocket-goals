@@ -77,7 +77,7 @@
         </svg>
       </button>
       <a routerLink="/login" class="ghost-btn">Log in</a>
-      <a routerLink="/signup" class="solid-btn">Sign up</a>
+      <button type="button" class="solid-btn" (click)="openGoalModal()">Launch Your Goal</button>
     </div>
   </header>
 
@@ -247,83 +247,6 @@
           </div>
         </section>
 
-        <!-- Why Joining is a Win Section -->
-        <section class="why-join-section glass">
-          <h2 class="why-join-title">Why Joining RocketGoals is a Win</h2>
-          <div class="why-join-grid">
-            <div class="why-join-card">
-              <div class="why-join-icon">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 class="why-join-card-title">Transform Goals into Reality</h3>
-              <p class="why-join-card-text">Stop dreaming, start achieving. Our proven 7-day framework turns your vision
-                into actionable steps that actually work.</p>
-            </div>
-
-            <div class="why-join-card">
-              <div class="why-join-icon">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 class="why-join-card-title">AI-Powered Personal Coach</h3>
-              <p class="why-join-card-text">Get 24/7 access to intelligent coaching that understands your goals, tracks
-                your progress, and adapts to your needs.</p>
-            </div>
-
-            <div class="why-join-card">
-              <div class="why-join-icon">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 class="why-join-card-title">Build Unstoppable Momentum</h3>
-              <p class="why-join-card-text">Daily micro-wins, streak tracking, and smart reminders keep you motivated
-                and moving forward every single day.</p>
-            </div>
-
-            <div class="why-join-card">
-              <div class="why-join-icon">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 class="why-join-card-title">Join Thousands of Achievers</h3>
-              <p class="why-join-card-text">Be part of a community that's already launched their goals. See real results
-                from real people who took action.</p>
-            </div>
-
-            <div class="why-join-card">
-              <div class="why-join-icon">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-              </div>
-              <h3 class="why-join-card-title">Flexible Plans for Every Stage</h3>
-              <p class="why-join-card-text">Start free, upgrade when ready. From Launch to Galactic, choose the plan
-                that matches your ambition level.</p>
-            </div>
-
-            <div class="why-join-card">
-              <div class="why-join-icon">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-              <h3 class="why-join-card-title">Data-Driven Progress</h3>
-              <p class="why-join-card-text">Track your journey with beautiful dashboards, insights, and analytics that
-                show exactly how far you've come.</p>
-            </div>
-          </div>
-        </section>
       </section>
 
       <!-- Right: Why Join Sidebar -->
@@ -454,12 +377,12 @@
             the AI-powered platform that turns your vision into a clear, actionable mission plan.
           </p>
           <div class="landing-hero-actions">
-            <a routerLink="/signup" class="hero-cta-primary">
-              <span>Start Your Mission Free</span>
+            <button type="button" class="hero-cta-primary" (click)="openGoalModal()">
+              <span>Launch Your Goal</span>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </a>
+            </button>
             <a routerLink="/pricing" class="hero-cta-secondary">View Pricing</a>
           </div>
           <div class="landing-hero-stats">
@@ -526,12 +449,12 @@
               <span>Mission timelines with milestone celebrations</span>
             </li>
           </ul>
-          <a routerLink="/signup" class="dashboard-cta">
-            <span>Get Started Free</span>
+          <button type="button" class="dashboard-cta" (click)="openGoalModal()">
+            <span>Launch Your Goal</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-          </a>
+          </button>
         </div>
         <div class="dashboard-image-container">
           <div class="dashboard-image-glow"></div>
@@ -725,15 +648,28 @@
         <p class="final-cta-subtitle">Join thousands of achievers who are crushing their goals with AI-powered coaching.
           Start free today.</p>
         <div class="final-cta-actions">
-          <a routerLink="/signup" class="final-cta-primary">
-            <span>Start Your Free Mission</span>
+          <button type="button" class="final-cta-primary" (click)="openGoalModal()">
+            <span>Launch Your Goal</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-          </a>
+          </button>
           <a routerLink="/login" class="final-cta-secondary">Already have an account? Log in</a>
         </div>
         <p class="final-cta-note">No credit card required • Free forever on Launch plan</p>
+      </div>
+    </section>
+
+    <!-- Bottom CTA Section -->
+    <section class="landing-bottom-cta-section">
+      <div class="bottom-cta-content">
+        <button type="button" class="bottom-cta-button" (click)="openGoalModal()">
+          <span class="bottom-cta-rocket">🚀</span>
+          <span class="bottom-cta-text">Launch Your Goal Now</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </button>
       </div>
     </section>
 

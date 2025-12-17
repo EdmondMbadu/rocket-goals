@@ -1911,6 +1911,8 @@
   font-weight: 800;
   font-size: 15px;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
   box-shadow: 0 15px 40px rgba(239, 68, 68, 0.35);
   transition: all 0.3s ease;
 }
@@ -2158,6 +2160,8 @@
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
   box-shadow: 0 12px 30px rgba(239, 68, 68, 0.3);
   transition: all 0.3s ease;
   width: fit-content;
@@ -2615,6 +2619,8 @@
   font-weight: 800;
   font-size: 17px;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
   box-shadow: 0 20px 50px rgba(239, 68, 68, 0.4);
   transition: all 0.3s ease;
 }
@@ -3244,4 +3250,71 @@
     0 6px 20px rgba(220, 38, 38, 0.4),
     0 12px 40px rgba(220, 38, 38, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ===== BOTTOM CTA SECTION ===== */
+.landing-bottom-cta-section {
+  padding: 80px 40px;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(239, 68, 68, 0.05));
+}
+
+.bottom-cta-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.bottom-cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-weight: 900;
+  font-size: 20px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 20px 50px rgba(239, 68, 68, 0.4);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bottom-cta-button:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 28px 60px rgba(239, 68, 68, 0.5);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.bottom-cta-button:active {
+  transform: translateY(-2px) scale(1);
+}
+
+.bottom-cta-rocket {
+  font-size: 1.75rem;
+  animation: rocket-pulse 2s ease-in-out infinite;
+}
+
+.bottom-cta-text {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Light mode adjustments for bottom CTA */
+.light-mode .landing-bottom-cta-section {
+  background: linear-gradient(180deg, transparent, rgba(239, 68, 68, 0.03));
+}
+
+.light-mode .bottom-cta-button {
+  box-shadow:
+    0 20px 50px rgba(220, 38, 38, 0.3),
+    0 4px 15px rgba(220, 38, 38, 0.2);
+}
+
+.light-mode .bottom-cta-button:hover {
+  box-shadow:
+    0 28px 60px rgba(220, 38, 38, 0.4),
+    0 6px 20px rgba(220, 38, 38, 0.25);
 }
