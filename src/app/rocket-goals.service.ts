@@ -102,6 +102,19 @@ export class RocketGoalsService {
   async deleteRocketGoal(goalId: string) {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
+
+    const deleteCollectionDocs = async (collectionName: string) => {
+      const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, collectionName);
+      const snapshot = await firestoreModule.getDocs(collectionRef);
+      await Promise.all(snapshot.docs.map(doc => firestoreModule.deleteDoc(doc.ref)));
+    };
+
+    await Promise.all([
+      deleteCollectionDocs('fans'),
+      deleteCollectionDocs('fanComments'),
+      deleteCollectionDocs('fanReactions')
+    ]);
+
     const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId);
     await firestoreModule.deleteDoc(docRef);
   }

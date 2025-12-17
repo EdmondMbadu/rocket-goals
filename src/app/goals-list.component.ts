@@ -47,6 +47,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   editingWorkOnTitleValue = signal<string>('');
   fanMemberships = signal<FanMissionContext[]>([]);
   fanMembershipsLoading = signal(false);
+  leavingFanIds = signal<Record<string, boolean>>({});
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -204,16 +205,21 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       );
 
       const goalMap = new Map(goalResults.map(entry => [entry.goalId, entry.goal]));
-      const entries: FanMissionContext[] = memberships.map(membership => {
+      const entries: FanMissionContext[] = [];
+      for (const membership of memberships) {
         const goal = goalMap.get(membership.goalId) ?? null;
-        if (goal && profile?.userId && goal.userId === profile.userId) {
-          return null;
+        if (!goal) {
+          void this.cleanupStaleFanMembership(membership);
+          continue;
         }
-        return {
+        if (profile?.userId && goal.userId === profile.userId) {
+          continue;
+        }
+        entries.push({
           fan: membership,
           goal
-        };
-      }).filter((entry): entry is FanMissionContext => entry !== null);
+        });
+      }
 
       this.fanMemberships.set(entries);
     } catch (error) {
@@ -421,6 +427,52 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Navigate to landing page with editGoal query param
     // The app component will handle pre-filling the challenge with goal data
     this.router.navigate(['/'], { queryParams: { editGoal: goalId } });
+  }
+
+  isFanLeaving(fanId: string): boolean {
+    return !!this.leavingFanIds()[fanId];
+  }
+
+  private setFanLeavingState(fanId: string, isLeaving: boolean) {
+    const current = { ...this.leavingFanIds() };
+    if (isLeaving) {
+      current[fanId] = true;
+    } else {
+      delete current[fanId];
+    }
+    this.leavingFanIds.set(current);
+  }
+
+  private async cleanupStaleFanMembership(membership: Fan) {
+    if (!membership.goalId || !membership.id) {
+      return;
+    }
+    try {
+      await this.fansService.removeFan(membership.goalId, membership.id);
+    } catch (error) {
+      console.warn('Unable to clean up stale fan membership', membership.goalId, membership.id, error);
+    }
+  }
+
+  async leaveFanMission(fan: Fan) {
+    if (!fan.goalId || !fan.id) {
+      return;
+    }
+    const confirmed = confirm('Stop being a fan of this mission?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.setFanLeavingState(fan.id, true);
+    try {
+      await this.fansService.removeFan(fan.goalId, fan.id);
+      this.fanMemberships.set(this.fanMemberships().filter(entry => entry.fan.id !== fan.id));
+    } catch (error) {
+      console.error('Error leaving fan mission:', error);
+      alert('Failed to leave the mission. Please try again.');
+    } finally {
+      this.setFanLeavingState(fan.id, false);
+    }
   }
 
   @HostListener('document:click', ['$event'])
