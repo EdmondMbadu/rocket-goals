@@ -2861,7 +2861,7 @@
 
 .goal-next-btn,
 .goal-create-btn {
-  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
@@ -2963,7 +2963,7 @@
   font-size: 1.125rem;
   font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border: none;
   border-radius: 1rem;
   cursor: pointer;
@@ -2985,7 +2985,7 @@
 }
 
 .launch-goal-btn-header {
-  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   color: #ffffff;
   box-shadow: 0 4px 15px rgba(220, 38, 38, 0.35);
 }
@@ -3013,7 +3013,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #dc2626;
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(234, 88, 12, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.1) 100%);
   border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 9999px;
   margin-bottom: 0.75rem;
@@ -3053,7 +3053,7 @@
   appearance: none;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
@@ -3067,7 +3067,7 @@
 .scale-slider::-moz-range-thumb {
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
@@ -3097,7 +3097,7 @@
 /* Dark mode quiz styles */
 .goal-modal.dark-mode .rocket-section-badge {
   color: #f87171;
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(234, 88, 12, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.15) 100%);
   border-color: rgba(220, 38, 38, 0.3);
 }
 
@@ -3146,7 +3146,7 @@
 
 .launch-goal-cta-wrapper {
   padding: 1.5rem;
-  background: linear-gradient(180deg, rgba(220, 38, 38, 0.03) 0%, rgba(234, 88, 12, 0.05) 100%);
+  background: linear-gradient(180deg, rgba(220, 38, 38, 0.03) 0%, rgba(185, 28, 28, 0.05) 100%);
   border-top: 1px solid rgba(220, 38, 38, 0.1);
 }
 
@@ -3228,7 +3228,7 @@
 
 /* Light mode adjustments */
 .light-mode .launch-goal-cta-wrapper {
-  background: linear-gradient(180deg, rgba(220, 38, 38, 0.02) 0%, rgba(234, 88, 12, 0.04) 100%);
+  background: linear-gradient(180deg, rgba(220, 38, 38, 0.02) 0%, rgba(185, 28, 28, 0.04) 100%);
   border-top-color: rgba(220, 38, 38, 0.08);
 }
 

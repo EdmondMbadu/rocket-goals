@@ -1112,7 +1112,8 @@ export const sendGoalCreatedEmail = functions.runWith({
 
     // Map timeframe to readable text
     const timeframeText = timeframe === 'week' ? '7 days' :
-        timeframe === 'month' ? '30 days' : '6 months';
+        timeframe === 'month' ? '30 days' :
+        timeframe === '3months' ? '90 days' : '6 months'; // Legacy fallback for old '6months' option
 
     try {
         // Initialize SendGrid with API key
