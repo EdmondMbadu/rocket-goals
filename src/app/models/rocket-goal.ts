@@ -16,6 +16,8 @@ export interface RocketGoal {
   entryPoint: 'launch_challenge';
   createdAt: unknown;
   startTime?: number; // Timestamp in milliseconds when the 7-day challenge started
+  visualizationImageUrl?: string; // AI-generated visualization of the achieved goal
+  visualizationGeneratedAt?: unknown; // Timestamp when visualization was generated
 }
 
 export type CreateRocketGoalInput = Omit<RocketGoal, 'id' | 'createdAt'> & {

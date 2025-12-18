@@ -8,6 +8,7 @@ import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import { ThemeService } from './theme.service';
+import { VisualizationService } from './visualization.service';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 
@@ -38,6 +39,7 @@ export class RocketAiPageComponent implements OnInit {
   protected readonly goalsService = inject(RocketGoalsService);
   private readonly router = inject(Router);
   private readonly theme = inject(ThemeService);
+  private readonly visualizationService = inject(VisualizationService);
   private readonly functions = getFunctions(getApp(), 'us-central1');
 
   protected readonly isDarkMode = this.theme.isDarkMode;
@@ -319,6 +321,22 @@ export class RocketAiPageComponent implements OnInit {
       } catch (emailError) {
         console.warn('Failed to send goal creation email:', emailError);
       }
+
+      // Generate visualization image in the background (don't wait for it)
+      this.visualizationService.generateVisualization({
+        goalId,
+        goalDescription: answers.goalDescription,
+        timeframe: answers.timeframe!,
+        hasAccountabilitySupport: answers.hasAccountabilitySupport
+      }).then(result => {
+        if (result.success) {
+          console.log('Visualization generated successfully:', result.imageUrl);
+        } else {
+          console.warn('Failed to generate visualization:', result.message);
+        }
+      }).catch(error => {
+        console.warn('Error generating visualization:', error);
+      });
 
       // Close modal and navigate to the new goal
       this.closeGoalModal();

@@ -15,6 +15,7 @@ import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
 import { FansService, Fan, FanComment } from './fans.service';
+import { VisualizationService } from './visualization.service';
 
 @Component({
   selector: 'app-rocket-goal-view',
@@ -30,6 +31,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private calendarEventsService = inject(CalendarEventsService);
   private actionItemsService = inject(ActionItemsService);
   private fansService = inject(FansService);
+  private visualizationService = inject(VisualizationService);
   authService = inject(AuthService); // Make public for template access
   private themeService = inject(ThemeService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
@@ -53,6 +55,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
   calendarEvents = signal<CalendarEvent[]>([]);
+  visualizationLoading = signal(false);
+  showVisualizationModal = signal(false);
   selectedEvent = signal<CalendarEvent | null>(null);
   showEventModal = signal(false);
   eventModalDate = signal<Date>(new Date());
@@ -1102,5 +1106,63 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
+
+  // Visualization methods
+  getVisualizationImageUrl(): string | null {
+    const goal = this.goal();
+    return goal?.visualizationImageUrl || null;
+  }
+
+  hasVisualization(): boolean {
+    return !!this.getVisualizationImageUrl();
+  }
+
+  openVisualizationModal(): void {
+    if (this.hasVisualization()) {
+      this.showVisualizationModal.set(true);
+    }
+  }
+
+  closeVisualizationModal(): void {
+    this.showVisualizationModal.set(false);
+  }
+
+  // Generate visualization for this goal
+  async generateVisualization(): Promise<void> {
+    const goal = this.goal();
+    if (!goal || this.visualizationLoading()) return;
+
+    this.visualizationLoading.set(true);
+
+    try {
+      const result = await this.visualizationService.generateVisualization({
+        goalId: goal.id,
+        goalDescription: goal.primaryGoal || goal.answers?.['goal_title_label'] || 'Achieve my goal',
+        timeframe: goal.answers?.['timeframe'] || 'month',
+        hasAccountabilitySupport: goal.answers?.['rocket_quiz']?.hasAccountabilitySupport || 'no'
+      });
+
+      if (result.success && result.imageUrl) {
+        // Reload the goal to get the updated visualization URL
+        await this.loadGoal(goal.id);
+        console.log('Visualization generated successfully:', result.imageUrl);
+      } else {
+        console.error('Failed to generate visualization:', result.message);
+        alert('Failed to generate visualization. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating visualization:', error);
+      alert('An error occurred while generating the visualization.');
+    } finally {
+      this.visualizationLoading.set(false);
+    }
+  }
+
+  // Check if current user can generate visualization (owner only)
+  canGenerateVisualization(): boolean {
+    const goal = this.goal();
+    const profile = this.authService.profile();
+    return !!(goal && profile && goal.userId === profile.userId && !this.hasVisualization());
   }
 }

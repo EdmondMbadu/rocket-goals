@@ -1216,6 +1216,216 @@ export const sendGoalCreatedEmail = functions.runWith({
     }
 });
 
+/**
+ * Cloud Function to generate a visualization image for a goal using Gemini
+ * Uses the provided prompt template to create an inspirational image of the user's future self
+ */
+export const generateGoalVisualization = onCall({
+    region: "us-central1",
+    secrets: [geminiApiKey],
+    timeoutSeconds: 120, // Image generation can take longer
+}, async (request: any) => {
+    const startTime = Date.now();
+
+    try {
+        // Verify the user is authenticated
+        if (!request.auth) {
+            throw new HttpsError(
+                "unauthenticated",
+                "You must be logged in to generate visualizations."
+            );
+        }
+
+        const apiKey = geminiApiKey.value();
+        if (!apiKey) {
+            throw new HttpsError(
+                "failed-precondition",
+                "Google AI API key is not configured"
+            );
+        }
+
+        const data = request?.data || {};
+        const goalDescription = (data?.goalDescription || "").toString().trim();
+        const timeframe = (data?.timeframe || "month").toString().trim();
+        const goalId = (data?.goalId || "").toString().trim();
+        const hasAccountabilitySupport = data?.hasAccountabilitySupport === "yes";
+
+        if (!goalDescription) {
+            throw new HttpsError(
+                "invalid-argument",
+                "Goal description is required"
+            );
+        }
+
+        if (!goalId) {
+            throw new HttpsError(
+                "invalid-argument",
+                "Goal ID is required"
+            );
+        }
+
+        console.log(`🎨 Generating visualization for goal: "${goalDescription.substring(0, 50)}..."`);
+
+        // Map timeframe to readable text
+        const timeframeText = timeframe === 'week' ? 'a 7-day' :
+            timeframe === 'month' ? 'a 30-day' :
+            timeframe === '3months' ? 'a 90-day' : 'a 6-month';
+
+        // Build the image generation prompt using the user's template
+        const imagePrompt = `Create a highly inspiring, emotionally grounded, realistic visualization of a person who has achieved the following goal:
+
+"${goalDescription}" — rewritten as already achieved.
+
+The scene represents the person's Future Self living this goal fully and confidently.
+
+Time context:
+- The achievement reflects steady progress over ${timeframeText} timeframe.
+
+The person:
+- Appears focused, calm, and confident
+- Body language reflects discipline, consistency, and inner strength
+- Facial expression shows quiet satisfaction, not arrogance
+- The person feels authentic, human, and relatable
+
+Environment:
+- The setting naturally supports the goal (workplace, studio, outdoors, community, home, etc.)
+- The environment is organized, intentional, and free of distraction
+- Visual elements subtly reflect daily commitment and routine
+
+Emotional tone:
+- Hopeful, grounded, resilient
+- Challenges are implied as conquered, not erased
+- A sense of growth rather than perfection
+
+Lighting & style:
+- Warm, natural lighting
+- Photorealistic or cinematic realism
+- No fantasy, no exaggeration
+- Inspirational but believable
+
+Support & growth:
+${hasAccountabilitySupport ? '- Subtly include symbols of mentorship, collaboration, or accountability' : '- Emphasize self-reliance and inner resolve'}
+
+Composition:
+- Medium-wide shot
+- Strong sense of forward movement or presence
+- The image should feel like a moment captured from the person's real future life
+
+Avoid:
+- Abstract symbols
+- Text overlays
+- Unrealistic success clichés
+- Overly polished "stock photo" look
+
+The final image should make the viewer think:
+"This is achievable. This is me — soon."`;
+
+        // Initialize Gemini with image generation capabilities
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        // Use Gemini 2.0 Flash Experimental for image generation
+        // This model supports native image output with responseModalities
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash-exp",
+        });
+
+        console.log(`🎨 Sending image generation request to Gemini 2.0 Flash...`);
+
+        // Generate the image using Gemini's image generation
+        const result = await model.generateContent({
+            contents: [{
+                role: "user",
+                parts: [{
+                    text: `Generate an image based on this description:\n\n${imagePrompt}`
+                }]
+            }],
+            generationConfig: {
+                responseModalities: ["image", "text"] as any,
+            } as any,
+        });
+
+        const response = result.response;
+        let imageBase64: string | null = null;
+        let imageMimeType: string | null = null;
+
+        // Extract the image from the response
+        const parts = response.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+            if ((part as any).inlineData) {
+                imageBase64 = (part as any).inlineData.data;
+                imageMimeType = (part as any).inlineData.mimeType || 'image/png';
+                break;
+            }
+        }
+
+        if (!imageBase64) {
+            console.log(`⚠️ No image generated, Gemini response:`, JSON.stringify(response, null, 2));
+            throw new HttpsError(
+                "internal",
+                "Failed to generate image - no image data in response"
+            );
+        }
+
+        console.log(`✅ Image generated successfully (${imageMimeType})`);
+
+        // Upload to Firebase Storage
+        const bucket = admin.storage().bucket();
+        const fileName = `goal-visualizations/${goalId}/visualization_${Date.now()}.png`;
+        const file = bucket.file(fileName);
+
+        // Convert base64 to buffer and upload
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+
+        await file.save(imageBuffer, {
+            metadata: {
+                contentType: imageMimeType || 'image/png',
+                metadata: {
+                    goalId: goalId,
+                    userId: request.auth.uid,
+                    generatedAt: new Date().toISOString()
+                }
+            }
+        });
+
+        // Make the file publicly accessible
+        await file.makePublic();
+
+        // Get the public URL
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+        console.log(`📤 Image uploaded to: ${publicUrl}`);
+
+        // Update the goal document with the visualization URL
+        await admin.firestore()
+            .collection('rocketGoals')
+            .doc(goalId)
+            .update({
+                visualizationImageUrl: publicUrl,
+                visualizationGeneratedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+        console.log(`✅ Goal document updated with visualization URL`);
+
+        const totalTime = Date.now() - startTime;
+        console.log(`✅ generateGoalVisualization completed in ${totalTime}ms`);
+
+        return {
+            success: true,
+            imageUrl: publicUrl,
+            message: "Visualization generated successfully"
+        };
+    } catch (error: any) {
+        console.error("❌ generateGoalVisualization error:", error);
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        throw new HttpsError(
+            "internal",
+            error?.message || "Failed to generate visualization"
+        );
+    }
+});
+
 // Callable: return auth metadata (last sign-in, creation time) for given UIDs
 export const getAuthMetadata = onCall({}, async (request) => {
     if (!request.auth) {
