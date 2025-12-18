@@ -3349,28 +3349,28 @@
 /* ===== VISUALIZATION CARD & MODAL ===== */
 .visualization-card {
   background: linear-gradient(135deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(88, 28, 135, 0.15) 50%,
+    rgba(220, 38, 38, 0.1) 0%,
+    rgba(153, 27, 27, 0.15) 50%,
     rgba(15, 23, 42, 0.95) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(220, 38, 38, 0.3);
   box-shadow:
-    0 0 20px rgba(139, 92, 246, 0.1),
+    0 0 20px rgba(220, 38, 38, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .visualization-card:hover {
-  border-color: rgba(139, 92, 246, 0.5);
+  border-color: rgba(220, 38, 38, 0.5);
   box-shadow:
-    0 0 30px rgba(139, 92, 246, 0.2),
+    0 0 30px rgba(220, 38, 38, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .light-mode .visualization-card {
   background: linear-gradient(135deg,
-    rgba(139, 92, 246, 0.08) 0%,
-    rgba(168, 85, 247, 0.12) 50%,
+    rgba(220, 38, 38, 0.08) 0%,
+    rgba(185, 28, 28, 0.12) 50%,
     rgba(255, 255, 255, 0.95) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
 /* Visualization Modal Overlay */
@@ -3464,8 +3464,8 @@
   overflow: hidden;
   box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 50px rgba(139, 92, 246, 0.2);
-  border: 2px solid rgba(139, 92, 246, 0.3);
+    0 0 50px rgba(220, 38, 38, 0.2);
+  border: 2px solid rgba(220, 38, 38, 0.3);
 }
 
 .visualization-modal-image {
