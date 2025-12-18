@@ -3514,6 +3514,51 @@
   }
 }
 
+/* ===== VISUALIZATION UPLOAD BUTTON ===== */
+.upload-visualization-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.upload-visualization-btn:hover {
+  background: rgba(220, 38, 38, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+}
+
+.upload-visualization-btn.uploading {
+  background: rgba(220, 38, 38, 0.6);
+  cursor: not-allowed;
+}
+
+.upload-visualization-btn:active {
+  transform: scale(0.95);
+}
+
+/* Light mode upload button */
+.light-mode .upload-visualization-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #1e293b;
+}
+
+.light-mode .upload-visualization-btn:hover {
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 /* ===== VISUALIZATION GENERATE CARD ===== */
 .visualization-generate-card {
   border: 1px solid rgba(220, 38, 38, 0.2);

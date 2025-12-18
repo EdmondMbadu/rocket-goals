@@ -318,6 +318,26 @@
                 <!-- Overlay gradient -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
+                <!-- Upload button overlay (only for goal owner) -->
+                @if (canUploadVisualization()) {
+                <div class="absolute top-3 right-3 z-20">
+                  <label class="upload-visualization-btn cursor-pointer" [class.uploading]="uploadingVisualization()" title="Upload your own image">
+                    <input type="file" 
+                      accept="image/*" 
+                      class="hidden" 
+                      (change)="onVisualizationImageSelected($event)"
+                      [disabled]="uploadingVisualization()" />
+                    @if (uploadingVisualization()) {
+                      <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    } @else {
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    }
+                  </label>
+                </div>
+                }
+
                 <!-- Bottom label -->
                 <div class="absolute bottom-3 left-3 right-3">
                   <p class="text-white text-xs font-medium opacity-90" style="font-family: 'Exo 2', sans-serif;">

@@ -63,6 +63,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private countdownInterval: any;
   private fanInviteSearchTimeout?: any;
   private visualizationPollInterval?: any;
+  private storage: any = null;
+  visualizationImageFile: File | null = null;
+  uploadingVisualization = signal(false);
   activePrimaryTab = signal<'fans' | 'tasks' | 'calendar'>('fans');
   currentFanInviteEmail = signal('');
   currentFanInviteName = signal('');
@@ -97,11 +100,21 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   viewAllTasks = signal(false);
   savingTask = signal(false);
 
-  ngOnInit() {
+  async ngOnInit() {
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
     if (savedTitle) {
       this.dashboardTitle.set(savedTitle);
+    }
+
+    // Initialize Firebase Storage
+    try {
+      const { getStorage } = await import('firebase/storage');
+      const { getApp } = await import('firebase/app');
+      const app = getApp();
+      this.storage = getStorage(app);
+    } catch (error) {
+      console.error('Failed to initialize storage', error);
     }
 
     const goalId = this.route.snapshot.paramMap.get('id');
@@ -1242,5 +1255,81 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     // Don't show generate button if visualization is loading/pending
     if (this.visualizationLoading()) return false;
     return !!(goal && profile && goal.userId === profile.userId && !this.hasVisualization());
+  }
+
+  // Check if current user can upload visualization (owner only)
+  canUploadVisualization(): boolean {
+    const goal = this.goal();
+    const profile = this.authService.profile();
+    return !!(goal && profile && goal.userId === profile.userId && !this.uploadingVisualization());
+  }
+
+  // Handle file selection for visualization upload
+  onVisualizationImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const file = input.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB.');
+      return;
+    }
+
+    this.visualizationImageFile = file;
+    this.uploadVisualizationImage();
+  }
+
+  // Upload visualization image to Firebase Storage
+  async uploadVisualizationImage(): Promise<void> {
+    if (!this.visualizationImageFile || !this.storage || !this.goal()) {
+      return;
+    }
+
+    const goal = this.goal()!;
+    const profile = this.authService.profile();
+    if (!profile?.userId || goal.userId !== profile.userId) {
+      alert('Only the goal owner can upload images.');
+      return;
+    }
+
+    this.uploadingVisualization.set(true);
+
+    try {
+      const storageModule = await import('firebase/storage');
+      const fileExtension = this.visualizationImageFile.name.split('.').pop();
+      const fileName = `visualization_${Date.now()}.${fileExtension}`;
+      const storageRef = storageModule.ref(this.storage, `goal-visualizations/${goal.id}/${fileName}`);
+      
+      await storageModule.uploadBytes(storageRef, this.visualizationImageFile);
+      const downloadURL = await storageModule.getDownloadURL(storageRef);
+      
+      // Update goal in Firestore
+      await this.rocketGoalsService.updateRocketGoal(goal.id, {
+        visualizationImageUrl: downloadURL
+      });
+      
+      // Reload goal to get updated data
+      await this.loadGoal(goal.id);
+      
+      // Clear the file reference
+      this.visualizationImageFile = null;
+      
+      console.log('Visualization image uploaded successfully:', downloadURL);
+    } catch (error: any) {
+      console.error('Error uploading visualization image', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      this.uploadingVisualization.set(false);
+    }
   }
 }
