@@ -147,6 +147,86 @@
     </div>
   </section>
 
+  <!-- Dashboard Section -->
+  <section
+    class="py-24 bg-white text-black relative overflow-hidden dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+        <!-- Left Column - Text Content -->
+        <div class="space-y-8">
+          <div
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 mb-4 dark:bg-white/5 dark:border-white/10">
+            <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            <span class="text-xs font-bold text-gray-600 tracking-wider uppercase dark:text-slate-200">Dashboard</span>
+          </div>
+
+          <h2
+            class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-black dark:text-white">
+            Dashboard to Power<br />
+            <span class="text-red-600">Your Goals</span>
+          </h2>
+
+          <p class="text-xl text-black/70 leading-relaxed font-medium dark:text-slate-300">
+            Get a comprehensive view of your progress with our powerful dashboard. Track your milestones, monitor your
+            performance, and stay motivated with real-time insights that keep you on the path to success.
+          </p>
+
+          <ul class="space-y-4">
+            <li class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-black text-lg dark:text-white">Real-time Progress Tracking</h3>
+                <p class="text-black/60 dark:text-slate-300">See your achievements update in real-time as you complete
+                  your daily tasks.</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-black text-lg dark:text-white">Visual Analytics</h3>
+                <p class="text-black/60 dark:text-slate-300">Beautiful charts and graphs that make it easy to understand
+                  your progress at a glance.</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-black text-lg dark:text-white">Smart Insights</h3>
+                <p class="text-black/60 dark:text-slate-300">AI-powered recommendations to help you optimize your
+                  approach and achieve faster results.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right Column - Dashboard Image -->
+        <div class="relative overflow-visible">
+          <div
+            class="relative rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 group transform scale-110">
+            <img
+              src="https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FScreenshot%202025-12-18%20at%2010.21.11%E2%80%AFAM.png?alt=media&token=3c369bb1-1dbb-4217-b5cf-f430a1911b6d"
+              alt="RocketGoals Dashboard" class="w-full h-auto object-cover" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-slate-950/20">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Rocket Dashboard Overlay (White Sci-Fi Ultimate) -->
   @if (isDashboardActive()) {
   <div class="fixed inset-0 z-[100] bg-white-space text-black overflow-hidden animate-fade-in flex flex-col">
