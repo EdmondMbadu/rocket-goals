@@ -43,8 +43,8 @@ export class RocketAiPageComponent implements OnInit {
   private readonly visualizationService = inject(VisualizationService);
   private readonly functions = getFunctions(getApp(), 'us-central1');
   
-  // Flag to track if this is a 7-day challenge
-  private readonly isSevenDayChallenge = signal(false);
+  // Flag to track if this is a 7-day challenge (exposed for template)
+  protected readonly isSevenDayChallenge = signal(false);
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly showHistory = signal(true);
@@ -198,9 +198,9 @@ export class RocketAiPageComponent implements OnInit {
     this.goalModalStep.set(1);
     this.showAuthPrompt.set(false);
     this.goalCreationError.set(null);
-    // Pre-fill with "7Day challenge" and set timeframe to week
+    // Set timeframe to week automatically, but leave goal description empty
     this.quizAnswers.set({
-      goalDescription: '7Day challenge',
+      goalDescription: '', // Leave empty - question text will mention 7-day challenge
       timeframe: 'week', // Automatically set to one week
       futureSelfClarity: 5,
       dailyTimeForGoal: '',
