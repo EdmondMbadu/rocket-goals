@@ -2696,7 +2696,7 @@
 
 /* ===== FINAL CTA SECTION ===== */
 .landing-final-cta-section {
-  padding: 100px 40px;
+  padding: 100px 40px 40px;
   position: relative;
   text-align: center;
 }
@@ -3860,7 +3860,7 @@
 
 /* ===== BOTTOM CTA SECTION ===== */
 .landing-bottom-cta-section {
-  padding: 80px 40px;
+  padding: 20px 40px 60px;
   text-align: center;
   background: linear-gradient(180deg, transparent, rgba(239, 68, 68, 0.05));
 }
