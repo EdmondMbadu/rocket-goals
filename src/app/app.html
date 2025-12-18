@@ -1,7 +1,8 @@
 @if (isAuthRoute()) {
 <router-outlet />
 } @else {
-<div class="landing-page min-h-screen bg-white text-black dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-red-600 selection:text-white">
+<div
+  class="landing-page min-h-screen bg-white text-black dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-red-600 selection:text-white">
   <!-- Navigation -->
   <nav
     class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-b border-black/5 dark:border-white/10">
@@ -52,7 +53,8 @@
   </nav>
 
   <!-- Hero Section -->
-  <div class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white dark:bg-slate-950">
+  <div
+    class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white dark:bg-slate-950">
     <!-- Background Animation -->
     <div class="absolute inset-0 z-0">
       <canvas #rocketCanvas class="w-full h-full object-cover"></canvas>
@@ -73,7 +75,8 @@
         </div>
 
         <!-- Headline -->
-        <h1 class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none mb-6 text-black dark:text-white">
+        <h1
+          class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none mb-6 text-black dark:text-white">
           IGNITE YOUR <br />
           <span class="hero-gradient-text">
             POTENTIAL
@@ -81,7 +84,8 @@
         </h1>
 
         <!-- Subheadline -->
-        <p class="text-xl md:text-2xl text-black/70 max-w-3xl mx-auto leading-relaxed font-medium mb-10 dark:text-slate-300">
+        <p
+          class="text-xl md:text-2xl text-black/70 max-w-3xl mx-auto leading-relaxed font-medium mb-10 dark:text-slate-300">
           The world's most advanced AI-powered goal tracking platform.
           Turn your ambitions into achievements at warp speed.
         </p>
@@ -101,17 +105,6 @@
               class="absolute inset-0 bg-gradient-to-r from-red-700 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
             </div>
           </a>
-
-          <button
-            class="px-8 py-4 bg-white text-black font-bold text-lg rounded-full border-2 border-black/10 hover:border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center gap-2 dark:bg-transparent dark:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-black">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Watch Demo
-          </button>
         </div>
       </div>
     </div>
@@ -135,7 +128,8 @@
         </span>
       </h2>
 
-      <p class="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto font-medium mb-12 leading-relaxed dark:text-slate-300">
+      <p
+        class="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto font-medium mb-12 leading-relaxed dark:text-slate-300">
         "One week. One mission. A brand new you." <br />
         Join the challenge to clarify your vision and ignite your potential.
       </p>
@@ -358,114 +352,6 @@
   </div>
   }
 
-  <!-- Video & Avatar Section -->
-  <section id="video-avatar"
-    class="py-24 bg-white text-black relative overflow-hidden border-t border-black/5 dark:bg-slate-950 dark:text-slate-100 dark:border-white/5 transition-colors duration-300">
-    <!-- Decorative Elements -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div
-        class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-[120px] opacity-50 dark:bg-red-600/20">
-      </div>
-      <div
-        class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-black/5 rounded-full blur-[100px] opacity-30 dark:bg-white/5">
-      </div>
-    </div>
-
-    <div class="container mx-auto px-4 relative z-10">
-      <div class="grid lg:grid-cols-[1fr_1.2fr] gap-16 items-center max-w-7xl mx-auto">
-        <!-- Left Column - Video Placeholder -->
-        <div class="relative order-2 lg:order-1 space-y-8">
-          <div
-            class="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-black/10 group cursor-pointer bg-gray-50 hover:border-red-600/50 transition-all duration-500 dark:bg-slate-900/50 dark:border-white/10">
-            <!-- Video Placeholder -->
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="text-center space-y-6 px-8">
-                <div
-                  class="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)]">
-                  <svg class="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-                <div class="space-y-2">
-                  <h3 class="text-3xl font-bold text-black tracking-tight dark:text-white">
-                    Meet <span class="text-red-600">RocketGoals</span>
-                  </h3>
-                  <p class="text-gray-500 font-medium text-lg dark:text-slate-300">Watch the introduction</p>
-                </div>
-              </div>
-            </div>
-            <!-- Decorative overlay -->
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300 dark:from-slate-950/80">
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column - Avatar -->
-        <div class="relative order-1 lg:order-2 flex flex-col items-center lg:items-start space-y-10">
-          <div class="relative group w-full max-w-md mx-auto lg:mx-0">
-            <!-- Pod Container -->
-            <div
-              class="relative bg-white border border-black/10 rounded-[2.5rem] p-8 shadow-xl dark:bg-slate-900/80 dark:border-white/10">
-              <!-- Avatar Image -->
-              <div class="relative z-10 flex justify-center mb-8">
-                <div class="relative">
-                  <div class="absolute -inset-4 bg-red-600/10 rounded-full blur-xl animate-pulse"></div>
-                  <img src="/assets/jim-pic.png" alt="Jim's Avatar" [class.avatar-speaking]="isSpeaking()"
-                    class="relative z-10 w-48 h-48 rounded-full object-cover border-4 border-white shadow-2xl dark:border-slate-900" />
-                  <!-- Status Indicator Badge -->
-                  <div class="absolute bottom-2 right-2 z-20">
-                    @if (isSpeaking()) {
-                    <div
-                      class="flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full shadow-lg border border-white">
-                      <div class="flex gap-1 h-3 items-center">
-                        <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></div>
-                        <div class="w-1 h-2 bg-white rounded-full animate-[wave_1s_ease-in-out_0.1s_infinite]"></div>
-                        <div class="w-1 h-3 bg-white rounded-full animate-[wave_1s_ease-in-out_0.2s_infinite]"></div>
-                      </div>
-                      <span class="text-xs font-bold text-white uppercase tracking-wider">Speaking</span>
-                    </div>
-                    } @else {
-                    <div
-                      class="flex items-center gap-2 px-3 py-1.5 bg-green-500 rounded-full shadow-lg border border-white dark:border-slate-900">
-                      <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                      <span class="text-xs font-bold text-white uppercase tracking-wider">Online</span>
-                    </div>
-                    }
-                  </div>
-                </div>
-              </div>
-
-              <!-- Text Content -->
-              <div class="text-center space-y-6">
-                <div>
-                  <h3 class="text-3xl font-black text-black mb-2 dark:text-white">
-                    Talk to <span class="text-red-600">Jim</span>
-                  </h3>
-                  <p class="text-gray-500 font-medium text-lg leading-relaxed dark:text-slate-300">
-                    Get your instant Rocket Goals Launch Plan. It's free and takes less than 3 minutes.
-                  </p>
-                </div>
-
-                <button (click)="startConversation()" [disabled]="isConversationActive()"
-                  class="w-full py-4 bg-black text-white font-bold text-lg rounded-xl hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
-                  <span>{{ isConversationActive() ? 'Conversation Active' : 'Start Conversation' }}</span>
-                  @if (!isConversationActive()) {
-                  <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
-                    </path>
-                  </svg>
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- Conversation Modal -->
   @if (isConversationActive()) {
@@ -792,8 +678,8 @@
     <div class="container mx-auto px-4 relative z-10">
       <div class="text-center mb-20">
         <h2 class="text-4xl md:text-5xl font-black text-black mb-6 tracking-tight dark:text-white">
-          EVERYTHING YOU NEED TO
-          <span class="text-red-600 block mt-2">DOMINATE</span>
+          Everything You need to
+          <span class="text-red-600 block mt-2">Accelerate Your Goal</span>
         </h2>
         <p class="text-xl text-black/60 max-w-2xl mx-auto font-medium dark:text-slate-300">
           Powerful tools designed to help you achieve your goals faster and more effectively than ever before.
@@ -952,7 +838,8 @@
           <span class="text-xs font-bold text-gray-600 tracking-wider uppercase dark:text-slate-200">Pricing</span>
         </div>
         <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-tight dark:text-white">Pick your mission</h2>
-        <p class="text-lg md:text-xl text-black/60 dark:text-slate-300">Emotionally intelligent reminders and accountability for every
+        <p class="text-lg md:text-xl text-black/60 dark:text-slate-300">Emotionally intelligent reminders and
+          accountability for every
           stage.</p>
       </div>
 
@@ -1327,17 +1214,48 @@
             class="px-12 py-6 bg-red-600 text-white font-bold text-xl rounded-full hover:bg-black transition-all duration-300 shadow-[0_10px_30px_rgba(220,38,38,0.3)] hover:shadow-black/20 hover:-translate-y-1 inline-flex items-center justify-center">
             Get Started Free
           </a>
-          <button
-            class="px-12 py-6 bg-white text-black font-bold text-xl rounded-full border-2 border-black/10 hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1 dark:bg-transparent dark:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-black">
-            Watch Demo
-          </button>
+        </div>
+        <div class="flex items-center justify-center gap-2 mt-10 pt-8 border-t border-black/5 dark:border-white/5">
+          <p
+            class="text-black/50 text-lg font-medium dark:text-slate-400 flex items-center gap-2 flex-wrap justify-center">
+            Built by
+            <span class="inline-flex items-center gap-1.5">
+              <img src="https://cursor.sh/favicon.ico" alt="Cursor" class="h-6 w-6 object-contain"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
+              <svg class="h-6 w-6 text-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                style="display: none;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.576 8.42l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+              </svg>
+              <span class="font-bold text-black dark:text-white">Cursor</span>
+            </span>,
+            powered by
+            <span class="inline-flex items-center gap-1.5">
+              <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg" alt="Gemini"
+                class="h-6 w-6 object-contain"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
+              <svg class="h-6 w-6 text-black dark:text-white" fill="currentColor" viewBox="0 0 24 24"
+                style="display: none;">
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span class="font-bold text-black dark:text-white">Gemini</span>
+            </span>, and
+            fueled by your
+            <span class="inline-flex items-center gap-1.5">
+              <img src="/assets/rocket-goals.png" alt="RocketGoals" class="h-6 w-6 object-contain" />
+              <span class="font-bold text-black dark:text-white">RocketGoals</span>
+              <!-- <span class="font-bold text-black dark:text-white">Goals</span> -->
+            </span>
+          </p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-black/5 py-20 dark:bg-slate-950 dark:border-white/10 transition-colors duration-300">
+  <footer
+    class="bg-white border-t border-black/5 py-20 dark:bg-slate-950 dark:border-white/10 transition-colors duration-300">
     <div class="container mx-auto px-4">
       <div class="grid md:grid-cols-4 gap-12 mb-16">
         <div class="col-span-1 md:col-span-1">
@@ -1371,14 +1289,18 @@
           <h4 class="font-bold text-black text-lg mb-6 dark:text-white">Support</h4>
           <ul class="space-y-4 text-black/60 font-medium dark:text-slate-300">
             <li><a href="#" class="hover:text-red-600 transition-colors dark:hover:text-red-400">Help Center</a></li>
-            <li><a routerLink="/contact" class="hover:text-red-600 transition-colors dark:hover:text-red-400">Contact Us</a></li>
+            <li><a routerLink="/contact" class="hover:text-red-600 transition-colors dark:hover:text-red-400">Contact
+                Us</a></li>
             <li><a href="#" class="hover:text-red-600 transition-colors dark:hover:text-red-400">Privacy Policy</a></li>
-            <li><a href="#" class="hover:text-red-600 transition-colors dark:hover:text-red-400">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-red-600 transition-colors dark:hover:text-red-400">Terms of Service</a>
+            </li>
           </ul>
         </div>
       </div>
-      <div class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 dark:border-white/5">
-        <p class="text-black/40 text-sm font-medium dark:text-slate-400">&copy; 2025 RocketGoals. All rights reserved.</p>
+      <div
+        class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 dark:border-white/5">
+        <p class="text-black/40 text-sm font-medium dark:text-slate-400">&copy; 2025 RocketGoals. All rights reserved.
+        </p>
         <div class="flex gap-6">
           <a href="https://x.com/RocketGoals" target="_blank" rel="noopener noreferrer"
             class="text-black/40 hover:text-black transition-colors dark:text-slate-400 dark:hover:text-white">
@@ -1388,7 +1310,8 @@
                 d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
             </svg>
           </a>
-          <a href="#" class="text-black/40 hover:text-black transition-colors dark:text-slate-400 dark:hover:text-white">
+          <a href="#"
+            class="text-black/40 hover:text-black transition-colors dark:text-slate-400 dark:hover:text-white">
             <span class="sr-only">GitHub</span>
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd"
