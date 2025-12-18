@@ -288,6 +288,23 @@
                   <div class="stat-value-sm truncate">{{ getSupportDisplay() }}</div>
                 </div>
               </div>
+
+              <!-- Fan Reactions Display - Love from Fans -->
+              @if (fanReactions().length > 0 && !reactionsLoading()) {
+              <div class="fan-reactions-display mt-4 pt-4 relative z-10">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs font-mono uppercase tracking-wider fan-reactions-label">Love from Fans</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                  @for (reaction of fanReactions(); track reaction.emoji) {
+                  <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg fan-reaction-badge transition-colors">
+                    <span class="text-xl">{{ reaction.emoji }}</span>
+                    <span class="text-sm font-semibold fan-reaction-count">{{ reaction.count }}</span>
+                  </div>
+                  }
+                </div>
+              </div>
+              }
             </div>
 
             <!-- FUTURE SELF VISUALIZATION CARD -->

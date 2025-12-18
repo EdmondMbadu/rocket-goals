@@ -3608,3 +3608,65 @@
 .light-mode .generate-visualization-btn {
   box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
+
+/* ===== FAN REACTIONS DISPLAY ===== */
+.fan-reactions-display {
+  border-top: 1px solid;
+}
+
+.dark-mode .fan-reactions-display {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.light-mode .fan-reactions-display {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.fan-reactions-label {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.dark-mode .fan-reactions-label {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.light-mode .fan-reactions-label {
+  color: rgba(71, 85, 105, 0.8);
+}
+
+.fan-reaction-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid;
+}
+
+.dark-mode .fan-reaction-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .fan-reaction-badge:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.light-mode .fan-reaction-badge {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .fan-reaction-badge:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.fan-reaction-count {
+  color: rgba(209, 213, 219, 1);
+}
+
+.dark-mode .fan-reaction-count {
+  color: rgba(209, 213, 219, 1);
+}
+
+.light-mode .fan-reaction-count {
+  color: rgba(51, 65, 85, 1);
+}
