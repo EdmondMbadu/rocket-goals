@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, ViewChild, computed, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from './auth.service';
@@ -33,7 +33,7 @@ export interface RocketQuizAnswers {
   templateUrl: './rocket-ai-page.component.html',
   styleUrl: './rocket-ai-page.component.css'
 })
-export class RocketAiPageComponent implements OnInit {
+export class RocketAiPageComponent implements OnInit, OnDestroy {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
   protected readonly goalsService = inject(RocketGoalsService);
@@ -45,6 +45,11 @@ export class RocketAiPageComponent implements OnInit {
   
   // Flag to track if this is a 7-day challenge (exposed for template)
   protected readonly isSevenDayChallenge = signal(false);
+  
+  // Scroll indicator state
+  protected readonly isAtBottom = signal(false);
+  private scrollSections: HTMLElement[] = [];
+  private currentSectionIndex = 0;
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly showHistory = signal(true);
@@ -126,6 +131,106 @@ export class RocketAiPageComponent implements OnInit {
         });
       }
     });
+    
+    // Initialize scroll sections for non-logged-in users
+    if (!this.isLoggedIn()) {
+      setTimeout(() => {
+        this.initializeScrollSections();
+        this.checkScrollPosition();
+      }, 500);
+    }
+  }
+  
+  ngOnDestroy(): void {
+    // Cleanup if needed
+  }
+  
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (!this.isLoggedIn()) {
+      this.checkScrollPosition();
+    }
+  }
+  
+  private initializeScrollSections(): void {
+    // Get all landing page sections
+    const sections = document.querySelectorAll('.landing-scroll-sections > section');
+    this.scrollSections = Array.from(sections) as HTMLElement[];
+  }
+  
+  private checkScrollPosition(): void {
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollBottom = scrollTop + windowHeight;
+    
+    // Check if we're near the bottom (within 100px)
+    const isNearBottom = scrollBottom >= documentHeight - 100;
+    this.isAtBottom.set(isNearBottom);
+    
+    // Update current section index based on scroll position
+    if (!isNearBottom && this.scrollSections.length > 0) {
+      for (let i = 0; i < this.scrollSections.length; i++) {
+        const section = this.scrollSections[i];
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= windowHeight * 0.5 && rect.bottom > windowHeight * 0.5) {
+          this.currentSectionIndex = i;
+          break;
+        }
+      }
+    }
+  }
+  
+  protected handleScrollIndicatorClick(): void {
+    if (this.isAtBottom()) {
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Scroll to next section
+      this.scrollToNextSection();
+    }
+  }
+  
+  private scrollToNextSection(): void {
+    // If we haven't initialized sections yet, try to find them
+    if (this.scrollSections.length === 0) {
+      this.initializeScrollSections();
+    }
+    
+    if (this.scrollSections.length === 0) {
+      // If no sections found, scroll to landing sections start
+      const landingSections = document.querySelector('.landing-scroll-sections');
+      if (landingSections) {
+        landingSections.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
+    
+    // Find the next section that's not fully visible
+    const windowHeight = window.innerHeight;
+    let nextSection: HTMLElement | null = null;
+    
+    for (let i = this.currentSectionIndex; i < this.scrollSections.length; i++) {
+      const section = this.scrollSections[i];
+      const rect = section.getBoundingClientRect();
+      
+      // If section is below the viewport or only partially visible
+      if (rect.top > windowHeight * 0.2) {
+        nextSection = section;
+        this.currentSectionIndex = i;
+        break;
+      }
+    }
+    
+    // If no next section found, scroll to the last one
+    if (!nextSection && this.scrollSections.length > 0) {
+      nextSection = this.scrollSections[this.scrollSections.length - 1];
+      this.currentSectionIndex = this.scrollSections.length - 1;
+    }
+    
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   protected runPrompt(prompt: string): void {

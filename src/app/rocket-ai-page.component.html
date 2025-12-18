@@ -356,6 +356,18 @@
     </section>
   </main>
 
+  <!-- Scroll Indicator for Non-Logged-In Users (Fixed on Right Side) -->
+  <div class="scroll-indicator" *ngIf="!isLoggedIn()">
+    <div class="scroll-indicator-content" (click)="handleScrollIndicatorClick()">
+      <p class="scroll-indicator-text">{{ isAtBottom() ? 'Back to top' : 'Scroll to explore more' }}</p>
+      <div class="scroll-indicator-arrow" [class.arrow-up]="isAtBottom()">
+        <svg class="scroll-arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
   <!-- SCROLL-DOWN LANDING PAGE SECTIONS FOR NON-LOGGED-IN USERS -->
   <div class="landing-scroll-sections" *ngIf="!isLoggedIn()">
 
