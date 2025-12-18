@@ -1223,14 +1223,10 @@ export class App implements AfterViewInit, OnDestroy {
   }
 
   startChallenge() {
-    this.isChallengeActive.set(true);
-    this.currentChallengeStep.set(0);
-    this.challengeAnswers.set({});
-    this.isDashboardActive.set(false);
-    this.resetChallengeAuthFlow();
-    this.userInfo.set({ name: '', email: '', password: '' });
-    // Prevent scrolling on body
-    document.body.style.overflow = 'hidden';
+    // Navigate to AI page with 7-day challenge flag
+    this.router.navigate(['/ai'], {
+      queryParams: { sevenDayChallenge: 'true' }
+    });
   }
 
   async startChallengeWithGoal(goalId: string) {

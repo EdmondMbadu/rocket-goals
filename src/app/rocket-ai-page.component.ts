@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild, computed, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
@@ -38,9 +38,13 @@ export class RocketAiPageComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   protected readonly goalsService = inject(RocketGoalsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly theme = inject(ThemeService);
   private readonly visualizationService = inject(VisualizationService);
   private readonly functions = getFunctions(getApp(), 'us-central1');
+  
+  // Flag to track if this is a 7-day challenge
+  private readonly isSevenDayChallenge = signal(false);
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly showHistory = signal(true);
@@ -107,6 +111,21 @@ export class RocketAiPageComponent implements OnInit {
       // Check if user was redirected back after login with pending goal
       await this.checkPendingGoalCreation();
     }
+    
+    // Check for 7-day challenge query parameter
+    this.route.queryParams.subscribe(params => {
+      if (params['sevenDayChallenge'] === 'true') {
+        this.isSevenDayChallenge.set(true);
+        // Open modal and pre-fill for 7-day challenge
+        this.openGoalModalForSevenDayChallenge();
+        // Clear the query parameter from URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true
+        });
+      }
+    });
   }
 
   protected runPrompt(prompt: string): void {
@@ -173,12 +192,34 @@ export class RocketAiPageComponent implements OnInit {
     });
   }
 
+  // Open modal specifically for 7-day challenge
+  private openGoalModalForSevenDayChallenge(): void {
+    this.showGoalModal.set(true);
+    this.goalModalStep.set(1);
+    this.showAuthPrompt.set(false);
+    this.goalCreationError.set(null);
+    // Pre-fill with "7Day challenge" and set timeframe to week
+    this.quizAnswers.set({
+      goalDescription: '7Day challenge',
+      timeframe: 'week', // Automatically set to one week
+      futureSelfClarity: 5,
+      dailyTimeForGoal: '',
+      challengePerception: '',
+      emotionalResilience: '',
+      dailyConsistency: '',
+      hasAccountabilitySupport: '',
+      additionalNotes: ''
+    });
+  }
+
   protected closeGoalModal(): void {
     this.showGoalModal.set(false);
     this.goalModalStep.set(1);
     this.showAuthPrompt.set(false);
     this.goalCreationError.set(null);
     this.isCreatingGoal.set(false);
+    // Reset 7-day challenge flag when closing
+    this.isSevenDayChallenge.set(false);
   }
 
   protected updateQuizAnswer<K extends keyof RocketQuizAnswers>(key: K, value: RocketQuizAnswers[K]): void {
@@ -211,7 +252,12 @@ export class RocketAiPageComponent implements OnInit {
     this.goalCreationError.set(null);
 
     const currentStep = this.goalModalStep();
-    if (currentStep < this.totalSteps) {
+    
+    // For 7-day challenge, skip step 2 (timeframe) since it's already set
+    if (this.isSevenDayChallenge() && currentStep === 1) {
+      // Skip step 2 and go directly to step 3
+      this.goalModalStep.set(3);
+    } else if (currentStep < this.totalSteps) {
       this.goalModalStep.set(currentStep + 1);
     } else {
       // Last step - check auth and create goal
@@ -223,7 +269,12 @@ export class RocketAiPageComponent implements OnInit {
     this.goalCreationError.set(null);
     this.showAuthPrompt.set(false);
     const currentStep = this.goalModalStep();
-    if (currentStep > 1) {
+    
+    // For 7-day challenge, skip step 2 when going back
+    if (this.isSevenDayChallenge() && currentStep === 3) {
+      // Go back to step 1, skipping step 2
+      this.goalModalStep.set(1);
+    } else if (currentStep > 1) {
       this.goalModalStep.set(currentStep - 1);
     }
   }
