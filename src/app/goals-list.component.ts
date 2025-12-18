@@ -48,6 +48,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   fanMemberships = signal<FanMissionContext[]>([]);
   fanMembershipsLoading = signal(false);
   leavingFanIds = signal<Record<string, boolean>>({});
+  editingGoalId = signal<string | null>(null);
+  editingGoalTitleValue = signal<string>('');
 
   ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -423,10 +425,74 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  editGoal(goalId: string) {
-    // Navigate to landing page with editGoal query param
-    // The app component will handle pre-filling the challenge with goal data
-    this.router.navigate(['/'], { queryParams: { editGoal: goalId } });
+  startEditingGoalTitle(goal: RocketGoal) {
+    const currentTitle = this.getGoalTitle(goal);
+    this.editingGoalTitleValue.set(currentTitle);
+    this.editingGoalId.set(goal.id);
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`input.goal-title-edit-input`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  async saveGoalTitle(goal: RocketGoal) {
+    const newTitle = this.editingGoalTitleValue().trim();
+    if (!newTitle) {
+      this.cancelEditingGoalTitle();
+      return;
+    }
+
+    try {
+      // Update the goal in Firestore
+      const updates: any = {
+        primaryGoal: newTitle
+      };
+
+      // Also update the custom_goal_title in answers if it exists, or set it
+      const currentAnswers = { ...goal.answers };
+      if (currentAnswers['custom_goal_title']) {
+        currentAnswers['custom_goal_title'] = newTitle;
+        currentAnswers['goal_title_label'] = newTitle;
+      } else {
+        // If no custom title was set, create one
+        currentAnswers['custom_goal_title'] = newTitle;
+        currentAnswers['goal_title_label'] = newTitle;
+      }
+      updates.answers = currentAnswers;
+
+      await this.rocketGoalsService.updateRocketGoal(goal.id, updates);
+
+      // Update local state
+      this.goals.update(goals =>
+        goals.map(g => g.id === goal.id ? { ...g, primaryGoal: newTitle, answers: currentAnswers } : g)
+      );
+
+      this.cancelEditingGoalTitle();
+    } catch (error) {
+      console.error('Error updating goal title:', error);
+      alert('Failed to update goal title. Please try again.');
+    }
+  }
+
+  cancelEditingGoalTitle() {
+    this.editingGoalId.set(null);
+    this.editingGoalTitleValue.set('');
+  }
+
+  isEditingGoal(goalId: string): boolean {
+    return this.editingGoalId() === goalId;
+  }
+
+  getVisualizationImageUrl(goal: RocketGoal): string | null {
+    return goal.visualizationImageUrl || null;
+  }
+
+  hasVisualization(goal: RocketGoal): boolean {
+    return !!this.getVisualizationImageUrl(goal);
   }
 
   isFanLeaving(fanId: string): boolean {

@@ -93,3 +93,13 @@
 :host-context(.dark) .goals-page .hover\:text-black:hover {
   color: #f8fafc;
 }
+
+/* Goal Title Edit Input */
+.goal-title-edit-input {
+  font-family: inherit;
+  padding: 4px 0;
+}
+
+.goal-title-edit-input:focus {
+  outline: none;
+}
