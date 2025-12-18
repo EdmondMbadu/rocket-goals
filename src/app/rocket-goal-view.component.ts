@@ -62,6 +62,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   eventModalDate = signal<Date>(new Date());
   private countdownInterval: any;
   private fanInviteSearchTimeout?: any;
+  private visualizationPollInterval?: any;
   activePrimaryTab = signal<'fans' | 'tasks' | 'calendar'>('fans');
   currentFanInviteEmail = signal('');
   currentFanInviteName = signal('');
@@ -122,6 +123,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     }
     if (this.fanInviteSearchTimeout) {
       clearTimeout(this.fanInviteSearchTimeout);
+    }
+    if (this.visualizationPollInterval) {
+      clearInterval(this.visualizationPollInterval);
     }
   }
 
@@ -290,6 +294,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         if (!this.isGoalOwner()) {
           this.scrollFansIntoView();
         }
+
+        // Start polling for visualization if goal is new and doesn't have one yet
+        this.startVisualizationPolling(currentGoal);
       }
       } else {
         this.error.set('Goal not found');
@@ -1128,6 +1135,75 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     this.showVisualizationModal.set(false);
   }
 
+  // Check if goal is newly created (within last 2 minutes) and doesn't have visualization
+  isVisualizationPending(): boolean {
+    const goal = this.goal();
+    if (!goal || this.hasVisualization()) return false;
+
+    // Check if goal was created recently (within 2 minutes)
+    const startTime = goal.startTime || 0;
+    const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+    return startTime > twoMinutesAgo;
+  }
+
+  // Start polling for visualization if goal is new
+  startVisualizationPolling(goal: RocketGoal): void {
+    // Clear any existing polling
+    if (this.visualizationPollInterval) {
+      clearInterval(this.visualizationPollInterval);
+      this.visualizationPollInterval = undefined;
+    }
+
+    // If goal already has visualization or is old, don't poll
+    if (goal.visualizationImageUrl) return;
+
+    // Check if goal is recent (created within last 2 minutes)
+    const startTime = goal.startTime || 0;
+    const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+    if (startTime <= twoMinutesAgo) return;
+
+    // Show loading state for new goals
+    this.visualizationLoading.set(true);
+    console.log('Starting visualization polling for new goal...');
+
+    let pollCount = 0;
+    const maxPolls = 24; // Poll for max 2 minutes (every 5 seconds)
+
+    this.visualizationPollInterval = setInterval(async () => {
+      pollCount++;
+      console.log(`Polling for visualization (${pollCount}/${maxPolls})...`);
+
+      try {
+        // Fetch the latest goal data
+        const updatedGoal = await this.rocketGoalsService.getRocketGoalById(goal.id);
+
+        if (updatedGoal?.visualizationImageUrl) {
+          // Visualization is ready!
+          console.log('Visualization ready:', updatedGoal.visualizationImageUrl);
+          this.goal.set(updatedGoal as RocketGoal);
+          this.visualizationLoading.set(false);
+
+          // Stop polling
+          if (this.visualizationPollInterval) {
+            clearInterval(this.visualizationPollInterval);
+            this.visualizationPollInterval = undefined;
+          }
+        } else if (pollCount >= maxPolls) {
+          // Max polls reached, stop polling
+          console.log('Max polls reached, stopping visualization polling');
+          this.visualizationLoading.set(false);
+
+          if (this.visualizationPollInterval) {
+            clearInterval(this.visualizationPollInterval);
+            this.visualizationPollInterval = undefined;
+          }
+        }
+      } catch (error) {
+        console.error('Error polling for visualization:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+  }
+
   // Generate visualization for this goal
   async generateVisualization(): Promise<void> {
     const goal = this.goal();
@@ -1163,6 +1239,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   canGenerateVisualization(): boolean {
     const goal = this.goal();
     const profile = this.authService.profile();
+    // Don't show generate button if visualization is loading/pending
+    if (this.visualizationLoading()) return false;
     return !!(goal && profile && goal.userId === profile.userId && !this.hasVisualization());
   }
 }
