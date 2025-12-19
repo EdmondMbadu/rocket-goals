@@ -10,7 +10,7 @@ import { RocketGoalsService } from './rocket-goals.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { stripMarkdownForTTS } from './text-utils';
 import { ThemeService } from './theme.service';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -31,6 +31,12 @@ export class App implements AfterViewInit, OnDestroy {
   private camera!: THREE.PerspectiveCamera;
   private stars: THREE.Points[] = [];
   private animationId: number | null = null;
+  private animationLoop: (() => void) | null = null;
+  private threeModule: typeof import('three') | null = null;
+  private resizeHandler: (() => void) | null = null;
+  private visibilityHandler: (() => void) | null = null;
+  private isAnimationPaused = false;
+  private prefersReducedMotion: MediaQueryList | null = null;
 
   // Conversation state
   isConversationActive = signal(false);
@@ -111,6 +117,9 @@ export class App implements AfterViewInit, OnDestroy {
     // Check speech support without initializing the full service
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     this.speechSupported.set(!!SpeechRecognition);
+    this.prefersReducedMotion = typeof window !== 'undefined' && 'matchMedia' in window
+      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
 
     // Warm up Firestore client early to trim first-response latency
     this.firestoreAIService.preload().catch(error => {
@@ -157,7 +166,7 @@ export class App implements AfterViewInit, OnDestroy {
         setTimeout(() => {
           // Check if canvas exists in DOM and animation hasn't been initialized yet
           if (this.rocketCanvas?.nativeElement && !this.animationInitialized) {
-            this.initThreeJs();
+            void this.initThreeJs();
           }
         }, 150);
       }
@@ -200,25 +209,53 @@ export class App implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     // Only initialize if landing page is visible
     if (this.rocketCanvas?.nativeElement && !this.isAuthRoute() && !this.animationInitialized) {
-      this.initThreeJs();
+      void this.initThreeJs();
     }
   }
 
   ngOnDestroy() {
     this.cleanupAnimation();
     this.routerSubscription?.unsubscribe();
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.typewriterIntervals.forEach(interval => clearInterval(interval));
+    this.typewriterIntervals.clear();
   }
 
   private cleanupAnimation() {
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+      this.resizeHandler = null;
+    }
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
+    this.animationLoop = null;
+    this.isAnimationPaused = false;
     if (this.renderer) {
       this.renderer.dispose();
       this.renderer = null as any;
     }
     if (this.scene) {
+      this.scene.traverse(object => {
+        const geometry = (object as any).geometry;
+        if (geometry?.dispose) {
+          geometry.dispose();
+        }
+        const material = (object as any).material;
+        if (Array.isArray(material)) {
+          material.forEach(item => item?.dispose?.());
+        } else if (material?.dispose) {
+          material.dispose();
+        }
+      });
       // Clear scene
       while (this.scene.children.length > 0) {
         this.scene.remove(this.scene.children[0]);
@@ -227,11 +264,16 @@ export class App implements AfterViewInit, OnDestroy {
     this.animationInitialized = false;
   }
 
-  private initThreeJs() {
+  private async initThreeJs(): Promise<void> {
     // Clean up any existing animation first
     this.cleanupAnimation();
 
-    const canvas = this.rocketCanvas.nativeElement;
+    const canvas = this.rocketCanvas?.nativeElement;
+    if (!canvas) {
+      return;
+    }
+
+    const THREE = await this.loadThree();
     // Ensure we have dimensions
     let width = canvas.clientWidth || window.innerWidth;
     let height = canvas.clientHeight || 600;
@@ -250,11 +292,16 @@ export class App implements AfterViewInit, OnDestroy {
     // Renderer setup
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
 
     // --- 1. Create Stars (Warp effect) - BLACK and RED for contrast on White ---
     const starGeometry = new THREE.BufferGeometry();
-    const starCount = 6000;
+    const reducedMotion = this.prefersReducedMotion?.matches ?? false;
+    const deviceMemory = (navigator as any).deviceMemory || 4;
+    const hardwareConcurrency = navigator.hardwareConcurrency || 4;
+    const perfScale = Math.min(1, deviceMemory / 4, hardwareConcurrency / 4);
+    const baseStarCount = 6000;
+    const starCount = reducedMotion ? 1500 : Math.max(2500, Math.floor(baseStarCount * perfScale));
     const positions = new Float32Array(starCount * 3);
     const velocities = new Float32Array(starCount);
     const colors = new Float32Array(starCount * 3);
@@ -353,6 +400,9 @@ export class App implements AfterViewInit, OnDestroy {
     // Animation Loop - Run outside Angular to avoid change detection cycles
     this.ngZone.runOutsideAngular(() => {
       const animate = () => {
+        if (this.isAnimationPaused) {
+          return;
+        }
         this.animationId = requestAnimationFrame(animate);
 
         // Update star positions (Warp Speed)
@@ -391,20 +441,52 @@ export class App implements AfterViewInit, OnDestroy {
         this.renderer.render(this.scene, this.camera);
       };
 
-      animate();
+      this.animationLoop = animate;
+      if (!reducedMotion) {
+        animate();
+      } else {
+        this.renderer.render(this.scene, this.camera);
+      }
     });
 
     // Handle Resize
-    window.addEventListener('resize', () => {
+    this.resizeHandler = () => {
       if (!this.rocketCanvas) return;
       const newWidth = this.rocketCanvas.nativeElement.clientWidth;
       const newHeight = this.rocketCanvas.nativeElement.clientHeight;
       this.camera.aspect = newWidth / newHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(newWidth, newHeight);
-    });
+    };
+    window.addEventListener('resize', this.resizeHandler, { passive: true });
+
+    this.visibilityHandler = () => {
+      if (document.hidden) {
+        this.isAnimationPaused = true;
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+          this.animationId = null;
+        }
+        return;
+      }
+
+      if (!reducedMotion && this.animationLoop && !this.animationId) {
+        this.isAnimationPaused = false;
+        this.animationLoop();
+      }
+    };
+    document.addEventListener('visibilitychange', this.visibilityHandler, { passive: true });
 
     this.animationInitialized = true;
+  }
+
+  private async loadThree(): Promise<typeof import('three')> {
+    if (this.threeModule) {
+      return this.threeModule;
+    }
+    const module = await import('three');
+    this.threeModule = module;
+    return module;
   }
 
   public scrollToSection(sectionId: string): void {

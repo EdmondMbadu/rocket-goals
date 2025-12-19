@@ -1,32 +1,19 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './auth/login.component';
-import { SignupComponent } from './auth/signup.component';
-import { WelcomeComponent } from './auth/welcome.component';
-import { LandingBridgeComponent } from './landing-bridge.component';
-import { RocketGoalViewComponent } from './rocket-goal-view.component';
-import { GoalsListComponent } from './goals-list.component';
-import { ProfileComponent } from './profile.component';
-import { AdminComponent } from './admin/admin.component';
-import { AiStatsComponent } from './admin/ai-stats.component';
-import { RocketAiPageComponent } from './rocket-ai-page.component';
-import { PricingPageComponent } from './pricing-page.component';
-import { ContactPageComponent } from './contact-page.component';
-import { RocketQuiz } from './rocket-quiz/rocket-quiz';
 import { authGuard } from './auth.guard';
 
 export const routes: Routes = [
-  { path: '', component: LandingBridgeComponent, pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'signup', component: SignupComponent },
-  { path: 'welcome', component: WelcomeComponent },
-  { path: 'goals', component: GoalsListComponent },
-  { path: 'rocketgoal/:id', component: RocketGoalViewComponent },
-  { path: 'profile', component: ProfileComponent },
-  { path: 'admin/ai-stats', component: AiStatsComponent },
-  { path: 'admin', component: AdminComponent },
-  { path: 'ai', component: RocketAiPageComponent },
-  { path: 'quiz', component: RocketQuiz },
-  { path: 'pricing', component: PricingPageComponent, canActivate: [authGuard] },
-  { path: 'contact', component: ContactPageComponent },
+  { path: '', loadComponent: () => import('./landing-bridge.component').then(m => m.LandingBridgeComponent), pathMatch: 'full' },
+  { path: 'login', loadComponent: () => import('./auth/login.component').then(m => m.LoginComponent) },
+  { path: 'signup', loadComponent: () => import('./auth/signup.component').then(m => m.SignupComponent) },
+  { path: 'welcome', loadComponent: () => import('./auth/welcome.component').then(m => m.WelcomeComponent) },
+  { path: 'goals', loadComponent: () => import('./goals-list.component').then(m => m.GoalsListComponent) },
+  { path: 'rocketgoal/:id', loadComponent: () => import('./rocket-goal-view.component').then(m => m.RocketGoalViewComponent) },
+  { path: 'profile', loadComponent: () => import('./profile.component').then(m => m.ProfileComponent) },
+  { path: 'admin/ai-stats', loadComponent: () => import('./admin/ai-stats.component').then(m => m.AiStatsComponent) },
+  { path: 'admin', loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent) },
+  { path: 'ai', loadComponent: () => import('./rocket-ai-page.component').then(m => m.RocketAiPageComponent) },
+  { path: 'quiz', loadComponent: () => import('./rocket-quiz/rocket-quiz').then(m => m.RocketQuiz) },
+  { path: 'pricing', loadComponent: () => import('./pricing-page.component').then(m => m.PricingPageComponent), canActivate: [authGuard] },
+  { path: 'contact', loadComponent: () => import('./contact-page.component').then(m => m.ContactPageComponent) },
   { path: '**', redirectTo: '' }
 ];
