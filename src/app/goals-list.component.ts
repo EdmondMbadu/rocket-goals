@@ -758,7 +758,29 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         startTime: now
       });
 
-      // Send email notification via Cloud Function
+      // Generate visualization image first, then send email with the image
+      let visualizationImageUrl: string | undefined;
+      try {
+        const visualizationResult = await this.visualizationService.generateVisualization({
+          goalId,
+          goalDescription: answers.goalDescription,
+          timeframe: answers.timeframe!,
+          hasAccountabilitySupport: answers.hasAccountabilitySupport,
+          userPhotoBase64: answers.userPhotoBase64
+        });
+
+        if (visualizationResult.success && visualizationResult.imageUrl) {
+          visualizationImageUrl = visualizationResult.imageUrl;
+          console.log('Visualization generated successfully:', visualizationImageUrl);
+        } else {
+          console.warn('Failed to generate visualization:', visualizationResult.message);
+        }
+      } catch (visualizationError) {
+        console.warn('Error generating visualization:', visualizationError);
+        // Continue to send email even if visualization fails
+      }
+
+      // Send email notification via Cloud Function (with image if available)
       try {
         const sendGoalEmail = httpsCallable<{
           goalId: string;
@@ -766,6 +788,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
           timeframe: string;
           userEmail: string;
           userName: string;
+          imageUrl?: string;
         }, { success: boolean }>(this.functions, 'sendGoalCreatedEmail');
 
         await sendGoalEmail({
@@ -773,28 +796,12 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
           goalTitle: answers.goalDescription,
           timeframe: answers.timeframe!,
           userEmail: profile.email || '',
-          userName: profile.firstName || 'Achiever'
+          userName: profile.firstName || 'Achiever',
+          imageUrl: visualizationImageUrl
         });
       } catch (emailError) {
         console.warn('Failed to send goal creation email:', emailError);
       }
-
-      // Generate visualization image in the background (don't wait for it)
-      this.visualizationService.generateVisualization({
-        goalId,
-        goalDescription: answers.goalDescription,
-        timeframe: answers.timeframe!,
-        hasAccountabilitySupport: answers.hasAccountabilitySupport,
-        userPhotoBase64: answers.userPhotoBase64
-      }).then(result => {
-        if (result.success) {
-          console.log('Visualization generated successfully:', result.imageUrl);
-        } else {
-          console.warn('Failed to generate visualization:', result.message);
-        }
-      }).catch(error => {
-        console.warn('Error generating visualization:', error);
-      });
 
       // Close modal and navigate to the new goal
       this.closeGoalModal();

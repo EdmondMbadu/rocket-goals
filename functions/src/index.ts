@@ -1083,6 +1083,7 @@ export const sendGoalCreatedEmail = functions.runWith({
     timeframe: string;
     userEmail: string;
     userName: string;
+    imageUrl?: string;
 }, context: functions.https.CallableContext) => {
     // Verify the user is authenticated
     if (!context.auth) {
@@ -1093,7 +1094,7 @@ export const sendGoalCreatedEmail = functions.runWith({
     }
 
     // Validate input
-    const { goalId, goalTitle, timeframe, userEmail, userName } = data;
+    const { goalId, goalTitle, timeframe, userEmail, userName, imageUrl } = data;
     if (!goalId || !goalTitle || !timeframe || !userEmail) {
         throw new functions.https.HttpsError(
             'invalid-argument',
@@ -1153,6 +1154,16 @@ export const sendGoalCreatedEmail = functions.runWith({
                                 ⏱️ Mission Timeframe: <strong>${timeframeText}</strong>
                             </p>
                         </div>
+
+                        ${imageUrl ? `
+                        <!-- Visualization Image -->
+                        <div style="text-align: center; margin: 25px 0;">
+                            <img src="${imageUrl}" alt="Your Future Self Visualization" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); border: 2px solid #fecaca;" />
+                            <p style="color: #6b7280; font-size: 12px; margin: 10px 0 0; font-style: italic;">
+                                Your personalized Future Self visualization
+                            </p>
+                        </div>
+                        ` : ''}
 
                         <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
                             Your AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!
