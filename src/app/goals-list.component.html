@@ -436,19 +436,19 @@
     </div>
 
       <!-- Modal Body -->
-      <div class="px-6 py-4 max-h-[70vh] overflow-y-auto goal-modal-body">
+      <div class="px-5 py-3 max-h-[75vh] overflow-y-auto goal-modal-body">
 
         <!-- Step 1: Goal Description -->
-        <div *ngIf="goalModalStep() === 1 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 1 && !showAuthPrompt()" class="space-y-2">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">
               What is the goal you're trying to achieve?
             </label>
             <p class="text-xs text-gray-500 mb-2">
               Describe the main goal you want to accomplish. Be specific!
             </p>
             <textarea
-              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
+              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
               rows="3"
               placeholder="e.g., Learn to play guitar, Run a marathon, Launch my business..."
               [ngModel]="quizAnswers().goalDescription"
@@ -457,17 +457,17 @@
         </div>
 
         <!-- Step 2: Timeframe Selection -->
-        <div *ngIf="goalModalStep() === 2 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 2 && !showAuthPrompt()" class="space-y-2">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">
               When are you planning to achieve this goal?
             </label>
-            <p class="text-xs text-gray-500 mb-3">
+            <p class="text-xs text-gray-500 mb-2">
               Choose a timeframe that challenges you but is realistic.
             </p>
             <div class="space-y-2">
               <button *ngFor="let option of timeframeOptions" type="button"
-                class="timeframe-option w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200"
+                class="timeframe-option w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200"
               [class.selected]="quizAnswers().timeframe === option.value"
               [class.border-gray-200]="quizAnswers().timeframe !== option.value"
               [class.border-red-500]="quizAnswers().timeframe === option.value"
@@ -503,12 +503,12 @@
       </div>
 
         <!-- Step 3: R – Remember Your Future Self -->
-        <div *ngIf="goalModalStep() === 3 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 3 && !showAuthPrompt()" class="space-y-2">
           <div class="rocket-section-badge">R – Remember Your Future Self</div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
             On a scale of 1–10, how clearly can you visualize your Future Self living your ideal life?
           </label>
-          <p class="text-xs text-gray-500 mb-3">
+          <p class="text-xs text-gray-500 mb-2">
             1 = Very unclear, 10 = Crystal clear vision
           </p>
         <div class="scale-slider-container">
@@ -525,14 +525,14 @@
       </div>
 
         <!-- Step 4: O – Own Your ONE Thing -->
-        <div *ngIf="goalModalStep() === 4 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 4 && !showAuthPrompt()" class="space-y-2">
           <div class="rocket-section-badge">O – Own Your ONE Thing</div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
             How much time daily do you devote to your ONE thing, without distractions?
           </label>
           <div class="space-y-2">
             <button *ngFor="let option of dailyTimeOptions" type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().dailyTimeForGoal === option.value"
             [class.border-gray-200]="quizAnswers().dailyTimeForGoal !== option.value"
             [class.border-red-500]="quizAnswers().dailyTimeForGoal === option.value"
@@ -544,14 +544,14 @@
       </div>
 
         <!-- Step 5: C – Celebrate Change -->
-        <div *ngIf="goalModalStep() === 5 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 5 && !showAuthPrompt()" class="space-y-2">
           <div class="rocket-section-badge">C – Celebrate Change</div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
             When challenges arise, do you see them as obstacles or signals of growth?
           </label>
           <div class="space-y-2">
             <button type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().challengePerception === 'obstacles'"
             [class.border-gray-200]="quizAnswers().challengePerception !== 'obstacles'"
             [class.border-red-500]="quizAnswers().challengePerception === 'obstacles'"
@@ -560,7 +560,7 @@
             <span class="font-medium text-gray-900">Obstacles – they slow me down</span>
           </button>
             <button type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
               [class.selected]="quizAnswers().challengePerception === 'growth'"
               [class.border-gray-200]="quizAnswers().challengePerception !== 'growth'"
               [class.border-red-500]="quizAnswers().challengePerception === 'growth'"
@@ -572,14 +572,14 @@
         </div>
 
         <!-- Step 6: K – Keep Kind Intentions -->
-        <div *ngIf="goalModalStep() === 6 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 6 && !showAuthPrompt()" class="space-y-2">
           <div class="rocket-section-badge">K – Keep Kind Intentions</div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
             Do you have tools or rituals that help you bounce back from emotional setbacks?
           </label>
           <div class="space-y-2">
             <button type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().emotionalResilience === 'yes'"
             [class.border-gray-200]="quizAnswers().emotionalResilience !== 'yes'"
             [class.border-red-500]="quizAnswers().emotionalResilience === 'yes'"
@@ -588,7 +588,7 @@
             <span class="font-medium text-gray-900">Yes, I have strategies that work for me</span>
           </button>
             <button type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
               [class.selected]="quizAnswers().emotionalResilience === 'no'"
               [class.border-gray-200]="quizAnswers().emotionalResilience !== 'no'"
               [class.border-red-500]="quizAnswers().emotionalResilience === 'no'"
@@ -600,14 +600,14 @@
         </div>
 
         <!-- Step 7: E – Engage with Exponential Effort -->
-        <div *ngIf="goalModalStep() === 7 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 7 && !showAuthPrompt()" class="space-y-2">
           <div class="rocket-section-badge">E – Engage with Exponential Effort</div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
             How consistent are you at showing up daily—even when motivation is low?
           </label>
           <div class="space-y-2">
             <button *ngFor="let option of consistencyOptions" type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().dailyConsistency === option.value"
             [class.border-gray-200]="quizAnswers().dailyConsistency !== option.value"
             [class.border-red-500]="quizAnswers().dailyConsistency === option.value"
@@ -619,14 +619,14 @@
       </div>
 
         <!-- Step 8: T – Transform Time with Your Team -->
-        <div *ngIf="goalModalStep() === 8 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 8 && !showAuthPrompt()" class="space-y-2">
           <div class="rocket-section-badge">T – Transform Time with Your Team</div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
             Do you currently have an accountability partner, mentor, or supportive team helping you grow?
           </label>
           <div class="space-y-2">
             <button type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().hasAccountabilitySupport === 'yes'"
             [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'yes'"
             [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'yes'"
@@ -635,7 +635,7 @@
             <span class="font-medium text-gray-900">Yes, I have support</span>
           </button>
             <button type="button"
-              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              class="quiz-option-btn w-full flex items-center gap-2.5 p-2.5 rounded-lg border-2 transition-all duration-200 text-left"
               [class.selected]="quizAnswers().hasAccountabilitySupport === 'no'"
               [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'no'"
               [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'no'"
@@ -647,16 +647,16 @@
         </div>
 
         <!-- Step 9: Additional Notes -->
-        <div *ngIf="goalModalStep() === 9 && !showAuthPrompt()" class="space-y-3">
+        <div *ngIf="goalModalStep() === 9 && !showAuthPrompt()" class="space-y-2">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">
               Anything else we should know?
             </label>
             <p class="text-xs text-gray-500 mb-2">
               Share any additional context, challenges, or thoughts about your goal. (Optional)
             </p>
             <textarea
-              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
+              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
               rows="3"
               placeholder="e.g., I've tried this before but struggled with..., I'm most motivated when..."
               [ngModel]="quizAnswers().additionalNotes"
@@ -665,44 +665,40 @@
         </div>
 
       <!-- Step 10: Photo Capture -->
-      <div *ngIf="goalModalStep() === 10 && !showAuthPrompt()" class="space-y-3">
+      <div *ngIf="goalModalStep() === 10 && !showAuthPrompt()" class="space-y-2">
         <!-- Skip option - compact at top -->
-        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200 mb-2">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-200 mb-1">
+          <div class="flex items-center gap-1.5">
+            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+              <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
               </svg>
             </div>
             <div>
-              <p class="font-semibold text-gray-700 text-xs">Want to skip this step?</p>
-              <p class="text-xs text-gray-500">We'll use a general visualization instead</p>
+              <p class="font-semibold text-gray-700 text-xs leading-tight">Want to skip?</p>
             </div>
           </div>
           <button type="button"
-            class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium text-xs hover:bg-gray-100 hover:border-gray-400 transition flex items-center gap-1.5"
+            class="px-2.5 py-1 rounded-md bg-white border border-gray-300 text-gray-700 font-medium text-xs hover:bg-gray-100 hover:border-gray-400 transition"
             (click)="skipPhoto()">
             Skip
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
           </button>
         </div>
 
         <div class="text-center">
-          <div class="photo-capture-icon mb-3">
-            <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
-              <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="photo-capture-icon mb-2">
+            <div class="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
           </div>
-          <label class="block text-base font-bold text-gray-800 mb-1">
-            Add Your Photo to the Visualization
+          <label class="block text-base font-bold text-gray-900 mb-1">
+            Add Your Photo
           </label>
-          <p class="text-xs text-gray-500 mb-4">
-            Take a quick selfie so we can personalize your Future Self visualization with your face. This makes the image feel more real and inspiring!
+          <p class="text-sm font-semibold text-red-600 mb-2">
+            Personalize your visualization with your face
           </p>
         </div>
 
@@ -710,25 +706,25 @@
         <div class="photo-capture-container">
           <!-- Not started state -->
           <div *ngIf="!isCameraActive() && !capturedPhoto() && !isCameraLoading()" class="photo-capture-placeholder">
-            <div class="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
-              <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-full h-48 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
+              <svg class="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <p class="text-gray-500 font-medium mb-4">Your photo will appear here</p>
-              <div class="flex flex-col sm:flex-row items-center gap-3">
+              <p class="text-gray-500 font-medium text-xs mb-3">Your photo will appear here</p>
+              <div class="flex flex-col sm:flex-row items-center gap-2">
                 <button type="button"
-                  class="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold hover:opacity-90 transition flex items-center gap-2"
+                  class="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition flex items-center gap-1.5"
                   (click)="startCamera()">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   Take Photo
                 </button>
-                <span class="text-gray-400 text-sm font-medium">or</span>
+                <span class="text-gray-400 text-xs font-medium">or</span>
                 <label
-                  class="px-6 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-semibold hover:border-red-400 hover:bg-red-50 transition cursor-pointer flex items-center gap-2">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-semibold text-sm hover:border-red-400 hover:bg-red-50 transition cursor-pointer flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   Upload Photo
@@ -740,21 +736,21 @@
 
           <!-- Loading camera -->
           <div *ngIf="isCameraLoading()" class="photo-capture-loading">
-            <div class="w-full aspect-[4/3] rounded-2xl bg-gray-100 flex flex-col items-center justify-center">
-              <div class="w-12 h-12 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mb-4"></div>
-              <p class="text-gray-600 font-medium">Accessing camera...</p>
+            <div class="w-full h-48 rounded-xl bg-gray-100 flex flex-col items-center justify-center">
+              <div class="w-10 h-10 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mb-3"></div>
+              <p class="text-gray-600 font-medium text-sm">Accessing camera...</p>
             </div>
           </div>
 
           <!-- Camera error -->
           <div *ngIf="cameraError()" class="photo-capture-error">
-            <div class="w-full aspect-[4/3] rounded-2xl bg-red-50 border-2 border-red-200 flex flex-col items-center justify-center p-6">
-              <svg class="w-12 h-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-full h-48 rounded-xl bg-red-50 border-2 border-red-200 flex flex-col items-center justify-center p-4">
+              <svg class="w-10 h-10 text-red-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <p class="text-red-600 font-medium text-center mb-4">{{ cameraError() }}</p>
+              <p class="text-red-600 font-medium text-center text-sm mb-3">{{ cameraError() }}</p>
               <button type="button"
-                class="px-4 py-2 rounded-lg bg-red-100 text-red-600 font-medium hover:bg-red-200 transition"
+                class="px-3 py-1.5 rounded-lg bg-red-100 text-red-600 font-medium text-sm hover:bg-red-200 transition"
                 (click)="startCamera()">
                 Try Again
               </button>
@@ -763,7 +759,7 @@
 
           <!-- Camera active (video feed) -->
           <div *ngIf="isCameraActive() && !capturedPhoto()" class="photo-capture-active">
-            <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black">
+            <div class="relative w-full h-48 rounded-xl overflow-hidden bg-black">
               <video id="photo-capture-video"
                 class="w-full h-full object-cover"
                 autoplay
@@ -771,21 +767,21 @@
                 style="transform: scaleX(-1);"></video>
               <!-- Camera overlay frame -->
               <div class="absolute inset-0 pointer-events-none">
-                <div class="absolute inset-4 border-2 border-white/30 rounded-xl"></div>
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-white/50 rounded-full"></div>
+                <div class="absolute inset-3 border-2 border-white/30 rounded-lg"></div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/50 rounded-full"></div>
               </div>
             </div>
-            <div class="flex justify-center gap-4 mt-4">
+            <div class="flex justify-center gap-3 mt-3">
               <button type="button"
-                class="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold hover:opacity-90 transition flex items-center gap-2"
+                class="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition flex items-center gap-1.5"
                 (click)="capturePhoto()">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" />
                 </svg>
-                Capture Photo
+                Capture
               </button>
               <button type="button"
-                class="px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition"
+                class="px-3 py-2 rounded-lg border-2 border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition"
                 (click)="stopCamera()">
                 Cancel
               </button>
@@ -795,36 +791,36 @@
           <!-- Photo captured (preview) -->
           <div *ngIf="capturedPhoto()" class="photo-capture-preview">
             <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden border-4 border-green-400 shadow-md">
-              <img [src]="capturedPhoto()" alt="Captured photo" class="w-full h-full object-cover" />
-              <div class="absolute top-2 right-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <img [src]="capturedPhoto()" alt="Captured photo" class="w-full h-full object-contain bg-gray-50" />
+              <div class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <!-- Loading overlay when using photo -->
               <div *ngIf="isUsingPhoto()" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-xl">
-                <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-3"></div>
-                <p class="text-white font-medium text-sm">Processing your photo...</p>
+                <div class="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
+                <p class="text-white font-medium text-xs">Processing...</p>
               </div>
             </div>
-            <div class="flex justify-center gap-3 mt-3">
+            <div class="flex justify-center gap-2 mt-2">
               <button type="button"
                 [disabled]="isUsingPhoto()"
-                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold hover:opacity-90 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="usePhoto()">
-                <svg *ngIf="!isUsingPhoto()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg *ngIf="!isUsingPhoto()" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <svg *ngIf="isUsingPhoto()" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg *ngIf="isUsingPhoto()" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 {{ isUsingPhoto() ? 'Processing...' : 'Use This Photo' }}
               </button>
               <button type="button"
                 [disabled]="isUsingPhoto()"
-                class="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-3 py-2 rounded-lg border-2 border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="retakePhoto()">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Retake
