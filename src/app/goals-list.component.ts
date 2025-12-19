@@ -642,6 +642,39 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.startCamera();
   }
 
+  protected onPhotoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      this.cameraError.set('Please select an image file.');
+      return;
+    }
+
+    // Max file size: 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      this.cameraError.set('Image is too large. Please select an image under 5MB.');
+      return;
+    }
+
+    this.cameraError.set(null);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      this.capturedPhoto.set(base64);
+      this.updateQuizAnswer('userPhotoBase64', base64);
+    };
+    reader.onerror = () => {
+      this.cameraError.set('Failed to read the image. Please try again.');
+    };
+    reader.readAsDataURL(file);
+
+    // Reset the input so the same file can be selected again
+    input.value = '';
+  }
+
   protected skipPhoto(): void {
     this.stopCamera();
     this.capturedPhoto.set(null);
