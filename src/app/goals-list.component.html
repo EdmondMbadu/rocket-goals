@@ -666,6 +666,29 @@
 
       <!-- Step 10: Photo Capture -->
       <div *ngIf="goalModalStep() === 10 && !showAuthPrompt()" class="space-y-4">
+        <!-- Skip option - prominent at top -->
+        <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200 mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-700 text-sm">Want to skip this step?</p>
+              <p class="text-xs text-gray-500">We'll use a general visualization instead</p>
+            </div>
+          </div>
+          <button type="button"
+            class="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 hover:border-gray-400 transition flex items-center gap-2"
+            (click)="skipPhoto()">
+            Skip
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+
         <div class="text-center">
           <div class="photo-capture-icon mb-4">
             <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
@@ -789,15 +812,6 @@
           </div>
         </div>
 
-        <!-- Skip option -->
-        <div class="text-center pt-4 border-t border-gray-100 mt-6">
-          <p class="text-sm text-gray-500 mb-3">Don't want to add your photo?</p>
-          <button type="button"
-            class="text-sm font-medium text-gray-600 hover:text-red-500 transition underline underline-offset-2"
-            (click)="skipPhoto()">
-            Skip and use a general visualization
-          </button>
-        </div>
       </div>
 
       <!-- Auth Prompt for non-logged-in users -->
