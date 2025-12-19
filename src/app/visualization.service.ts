@@ -7,6 +7,7 @@ export interface GenerateVisualizationInput {
   goalDescription: string;
   timeframe: string;
   hasAccountabilitySupport?: string;
+  userPhotoBase64?: string | null; // base64 encoded user face photo for personalized visualization
 }
 
 export interface GenerateVisualizationResult {
@@ -34,7 +35,8 @@ export class VisualizationService {
         goalId: input.goalId,
         goalDescription: input.goalDescription,
         timeframe: input.timeframe,
-        hasAccountabilitySupport: input.hasAccountabilitySupport
+        hasAccountabilitySupport: input.hasAccountabilitySupport,
+        userPhotoBase64: input.userPhotoBase64
       });
 
       return result.data;

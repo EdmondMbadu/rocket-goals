@@ -1249,6 +1249,7 @@ export const generateGoalVisualization = onCall({
         const timeframe = (data?.timeframe || "month").toString().trim();
         const goalId = (data?.goalId || "").toString().trim();
         const hasAccountabilitySupport = data?.hasAccountabilitySupport === "yes";
+        const userPhotoBase64 = data?.userPhotoBase64 ? data.userPhotoBase64.toString() : null;
 
         if (!goalDescription) {
             throw new HttpsError(
@@ -1264,7 +1265,8 @@ export const generateGoalVisualization = onCall({
             );
         }
 
-        console.log(`🎨 Generating visualization for goal: "${goalDescription.substring(0, 50)}..."`);
+        const hasUserPhoto = userPhotoBase64 && userPhotoBase64.startsWith('data:image');
+        console.log(`🎨 Generating visualization for goal: "${goalDescription.substring(0, 50)}..." (with user photo: ${hasUserPhoto})`);
 
         // Map timeframe to readable text
         const timeframeText = timeframe === 'week' ? 'a 7-day' :
@@ -1272,6 +1274,11 @@ export const generateGoalVisualization = onCall({
             timeframe === '3months' ? 'a 90-day' : 'a 6-month';
 
         // Build the image generation prompt using the user's template
+        // When user photo is provided, instruct the model to use their face
+        const personDescription = hasUserPhoto
+            ? `IMPORTANT: Use the exact face from the provided reference photo. The person in the generated image MUST have the same facial features, skin tone, and appearance as shown in the reference photo. This is their Future Self visualization - it should look like THEM achieving this goal.`
+            : `The person feels authentic, human, and relatable`;
+
         const imagePrompt = `Create a highly inspiring, emotionally grounded, realistic visualization of a person who has achieved the following goal:
 
 "${goalDescription}" — rewritten as already achieved.
@@ -1285,7 +1292,7 @@ The person:
 - Appears focused, calm, and confident
 - Body language reflects discipline, consistency, and inner strength
 - Facial expression shows quiet satisfaction, not arrogance
-- The person feels authentic, human, and relatable
+${personDescription}
 
 Environment:
 - The setting naturally supports the goal (workplace, studio, outdoors, community, home, etc.)
@@ -1331,13 +1338,42 @@ The final image should make the viewer think:
 
         console.log(`🎨 Sending image generation request to Gemini 2.0 Flash...`);
 
+        // Build the content parts for the request
+        const contentParts: any[] = [];
+
+        // If user photo is provided, include it as a reference image
+        if (hasUserPhoto && userPhotoBase64) {
+            // Extract the base64 data and mime type from the data URL
+            const matches = userPhotoBase64.match(/^data:([^;]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                const mimeType = matches[1];
+                const base64Data = matches[2];
+                contentParts.push({
+                    inlineData: {
+                        mimeType: mimeType,
+                        data: base64Data
+                    }
+                });
+                contentParts.push({
+                    text: `Reference photo above: This is the user's face. Generate an image of THIS EXACT PERSON (same face, features, skin tone) achieving their goal as described below.\n\n${imagePrompt}`
+                });
+            } else {
+                // Fallback if data URL format is unexpected
+                contentParts.push({
+                    text: `Generate an image based on this description:\n\n${imagePrompt}`
+                });
+            }
+        } else {
+            contentParts.push({
+                text: `Generate an image based on this description:\n\n${imagePrompt}`
+            });
+        }
+
         // Generate the image using Gemini's image generation
         const result = await model.generateContent({
             contents: [{
                 role: "user",
-                parts: [{
-                    text: `Generate an image based on this description:\n\n${imagePrompt}`
-                }]
+                parts: contentParts
             }],
             generationConfig: {
                 responseModalities: ["image", "text"] as any,

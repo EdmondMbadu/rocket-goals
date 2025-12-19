@@ -28,6 +28,7 @@ export interface RocketQuizAnswers {
   dailyConsistency: string; // consistency option
   hasAccountabilitySupport: string; // yes/no
   additionalNotes: string;
+  userPhotoBase64: string | null; // base64 encoded user face photo for visualization
 }
 
 interface FanMissionContext {
@@ -76,10 +77,17 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
   protected readonly goalModalStep = signal<number>(1);
-  protected readonly totalSteps = 9; // Total quiz steps
+  protected readonly totalSteps = 10; // Total quiz steps (including photo capture)
   protected readonly isCreatingGoal = signal(false);
   protected readonly goalCreationError = signal<string | null>(null);
   protected readonly showAuthPrompt = signal(false);
+
+  // Photo capture state
+  protected readonly isCameraActive = signal(false);
+  protected readonly isCameraLoading = signal(false);
+  protected readonly cameraError = signal<string | null>(null);
+  protected readonly capturedPhoto = signal<string | null>(null);
+  private videoStream: MediaStream | null = null;
 
   // Quiz answers
   protected readonly quizAnswers = signal<RocketQuizAnswers>({
@@ -91,7 +99,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     emotionalResilience: '',
     dailyConsistency: '',
     hasAccountabilitySupport: '',
-    additionalNotes: ''
+    additionalNotes: '',
+    userPhotoBase64: null
   });
 
   protected readonly timeframeOptions: { value: GoalTimeframe; label: string; description: string }[] = [
@@ -481,16 +490,20 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       emotionalResilience: '',
       dailyConsistency: '',
       hasAccountabilitySupport: '',
-      additionalNotes: ''
+      additionalNotes: '',
+      userPhotoBase64: null
     });
   }
 
   protected closeGoalModal(): void {
+    this.stopCamera();
     this.showGoalModal.set(false);
     this.goalModalStep.set(1);
     this.showAuthPrompt.set(false);
     this.goalCreationError.set(null);
     this.isCreatingGoal.set(false);
+    this.capturedPhoto.set(null);
+    this.cameraError.set(null);
   }
 
   protected updateQuizAnswer<K extends keyof RocketQuizAnswers>(key: K, value: RocketQuizAnswers[K]): void {
@@ -511,6 +524,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       case 7: return !!answers.dailyConsistency;
       case 8: return !!answers.hasAccountabilitySupport;
       case 9: return true; // Additional notes is optional
+      case 10: return true; // Photo capture is optional (can skip or use photo)
       default: return false;
     }
   }
@@ -556,6 +570,89 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate([`/${mode}`], {
       queryParams: { redirectTo: '/goals', createGoal: 'true' }
     });
+  }
+
+  // Camera/Photo capture methods
+  protected async startCamera(): Promise<void> {
+    this.cameraError.set(null);
+    this.isCameraLoading.set(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      this.videoStream = stream;
+      this.isCameraActive.set(true);
+
+      // Wait for the video element to be ready and attach the stream
+      setTimeout(() => {
+        const videoElement = document.getElementById('photo-capture-video') as HTMLVideoElement;
+        if (videoElement) {
+          videoElement.srcObject = stream;
+          videoElement.play();
+        }
+      }, 100);
+    } catch (error: any) {
+      console.error('Camera access error:', error);
+      if (error.name === 'NotAllowedError') {
+        this.cameraError.set('Camera access denied. Please allow camera access in your browser settings.');
+      } else if (error.name === 'NotFoundError') {
+        this.cameraError.set('No camera found. Please connect a camera and try again.');
+      } else {
+        this.cameraError.set('Unable to access camera. Please try again.');
+      }
+    } finally {
+      this.isCameraLoading.set(false);
+    }
+  }
+
+  protected stopCamera(): void {
+    if (this.videoStream) {
+      this.videoStream.getTracks().forEach(track => track.stop());
+      this.videoStream = null;
+    }
+    this.isCameraActive.set(false);
+  }
+
+  protected capturePhoto(): void {
+    const videoElement = document.getElementById('photo-capture-video') as HTMLVideoElement;
+    if (!videoElement) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Flip horizontally for mirror effect
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoElement, 0, 0);
+
+      const photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+      this.capturedPhoto.set(photoBase64);
+      this.updateQuizAnswer('userPhotoBase64', photoBase64);
+      this.stopCamera();
+    }
+  }
+
+  protected retakePhoto(): void {
+    this.capturedPhoto.set(null);
+    this.updateQuizAnswer('userPhotoBase64', null);
+    this.startCamera();
+  }
+
+  protected skipPhoto(): void {
+    this.stopCamera();
+    this.capturedPhoto.set(null);
+    this.updateQuizAnswer('userPhotoBase64', null);
+    // Move to final step (auth check or goal creation)
+    this.handleFinalStep();
+  }
+
+  protected usePhoto(): void {
+    // Photo is already saved in quizAnswers, proceed to final step
+    this.handleFinalStep();
   }
 
   protected async createGoalFromQuiz(): Promise<void> {
@@ -639,7 +736,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         goalId,
         goalDescription: answers.goalDescription,
         timeframe: answers.timeframe!,
-        hasAccountabilitySupport: answers.hasAccountabilitySupport
+        hasAccountabilitySupport: answers.hasAccountabilitySupport,
+        userPhotoBase64: answers.userPhotoBase64
       }).then(result => {
         if (result.success) {
           console.log('Visualization generated successfully:', result.imageUrl);

@@ -780,3 +780,149 @@
 .auth-prompt-icon {
   margin-bottom: 1rem;
 }
+
+/* =====================================================
+   PHOTO CAPTURE STYLES (Step 10)
+   ===================================================== */
+
+.photo-capture-container {
+  position: relative;
+}
+
+.photo-capture-placeholder,
+.photo-capture-loading,
+.photo-capture-error,
+.photo-capture-active,
+.photo-capture-preview {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.photo-capture-placeholder .w-full {
+  transition: all 0.3s ease;
+}
+
+.photo-capture-placeholder .w-full:hover {
+  border-color: #fca5a5;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+/* Video element styling */
+#photo-capture-video {
+  background: #000;
+}
+
+/* Camera overlay animations */
+.photo-capture-active .absolute.inset-4 {
+  animation: framePulse 2s ease-in-out infinite;
+}
+
+@keyframes framePulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.photo-capture-active .w-32.h-32 {
+  animation: faceFocus 1.5s ease-in-out infinite;
+}
+
+@keyframes faceFocus {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Captured photo success state */
+.photo-capture-preview .border-4 {
+  box-shadow:
+    0 10px 30px rgba(34, 197, 94, 0.3),
+    0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+/* Dark mode styles for photo capture */
+.goal-modal.dark-mode .photo-capture-placeholder .w-full {
+  background: linear-gradient(135deg, #1e2433 0%, #0f1320 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.goal-modal.dark-mode .photo-capture-placeholder .w-full:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.goal-modal.dark-mode .photo-capture-placeholder .text-gray-400,
+.goal-modal.dark-mode .photo-capture-placeholder .text-gray-500 {
+  color: #9ca3af;
+}
+
+.goal-modal.dark-mode .photo-capture-loading .bg-gray-100 {
+  background: #1e2433;
+}
+
+.goal-modal.dark-mode .photo-capture-loading .text-gray-600 {
+  color: #d1d5db;
+}
+
+.goal-modal.dark-mode .photo-capture-error .bg-red-50 {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.goal-modal.dark-mode .photo-capture-icon .bg-gradient-to-br {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(249, 115, 22, 0.2) 100%);
+}
+
+.goal-modal.dark-mode .text-lg.font-bold.text-gray-800 {
+  color: #f3f4f6;
+}
+
+.goal-modal.dark-mode .border-t.border-gray-100 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Capture button pulse effect */
+.photo-capture-active button.bg-gradient-to-r {
+  position: relative;
+}
+
+.photo-capture-active button.bg-gradient-to-r::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(249, 115, 22, 0.4));
+  filter: blur(8px);
+  opacity: 0;
+  animation: captureGlow 1.5s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes captureGlow {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
