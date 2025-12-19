@@ -435,39 +435,39 @@
       </div>
     </div>
 
-    <!-- Modal Body -->
-    <div class="px-8 py-8 max-h-[65vh] overflow-y-auto goal-modal-body">
+      <!-- Modal Body -->
+      <div class="px-6 py-4 max-h-[70vh] overflow-y-auto goal-modal-body">
 
-      <!-- Step 1: Goal Description -->
-      <div *ngIf="goalModalStep() === 1 && !showAuthPrompt()" class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            What is the goal you're trying to achieve?
-          </label>
-          <p class="text-xs text-gray-500 mb-3">
-            Describe the main goal you want to accomplish. Be specific!
-          </p>
-          <textarea
-            class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
-            rows="4"
-            placeholder="e.g., Learn to play guitar, Run a marathon, Launch my business..."
-            [ngModel]="quizAnswers().goalDescription"
-            (ngModelChange)="updateQuizAnswer('goalDescription', $event)"></textarea>
+        <!-- Step 1: Goal Description -->
+        <div *ngIf="goalModalStep() === 1 && !showAuthPrompt()" class="space-y-3">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+              What is the goal you're trying to achieve?
+            </label>
+            <p class="text-xs text-gray-500 mb-2">
+              Describe the main goal you want to accomplish. Be specific!
+            </p>
+            <textarea
+              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
+              rows="3"
+              placeholder="e.g., Learn to play guitar, Run a marathon, Launch my business..."
+              [ngModel]="quizAnswers().goalDescription"
+              (ngModelChange)="updateQuizAnswer('goalDescription', $event)"></textarea>
+          </div>
         </div>
-      </div>
 
-      <!-- Step 2: Timeframe Selection -->
-      <div *ngIf="goalModalStep() === 2 && !showAuthPrompt()" class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            When are you planning to achieve this goal?
-          </label>
-          <p class="text-xs text-gray-500 mb-4">
-            Choose a timeframe that challenges you but is realistic.
-          </p>
-          <div class="space-y-3">
-            <button *ngFor="let option of timeframeOptions" type="button"
-              class="timeframe-option w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200"
+        <!-- Step 2: Timeframe Selection -->
+        <div *ngIf="goalModalStep() === 2 && !showAuthPrompt()" class="space-y-3">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+              When are you planning to achieve this goal?
+            </label>
+            <p class="text-xs text-gray-500 mb-3">
+              Choose a timeframe that challenges you but is realistic.
+            </p>
+            <div class="space-y-2">
+              <button *ngFor="let option of timeframeOptions" type="button"
+                class="timeframe-option w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200"
               [class.selected]="quizAnswers().timeframe === option.value"
               [class.border-gray-200]="quizAnswers().timeframe !== option.value"
               [class.border-red-500]="quizAnswers().timeframe === option.value"
@@ -502,15 +502,15 @@
         </div>
       </div>
 
-      <!-- Step 3: R – Remember Your Future Self -->
-      <div *ngIf="goalModalStep() === 3 && !showAuthPrompt()" class="space-y-4">
-        <div class="rocket-section-badge">R – Remember Your Future Self</div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          On a scale of 1–10, how clearly can you visualize your Future Self living your ideal life?
-        </label>
-        <p class="text-xs text-gray-500 mb-4">
-          1 = Very unclear, 10 = Crystal clear vision
-        </p>
+        <!-- Step 3: R – Remember Your Future Self -->
+        <div *ngIf="goalModalStep() === 3 && !showAuthPrompt()" class="space-y-3">
+          <div class="rocket-section-badge">R – Remember Your Future Self</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            On a scale of 1–10, how clearly can you visualize your Future Self living your ideal life?
+          </label>
+          <p class="text-xs text-gray-500 mb-3">
+            1 = Very unclear, 10 = Crystal clear vision
+          </p>
         <div class="scale-slider-container">
           <input type="range" min="1" max="10" step="1"
             class="scale-slider w-full"
@@ -524,15 +524,15 @@
         </div>
       </div>
 
-      <!-- Step 4: O – Own Your ONE Thing -->
-      <div *ngIf="goalModalStep() === 4 && !showAuthPrompt()" class="space-y-4">
-        <div class="rocket-section-badge">O – Own Your ONE Thing</div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          How much time daily do you devote to your ONE thing, without distractions?
-        </label>
-        <div class="space-y-3">
-          <button *ngFor="let option of dailyTimeOptions" type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+        <!-- Step 4: O – Own Your ONE Thing -->
+        <div *ngIf="goalModalStep() === 4 && !showAuthPrompt()" class="space-y-3">
+          <div class="rocket-section-badge">O – Own Your ONE Thing</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            How much time daily do you devote to your ONE thing, without distractions?
+          </label>
+          <div class="space-y-2">
+            <button *ngFor="let option of dailyTimeOptions" type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().dailyTimeForGoal === option.value"
             [class.border-gray-200]="quizAnswers().dailyTimeForGoal !== option.value"
             [class.border-red-500]="quizAnswers().dailyTimeForGoal === option.value"
@@ -543,15 +543,15 @@
         </div>
       </div>
 
-      <!-- Step 5: C – Celebrate Change -->
-      <div *ngIf="goalModalStep() === 5 && !showAuthPrompt()" class="space-y-4">
-        <div class="rocket-section-badge">C – Celebrate Change</div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          When challenges arise, do you see them as obstacles or signals of growth?
-        </label>
-        <div class="space-y-3">
-          <button type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+        <!-- Step 5: C – Celebrate Change -->
+        <div *ngIf="goalModalStep() === 5 && !showAuthPrompt()" class="space-y-3">
+          <div class="rocket-section-badge">C – Celebrate Change</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            When challenges arise, do you see them as obstacles or signals of growth?
+          </label>
+          <div class="space-y-2">
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().challengePerception === 'obstacles'"
             [class.border-gray-200]="quizAnswers().challengePerception !== 'obstacles'"
             [class.border-red-500]="quizAnswers().challengePerception === 'obstacles'"
@@ -559,27 +559,27 @@
             (click)="updateQuizAnswer('challengePerception', 'obstacles')">
             <span class="font-medium text-gray-900">Obstacles – they slow me down</span>
           </button>
-          <button type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
-            [class.selected]="quizAnswers().challengePerception === 'growth'"
-            [class.border-gray-200]="quizAnswers().challengePerception !== 'growth'"
-            [class.border-red-500]="quizAnswers().challengePerception === 'growth'"
-            [class.bg-red-50]="quizAnswers().challengePerception === 'growth'"
-            (click)="updateQuizAnswer('challengePerception', 'growth')">
-            <span class="font-medium text-gray-900">Signals of growth – they help me improve</span>
-          </button>
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().challengePerception === 'growth'"
+              [class.border-gray-200]="quizAnswers().challengePerception !== 'growth'"
+              [class.border-red-500]="quizAnswers().challengePerception === 'growth'"
+              [class.bg-red-50]="quizAnswers().challengePerception === 'growth'"
+              (click)="updateQuizAnswer('challengePerception', 'growth')">
+              <span class="font-medium text-gray-900">Signals of growth – they help me improve</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Step 6: K – Keep Kind Intentions -->
-      <div *ngIf="goalModalStep() === 6 && !showAuthPrompt()" class="space-y-4">
-        <div class="rocket-section-badge">K – Keep Kind Intentions</div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          Do you have tools or rituals that help you bounce back from emotional setbacks?
-        </label>
-        <div class="space-y-3">
-          <button type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+        <!-- Step 6: K – Keep Kind Intentions -->
+        <div *ngIf="goalModalStep() === 6 && !showAuthPrompt()" class="space-y-3">
+          <div class="rocket-section-badge">K – Keep Kind Intentions</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            Do you have tools or rituals that help you bounce back from emotional setbacks?
+          </label>
+          <div class="space-y-2">
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().emotionalResilience === 'yes'"
             [class.border-gray-200]="quizAnswers().emotionalResilience !== 'yes'"
             [class.border-red-500]="quizAnswers().emotionalResilience === 'yes'"
@@ -587,27 +587,27 @@
             (click)="updateQuizAnswer('emotionalResilience', 'yes')">
             <span class="font-medium text-gray-900">Yes, I have strategies that work for me</span>
           </button>
-          <button type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
-            [class.selected]="quizAnswers().emotionalResilience === 'no'"
-            [class.border-gray-200]="quizAnswers().emotionalResilience !== 'no'"
-            [class.border-red-500]="quizAnswers().emotionalResilience === 'no'"
-            [class.bg-red-50]="quizAnswers().emotionalResilience === 'no'"
-            (click)="updateQuizAnswer('emotionalResilience', 'no')">
-            <span class="font-medium text-gray-900">No, I'm still figuring this out</span>
-          </button>
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().emotionalResilience === 'no'"
+              [class.border-gray-200]="quizAnswers().emotionalResilience !== 'no'"
+              [class.border-red-500]="quizAnswers().emotionalResilience === 'no'"
+              [class.bg-red-50]="quizAnswers().emotionalResilience === 'no'"
+              (click)="updateQuizAnswer('emotionalResilience', 'no')">
+              <span class="font-medium text-gray-900">No, I'm still figuring this out</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Step 7: E – Engage with Exponential Effort -->
-      <div *ngIf="goalModalStep() === 7 && !showAuthPrompt()" class="space-y-4">
-        <div class="rocket-section-badge">E – Engage with Exponential Effort</div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          How consistent are you at showing up daily—even when motivation is low?
-        </label>
-        <div class="space-y-3">
-          <button *ngFor="let option of consistencyOptions" type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+        <!-- Step 7: E – Engage with Exponential Effort -->
+        <div *ngIf="goalModalStep() === 7 && !showAuthPrompt()" class="space-y-3">
+          <div class="rocket-section-badge">E – Engage with Exponential Effort</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            How consistent are you at showing up daily—even when motivation is low?
+          </label>
+          <div class="space-y-2">
+            <button *ngFor="let option of consistencyOptions" type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().dailyConsistency === option.value"
             [class.border-gray-200]="quizAnswers().dailyConsistency !== option.value"
             [class.border-red-500]="quizAnswers().dailyConsistency === option.value"
@@ -618,15 +618,15 @@
         </div>
       </div>
 
-      <!-- Step 8: T – Transform Time with Your Team -->
-      <div *ngIf="goalModalStep() === 8 && !showAuthPrompt()" class="space-y-4">
-        <div class="rocket-section-badge">T – Transform Time with Your Team</div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          Do you currently have an accountability partner, mentor, or supportive team helping you grow?
-        </label>
-        <div class="space-y-3">
-          <button type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
+        <!-- Step 8: T – Transform Time with Your Team -->
+        <div *ngIf="goalModalStep() === 8 && !showAuthPrompt()" class="space-y-3">
+          <div class="rocket-section-badge">T – Transform Time with Your Team</div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            Do you currently have an accountability partner, mentor, or supportive team helping you grow?
+          </label>
+          <div class="space-y-2">
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
             [class.selected]="quizAnswers().hasAccountabilitySupport === 'yes'"
             [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'yes'"
             [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'yes'"
@@ -634,74 +634,74 @@
             (click)="updateQuizAnswer('hasAccountabilitySupport', 'yes')">
             <span class="font-medium text-gray-900">Yes, I have support</span>
           </button>
-          <button type="button"
-            class="quiz-option-btn w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 text-left"
-            [class.selected]="quizAnswers().hasAccountabilitySupport === 'no'"
-            [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'no'"
-            [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'no'"
-            [class.bg-red-50]="quizAnswers().hasAccountabilitySupport === 'no'"
-            (click)="updateQuizAnswer('hasAccountabilitySupport', 'no')">
-            <span class="font-medium text-gray-900">No, I'm doing this solo</span>
-          </button>
+            <button type="button"
+              class="quiz-option-btn w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+              [class.selected]="quizAnswers().hasAccountabilitySupport === 'no'"
+              [class.border-gray-200]="quizAnswers().hasAccountabilitySupport !== 'no'"
+              [class.border-red-500]="quizAnswers().hasAccountabilitySupport === 'no'"
+              [class.bg-red-50]="quizAnswers().hasAccountabilitySupport === 'no'"
+              (click)="updateQuizAnswer('hasAccountabilitySupport', 'no')">
+              <span class="font-medium text-gray-900">No, I'm doing this solo</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Step 9: Additional Notes -->
-      <div *ngIf="goalModalStep() === 9 && !showAuthPrompt()" class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Anything else we should know?
-          </label>
-          <p class="text-xs text-gray-500 mb-3">
-            Share any additional context, challenges, or thoughts about your goal. (Optional)
-          </p>
-          <textarea
-            class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
-            rows="4"
-            placeholder="e.g., I've tried this before but struggled with..., I'm most motivated when..."
-            [ngModel]="quizAnswers().additionalNotes"
-            (ngModelChange)="updateQuizAnswer('additionalNotes', $event)"></textarea>
+        <!-- Step 9: Additional Notes -->
+        <div *ngIf="goalModalStep() === 9 && !showAuthPrompt()" class="space-y-3">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+              Anything else we should know?
+            </label>
+            <p class="text-xs text-gray-500 mb-2">
+              Share any additional context, challenges, or thoughts about your goal. (Optional)
+            </p>
+            <textarea
+              class="goal-input w-full rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm placeholder-gray-400 transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"
+              rows="3"
+              placeholder="e.g., I've tried this before but struggled with..., I'm most motivated when..."
+              [ngModel]="quizAnswers().additionalNotes"
+              (ngModelChange)="updateQuizAnswer('additionalNotes', $event)"></textarea>
+          </div>
         </div>
-      </div>
 
       <!-- Step 10: Photo Capture -->
-      <div *ngIf="goalModalStep() === 10 && !showAuthPrompt()" class="space-y-4">
-        <!-- Skip option - prominent at top -->
-        <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200 mb-2">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div *ngIf="goalModalStep() === 10 && !showAuthPrompt()" class="space-y-3">
+        <!-- Skip option - compact at top -->
+        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200 mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
               </svg>
             </div>
             <div>
-              <p class="font-semibold text-gray-700 text-sm">Want to skip this step?</p>
+              <p class="font-semibold text-gray-700 text-xs">Want to skip this step?</p>
               <p class="text-xs text-gray-500">We'll use a general visualization instead</p>
             </div>
           </div>
           <button type="button"
-            class="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 hover:border-gray-400 transition flex items-center gap-2"
+            class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium text-xs hover:bg-gray-100 hover:border-gray-400 transition flex items-center gap-1.5"
             (click)="skipPhoto()">
             Skip
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </button>
         </div>
 
         <div class="text-center">
-          <div class="photo-capture-icon mb-4">
-            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
-              <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="photo-capture-icon mb-3">
+            <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
           </div>
-          <label class="block text-lg font-bold text-gray-800 mb-2">
+          <label class="block text-base font-bold text-gray-800 mb-1">
             Add Your Photo to the Visualization
           </label>
-          <p class="text-sm text-gray-500 mb-6">
+          <p class="text-xs text-gray-500 mb-4">
             Take a quick selfie so we can personalize your Future Self visualization with your face. This makes the image feel more real and inspiring!
           </p>
         </div>
@@ -794,27 +794,37 @@
 
           <!-- Photo captured (preview) -->
           <div *ngIf="capturedPhoto()" class="photo-capture-preview">
-            <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-4 border-green-400 shadow-lg">
+            <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden border-4 border-green-400 shadow-md">
               <img [src]="capturedPhoto()" alt="Captured photo" class="w-full h-full object-cover" />
-              <div class="absolute top-3 right-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="absolute top-2 right-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
+              <!-- Loading overlay when using photo -->
+              <div *ngIf="isUsingPhoto()" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-xl">
+                <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-3"></div>
+                <p class="text-white font-medium text-sm">Processing your photo...</p>
+              </div>
             </div>
-            <div class="flex justify-center gap-4 mt-4">
+            <div class="flex justify-center gap-3 mt-3">
               <button type="button"
-                class="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold hover:opacity-90 transition flex items-center gap-2"
+                [disabled]="isUsingPhoto()"
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold hover:opacity-90 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="usePhoto()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg *ngIf="!isUsingPhoto()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                Use This Photo
+                <svg *ngIf="isUsingPhoto()" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ isUsingPhoto() ? 'Processing...' : 'Use This Photo' }}
               </button>
               <button type="button"
-                class="px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition flex items-center gap-2"
+                [disabled]="isUsingPhoto()"
+                class="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="retakePhoto()">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Retake
@@ -859,7 +869,7 @@
     </div>
 
     <!-- Modal Footer - Hidden on step 10 (photo capture has its own buttons) -->
-    <div class="goal-modal-footer px-8 py-6 flex justify-between items-center relative z-10" *ngIf="!showAuthPrompt() && goalModalStep() !== 10">
+    <div class="goal-modal-footer px-6 py-4 flex justify-between items-center relative z-10" *ngIf="!showAuthPrompt() && goalModalStep() !== 10">
       <button *ngIf="goalModalStep() > 1" type="button"
         class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition"
         (click)="goToPreviousStep()">

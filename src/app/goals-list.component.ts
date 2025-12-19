@@ -87,6 +87,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly isCameraLoading = signal(false);
   protected readonly cameraError = signal<string | null>(null);
   protected readonly capturedPhoto = signal<string | null>(null);
+  protected readonly isUsingPhoto = signal(false);
   private videoStream: MediaStream | null = null;
 
   // Quiz answers
@@ -555,6 +556,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected handleFinalStep(): void {
+    // Clear photo loading state
+    this.isUsingPhoto.set(false);
+    
     if (!this.isLoggedIn()) {
       // Show auth prompt within the modal
       this.showAuthPrompt.set(true);
@@ -683,9 +687,20 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.handleFinalStep();
   }
 
-  protected usePhoto(): void {
-    // Photo is already saved in quizAnswers, proceed to final step
-    this.handleFinalStep();
+  protected async usePhoto(): Promise<void> {
+    // Show loading state
+    this.isUsingPhoto.set(true);
+    
+    try {
+      // Small delay to show loading state (photo is already saved in quizAnswers)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Proceed to final step
+      this.handleFinalStep();
+    } finally {
+      // Keep loading state until handleFinalStep completes (it will show its own loading)
+      // The loading will be cleared when createGoalFromQuiz completes or auth prompt shows
+    }
   }
 
   protected async createGoalFromQuiz(): Promise<void> {
