@@ -556,10 +556,12 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected handleFinalStep(): void {
-    // Clear photo loading state
-    this.isUsingPhoto.set(false);
+    // Don't clear photo loading state here - keep it until goal creation completes
+    // This prevents multiple clicks and goal creation
     
     if (!this.isLoggedIn()) {
+      // Clear loading state if showing auth prompt
+      this.isUsingPhoto.set(false);
       // Show auth prompt within the modal
       this.showAuthPrompt.set(true);
     } else {
@@ -680,6 +682,11 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected skipPhoto(): void {
+    // Prevent multiple clicks - if already processing, do nothing
+    if (this.isUsingPhoto() || this.isCreatingGoal()) {
+      return;
+    }
+    
     this.stopCamera();
     this.capturedPhoto.set(null);
     this.updateQuizAnswer('userPhotoBase64', null);
@@ -688,6 +695,11 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected async usePhoto(): Promise<void> {
+    // Prevent multiple clicks - if already processing, do nothing
+    if (this.isUsingPhoto() || this.isCreatingGoal()) {
+      return;
+    }
+    
     // Show loading state
     this.isUsingPhoto.set(true);
     
@@ -697,10 +709,13 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       
       // Proceed to final step
       this.handleFinalStep();
-    } finally {
-      // Keep loading state until handleFinalStep completes (it will show its own loading)
-      // The loading will be cleared when createGoalFromQuiz completes or auth prompt shows
+    } catch (error) {
+      // Clear loading state on error
+      this.isUsingPhoto.set(false);
+      throw error;
     }
+    // Keep loading state until handleFinalStep completes (it will show its own loading)
+    // The loading will be cleared when createGoalFromQuiz completes or auth prompt shows
   }
 
   protected async createGoalFromQuiz(): Promise<void> {
@@ -806,11 +821,17 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       // Close modal and navigate to the new goal
       this.closeGoalModal();
       await this.loadGoals(); // Reload goals list
+      
+      // Clear loading states before navigation
+      this.isUsingPhoto.set(false);
+      this.isCreatingGoal.set(false);
+      
       this.router.navigate(['/rocketgoal', goalId]);
     } catch (error: any) {
       console.error('Failed to create goal:', error);
       this.goalCreationError.set(error?.message || 'Failed to create goal. Please try again.');
-    } finally {
+      // Clear loading states on error so user can try again
+      this.isUsingPhoto.set(false);
       this.isCreatingGoal.set(false);
     }
   }
