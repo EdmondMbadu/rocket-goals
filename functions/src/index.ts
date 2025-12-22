@@ -829,6 +829,12 @@ ${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ''}`;
 export const rocketGoalsAI = onCall({
     region: "us-central1",
     secrets: [geminiApiKey],
+    cors: [
+        "https://rocket-goals.web.app",
+        "https://rocket-goals.firebaseapp.com",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    ]
 }, async (request: any) => {
     const startTime = Date.now();
 
