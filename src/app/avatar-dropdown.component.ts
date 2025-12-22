@@ -19,6 +19,7 @@ export class AvatarDropdownComponent implements OnInit {
   showDropdown = signal(false);
   userGoals = signal<any[]>([]);
   loadingGoals = signal(false);
+  billingLoading = signal(false);
 
   ngOnInit() {
     // Load goals when component initializes if user is logged in
@@ -83,6 +84,50 @@ export class AvatarDropdownComponent implements OnInit {
   isAdmin(): boolean {
     const profile = this.authService.profile();
     return profile?.role === 'admin' || profile?.admin === true;
+  }
+
+  hasSubscription(): boolean {
+    const profile = this.authService.profile();
+    const status = profile?.subscriptionStatus;
+    return status === 'active' || status === 'canceling' || status === 'past_due';
+  }
+
+  async openBillingPortal() {
+    this.billingLoading.set(true);
+
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const createBillingPortalSession = functionsModule.httpsCallable(functions, 'createBillingPortalSession');
+
+      const result = await createBillingPortalSession({
+        returnUrl: window.location.href
+      });
+
+      const data = result.data as { url?: string };
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      console.error('Error opening billing portal:', err);
+      alert('Failed to open billing portal. Please try again.');
+    } finally {
+      this.billingLoading.set(false);
+      this.closeDropdown();
+    }
+  }
+
+  navigateToPricing() {
+    this.router.navigateByUrl('/pricing');
+    this.closeDropdown();
   }
 
   async handleLogout() {
