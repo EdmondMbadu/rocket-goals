@@ -41,6 +41,9 @@
       </div>
     </div>
     <div class="nav-right" *ngIf="isLoggedIn()">
+      <a routerLink="/pricing" class="upgrade-btn">
+        Upgrade
+      </a>
       <button type="button" class="ghost-btn icon-btn" (click)="toggleHistory()" aria-label="Toggle history">
         <svg *ngIf="showHistory()" viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor"
           stroke-width="2">

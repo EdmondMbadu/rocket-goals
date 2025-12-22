@@ -8,6 +8,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import sgMail = require("@sendgrid/mail");
 import { getToolRegistry, type AgentResponse, type SideEffect } from "./tools";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
+import * as crypto from "crypto";
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -16,6 +17,239 @@ admin.initializeApp();
 const geminiApiKey = defineSecret('GEMINI_API_KEY');
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const gaPropertyId = defineSecret('GA_PROPERTY_ID');
+const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
+
+const stripeSubscriptionEvents = new Set([
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+  'invoice.payment_succeeded',
+  'invoice.payment_failed',
+  'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.async_payment_failed'
+]);
+
+const toTimestamp = (unixSeconds?: number | null) => {
+  if (!unixSeconds) return null;
+  return admin.firestore.Timestamp.fromMillis(unixSeconds * 1000);
+};
+
+const parseStripeSignature = (header: string) => {
+  const parts = header.split(',').map((part) => part.trim());
+  const timestampPart = parts.find((part) => part.startsWith('t='));
+  const timestamp = timestampPart ? Number(timestampPart.slice(2)) : null;
+  const signatures = parts
+    .filter((part) => part.startsWith('v1='))
+    .map((part) => part.slice(3));
+  return { timestamp, signatures };
+};
+
+const timingSafeEqual = (a: string, b: string) => {
+  const aBuffer = Buffer.from(a, 'utf8');
+  const bBuffer = Buffer.from(b, 'utf8');
+  if (aBuffer.length !== bBuffer.length) return false;
+  return crypto.timingSafeEqual(aBuffer, bBuffer);
+};
+
+const verifyStripeSignature = (rawBody: Buffer, signatureHeader: string, secret: string) => {
+  const { timestamp, signatures } = parseStripeSignature(signatureHeader);
+  if (!timestamp || signatures.length === 0) {
+    return false;
+  }
+  const age = Math.abs(Date.now() / 1000 - timestamp);
+  if (age > 300) {
+    return false;
+  }
+  const payload = `${timestamp}.${rawBody.toString('utf8')}`;
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  return signatures.some((signature) => timingSafeEqual(signature, expected));
+};
+
+const findProfileByCustomerId = async (customerId: string) => {
+  const snapshot = await admin.firestore()
+    .collection('userProfiles')
+    .where('stripeCustomerId', '==', customerId)
+    .limit(1)
+    .get();
+  if (snapshot.empty) return null;
+  return snapshot.docs[0];
+};
+
+const findProfileByEmail = async (email: string) => {
+  const snapshot = await admin.firestore()
+    .collection('userProfiles')
+    .where('email', '==', email)
+    .limit(1)
+    .get();
+  if (snapshot.empty) return null;
+  return snapshot.docs[0];
+};
+
+const resolveProfileRef = async ({
+  customerId,
+  metadata,
+  clientReferenceId,
+  email
+}: {
+  customerId?: string | null;
+  metadata?: Record<string, string> | null;
+  clientReferenceId?: string | null;
+  email?: string | null;
+}) => {
+  const metadataUserId = metadata?.firebaseUserId || metadata?.userId || metadata?.uid;
+  if (metadataUserId) {
+    const docRef = admin.firestore().collection('userProfiles').doc(metadataUserId);
+    const snapshot = await docRef.get();
+    return snapshot.exists ? docRef : null;
+  }
+  if (clientReferenceId) {
+    const docRef = admin.firestore().collection('userProfiles').doc(clientReferenceId);
+    const snapshot = await docRef.get();
+    return snapshot.exists ? docRef : null;
+  }
+  if (customerId) {
+    const doc = await findProfileByCustomerId(customerId);
+    if (doc) return doc.ref;
+  }
+  if (email) {
+    const doc = await findProfileByEmail(email);
+    if (doc) return doc.ref;
+  }
+  return null;
+};
+
+export const stripeWebhookRocketGoals = functions.runWith({
+    secrets: [stripeWebhookSecret]
+}).https.onRequest(async (req, res) => {
+    if (req.method !== 'POST') {
+        res.status(405).send('Method Not Allowed');
+        return;
+    }
+
+    const signature = req.headers['stripe-signature'];
+    const secret = stripeWebhookSecret.value();
+    if (!secret) {
+        res.status(500).send('Stripe webhook secret not configured.');
+        return;
+    }
+    if (!signature || typeof signature !== 'string') {
+        res.status(400).send('Missing Stripe signature.');
+        return;
+    }
+
+    const rawBody = req.rawBody;
+    if (!rawBody) {
+        res.status(400).send('Missing raw body.');
+        return;
+    }
+
+    if (!verifyStripeSignature(Buffer.from(rawBody), signature, secret)) {
+        res.status(400).send('Invalid signature.');
+        return;
+    }
+
+    let event: any;
+    try {
+        event = JSON.parse(Buffer.from(rawBody).toString('utf8'));
+    } catch (error) {
+        console.error('Failed to parse Stripe webhook payload', error);
+        res.status(400).send('Invalid payload.');
+        return;
+    }
+
+    if (!stripeSubscriptionEvents.has(event.type)) {
+        res.status(200).send({ received: true });
+        return;
+    }
+
+    try {
+        switch (event.type) {
+            case 'checkout.session.completed':
+            case 'checkout.session.async_payment_succeeded':
+            case 'checkout.session.async_payment_failed': {
+                const session = event.data.object;
+                const customerId = session.customer as string | null;
+                const subscriptionId = session.subscription as string | null;
+                const profileRef = await resolveProfileRef({
+                    customerId,
+                    clientReferenceId: session.client_reference_id,
+                    metadata: session.metadata,
+                    email: session.customer_email
+                });
+                if (!profileRef) {
+                    console.warn('Stripe checkout session missing user profile match', {
+                        customerId,
+                        clientReferenceId: session.client_reference_id,
+                        email: session.customer_email
+                    });
+                    break;
+                }
+                await profileRef.set({
+                    stripeCustomerId: customerId || null,
+                    stripeSubscriptionId: subscriptionId || null,
+                    subscriptionStatus: session.payment_status === 'paid' ? 'active' : session.payment_status,
+                    subscriptionPaidAt: session.payment_status === 'paid' ? admin.firestore.FieldValue.serverTimestamp() : null
+                }, { merge: true });
+                break;
+            }
+            case 'customer.subscription.created':
+            case 'customer.subscription.updated':
+            case 'customer.subscription.deleted': {
+                const subscription = event.data.object;
+                const customerId = subscription.customer as string | null;
+                const profileRef = await resolveProfileRef({
+                    customerId,
+                    metadata: subscription.metadata
+                });
+                if (!profileRef) {
+                    console.warn('Stripe subscription missing user profile match', { customerId });
+                    break;
+                }
+                await profileRef.set({
+                    stripeCustomerId: customerId || null,
+                    stripeSubscriptionId: subscription.id,
+                    subscriptionStatus: subscription.status,
+                    subscriptionExpiresAt: toTimestamp(subscription.current_period_end)
+                }, { merge: true });
+                break;
+            }
+            case 'invoice.payment_succeeded':
+            case 'invoice.payment_failed': {
+                const invoice = event.data.object;
+                const customerId = invoice.customer as string | null;
+                const profileRef = await resolveProfileRef({
+                    customerId,
+                    metadata: invoice.metadata,
+                    email: invoice.customer_email
+                });
+                if (!profileRef) {
+                    console.warn('Stripe invoice missing user profile match', { customerId });
+                    break;
+                }
+                const line = invoice.lines?.data?.[0];
+                const periodEnd = line?.period?.end || invoice.period_end || null;
+                const paidAt = invoice.status_transitions?.paid_at || invoice.created || null;
+                await profileRef.set({
+                    stripeCustomerId: customerId || null,
+                    stripeSubscriptionId: invoice.subscription || null,
+                    subscriptionStatus: event.type === 'invoice.payment_succeeded' ? 'active' : (invoice.status || 'past_due'),
+                    subscriptionPaidAt: event.type === 'invoice.payment_succeeded' ? toTimestamp(paidAt) : null,
+                    subscriptionExpiresAt: toTimestamp(periodEnd)
+                }, { merge: true });
+                break;
+            }
+            default:
+                break;
+        }
+    } catch (error) {
+        console.error('Failed to process Stripe webhook', error);
+        res.status(500).send('Webhook processing error.');
+        return;
+    }
+
+    res.status(200).send({ received: true });
+});
 
 /**
  * Cloud Function that processes AI prompts using Google AI (Gemini)

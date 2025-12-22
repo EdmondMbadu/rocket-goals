@@ -69,6 +69,14 @@
         </a>
       </div>
       <div class="flex items-center gap-3 flex-none">
+        <a routerLink="/pricing"
+          class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-600 to-black text-white text-sm font-bold shadow-lg shadow-red-600/20 hover:shadow-red-600/40 hover:-translate-y-0.5 transition-all">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path
+              d="M11.3 1.046a1 1 0 00-1.238.66L7.43 9H3a1 1 0 00-.894 1.447l5 9a1 1 0 001.8-.12L11.58 11H16a1 1 0 00.894-1.447l-5-9a1 1 0 00-.594-.507z" />
+          </svg>
+          Upgrade
+        </a>
         <button type="button" (click)="toggleDarkMode()" [attr.aria-pressed]="isDarkMode()"
           class="p-2.5 rounded-full border border-black/10 text-black/70 hover:bg-black/5 transition-colors dark:border-white/20 dark:text-white dark:hover:bg-white/10"
           title="Toggle appearance">
