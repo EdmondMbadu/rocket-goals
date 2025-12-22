@@ -37,6 +37,10 @@ export class RocketQuiz {
   name = signal('');
   password = signal('');
   authMode = signal<'signup' | 'login'>('signup');
+  verificationSent = signal(false);
+  verificationEmail = signal('');
+  verificationNotice = signal<string | null>(null);
+  verificationSending = signal(false);
   @HostBinding('class.light-mode') get lightMode() {
     return !this.theme.isDarkMode();
   }
@@ -280,12 +284,20 @@ export class RocketQuiz {
           email: this.email().trim(),
           password: this.password()
         });
+        await this.authService.sendEmailVerification();
+        this.verificationEmail.set(this.email().trim());
+        this.verificationSent.set(true);
+        this.verificationNotice.set('Verification email sent. Confirm it to access your report.');
+        return;
       } else {
         await this.authService.signInWithEmail(this.email().trim(), this.password());
       }
       await this.router.navigateByUrl('/ai');
     } catch (error) {
       console.error('Quiz auth error:', error);
+      if (this.authMode() === 'signup' && !this.verificationSent()) {
+        this.verificationNotice.set(this.authService.authError() || 'Unable to send verification email right now.');
+      }
     }
   }
 
@@ -298,6 +310,9 @@ export class RocketQuiz {
     this.name.set('');
     this.password.set('');
     this.authMode.set('signup');
+    this.verificationSent.set(false);
+    this.verificationEmail.set('');
+    this.verificationNotice.set(null);
   }
 
   private extractNames(fullName: string) {
@@ -308,5 +323,19 @@ export class RocketQuiz {
     const firstName = parts[0];
     const lastName = parts.slice(1).join(' ') || 'Member';
     return { firstName, lastName };
+  }
+
+  async resendVerificationEmail() {
+    if (this.verificationSending()) return;
+    this.verificationNotice.set(null);
+    this.verificationSending.set(true);
+    try {
+      await this.authService.sendEmailVerification();
+      this.verificationNotice.set(`Verification email re-sent to ${this.verificationEmail()}.`);
+    } catch (error) {
+      this.verificationNotice.set('Unable to resend the verification email right now.');
+    } finally {
+      this.verificationSending.set(false);
+    }
   }
 }

@@ -186,7 +186,22 @@
           and access to the FREE ROCKET Goals Launch System.
         </p>
 
-        <div class="results-auth-toggle" role="tablist">
+        <div class="verification-panel" *ngIf="verificationSent()">
+          <h3>Check your inbox to verify</h3>
+          <p>
+            We sent a verification link to <strong>{{ verificationEmail() }}</strong>.
+            Confirm it to unlock your report.
+          </p>
+          <p class="verification-note" *ngIf="verificationNotice()">{{ verificationNotice() }}</p>
+          <div class="verification-actions">
+            <button type="button" class="submit-btn secondary" (click)="resendVerificationEmail()" [disabled]="verificationSending()">
+              <span>{{ verificationSending() ? 'Sending...' : 'Resend Email' }}</span>
+            </button>
+            <a routerLink="/login" class="submit-btn ghost">Go to Login</a>
+          </div>
+        </div>
+
+        <div class="results-auth-toggle" role="tablist" *ngIf="!verificationSent()">
           <button type="button"
                   class="auth-toggle-btn"
                   [class.active]="authMode() === 'signup'"
@@ -201,7 +216,7 @@
           </button>
         </div>
 
-        <div class="results-form">
+        <div class="results-form" *ngIf="!verificationSent()">
           <div class="form-group" *ngIf="authMode() === 'signup'">
             <label for="name">Full Name</label>
             <input type="text" id="name" [(ngModel)]="name" placeholder="Your name" class="form-input" />
@@ -225,6 +240,9 @@
 
           <p class="form-error" *ngIf="authService.authError()">
             {{ authService.authError() }}
+          </p>
+          <p class="form-error" *ngIf="!verificationSent() && verificationNotice()">
+            {{ verificationNotice() }}
           </p>
 
           <button class="submit-btn"

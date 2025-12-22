@@ -29,6 +29,14 @@ export class LoginComponent {
   readonly resetSuccess = signal<string | null>(null);
   readonly resetError = signal<string | null>(null);
   readonly sendingReset = signal(false);
+  readonly verificationNotice = signal<string | null>(null);
+
+  ngOnInit() {
+    const verified = this.route.snapshot.queryParamMap.get('verified');
+    if (verified === '1' || verified === 'true') {
+      this.verificationNotice.set('Email verified! Log in to continue your mission.');
+    }
+  }
 
   async handleSubmit() {
     if (this.loginForm.invalid || this.submitting()) {

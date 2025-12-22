@@ -27,6 +27,10 @@ export class SignupComponent {
 
   readonly submitting = computed(() => this.authService.authLoading());
   readonly serverError = signal<string | null>(null);
+  readonly verificationSent = signal(false);
+  readonly verificationEmail = signal('');
+  readonly verificationNotice = signal<string | null>(null);
+  readonly verificationSending = signal(false);
 
   async handleSubmit() {
     if (this.signupForm.invalid || this.submitting()) {
@@ -34,12 +38,16 @@ export class SignupComponent {
       return;
     }
     this.serverError.set(null);
+    this.verificationNotice.set(null);
     try {
       const { firstName, lastName, email, password } = this.signupForm.getRawValue();
       await this.authService.signUpWithEmail({ firstName, lastName, email, password });
-      await this.router.navigateByUrl('/ai');
+      await this.authService.sendEmailVerification();
+      this.verificationEmail.set(email);
+      this.verificationSent.set(true);
+      this.verificationNotice.set('Verification email sent. Check your inbox and confirm to continue.');
     } catch {
-      this.serverError.set(this.authService.authError());
+      this.serverError.set(this.authService.authError() || 'Unable to create your account right now.');
     }
   }
 
@@ -51,6 +59,21 @@ export class SignupComponent {
       await this.router.navigateByUrl('/ai');
     } catch {
       this.serverError.set(this.authService.authError());
+    }
+  }
+
+  async resendVerificationEmail() {
+    if (this.verificationSending()) return;
+    this.serverError.set(null);
+    this.verificationNotice.set(null);
+    this.verificationSending.set(true);
+    try {
+      await this.authService.sendEmailVerification();
+      this.verificationNotice.set(`Verification email re-sent to ${this.verificationEmail()}.`);
+    } catch {
+      this.serverError.set('Unable to resend the verification email right now.');
+    } finally {
+      this.verificationSending.set(false);
     }
   }
 

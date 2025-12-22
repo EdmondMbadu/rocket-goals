@@ -29,10 +29,15 @@ export class AuthService {
     this.authLoading.set(true);
     this.authError.set(null);
     try {
-      const credential = await this.executeWithAuth(async (authModule, auth) => {
-        const { signInWithEmailAndPassword } = authModule;
-        return await signInWithEmailAndPassword(auth, email, password);
-      });
+      const { auth } = await this.ensureFirebase();
+      const authModule = await import('firebase/auth');
+      const credential = await authModule.signInWithEmailAndPassword(auth, email, password);
+      if (!credential.user.emailVerified) {
+        await authModule.signOut(auth);
+        const error = new Error('Please verify your email to log in.');
+        (error as any).code = 'auth/email-not-verified';
+        throw error;
+      }
       await this.handleProfileAfterAuth(credential);
       return this.profile();
     } catch (error: any) {
@@ -116,12 +121,14 @@ export class AuthService {
   }
 
   async sendEmailVerification() {
-    const { auth } = await this.ensureFirebase();
+    const { auth, app } = await this.ensureFirebase();
     if (!auth.currentUser) {
       throw new Error('No authenticated user to verify.');
     }
-    const { sendEmailVerification } = await import('firebase/auth');
-    await sendEmailVerification(auth.currentUser);
+    const functionsModule = await import('firebase/functions');
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const sendVerification = functionsModule.httpsCallable(functions, 'sendVerificationEmail');
+    await sendVerification({});
   }
 
   async getCurrentUser(): Promise<User | null> {
@@ -337,6 +344,9 @@ export class AuthService {
     }
     if (code.includes('auth/popup-closed-by-user')) {
       return 'The Google sign-in popup was closed before finishing.';
+    }
+    if (code.includes('auth/email-not-verified')) {
+      return 'Please verify your email to log in.';
     }
     return error.message || 'Something went wrong. Please try again.';
   }

@@ -1072,6 +1072,119 @@ export const sendTestEmail = functions.runWith({
 });
 
 /**
+ * Cloud Function to send custom verification emails via SendGrid
+ * Accessible by authenticated users only
+ */
+export const sendVerificationEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to request a verification email.'
+        );
+    }
+
+    try {
+        const user = await admin.auth().getUser(context.auth.uid);
+        const email = user.email;
+        if (!email) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'No email found for this account.'
+            );
+        }
+
+        if (user.emailVerified) {
+            return { success: true, alreadyVerified: true };
+        }
+
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set.');
+        }
+        sgMail.setApiKey(apiKey);
+
+        const actionCodeSettings = {
+            url: 'https://rocket-goals.web.app/login?verified=1',
+            handleCodeInApp: false
+        };
+
+        const verificationLink = await admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
+        const displayName = user.displayName?.trim() || 'Rocketeer';
+
+        const msg = {
+            to: email,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: 'Verify your Rocket Goals account',
+            text: `Hi ${displayName},\n\nWelcome to Rocket Goals! Please verify your email address to activate your mission control dashboard.\n\nVerify your email: ${verificationLink}\n\nIf you did not create this account, you can safely ignore this email.\n\nTo your success,\nThe Rocket Goals Team`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 36px 30px; border-radius: 18px 18px 0 0; text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">🚀</div>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">Verify Your Mission Control Email</h1>
+                        <p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
+                            Rocket Goals
+                        </p>
+                    </div>
+
+                    <div style="background: #ffffff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px;">
+                        <p style="color: #111827; font-size: 16px; line-height: 1.6; margin: 0 0 18px;">
+                            Hi <strong>${displayName}</strong>,
+                        </p>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                            Welcome aboard. Confirm your email address to activate your Rocket Goals account and unlock your mission dashboard.
+                        </p>
+
+                        <div style="text-align: center; margin: 24px 0;">
+                            <a href="${verificationLink}"
+                               style="background: #111827; color: #ffffff; text-decoration: none; padding: 14px 26px; border-radius: 12px; font-weight: 700; display: inline-block;">
+                                Verify My Email
+                            </a>
+                        </div>
+
+                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 18px;">
+                            If the button does not work, copy and paste this link into your browser:
+                        </p>
+                        <p style="color: #111827; font-size: 13px; word-break: break-all; margin: 0 0 24px;">
+                            ${verificationLink}
+                        </p>
+
+                        <p style="color: #9ca3af; font-size: 13px; margin: 0;">
+                            If you did not create this account, you can safely ignore this email.
+                        </p>
+                    </div>
+                </div>
+            `,
+        };
+
+        await sgMail.send(msg);
+
+        console.log(`✅ Verification email sent successfully to ${email}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error('❌ Error sending verification email:', error);
+
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send verification email: ${error.message}`
+        );
+    }
+});
+
+/**
  * Cloud Function to send email notification when a goal is created from AI chat
  * Accessible by authenticated users only
  */
