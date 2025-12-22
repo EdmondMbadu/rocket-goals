@@ -17,7 +17,7 @@ admin.initializeApp();
 const geminiApiKey = defineSecret('GEMINI_API_KEY');
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const gaPropertyId = defineSecret('GA_PROPERTY_ID');
-const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
+const stripeWebhookSecretGoals = defineSecret('STRIPE_WEBHOOK_SECRET_GOALS');
 
 const stripeSubscriptionEvents = new Set([
   'customer.subscription.created',
@@ -120,7 +120,7 @@ const resolveProfileRef = async ({
 };
 
 export const stripeWebhookRocketGoals = functions.runWith({
-    secrets: [stripeWebhookSecret]
+    secrets: [stripeWebhookSecretGoals]
 }).https.onRequest(async (req, res) => {
     if (req.method !== 'POST') {
         res.status(405).send('Method Not Allowed');
@@ -128,7 +128,7 @@ export const stripeWebhookRocketGoals = functions.runWith({
     }
 
     const signature = req.headers['stripe-signature'];
-    const secret = stripeWebhookSecret.value();
+    const secret = stripeWebhookSecretGoals.value();
     if (!secret) {
         res.status(500).send('Stripe webhook secret not configured.');
         return;
