@@ -214,6 +214,19 @@ export class AuthService {
     return mergedProfile;
   }
 
+  async refreshProfile(): Promise<UserProfile | null> {
+    const currentProfile = this.profile();
+    if (!currentProfile) {
+      return null;
+    }
+    const updatedProfile = await this.fetchUserProfile(currentProfile.userId);
+    if (updatedProfile) {
+      this.profile.set(updatedProfile);
+      return updatedProfile;
+    }
+    return currentProfile;
+  }
+
   private async ensureFirebase(): Promise<FirebaseHandles> {
     if (!this.firebaseHandles) {
       this.firebaseHandles = (async () => {

@@ -200,6 +200,65 @@
 
     <div class="card glass">
       <div class="card-head">
+        <h3>Subscription</h3>
+        @if (hasActiveSubscription()) {
+        <button class="ghost sm" (click)="openBillingPortal()" [disabled]="subscriptionLoading()">
+          {{ subscriptionLoading() ? 'Loading...' : 'Manage Billing' }}
+        </button>
+        }
+      </div>
+      @if (subscriptionError()) {
+      <div class="alert error">{{ subscriptionError() }}</div>
+      }
+      <div class="settings">
+        <div class="setting-row">
+          <div>
+            <p class="name">Status</p>
+            <p class="muted tiny" [class.text-green-500]="getSubscriptionStatus() === 'active'"
+               [class.text-yellow-500]="getSubscriptionStatus() === 'canceling'"
+               [class.text-red-500]="getSubscriptionStatus() === 'past_due' || getSubscriptionStatus() === 'canceled'">
+              {{ getSubscriptionStatusDisplay() }}
+            </p>
+          </div>
+          @if (getSubscriptionStatus() === 'none' || getSubscriptionStatus() === 'canceled') {
+          <button class="solid xs" (click)="router.navigateByUrl('/pricing')">Subscribe</button>
+          }
+        </div>
+        @if (getSubscriptionExpiresAt() && hasActiveSubscription()) {
+        <div class="setting-row">
+          <div>
+            <p class="name">{{ getSubscriptionStatus() === 'canceling' ? 'Access Until' : 'Renews On' }}</p>
+            <p class="muted tiny">{{ getSubscriptionExpiresAt() }}</p>
+          </div>
+        </div>
+        }
+        @if (getSubscriptionStatus() === 'active') {
+        <div class="setting-row">
+          <div>
+            <p class="name">Cancel Subscription</p>
+            <p class="muted tiny">Cancel at the end of your billing period</p>
+          </div>
+          <button class="danger xs" (click)="cancelSubscription()" [disabled]="subscriptionLoading()">
+            {{ subscriptionLoading() ? 'Processing...' : 'Cancel' }}
+          </button>
+        </div>
+        }
+        @if (getSubscriptionStatus() === 'canceling') {
+        <div class="setting-row">
+          <div>
+            <p class="name">Reactivate Subscription</p>
+            <p class="muted tiny">Continue your subscription</p>
+          </div>
+          <button class="solid xs" (click)="reactivateSubscription()" [disabled]="subscriptionLoading()">
+            {{ subscriptionLoading() ? 'Processing...' : 'Reactivate' }}
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-head">
         <h3>Account</h3>
       </div>
       <div class="settings">

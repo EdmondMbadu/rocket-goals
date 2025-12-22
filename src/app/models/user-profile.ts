@@ -21,6 +21,7 @@ export interface UserProfile {
   subscriptionStatus?: string;
   subscriptionPaidAt?: unknown;
   subscriptionExpiresAt?: unknown;
+  subscriptionCancelAt?: unknown;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   lastSignInAt?: unknown;

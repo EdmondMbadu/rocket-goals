@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { ThemeService } from './theme.service';
 import { AuthService } from './auth.service';
+import { stripePrices } from '../../environments/environment';
 
 @Component({
   selector: 'app-pricing-page',
@@ -120,7 +121,7 @@ import { AuthService } from './auth.service';
                   <li><span></span>Weekly PDF + bottleneck nudges</li>
                   <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
                 </ul>
-                <button (click)="selectPlan('price_moonshot', 'Moonshot')" [disabled]="loading()" class="btn-accent">
+                <button (click)="selectPlan(stripePrices.moonshot)" [disabled]="loading()" class="btn-accent">
                   {{ loading() ? 'Processing...' : 'Start Moonshot' }}
                 </button>
               </div>
@@ -142,7 +143,7 @@ import { AuthService } from './auth.service';
                   <li><span></span>Personality-coached, predictive nudges</li>
                   <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
                 </ul>
-                <button (click)="selectPlan('price_interplanetary', 'Interplanetary')" [disabled]="loading()" class="btn-primary">
+                <button (click)="selectPlan(stripePrices.interplanetary)" [disabled]="loading()" class="btn-primary">
                   {{ loading() ? 'Processing...' : 'Upgrade to Interplanetary' }}
                 </button>
               </div>
@@ -356,12 +357,13 @@ export class PricingPageComponent {
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly stripePrices = stripePrices;
 
   protected toggleDarkMode() {
     this.theme.toggleDarkMode();
   }
 
-  async selectPlan(priceId: string, planName: string) {
+  async selectPlan(priceId: string) {
     const profile = this.authService.profile();
 
     // Check if user is logged in

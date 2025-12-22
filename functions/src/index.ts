@@ -1934,6 +1934,243 @@ export const createCheckoutSession = functions.runWith({
     }
 });
 
+// Create a Stripe Billing Portal session for subscription management
+export const createBillingPortalSession = functions.runWith({
+    secrets: [stripeSecretKey]
+}).https.onCall(async (data: { returnUrl?: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to manage your subscription.'
+        );
+    }
+
+    const returnUrl = data.returnUrl || 'https://rocket-goals.web.app/profile';
+
+    try {
+        const stripeKey = stripeSecretKey.value();
+        if (!stripeKey) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'Stripe API key is not configured'
+            );
+        }
+
+        const stripe = require('stripe')(stripeKey);
+
+        // Get user profile to find Stripe customer ID
+        const userId = context.auth.uid;
+        const userDoc = await admin.firestore()
+            .collection('userProfiles')
+            .doc(userId)
+            .get();
+
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                'User profile not found'
+            );
+        }
+
+        const userData = userDoc.data();
+        const customerId = userData?.stripeCustomerId;
+
+        if (!customerId) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'No active subscription found. Please subscribe first.'
+            );
+        }
+
+        // Create Billing Portal session
+        const session = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: returnUrl,
+        });
+
+        console.log(`✅ Billing portal session created for user ${userId}`);
+
+        return {
+            url: session.url
+        };
+    } catch (error: any) {
+        console.error("❌ Error creating billing portal session:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            error?.message || 'Failed to create billing portal session'
+        );
+    }
+});
+
+// Cancel a subscription
+export const cancelSubscription = functions.runWith({
+    secrets: [stripeSecretKey]
+}).https.onCall(async (data: { immediately?: boolean }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to cancel your subscription.'
+        );
+    }
+
+    const cancelImmediately = data.immediately ?? false;
+
+    try {
+        const stripeKey = stripeSecretKey.value();
+        if (!stripeKey) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'Stripe API key is not configured'
+            );
+        }
+
+        const stripe = require('stripe')(stripeKey);
+
+        // Get user profile to find subscription ID
+        const userId = context.auth.uid;
+        const userDoc = await admin.firestore()
+            .collection('userProfiles')
+            .doc(userId)
+            .get();
+
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                'User profile not found'
+            );
+        }
+
+        const userData = userDoc.data();
+        const subscriptionId = userData?.stripeSubscriptionId;
+
+        if (!subscriptionId) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'No active subscription found.'
+            );
+        }
+
+        let subscription;
+        if (cancelImmediately) {
+            // Cancel immediately
+            subscription = await stripe.subscriptions.cancel(subscriptionId);
+        } else {
+            // Cancel at end of billing period
+            subscription = await stripe.subscriptions.update(subscriptionId, {
+                cancel_at_period_end: true
+            });
+        }
+
+        // Update user profile
+        await admin.firestore()
+            .collection('userProfiles')
+            .doc(userId)
+            .update({
+                subscriptionStatus: cancelImmediately ? 'canceled' : 'canceling',
+                subscriptionCancelAt: cancelImmediately ? null : toTimestamp(subscription.cancel_at)
+            });
+
+        console.log(`✅ Subscription ${cancelImmediately ? 'canceled' : 'scheduled for cancellation'} for user ${userId}`);
+
+        return {
+            status: subscription.status,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            cancelAt: subscription.cancel_at,
+            currentPeriodEnd: subscription.current_period_end
+        };
+    } catch (error: any) {
+        console.error("❌ Error canceling subscription:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            error?.message || 'Failed to cancel subscription'
+        );
+    }
+});
+
+// Reactivate a subscription that was scheduled for cancellation
+export const reactivateSubscription = functions.runWith({
+    secrets: [stripeSecretKey]
+}).https.onCall(async (_data, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to reactivate your subscription.'
+        );
+    }
+
+    try {
+        const stripeKey = stripeSecretKey.value();
+        if (!stripeKey) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'Stripe API key is not configured'
+            );
+        }
+
+        const stripe = require('stripe')(stripeKey);
+
+        // Get user profile to find subscription ID
+        const userId = context.auth.uid;
+        const userDoc = await admin.firestore()
+            .collection('userProfiles')
+            .doc(userId)
+            .get();
+
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                'User profile not found'
+            );
+        }
+
+        const userData = userDoc.data();
+        const subscriptionId = userData?.stripeSubscriptionId;
+
+        if (!subscriptionId) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'No subscription found.'
+            );
+        }
+
+        // Reactivate by removing cancel_at_period_end
+        const subscription = await stripe.subscriptions.update(subscriptionId, {
+            cancel_at_period_end: false
+        });
+
+        // Update user profile
+        await admin.firestore()
+            .collection('userProfiles')
+            .doc(userId)
+            .update({
+                subscriptionStatus: 'active',
+                subscriptionCancelAt: null
+            });
+
+        console.log(`✅ Subscription reactivated for user ${userId}`);
+
+        return {
+            status: subscription.status,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end
+        };
+    } catch (error: any) {
+        console.error("❌ Error reactivating subscription:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            error?.message || 'Failed to reactivate subscription'
+        );
+    }
+});
+
 // Callable: return auth metadata (last sign-in, creation time) for given UIDs
 export const getAuthMetadata = onCall({}, async (request) => {
     if (!request.auth) {

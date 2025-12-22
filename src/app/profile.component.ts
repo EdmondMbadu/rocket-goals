@@ -43,6 +43,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   editingGoalId = signal<string | null>(null);
   editingGoalTitle = signal<string>('');
 
+  // Subscription management
+  subscriptionLoading = signal(false);
+  subscriptionError = signal<string | null>(null);
+
   async ngOnInit() {
     // Wait a bit for auth to initialize
     let profile = this.authService.profile();
@@ -471,6 +475,157 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (this.profileImagePreview() === img.src) {
         this.profileImagePreview.set(null);
       }
+    }
+  }
+
+  // Subscription management methods
+  getSubscriptionStatus(): string {
+    const profile = this.profile();
+    if (!profile?.subscriptionStatus) return 'none';
+    return profile.subscriptionStatus;
+  }
+
+  getSubscriptionStatusDisplay(): string {
+    const status = this.getSubscriptionStatus();
+    switch (status) {
+      case 'active': return 'Active';
+      case 'canceling': return 'Canceling at period end';
+      case 'canceled': return 'Canceled';
+      case 'past_due': return 'Past Due';
+      case 'none': return 'No subscription';
+      default: return status;
+    }
+  }
+
+  getSubscriptionExpiresAt(): string {
+    const profile = this.profile();
+    if (!profile?.subscriptionExpiresAt) return '';
+    try {
+      const date = profile.subscriptionExpiresAt as any;
+      if (date && typeof date.toDate === 'function') {
+        return date.toDate().toLocaleDateString();
+      }
+      if (typeof date === 'string' || typeof date === 'number') {
+        return new Date(date).toLocaleDateString();
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  }
+
+  hasActiveSubscription(): boolean {
+    const status = this.getSubscriptionStatus();
+    return status === 'active' || status === 'canceling';
+  }
+
+  async openBillingPortal() {
+    this.subscriptionLoading.set(true);
+    this.subscriptionError.set(null);
+
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const createBillingPortalSession = functionsModule.httpsCallable(functions, 'createBillingPortalSession');
+
+      const result = await createBillingPortalSession({
+        returnUrl: window.location.origin + '/profile'
+      });
+
+      const data = result.data as { url?: string };
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No billing portal URL returned');
+      }
+    } catch (err: any) {
+      console.error('Error opening billing portal:', err);
+      this.subscriptionError.set(err?.message || 'Failed to open billing portal. Please try again.');
+      setTimeout(() => this.subscriptionError.set(null), 5000);
+    } finally {
+      this.subscriptionLoading.set(false);
+    }
+  }
+
+  async cancelSubscription() {
+    if (!confirm('Are you sure you want to cancel your subscription? You will still have access until the end of your billing period.')) {
+      return;
+    }
+
+    this.subscriptionLoading.set(true);
+    this.subscriptionError.set(null);
+
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const cancelSub = functionsModule.httpsCallable(functions, 'cancelSubscription');
+
+      await cancelSub({ immediately: false });
+
+      // Refresh profile to get updated status
+      const updatedProfile = await this.authService.refreshProfile();
+      if (updatedProfile) {
+        this.profile.set(updatedProfile);
+      }
+
+      this.success.set('Your subscription has been scheduled for cancellation. You will have access until the end of your billing period.');
+      setTimeout(() => this.success.set(null), 8000);
+    } catch (err: any) {
+      console.error('Error canceling subscription:', err);
+      this.subscriptionError.set(err?.message || 'Failed to cancel subscription. Please try again.');
+      setTimeout(() => this.subscriptionError.set(null), 5000);
+    } finally {
+      this.subscriptionLoading.set(false);
+    }
+  }
+
+  async reactivateSubscription() {
+    this.subscriptionLoading.set(true);
+    this.subscriptionError.set(null);
+
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const reactivateSub = functionsModule.httpsCallable(functions, 'reactivateSubscription');
+
+      await reactivateSub({});
+
+      // Refresh profile to get updated status
+      const updatedProfile = await this.authService.refreshProfile();
+      if (updatedProfile) {
+        this.profile.set(updatedProfile);
+      }
+
+      this.success.set('Your subscription has been reactivated!');
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: any) {
+      console.error('Error reactivating subscription:', err);
+      this.subscriptionError.set(err?.message || 'Failed to reactivate subscription. Please try again.');
+      setTimeout(() => this.subscriptionError.set(null), 5000);
+    } finally {
+      this.subscriptionLoading.set(false);
     }
   }
 }
