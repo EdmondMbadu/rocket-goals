@@ -82,7 +82,7 @@ import { stripePrices } from '../../environments/environment';
             <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px] dark:bg-white/10"></div>
           </div>
 
-          <div class="container mx-auto px-6 py-16 relative z-10 space-y-10 text-center">
+          <div class="container mx-auto px-6 py-4 relative z-10 space-y-4 text-center">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 dark:bg-white/5 dark:border-white/10">
               <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
               <span class="text-xs font-bold text-gray-600 tracking-wider uppercase dark:text-slate-300">Pricing</span>
@@ -115,6 +115,37 @@ import { stripePrices } from '../../environments/environment';
                 {{ error() }}
               </div>
             }
+            <div class="max-w-2xl mx-auto mb-10 p-4 border border-gray-200 rounded-xl bg-white/80 dark:bg-slate-900/60 dark:border-white/10">
+              <label class="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-2" for="promo-code-input">
+                Have a promotion code?
+              </label>
+              <div class="flex flex-col md:flex-row gap-3">
+                <input
+                  id="promo-code-input"
+                  type="text"
+                  class="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-sm font-semibold tracking-wide uppercase bg-white text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-slate-950 dark:border-white/10 dark:text-white"
+                  placeholder="Enter code (e.g. NY2026MOONSHOT)"
+                  [value]="promoCode()"
+                  (input)="updatePromoCode($any($event.target).value)"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button type="button" class="btn-accent md:w-40" (click)="applyPromoCode()" [disabled]="!promoCode()">
+                  Apply
+                </button>
+                <button type="button" class="btn-outline md:w-40" (click)="clearPromoCode()" [disabled]="!promoCode()">
+                  Clear
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-2 dark:text-slate-400">
+                Promo codes are plan-specific and apply to your first month only.
+              </p>
+              @if (promoNotice()) {
+                <p class="text-xs text-green-600 mt-2 font-semibold dark:text-green-400">
+                  {{ promoNotice() }}
+                </p>
+              }
+            </div>
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <!-- Moonshot -->
               <div class="pricing-card relative"
@@ -413,6 +444,8 @@ export class PricingPageComponent {
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  readonly promoCode = signal('');
+  readonly promoNotice = signal<string | null>(null);
   protected readonly stripePrices = stripePrices;
 
   // Plan hierarchy for upgrade logic
@@ -421,9 +454,55 @@ export class PricingPageComponent {
     'interplanetary': 2,
     'galactic': 3
   };
+  private readonly promoCodePlanMap: Record<string, string> = {
+    'NY2026MOONSHOT': 'moonshot',
+    'NY2026INTERPLANETARY': 'interplanetary',
+    'NY2026GALACTIC': 'galactic'
+  };
+  private readonly priceIdPlanMap: Record<string, string> = {
+    [stripePrices.moonshot]: 'moonshot',
+    [stripePrices.interplanetary]: 'interplanetary',
+    [stripePrices.galactic]: 'galactic'
+  };
 
   protected toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  updatePromoCode(value: string) {
+    const normalized = value.toUpperCase().replace(/\s+/g, '');
+    this.promoCode.set(normalized);
+    this.promoNotice.set(null);
+    if (this.error()) {
+      this.error.set(null);
+    }
+  }
+
+  applyPromoCode() {
+    const promoCode = this.promoCode().trim().toUpperCase();
+    if (!promoCode) {
+      this.error.set('Enter a promotion code to apply.');
+      this.promoNotice.set(null);
+      return;
+    }
+
+    const promoPlan = this.promoCodePlanMap[promoCode];
+    if (!promoPlan) {
+      this.error.set('Invalid promotion code.');
+      this.promoNotice.set(null);
+      return;
+    }
+
+    this.error.set(null);
+    this.promoNotice.set(`Promo code applied for ${this.getPlanName(promoPlan)}.`);
+  }
+
+  clearPromoCode() {
+    this.promoCode.set('');
+    this.promoNotice.set(null);
+    if (this.error()) {
+      this.error.set(null);
+    }
   }
 
   getCurrentPlan(): string | null {
@@ -498,11 +577,31 @@ export class PricingPageComponent {
 
   async selectPlan(priceId: string) {
     const profile = this.authService.profile();
+    const planKey = this.priceIdPlanMap[priceId];
+    const promoCode = this.promoCode().trim().toUpperCase();
+    const promoPlan = promoCode ? this.promoCodePlanMap[promoCode] : null;
 
     // Check if user is logged in
     if (!profile) {
       // Redirect to signup/login
       this.router.navigate(['/signup']);
+      return;
+    }
+
+    if (!planKey) {
+      this.error.set('Unknown plan selected. Please try again.');
+      return;
+    }
+
+    if (promoCode && !promoPlan) {
+      this.error.set('Invalid promotion code for the selected plan.');
+      this.promoNotice.set(null);
+      return;
+    }
+
+    if (promoPlan && promoPlan !== planKey) {
+      this.error.set(`Promotion code only applies to ${this.getPlanName(promoPlan)}.`);
+      this.promoNotice.set(null);
       return;
     }
 
@@ -525,6 +624,7 @@ export class PricingPageComponent {
       // Call the cloud function to create a Stripe checkout session
       const result = await createCheckoutSession({
         priceId,
+        promoCode: promoCode || undefined,
         successUrl: window.location.origin + '/goals?payment=success',
         cancelUrl: window.location.origin + '/pricing?payment=cancelled'
       });

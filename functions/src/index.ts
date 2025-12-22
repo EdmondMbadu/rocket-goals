@@ -1861,9 +1861,21 @@ The final image should make the viewer think:
  * Cloud Function to create a Stripe Checkout Session
  * This allows users to subscribe to a paid plan
  */
+const promoCodePlanMap: Record<string, string> = {
+    NY2026MOONSHOT: 'moonshot',
+    NY2026INTERPLANETARY: 'interplanetary',
+    NY2026GALACTIC: 'galactic'
+};
+
+const stripePriceByPlan: Record<string, string> = {
+    moonshot: 'price_1ShFV1G26VVCdyeuhiUrkRfy',
+    interplanetary: 'price_1ShFVtG26VVCdyeu1stsZFw5',
+    galactic: 'price_1ShFWGG26VVCdyeuANsvCWFA'
+};
+
 export const createCheckoutSession = functions.runWith({
     secrets: [stripeSecretKey]
-}).https.onCall(async (data: { priceId: string; successUrl?: string; cancelUrl?: string }, context: functions.https.CallableContext) => {
+}).https.onCall(async (data: { priceId: string; successUrl?: string; cancelUrl?: string; promoCode?: string }, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError(
             'unauthenticated',
@@ -1874,6 +1886,7 @@ export const createCheckoutSession = functions.runWith({
     const priceId = data.priceId;
     const successUrl = data.successUrl || 'https://rocket-goals.web.app/goals?payment=success';
     const cancelUrl = data.cancelUrl || 'https://rocket-goals.web.app/pricing?payment=cancelled';
+    const promoCode = data.promoCode?.trim().toUpperCase();
 
     if (!priceId) {
         throw new functions.https.HttpsError(
@@ -1933,6 +1946,47 @@ export const createCheckoutSession = functions.runWith({
                 });
         }
 
+        let promotionCodeId: string | undefined;
+        if (promoCode) {
+            const planKey = promoCodePlanMap[promoCode];
+            if (!planKey) {
+                throw new functions.https.HttpsError(
+                    'invalid-argument',
+                    'Invalid promotion code.'
+                );
+            }
+            const expectedPriceId = stripePriceByPlan[planKey];
+            if (expectedPriceId !== priceId) {
+                throw new functions.https.HttpsError(
+                    'invalid-argument',
+                    'Promotion code does not match the selected plan.'
+                );
+            }
+
+            const promoList = await stripe.promotionCodes.list({
+                code: promoCode,
+                active: true,
+                limit: 1
+            });
+
+            const promo = promoList.data[0];
+            if (!promo) {
+                throw new functions.https.HttpsError(
+                    'invalid-argument',
+                    'Promotion code is not active.'
+                );
+            }
+
+            if (promo.coupon?.duration !== 'once') {
+                throw new functions.https.HttpsError(
+                    'failed-precondition',
+                    'Promotion code is not configured for a one-month discount.'
+                );
+            }
+
+            promotionCodeId = promo.id;
+        }
+
         // Create Checkout Session
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
@@ -1944,6 +1998,7 @@ export const createCheckoutSession = functions.runWith({
                     quantity: 1,
                 },
             ],
+            discounts: promotionCodeId ? [{ promotion_code: promotionCodeId }] : undefined,
             success_url: successUrl,
             cancel_url: cancelUrl,
             metadata: {
