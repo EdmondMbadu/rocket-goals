@@ -41,6 +41,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   private shouldScrollToBottom = false;
   private scrollInterval: any = null;
+  private lastAutoPrompt: string | null = null;
 
   ngOnInit(): void {
     // If we have a goal context, load conversation for that goal
@@ -323,6 +324,24 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   startNewChat(): void {
     this.aiService.startNewSession();
+  }
+
+  triggerAutoLaunch(promptText: string): void {
+    const trimmedPrompt = promptText?.trim();
+    if (!trimmedPrompt) {
+      return;
+    }
+
+    if (this.lastAutoPrompt === trimmedPrompt) {
+      return;
+    }
+
+    this.lastAutoPrompt = trimmedPrompt;
+    this.inputMessage.set(trimmedPrompt);
+
+    setTimeout(() => {
+      void this.sendMessage();
+    }, 100);
   }
 
   sendQuickPrompt(prompt: string): void {

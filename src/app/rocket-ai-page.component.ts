@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, computed, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, ViewChild, computed, inject, signal, OnInit, OnDestroy, HostListener, AfterViewInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
+import { RocketGoalsLaunchService } from './rocket-goals-launch.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import { ThemeService } from './theme.service';
 import { VisualizationService } from './visualization.service';
@@ -33,10 +34,11 @@ export interface RocketQuizAnswers {
   templateUrl: './rocket-ai-page.component.html',
   styleUrl: './rocket-ai-page.component.css'
 })
-export class RocketAiPageComponent implements OnInit, OnDestroy {
+export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly aiService = inject(RocketGoalsAIService);
   protected readonly authService = inject(AuthService);
   protected readonly goalsService = inject(RocketGoalsService);
+  private readonly launchService = inject(RocketGoalsLaunchService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly theme = inject(ThemeService);
@@ -82,6 +84,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy {
   });
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
+  private pendingAutoPrompt: string | null = null;
 
   protected readonly starterPrompts = [
     'Give me a focused 7-day launch plan.',
@@ -117,13 +120,23 @@ export class RocketAiPageComponent implements OnInit, OnDestroy {
       await this.checkPendingGoalCreation();
     }
     
-    // Check for 7-day challenge query parameter
-    this.route.queryParams.subscribe(params => {
-      if (params['sevenDayChallenge'] === 'true') {
+    this.route.queryParamMap.subscribe(params => {
+      const hasSevenDayChallenge = params.get('sevenDayChallenge') === 'true';
+      const autoLaunchToken = params.get('autoLaunch');
+      const inlinePrompt = params.get('prompt');
+
+      if (hasSevenDayChallenge) {
         this.isSevenDayChallenge.set(true);
         // Open modal and pre-fill for 7-day challenge
         this.openGoalModalForSevenDayChallenge();
-        // Clear the query parameter from URL
+      }
+
+      const promptText = this.resolveAutoPrompt(autoLaunchToken, inlinePrompt);
+      if (promptText) {
+        this.queueAutoLaunch(promptText);
+      }
+
+      if (hasSevenDayChallenge || autoLaunchToken || inlinePrompt) {
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: {},
@@ -143,6 +156,13 @@ export class RocketAiPageComponent implements OnInit, OnDestroy {
   
   ngOnDestroy(): void {
     // Cleanup if needed
+  }
+
+  ngAfterViewInit(): void {
+    if (this.pendingAutoPrompt && this.aiPanel) {
+      this.aiPanel.triggerAutoLaunch(this.pendingAutoPrompt);
+      this.pendingAutoPrompt = null;
+    }
   }
   
   @HostListener('window:scroll')
@@ -179,6 +199,29 @@ export class RocketAiPageComponent implements OnInit, OnDestroy {
         }
       }
     }
+  }
+
+  private resolveAutoPrompt(token: string | null, inlinePrompt: string | null): string | null {
+    if (token) {
+      const storedPrompt = this.launchService.consumePrompt(token);
+      if (storedPrompt) {
+        return storedPrompt;
+      }
+    }
+
+    if (inlinePrompt && inlinePrompt.trim()) {
+      return inlinePrompt.trim();
+    }
+
+    return null;
+  }
+
+  private queueAutoLaunch(promptText: string): void {
+    if (this.aiPanel) {
+      this.aiPanel.triggerAutoLaunch(promptText);
+      return;
+    }
+    this.pendingAutoPrompt = promptText;
   }
   
   protected handleScrollIndicatorClick(): void {
