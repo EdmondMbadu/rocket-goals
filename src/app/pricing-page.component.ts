@@ -216,9 +216,11 @@ import { stripePrices } from '../../environments/environment';
                 @if (isCurrentPlan('galactic')) {
                 <button disabled class="btn-outline opacity-50 cursor-not-allowed">Current Plan</button>
                 } @else if (canUpgradeTo('galactic')) {
-                <a routerLink="/contact" class="btn-outline dark:border-white/30 dark:text-white dark:hover:bg-white dark:hover:text-black">Talk to Sales</a>
+                <button (click)="selectPlan(stripePrices.galactic)" [disabled]="loading()" class="btn-outline dark:border-white/30 dark:text-white dark:hover:bg-white dark:hover:text-black">
+                  {{ getButtonText('galactic') }}
+                </button>
                 } @else {
-                <a routerLink="/contact" class="btn-outline dark:border-white/30 dark:text-white dark:hover:bg-white dark:hover:text-black">Talk to Sales</a>
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Included in your plan</button>
                 }
               </div>
             </div>
