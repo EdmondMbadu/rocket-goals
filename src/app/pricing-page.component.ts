@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { ThemeService } from './theme.service';
+import { AuthService } from './auth.service';
 
 @Component({
   selector: 'app-pricing-page',
@@ -96,27 +97,12 @@ import { ThemeService } from './theme.service';
 
         <section class="pb-20">
           <div class="container mx-auto px-6">
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <!-- Launch -->
-              <div class="pricing-card dark:bg-slate-900/80 dark:border-white/10 dark:text-slate-100">
-                <div class="card-top">
-                  <span class="rocket-emoji rocket-size-1 rocket-green">🚀</span>
-                  <div class="badge bg-gray-900 text-white">Free</div>
-                </div>
-                <div class="space-y-2">
-                  <div class="title dark:text-white">1. Launch Mode</div>
-                  <div class="price dark:text-white">Free</div>
-                  <div class="sub dark:text-slate-400">Activate momentum</div>
-                  <p class="desc dark:text-slate-300">Early wins and streaks to feel momentum fast.</p>
-                </div>
-                <ul class="features dark:text-slate-200">
-                  <li><span></span>Daily alignment + micro-wins</li>
-                  <li><span></span>Mood slider + weekly reset</li>
-                  <li><span></span>Starter dashboard, streaks, mini Blast</li>
-                </ul>
-                <a routerLink="/signup" class="btn-primary">Start Free</a>
+            @if (error()) {
+              <div class="max-w-2xl mx-auto mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200">
+                {{ error() }}
               </div>
-
+            }
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <!-- Moonshot -->
               <div class="pricing-card highlight dark:bg-slate-900 dark:border-red-400/40 dark:text-slate-100">
                 <div class="card-top">
@@ -124,7 +110,7 @@ import { ThemeService } from './theme.service';
                   <div class="badge bg-black text-white">Most Popular</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title text-red-600 dark:text-red-400">2. Moonshot</div>
+                  <div class="title text-red-600 dark:text-red-400">Moonshot</div>
                   <div class="price dark:text-white">$9.99</div>
                   <div class="sub dark:text-slate-400">per month</div>
                   <p class="desc dark:text-slate-300">Hit your ONE thing in 30–90 day sprints with smart accountability.</p>
@@ -134,7 +120,9 @@ import { ThemeService } from './theme.service';
                   <li><span></span>Weekly PDF + bottleneck nudges</li>
                   <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
                 </ul>
-                <a routerLink="/signup" class="btn-accent">Start Moonshot</a>
+                <button (click)="selectPlan('price_moonshot', 'Moonshot')" [disabled]="loading()" class="btn-accent">
+                  {{ loading() ? 'Processing...' : 'Start Moonshot' }}
+                </button>
               </div>
 
               <!-- Interplanetary -->
@@ -144,7 +132,7 @@ import { ThemeService } from './theme.service';
                   <div class="badge bg-red-600 text-white">Performance</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title dark:text-white">3. Interplanetary</div>
+                  <div class="title dark:text-white">Interplanetary</div>
                   <div class="price dark:text-white">$29.99</div>
                   <div class="sub dark:text-slate-400">per month</div>
                   <p class="desc dark:text-slate-300">Predictive, multi-channel coaching for high-performers.</p>
@@ -154,7 +142,9 @@ import { ThemeService } from './theme.service';
                   <li><span></span>Personality-coached, predictive nudges</li>
                   <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
                 </ul>
-                <a routerLink="/signup" class="btn-primary">Upgrade to Interplanetary</a>
+                <button (click)="selectPlan('price_interplanetary', 'Interplanetary')" [disabled]="loading()" class="btn-primary">
+                  {{ loading() ? 'Processing...' : 'Upgrade to Interplanetary' }}
+                </button>
               </div>
 
               <!-- Galactic -->
@@ -164,7 +154,7 @@ import { ThemeService } from './theme.service';
                   <div class="badge bg-gray-900 text-white">Elite</div>
                 </div>
                 <div class="space-y-2">
-                  <div class="title text-gray-800 dark:text-white">4. Galactic</div>
+                  <div class="title text-gray-800 dark:text-white">Galactic</div>
                   <div class="price dark:text-white">$499</div>
                   <div class="sub dark:text-slate-400">per month</div>
                   <p class="desc dark:text-slate-300">Hybrid human + AI leadership system with elite accountability.</p>
@@ -334,19 +324,23 @@ import { ThemeService } from './theme.service';
       font-weight: 800;
       transition: all 0.2s ease;
       text-decoration: none;
+      border: none;
+      cursor: pointer;
     }
     .btn-primary {
       background: black;
       color: white;
       box-shadow: 0 12px 30px rgba(0,0,0,0.15);
     }
-    .btn-primary:hover { background: #111; transform: translateY(-2px); }
+    .btn-primary:hover:not(:disabled) { background: #111; transform: translateY(-2px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-accent {
       background: #dc2626;
       color: white;
       box-shadow: 0 12px 30px rgba(220,38,38,0.18);
     }
-    .btn-accent:hover { background: #b91c1c; transform: translateY(-2px); }
+    .btn-accent:hover:not(:disabled) { background: #b91c1c; transform: translateY(-2px); }
+    .btn-accent:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-outline {
       border: 2px solid rgba(0,0,0,0.1);
       color: black;
@@ -357,9 +351,62 @@ import { ThemeService } from './theme.service';
 })
 export class PricingPageComponent {
   private readonly theme = inject(ThemeService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   protected readonly isDarkMode = this.theme.isDarkMode;
+  protected readonly loading = signal(false);
+  protected readonly error = signal<string | null>(null);
 
   protected toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  async selectPlan(priceId: string, planName: string) {
+    const profile = this.authService.profile();
+
+    // Check if user is logged in
+    if (!profile) {
+      // Redirect to signup/login
+      this.router.navigate(['/signup']);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      // Import Firebase modules
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const createCheckoutSession = functionsModule.httpsCallable(functions, 'createCheckoutSession');
+
+      // Call the cloud function to create a Stripe checkout session
+      const result = await createCheckoutSession({
+        priceId,
+        successUrl: window.location.origin + '/goals?payment=success',
+        cancelUrl: window.location.origin + '/pricing?payment=cancelled'
+      });
+
+      const data = result.data as { sessionId?: string; url?: string };
+
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: any) {
+      console.error('Error creating checkout session:', err);
+      this.error.set('Failed to start checkout. Please try again.');
+    } finally {
+      this.loading.set(false);
+    }
   }
 }

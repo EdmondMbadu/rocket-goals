@@ -18,6 +18,7 @@ const geminiApiKey = defineSecret('GEMINI_API_KEY');
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const gaPropertyId = defineSecret('GA_PROPERTY_ID');
 const stripeWebhookSecretGoals = defineSecret('STRIPE_WEBHOOK_SECRET_GOALS');
+const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 
 const stripeSubscriptionEvents = new Set([
   'customer.subscription.created',
@@ -1816,6 +1817,119 @@ The final image should make the viewer think:
         throw new HttpsError(
             "internal",
             error?.message || "Failed to generate visualization"
+        );
+    }
+});
+
+/**
+ * Cloud Function to create a Stripe Checkout Session
+ * This allows users to subscribe to a paid plan
+ */
+export const createCheckoutSession = functions.runWith({
+    secrets: [stripeSecretKey]
+}).https.onCall(async (data: { priceId: string; successUrl?: string; cancelUrl?: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to create a checkout session.'
+        );
+    }
+
+    const priceId = data.priceId;
+    const successUrl = data.successUrl || 'https://rocket-goals.web.app/goals?payment=success';
+    const cancelUrl = data.cancelUrl || 'https://rocket-goals.web.app/pricing?payment=cancelled';
+
+    if (!priceId) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'priceId is required'
+        );
+    }
+
+    try {
+        const stripeKey = stripeSecretKey.value();
+        if (!stripeKey) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'Stripe API key is not configured'
+            );
+        }
+
+        // Initialize Stripe
+        const stripe = require('stripe')(stripeKey);
+
+        // Get user profile to link to customer
+        const userId = context.auth.uid;
+        const userDoc = await admin.firestore()
+            .collection('userProfiles')
+            .doc(userId)
+            .get();
+
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                'User profile not found'
+            );
+        }
+
+        const userData = userDoc.data();
+        const userEmail = userData?.email || context.auth.token.email;
+
+        // Check if user already has a Stripe customer ID
+        let customerId = userData?.stripeCustomerId;
+
+        // If no customer ID, create a new Stripe customer
+        if (!customerId) {
+            const customer = await stripe.customers.create({
+                email: userEmail,
+                metadata: {
+                    firebaseUserId: userId
+                }
+            });
+            customerId = customer.id;
+
+            // Update user profile with customer ID
+            await admin.firestore()
+                .collection('userProfiles')
+                .doc(userId)
+                .update({
+                    stripeCustomerId: customerId
+                });
+        }
+
+        // Create Checkout Session
+        const session = await stripe.checkout.sessions.create({
+            customer: customerId,
+            mode: 'subscription',
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price: priceId,
+                    quantity: 1,
+                },
+            ],
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+            metadata: {
+                firebaseUserId: userId
+            },
+            client_reference_id: userId,
+        });
+
+        console.log(`✅ Checkout session created: ${session.id} for user ${userId}`);
+
+        return {
+            sessionId: session.id,
+            url: session.url
+        };
+    } catch (error: any) {
+        console.error("❌ Error creating checkout session:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            error?.message || 'Failed to create checkout session'
         );
     }
 });
