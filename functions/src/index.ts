@@ -36,6 +36,18 @@ const toTimestamp = (unixSeconds?: number | null) => {
   return admin.firestore.Timestamp.fromMillis(unixSeconds * 1000);
 };
 
+// Map Stripe price IDs to plan names
+const PRICE_TO_PLAN: Record<string, 'moonshot' | 'interplanetary' | 'galactic'> = {
+  'price_1ShFV1G26VVCdyeuhiUrkRfy': 'moonshot',
+  'price_1ShFVtG26VVCdyeu1stsZFw5': 'interplanetary',
+  'price_1ShFWGG26VVCdyeuANsvCWFA': 'galactic'
+};
+
+const getPlanFromPriceId = (priceId: string | null | undefined): 'moonshot' | 'interplanetary' | 'galactic' | null => {
+  if (!priceId) return null;
+  return PRICE_TO_PLAN[priceId] || null;
+};
+
 const parseStripeSignature = (header: string) => {
   const parts = header.split(',').map((part) => part.trim());
   const timestampPart = parts.find((part) => part.startsWith('t='));
@@ -207,12 +219,27 @@ export const stripeWebhookRocketGoals = functions.runWith({
                     console.warn('Stripe subscription missing user profile match', { customerId });
                     break;
                 }
-                await profileRef.set({
+                // Extract price ID from subscription items
+                const priceId = subscription.items?.data?.[0]?.price?.id || null;
+                const plan = getPlanFromPriceId(priceId);
+                const updateData: Record<string, any> = {
                     stripeCustomerId: customerId || null,
                     stripeSubscriptionId: subscription.id,
                     subscriptionStatus: subscription.status,
                     subscriptionExpiresAt: toTimestamp(subscription.current_period_end)
-                }, { merge: true });
+                };
+                if (priceId) {
+                    updateData.subscriptionPriceId = priceId;
+                }
+                if (plan) {
+                    updateData.subscriptionPlan = plan;
+                }
+                // Clear plan info if subscription is deleted/canceled
+                if (event.type === 'customer.subscription.deleted') {
+                    updateData.subscriptionPlan = null;
+                    updateData.subscriptionPriceId = null;
+                }
+                await profileRef.set(updateData, { merge: true });
                 break;
             }
             case 'invoice.payment_succeeded':
@@ -231,13 +258,22 @@ export const stripeWebhookRocketGoals = functions.runWith({
                 const line = invoice.lines?.data?.[0];
                 const periodEnd = line?.period?.end || invoice.period_end || null;
                 const paidAt = invoice.status_transitions?.paid_at || invoice.created || null;
-                await profileRef.set({
+                const priceId = line?.price?.id || null;
+                const plan = getPlanFromPriceId(priceId);
+                const invoiceUpdateData: Record<string, any> = {
                     stripeCustomerId: customerId || null,
                     stripeSubscriptionId: invoice.subscription || null,
                     subscriptionStatus: event.type === 'invoice.payment_succeeded' ? 'active' : (invoice.status || 'past_due'),
                     subscriptionPaidAt: event.type === 'invoice.payment_succeeded' ? toTimestamp(paidAt) : null,
                     subscriptionExpiresAt: toTimestamp(periodEnd)
-                }, { merge: true });
+                };
+                if (priceId) {
+                    invoiceUpdateData.subscriptionPriceId = priceId;
+                }
+                if (plan) {
+                    invoiceUpdateData.subscriptionPlan = plan;
+                }
+                await profileRef.set(invoiceUpdateData, { merge: true });
                 break;
             }
             default:

@@ -213,15 +213,24 @@
       <div class="settings">
         <div class="setting-row">
           <div>
-            <p class="name">Status</p>
-            <p class="muted tiny" [class.text-green-500]="getSubscriptionStatus() === 'active'"
-               [class.text-yellow-500]="getSubscriptionStatus() === 'canceling'"
-               [class.text-red-500]="getSubscriptionStatus() === 'past_due' || getSubscriptionStatus() === 'canceled'">
-              {{ getSubscriptionStatusDisplay() }}
+            <p class="name">Plan</p>
+            <p class="muted tiny flex items-center gap-2">
+              <span class="px-2 py-0.5 text-xs font-bold rounded" [ngClass]="getPlanBadgeClass()">
+                {{ getSubscriptionPlanDisplay() }}
+              </span>
+              @if (getSubscriptionStatus() === 'active') {
+              <span class="text-green-500">Active</span>
+              } @else if (getSubscriptionStatus() === 'canceling') {
+              <span class="text-yellow-500">Canceling</span>
+              } @else if (getSubscriptionStatus() === 'past_due') {
+              <span class="text-red-500">Past Due</span>
+              }
             </p>
           </div>
           @if (getSubscriptionStatus() === 'none' || getSubscriptionStatus() === 'canceled') {
           <button class="solid xs" (click)="router.navigateByUrl('/pricing')">Subscribe</button>
+          } @else if (getSubscriptionPlan() !== 'galactic') {
+          <button class="ghost xs" (click)="router.navigateByUrl('/pricing')">Upgrade</button>
           }
         </div>
         @if (getSubscriptionExpiresAt() && hasActiveSubscription()) {

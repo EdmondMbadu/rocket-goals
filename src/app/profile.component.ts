@@ -497,6 +497,32 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  getSubscriptionPlan(): string | null {
+    const profile = this.profile();
+    return profile?.subscriptionPlan || null;
+  }
+
+  getSubscriptionPlanDisplay(): string {
+    const plan = this.getSubscriptionPlan();
+    if (!plan) return 'Free';
+    const planNames: Record<string, string> = {
+      'moonshot': 'Moonshot',
+      'interplanetary': 'Interplanetary',
+      'galactic': 'Galactic'
+    };
+    return planNames[plan] || plan;
+  }
+
+  getPlanBadgeClass(): string {
+    const plan = this.getSubscriptionPlan();
+    switch (plan) {
+      case 'moonshot': return 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300';
+      case 'interplanetary': return 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300';
+      case 'galactic': return 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300';
+      default: return 'bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-300';
+    }
+  }
+
   getSubscriptionExpiresAt(): string {
     const profile = this.profile();
     if (!profile?.subscriptionExpiresAt) return '';

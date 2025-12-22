@@ -98,6 +98,18 @@ import { stripePrices } from '../../environments/environment';
 
         <section class="pb-20">
           <div class="container mx-auto px-6">
+            @if (getCurrentPlan()) {
+              <div class="max-w-2xl mx-auto mb-8 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 border border-gray-200 dark:border-white/10 rounded-xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">🚀</span>
+                  <div>
+                    <p class="text-sm text-gray-500 dark:text-slate-400">Your current plan</p>
+                    <p class="font-bold text-lg text-black dark:text-white">{{ getCurrentPlanDisplay() }}</p>
+                  </div>
+                </div>
+                <span class="px-3 py-1 text-sm font-bold rounded-full" [ngClass]="getPlanBadgeClass()">Active</span>
+              </div>
+            }
             @if (error()) {
               <div class="max-w-2xl mx-auto mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200">
                 {{ error() }}
@@ -105,7 +117,16 @@ import { stripePrices } from '../../environments/environment';
             }
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <!-- Moonshot -->
-              <div class="pricing-card highlight dark:bg-slate-900 dark:border-red-400/40 dark:text-slate-100">
+              <div class="pricing-card relative"
+                   [class.highlight]="!isCurrentPlan('moonshot')"
+                   [class.opacity-60]="isDowngrade('moonshot')"
+                   [class.ring-2]="isCurrentPlan('moonshot')"
+                   [class.ring-orange-500]="isCurrentPlan('moonshot')">
+                @if (isCurrentPlan('moonshot')) {
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
+                  YOUR PLAN
+                </div>
+                }
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-2 rocket-orange">🚀</span>
                   <div class="badge bg-black text-white">Most Popular</div>
@@ -121,13 +142,27 @@ import { stripePrices } from '../../environments/environment';
                   <li><span></span>Weekly PDF + bottleneck nudges</li>
                   <li><span></span>Dynamic micro-wins + ROCKET Blast</li>
                 </ul>
+                @if (isCurrentPlan('moonshot')) {
+                <button disabled class="btn-accent opacity-50 cursor-not-allowed">Current Plan</button>
+                } @else if (canUpgradeTo('moonshot')) {
                 <button (click)="selectPlan(stripePrices.moonshot)" [disabled]="loading()" class="btn-accent">
-                  {{ loading() ? 'Processing...' : 'Start Moonshot' }}
+                  {{ getButtonText('moonshot') }}
                 </button>
+                } @else {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Included in your plan</button>
+                }
               </div>
 
               <!-- Interplanetary -->
-              <div class="pricing-card dark:bg-slate-900/80 dark:border-white/10 dark:text-slate-100">
+              <div class="pricing-card relative"
+                   [class.opacity-60]="isDowngrade('interplanetary')"
+                   [class.ring-2]="isCurrentPlan('interplanetary')"
+                   [class.ring-red-500]="isCurrentPlan('interplanetary')">
+                @if (isCurrentPlan('interplanetary')) {
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
+                  YOUR PLAN
+                </div>
+                }
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-3 rocket-red">🚀</span>
                   <div class="badge bg-red-600 text-white">Performance</div>
@@ -143,13 +178,26 @@ import { stripePrices } from '../../environments/environment';
                   <li><span></span>Personality-coached, predictive nudges</li>
                   <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
                 </ul>
+                @if (isCurrentPlan('interplanetary')) {
+                <button disabled class="btn-primary opacity-50 cursor-not-allowed">Current Plan</button>
+                } @else if (canUpgradeTo('interplanetary')) {
                 <button (click)="selectPlan(stripePrices.interplanetary)" [disabled]="loading()" class="btn-primary">
-                  {{ loading() ? 'Processing...' : 'Upgrade to Interplanetary' }}
+                  {{ getButtonText('interplanetary') }}
                 </button>
+                } @else {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Included in your plan</button>
+                }
               </div>
 
               <!-- Galactic -->
-              <div class="pricing-card dark:bg-slate-900/80 dark:border-white/10 dark:text-slate-100">
+              <div class="pricing-card relative"
+                   [class.ring-2]="isCurrentPlan('galactic')"
+                   [class.ring-purple-500]="isCurrentPlan('galactic')">
+                @if (isCurrentPlan('galactic')) {
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full">
+                  YOUR PLAN
+                </div>
+                }
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-4 rocket-gray">🚀</span>
                   <div class="badge bg-gray-900 text-white">Elite</div>
@@ -165,7 +213,13 @@ import { stripePrices } from '../../environments/environment';
                   <li><span></span>Build templates, lead pods/masterminds</li>
                   <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
                 </ul>
+                @if (isCurrentPlan('galactic')) {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Current Plan</button>
+                } @else if (canUpgradeTo('galactic')) {
                 <a routerLink="/contact" class="btn-outline dark:border-white/30 dark:text-white dark:hover:bg-white dark:hover:text-black">Talk to Sales</a>
+                } @else {
+                <a routerLink="/contact" class="btn-outline dark:border-white/30 dark:text-white dark:hover:bg-white dark:hover:text-black">Talk to Sales</a>
+                }
               </div>
             </div>
           </div>
@@ -359,8 +413,85 @@ export class PricingPageComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly stripePrices = stripePrices;
 
+  // Plan hierarchy for upgrade logic
+  private readonly planHierarchy: Record<string, number> = {
+    'moonshot': 1,
+    'interplanetary': 2,
+    'galactic': 3
+  };
+
   protected toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  getCurrentPlan(): string | null {
+    const profile = this.authService.profile();
+    return profile?.subscriptionPlan || null;
+  }
+
+  getCurrentPlanDisplay(): string {
+    const plan = this.getCurrentPlan();
+    if (!plan) return '';
+    const planNames: Record<string, string> = {
+      'moonshot': 'Moonshot',
+      'interplanetary': 'Interplanetary',
+      'galactic': 'Galactic'
+    };
+    return planNames[plan] || plan;
+  }
+
+  isCurrentPlan(planKey: string): boolean {
+    return this.getCurrentPlan() === planKey;
+  }
+
+  canUpgradeTo(planKey: string): boolean {
+    const currentPlan = this.getCurrentPlan();
+    if (!currentPlan) return true; // No plan, can subscribe to any
+    const currentLevel = this.planHierarchy[currentPlan] || 0;
+    const targetLevel = this.planHierarchy[planKey] || 0;
+    return targetLevel > currentLevel;
+  }
+
+  isDowngrade(planKey: string): boolean {
+    const currentPlan = this.getCurrentPlan();
+    if (!currentPlan) return false;
+    const currentLevel = this.planHierarchy[currentPlan] || 0;
+    const targetLevel = this.planHierarchy[planKey] || 0;
+    return targetLevel < currentLevel;
+  }
+
+  hasActiveSubscription(): boolean {
+    const profile = this.authService.profile();
+    const status = profile?.subscriptionStatus;
+    return status === 'active' || status === 'canceling';
+  }
+
+  getButtonText(planKey: string): string {
+    if (this.loading()) return 'Processing...';
+    if (this.isCurrentPlan(planKey)) return 'Current Plan';
+    if (this.canUpgradeTo(planKey)) {
+      return this.hasActiveSubscription() ? `Upgrade to ${this.getPlanName(planKey)}` : `Start ${this.getPlanName(planKey)}`;
+    }
+    return 'Included in your plan';
+  }
+
+  getPlanName(planKey: string): string {
+    const names: Record<string, string> = {
+      'moonshot': 'Moonshot',
+      'interplanetary': 'Interplanetary',
+      'galactic': 'Galactic'
+    };
+    return names[planKey] || planKey;
+  }
+
+  getPlanBadgeClass(): string {
+    const plan = this.getCurrentPlan();
+    switch (plan) {
+      case 'moonshot': return 'bg-orange-500 text-white';
+      case 'interplanetary': return 'bg-red-600 text-white';
+      case 'galactic': return 'bg-purple-600 text-white';
+      default: return 'bg-gray-500 text-white';
+    }
   }
 
   async selectPlan(priceId: string) {

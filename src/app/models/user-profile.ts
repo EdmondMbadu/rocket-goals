@@ -19,6 +19,8 @@ export interface UserProfile {
   admin?: boolean;
   role?: string;
   subscriptionStatus?: string;
+  subscriptionPlan?: 'moonshot' | 'interplanetary' | 'galactic';
+  subscriptionPriceId?: string;
   subscriptionPaidAt?: unknown;
   subscriptionExpiresAt?: unknown;
   subscriptionCancelAt?: unknown;
