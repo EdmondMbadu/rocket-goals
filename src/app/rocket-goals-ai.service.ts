@@ -1,4 +1,5 @@
-import { Injectable, inject, signal, effect } from '@angular/core';
+import { Injectable, inject, signal, effect, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Functions, getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 import { AuthService } from './auth.service';
@@ -100,6 +101,7 @@ export class RocketGoalsAIService {
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);
   private readonly calendarEventsService = inject(CalendarEventsService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly messages = signal<ChatMessage[]>([]);
   readonly isLoading = signal(false);
@@ -169,10 +171,38 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.resetClientState();
 
     if (userId) {
-      // If a fresh prompt is pending, don't auto-select any session
-      // The prompt handler will create a new session
-      void this.loadSessionsForCurrentUser(!this.preventAutoSelect);
+      // Check if there's an autoLaunch or prompt in the URL
+      // This runs BEFORE ngOnInit, so we need to check URL directly
+      const hasExternalPrompt = this.hasExternalPromptInUrl();
+
+      if (hasExternalPrompt) {
+        // Don't auto-select any session - a fresh prompt will be processed
+        this.preventAutoSelect = true;
+        void this.loadSessionsForCurrentUser(false);
+      } else if (!this.preventAutoSelect) {
+        // Normal flow - load and select most recent session
+        void this.loadSessionsForCurrentUser(true);
+      } else {
+        // preventAutoSelect was already set by component
+        void this.loadSessionsForCurrentUser(false);
+      }
     }
+  }
+
+  /**
+   * Check if the current URL has an external prompt (autoLaunch or prompt param)
+   * This is checked early to prevent loading old sessions when a fresh prompt is incoming
+   */
+  private hasExternalPromptInUrl(): boolean {
+    if (!isPlatformBrowser(this.platformId)) {
+      return false;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAutoLaunch = urlParams.has('autoLaunch');
+    const hasPrompt = urlParams.has('prompt') && !!urlParams.get('prompt')?.trim();
+
+    return hasAutoLaunch || hasPrompt;
   }
 
   private resetClientState(): void {
