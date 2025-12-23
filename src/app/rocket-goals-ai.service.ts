@@ -328,6 +328,11 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   async loadSession(sessionId: string): Promise<void> {
+    // Don't load old sessions if a fresh prompt is pending
+    if (this.preventAutoSelect) {
+      return;
+    }
+
     const profile = this.authService.profile();
     if (!profile?.userId) return;
 
@@ -371,6 +376,11 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
    * If a conversation exists for this goal, load it; otherwise start fresh
    */
   async loadConversationForGoal(goalId: string): Promise<void> {
+    // Don't load old conversations if a fresh prompt is pending
+    if (this.preventAutoSelect) {
+      return;
+    }
+
     // If we're already viewing this goal's conversation, don't reload
     if (this.currentGoalId === goalId && this.currentSessionId()) {
       return;
