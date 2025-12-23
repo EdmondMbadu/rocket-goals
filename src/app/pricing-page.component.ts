@@ -146,15 +146,45 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                 </p>
               }
             </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <!-- Free/Launch -->
+              <div class="pricing-card relative current-plan-free"
+                   [class.current-plan]="isCurrentPlan('free')"
+                   [class.opacity-60]="isDowngrade('free')">
+                @if (isCurrentPlan('free')) {
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full z-10 shadow-lg">
+                  YOUR PLAN
+                </div>
+                }
+                <div class="card-top">
+                  <span class="rocket-emoji rocket-size-1 rocket-green">🚀</span>
+                  <div class="badge bg-green-500 text-white">Free</div>
+                </div>
+                <div class="space-y-2">
+                  <div class="title text-green-600 dark:text-green-400">Launch</div>
+                  <div class="price dark:text-white">Free</div>
+                  <div class="sub dark:text-slate-400">forever</div>
+                  <p class="desc dark:text-slate-300">Start your journey with basic AI coaching and goal tracking.</p>
+                </div>
+                <ul class="features dark:text-slate-200">
+                  <li><span></span>Basic goal tracking</li>
+                  <li><span></span>AI coaching access</li>
+                  <li><span></span>Essential reminders</li>
+                </ul>
+                @if (isCurrentPlan('free')) {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Current Plan</button>
+                } @else {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Your Starting Point</button>
+                }
+              </div>
+
               <!-- Moonshot -->
-              <div class="pricing-card relative"
+              <div class="pricing-card relative current-plan-moonshot"
                    [class.highlight]="!isCurrentPlan('moonshot')"
-                   [class.opacity-60]="isDowngrade('moonshot')"
-                   [class.ring-2]="isCurrentPlan('moonshot')"
-                   [class.ring-orange-500]="isCurrentPlan('moonshot')">
+                   [class.current-plan]="isCurrentPlan('moonshot')"
+                   [class.opacity-60]="isDowngrade('moonshot')">
                 @if (isCurrentPlan('moonshot')) {
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full z-10 shadow-lg">
                   YOUR PLAN
                 </div>
                 }
@@ -185,12 +215,11 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
               </div>
 
               <!-- Interplanetary -->
-              <div class="pricing-card relative"
-                   [class.opacity-60]="isDowngrade('interplanetary')"
-                   [class.ring-2]="isCurrentPlan('interplanetary')"
-                   [class.ring-red-500]="isCurrentPlan('interplanetary')">
+              <div class="pricing-card relative current-plan-interplanetary"
+                   [class.current-plan]="isCurrentPlan('interplanetary')"
+                   [class.opacity-60]="isDowngrade('interplanetary')">
                 @if (isCurrentPlan('interplanetary')) {
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full z-10 shadow-lg">
                   YOUR PLAN
                 </div>
                 }
@@ -221,11 +250,10 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
               </div>
 
               <!-- Galactic -->
-              <div class="pricing-card relative"
-                   [class.ring-2]="isCurrentPlan('galactic')"
-                   [class.ring-purple-500]="isCurrentPlan('galactic')">
+              <div class="pricing-card relative current-plan-galactic"
+                   [class.current-plan]="isCurrentPlan('galactic')">
                 @if (isCurrentPlan('galactic')) {
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full z-10 shadow-lg">
                   YOUR PLAN
                 </div>
                 }
@@ -282,6 +310,79 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
       border: 1px solid rgba(220,38,38,0.15);
       box-shadow: 0 20px 45px rgba(220,38,38,0.12);
       background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(255,245,245,0.95));
+    }
+    .pricing-card.current-plan {
+      border: 4px solid;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.2), 0 0 0 6px rgba(59, 130, 246, 0.15);
+      transform: scale(1.05);
+      background: linear-gradient(145deg, rgba(255,255,255,1), rgba(249,250,251,0.98));
+      position: relative;
+      z-index: 1;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(0,0,0,0.2), 0 0 0 6px rgba(59, 130, 246, 0.15);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(0,0,0,0.25), 0 0 0 8px rgba(59, 130, 246, 0.25);
+      }
+    }
+    .pricing-card.current-plan-free.current-plan {
+      border-color: rgba(34, 197, 94, 0.8);
+      box-shadow: 0 30px 70px rgba(34, 197, 94, 0.3), 0 0 0 6px rgba(34, 197, 94, 0.2);
+      background: linear-gradient(145deg, rgba(240, 253, 244, 0.95), rgba(255,255,255,1));
+      animation: pulse-glow-green 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-green {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(34, 197, 94, 0.3), 0 0 0 6px rgba(34, 197, 94, 0.2);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(34, 197, 94, 0.4), 0 0 0 8px rgba(34, 197, 94, 0.3);
+      }
+    }
+    .pricing-card.current-plan-moonshot.current-plan {
+      border-color: rgba(249, 115, 22, 0.8);
+      box-shadow: 0 30px 70px rgba(249, 115, 22, 0.3), 0 0 0 6px rgba(249, 115, 22, 0.2);
+      background: linear-gradient(145deg, rgba(255, 247, 237, 0.95), rgba(255,255,255,1));
+      animation: pulse-glow-orange 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-orange {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(249, 115, 22, 0.3), 0 0 0 6px rgba(249, 115, 22, 0.2);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(249, 115, 22, 0.4), 0 0 0 8px rgba(249, 115, 22, 0.3);
+      }
+    }
+    .pricing-card.current-plan-interplanetary.current-plan {
+      border-color: rgba(220, 38, 38, 0.8);
+      box-shadow: 0 30px 70px rgba(220, 38, 38, 0.3), 0 0 0 6px rgba(220, 38, 38, 0.2);
+      background: linear-gradient(145deg, rgba(254, 242, 242, 0.95), rgba(255,255,255,1));
+      animation: pulse-glow-red 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-red {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(220, 38, 38, 0.3), 0 0 0 6px rgba(220, 38, 38, 0.2);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(220, 38, 38, 0.4), 0 0 0 8px rgba(220, 38, 38, 0.3);
+      }
+    }
+    .pricing-card.current-plan-galactic.current-plan {
+      border-color: rgba(147, 51, 234, 0.8);
+      box-shadow: 0 30px 70px rgba(147, 51, 234, 0.3), 0 0 0 6px rgba(147, 51, 234, 0.2);
+      background: linear-gradient(145deg, rgba(250, 245, 255, 0.95), rgba(255,255,255,1));
+      animation: pulse-glow-purple 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-purple {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(147, 51, 234, 0.3), 0 0 0 6px rgba(147, 51, 234, 0.2);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(147, 51, 234, 0.4), 0 0 0 8px rgba(147, 51, 234, 0.3);
+      }
     }
     .card-top {
       display: flex;
@@ -393,6 +494,77 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
       border-color: rgba(248,113,113,0.35);
       box-shadow: 0 35px 70px rgba(248,113,113,0.25);
     }
+    :host-context(.dark) .pricing-card.current-plan {
+      border: 4px solid;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 0 6px rgba(59, 130, 246, 0.25);
+      transform: scale(1.05);
+      background: linear-gradient(145deg, rgba(30,41,59,1), rgba(15,23,42,0.98));
+      animation: pulse-glow-dark 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-dark {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 0 6px rgba(59, 130, 246, 0.25);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(0,0,0,0.7), 0 0 0 8px rgba(59, 130, 246, 0.35);
+      }
+    }
+    :host-context(.dark) .pricing-card.current-plan-free.current-plan {
+      border-color: rgba(34, 197, 94, 0.8);
+      box-shadow: 0 30px 70px rgba(34, 197, 94, 0.4), 0 0 0 6px rgba(34, 197, 94, 0.25);
+      background: linear-gradient(145deg, rgba(20, 83, 45, 0.3), rgba(15,23,42,0.98));
+      animation: pulse-glow-green-dark 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-green-dark {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(34, 197, 94, 0.4), 0 0 0 6px rgba(34, 197, 94, 0.25);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(34, 197, 94, 0.5), 0 0 0 8px rgba(34, 197, 94, 0.35);
+      }
+    }
+    :host-context(.dark) .pricing-card.current-plan-moonshot.current-plan {
+      border-color: rgba(249, 115, 22, 0.8);
+      box-shadow: 0 30px 70px rgba(249, 115, 22, 0.4), 0 0 0 6px rgba(249, 115, 22, 0.25);
+      background: linear-gradient(145deg, rgba(154, 52, 18, 0.3), rgba(15,23,42,0.98));
+      animation: pulse-glow-orange-dark 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-orange-dark {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(249, 115, 22, 0.4), 0 0 0 6px rgba(249, 115, 22, 0.25);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(249, 115, 22, 0.5), 0 0 0 8px rgba(249, 115, 22, 0.35);
+      }
+    }
+    :host-context(.dark) .pricing-card.current-plan-interplanetary.current-plan {
+      border-color: rgba(220, 38, 38, 0.8);
+      box-shadow: 0 30px 70px rgba(220, 38, 38, 0.4), 0 0 0 6px rgba(220, 38, 38, 0.25);
+      background: linear-gradient(145deg, rgba(153, 27, 27, 0.3), rgba(15,23,42,0.98));
+      animation: pulse-glow-red-dark 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-red-dark {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(220, 38, 38, 0.4), 0 0 0 6px rgba(220, 38, 38, 0.25);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(220, 38, 38, 0.5), 0 0 0 8px rgba(220, 38, 38, 0.35);
+      }
+    }
+    :host-context(.dark) .pricing-card.current-plan-galactic.current-plan {
+      border-color: rgba(147, 51, 234, 0.8);
+      box-shadow: 0 30px 70px rgba(147, 51, 234, 0.4), 0 0 0 6px rgba(147, 51, 234, 0.25);
+      background: linear-gradient(145deg, rgba(88, 28, 135, 0.3), rgba(15,23,42,0.98));
+      animation: pulse-glow-purple-dark 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-purple-dark {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(147, 51, 234, 0.4), 0 0 0 6px rgba(147, 51, 234, 0.25);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(147, 51, 234, 0.5), 0 0 0 8px rgba(147, 51, 234, 0.35);
+      }
+    }
     :host-context(.dark) .pricing-card .sub,
     :host-context(.dark) .pricing-card .desc,
     :host-context(.dark) .pricing-card .features li {
@@ -450,6 +622,7 @@ export class PricingPageComponent implements OnInit {
 
   // Plan hierarchy for upgrade logic
   private readonly planHierarchy: Record<string, number> = {
+    'free': 0,
     'moonshot': 1,
     'interplanetary': 2,
     'galactic': 3
@@ -533,13 +706,16 @@ export class PricingPageComponent implements OnInit {
 
   getCurrentPlan(): string | null {
     const profile = this.authService.profile();
-    return profile?.subscriptionPlan || null;
+    const plan = profile?.subscriptionPlan;
+    // If no subscription plan, user is on free plan
+    return plan || 'free';
   }
 
   getCurrentPlanDisplay(): string {
     const plan = this.getCurrentPlan();
-    if (!plan) return '';
+    if (!plan) return 'Free';
     const planNames: Record<string, string> = {
+      'free': 'Free',
       'moonshot': 'Moonshot',
       'interplanetary': 'Interplanetary',
       'galactic': 'Galactic'
@@ -548,7 +724,13 @@ export class PricingPageComponent implements OnInit {
   }
 
   isCurrentPlan(planKey: string): boolean {
-    return this.getCurrentPlan() === planKey;
+    const currentPlan = this.getCurrentPlan();
+    // Handle 'free' plan - it's the default when subscriptionPlan is null/undefined
+    if (planKey === 'free') {
+      const profile = this.authService.profile();
+      return !profile?.subscriptionPlan;
+    }
+    return currentPlan === planKey;
   }
 
   canUpgradeTo(planKey: string): boolean {
@@ -584,6 +766,7 @@ export class PricingPageComponent implements OnInit {
 
   getPlanName(planKey: string): string {
     const names: Record<string, string> = {
+      'free': 'Free',
       'moonshot': 'Moonshot',
       'interplanetary': 'Interplanetary',
       'galactic': 'Galactic'
@@ -594,6 +777,7 @@ export class PricingPageComponent implements OnInit {
   getPlanBadgeClass(): string {
     const plan = this.getCurrentPlan();
     switch (plan) {
+      case 'free': return 'bg-green-500 text-white';
       case 'moonshot': return 'bg-orange-500 text-white';
       case 'interplanetary': return 'bg-red-600 text-white';
       case 'galactic': return 'bg-purple-600 text-white';
