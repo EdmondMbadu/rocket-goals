@@ -44,6 +44,13 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   private lastAutoPrompt: string | null = null;
 
   ngOnInit(): void {
+    // If a fresh prompt is pending (from rocket-prompt or one-shot), don't load old conversations
+    // This prevents race conditions where old chat history overwrites the new prompt session
+    if (this.aiService.isFreshPromptPending()) {
+      // Skip loading goal conversations - a fresh prompt will be processed
+      return;
+    }
+
     // If we have a goal context, load conversation for that goal
     if (this.goalContext?.id) {
       void this.aiService.loadConversationForGoal(this.goalContext.id).then(() => {
@@ -81,11 +88,16 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // If a fresh prompt is pending, don't load old conversations
+    if (this.aiService.isFreshPromptPending()) {
+      return;
+    }
+
     // When goal context becomes available or changes, load the conversation for that goal
     if (changes['goalContext']) {
       const previousGoalId = changes['goalContext'].previousValue?.id;
       const currentGoalId = this.goalContext?.id;
-      
+
       // Only reload if the goal actually changed
       if (currentGoalId && currentGoalId !== previousGoalId) {
         // Reset greeting state when switching goals

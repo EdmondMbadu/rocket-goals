@@ -85,6 +85,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild(RocketGoalsAIComponent) aiPanel?: RocketGoalsAIComponent;
   private pendingAutoPrompt: string | null = null;
+  private autoPromptHandled = false; // Prevent duplicate prompt handling
 
   protected readonly starterPrompts = [
     'Give me a focused 7-day launch plan.',
@@ -123,16 +124,27 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.isLoggedIn()) {
       if (shouldStartFresh) {
+        // Mark that we're handling an auto-prompt to prevent duplicate processing
+        this.autoPromptHandled = true;
         this.aiService.setPreventAutoSelect(true);
+        // Clear any existing goal context to prevent loadConversationForGoal interference
+        this.aiService.clearGoalContext();
         this.aiService.startNewSession();
-        await this.aiService.loadSessionsForCurrentUser(false);
+        // Queue the prompt BEFORE loading sessions to ensure it's ready
+        this.queueAutoLaunch(initialAutoPrompt);
+        // Load sessions in background without selecting any
+        void this.aiService.loadSessionsForCurrentUser(false);
       } else {
         await this.aiService.loadSessionsForCurrentUser();
       }
       // Check if user was redirected back after login with pending goal
       await this.checkPendingGoalCreation();
+    } else if (shouldStartFresh) {
+      // For non-logged-in users with a prompt, queue it immediately
+      this.autoPromptHandled = true;
+      this.queueAutoLaunch(initialAutoPrompt);
     }
-    
+
     this.route.queryParamMap.subscribe(params => {
       const hasSevenDayChallenge = params.get('sevenDayChallenge') === 'true';
       const autoLaunchToken = params.get('autoLaunch');
@@ -144,13 +156,17 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
         this.openGoalModalForSevenDayChallenge();
       }
 
-      const promptText = this.resolveAutoPrompt(autoLaunchToken, inlinePrompt);
-      if (promptText) {
-        if (this.isLoggedIn()) {
-          this.aiService.setPreventAutoSelect(true);
-          this.aiService.startNewSession();
+      // Only process prompt if we haven't already handled it in ngOnInit
+      if (!this.autoPromptHandled) {
+        const promptText = this.resolveAutoPrompt(autoLaunchToken, inlinePrompt);
+        if (promptText) {
+          if (this.isLoggedIn()) {
+            this.aiService.setPreventAutoSelect(true);
+            this.aiService.clearGoalContext();
+            this.aiService.startNewSession();
+          }
+          this.queueAutoLaunch(promptText);
         }
-        this.queueAutoLaunch(promptText);
       }
 
       if (hasSevenDayChallenge || autoLaunchToken || inlinePrompt) {
@@ -161,7 +177,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }
     });
-    
+
     // Initialize scroll sections for non-logged-in users
     if (!this.isLoggedIn()) {
       setTimeout(() => {

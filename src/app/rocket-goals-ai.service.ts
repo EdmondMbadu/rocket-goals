@@ -401,6 +401,22 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.preventAutoSelect = value;
   }
 
+  /**
+   * Clear the current goal context to prevent loadConversationForGoal from loading old chats
+   * Used when launching a fresh prompt from external sources (rocket-prompt, one-shot)
+   */
+  clearGoalContext(): void {
+    this.currentGoalId = null;
+  }
+
+  /**
+   * Check if a fresh prompt session is pending (preventAutoSelect is true)
+   * This helps child components know not to load goal-specific conversations
+   */
+  isFreshPromptPending(): boolean {
+    return this.preventAutoSelect;
+  }
+
   async deleteSession(sessionId: string): Promise<void> {
     const profile = this.authService.profile();
     if (!profile?.userId) return;
