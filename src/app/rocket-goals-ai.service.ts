@@ -169,7 +169,9 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.resetClientState();
 
     if (userId) {
-      void this.loadSessionsForCurrentUser();
+      // If a fresh prompt is pending, don't auto-select any session
+      // The prompt handler will create a new session
+      void this.loadSessionsForCurrentUser(!this.preventAutoSelect);
     }
   }
 
