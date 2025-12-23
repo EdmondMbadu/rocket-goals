@@ -2268,6 +2268,84 @@ export const reactivateSubscription = functions.runWith({
     }
 });
 
+// Redeem a promo code for a free 1-month subscription
+const PROMO_CODE_PLAN_MAP: Record<string, 'moonshot' | 'interplanetary' | 'galactic'> = {
+    'NY2026MOONSHOT': 'moonshot',
+    'NY2026INTERPLANETARY': 'interplanetary',
+    'NY2026GALACTIC': 'galactic'
+};
+
+export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to redeem a promo code.'
+        );
+    }
+
+    const promoCode = data.promoCode?.trim().toUpperCase();
+    if (!promoCode) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Please provide a promo code.'
+        );
+    }
+
+    const plan = PROMO_CODE_PLAN_MAP[promoCode];
+    if (!plan) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid promo code.'
+        );
+    }
+
+    const userId = context.auth.uid;
+    const userDocRef = admin.firestore().collection('userProfiles').doc(userId);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+        throw new functions.https.HttpsError(
+            'not-found',
+            'User profile not found.'
+        );
+    }
+
+    const userData = userDoc.data();
+
+    // Check if user has already used this promo code
+    const usedPromoCodes: string[] = userData?.usedPromoCodes || [];
+    if (usedPromoCodes.includes(promoCode)) {
+        throw new functions.https.HttpsError(
+            'already-exists',
+            'You have already used this promo code.'
+        );
+    }
+
+    // Calculate expiration date (1 month from now)
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+    // Update user profile with the new subscription
+    await userDocRef.update({
+        subscriptionStatus: 'active',
+        subscriptionPlan: plan,
+        subscriptionPaidAt: admin.firestore.Timestamp.now(),
+        subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+        usedPromoCodes: admin.firestore.FieldValue.arrayUnion(promoCode),
+        promoSubscription: true // Flag to indicate this is a promo subscription (no Stripe)
+    });
+
+    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} - Plan: ${plan}, Expires: ${expiresAt.toISOString()}`);
+
+    return {
+        success: true,
+        plan,
+        expiresAt: expiresAt.toISOString(),
+        message: `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription is now active for 1 month!`
+    };
+});
+
 // Callable: return auth metadata (last sign-in, creation time) for given UIDs
 export const getAuthMetadata = onCall({}, async (request) => {
     if (!request.auth) {

@@ -28,4 +28,6 @@ export interface UserProfile {
   stripeSubscriptionId?: string;
   lastSignInAt?: unknown;
   lastSignIn?: unknown;
+  usedPromoCodes?: string[];
+  promoSubscription?: boolean;
 }

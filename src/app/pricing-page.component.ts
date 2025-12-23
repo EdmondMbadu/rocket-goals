@@ -130,10 +130,13 @@ import { stripePrices } from '../../environments/environment';
                   autocomplete="off"
                   spellcheck="false"
                 />
-                <button type="button" class="btn-accent md:w-40" (click)="applyPromoCode()" [disabled]="!promoCode()">
+                <button type="button" class="btn-accent md:w-32" (click)="applyPromoCode()" [disabled]="!promoCode() || loading()">
                   Apply
                 </button>
-                <button type="button" class="btn-outline md:w-40" (click)="clearPromoCode()" [disabled]="!promoCode()">
+                <button type="button" class="btn-primary md:w-32" (click)="redeemPromoCode()" [disabled]="!promoNotice() || loading()">
+                  {{ loading() ? 'Redeeming...' : 'Redeem' }}
+                </button>
+                <button type="button" class="btn-outline md:w-32" (click)="clearPromoCode()" [disabled]="!promoCode() || loading()">
                   Clear
                 </button>
               </div>
@@ -572,6 +575,56 @@ export class PricingPageComponent {
       case 'interplanetary': return 'bg-red-600 text-white';
       case 'galactic': return 'bg-purple-600 text-white';
       default: return 'bg-gray-500 text-white';
+    }
+  }
+
+  async redeemPromoCode() {
+    const promoCode = this.promoCode().trim().toUpperCase();
+    const promoPlan = this.promoCodePlanMap[promoCode];
+
+    if (!promoPlan) {
+      this.error.set('Invalid promo code. Please apply a valid code first.');
+      return;
+    }
+
+    const profile = this.authService.profile();
+    if (!profile) {
+      this.router.navigate(['/signup']);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const redeemPromoCodeFn = functionsModule.httpsCallable(functions, 'redeemPromoCode');
+
+      const result = await redeemPromoCodeFn({ promoCode });
+      const data = result.data as { success: boolean; plan: string; expiresAt: string; message: string };
+
+      if (data.success) {
+        // Refresh the user profile to get the updated subscription
+        await this.authService.refreshProfile();
+        this.promoNotice.set(data.message);
+        this.promoCode.set('');
+        // Navigate to goals page with success message
+        this.router.navigate(['/goals'], { queryParams: { promo: 'success' } });
+      }
+    } catch (err: any) {
+      console.error('Error redeeming promo code:', err);
+      const errorMessage = err?.message || err?.details?.message || 'Failed to redeem promo code. Please try again.';
+      this.error.set(errorMessage);
+    } finally {
+      this.loading.set(false);
     }
   }
 
