@@ -123,6 +123,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.isLoggedIn()) {
       if (shouldStartFresh) {
+        this.aiService.setPreventAutoSelect(true);
         this.aiService.startNewSession();
         await this.aiService.loadSessionsForCurrentUser(false);
       } else {
@@ -146,6 +147,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       const promptText = this.resolveAutoPrompt(autoLaunchToken, inlinePrompt);
       if (promptText) {
         if (this.isLoggedIn()) {
+          this.aiService.setPreventAutoSelect(true);
           this.aiService.startNewSession();
         }
         this.queueAutoLaunch(promptText);
@@ -177,6 +179,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.pendingAutoPrompt && this.aiPanel) {
       this.aiPanel.triggerAutoLaunch(this.pendingAutoPrompt);
       this.pendingAutoPrompt = null;
+      this.aiService.setPreventAutoSelect(false);
     }
   }
   
@@ -234,6 +237,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
   private queueAutoLaunch(promptText: string): void {
     if (this.aiPanel) {
       this.aiPanel.triggerAutoLaunch(promptText);
+      this.aiService.setPreventAutoSelect(false);
       return;
     }
     this.pendingAutoPrompt = promptText;

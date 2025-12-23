@@ -117,6 +117,7 @@ export class RocketGoalsAIService {
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
   private currentUserId: string | null = null;
   private currentGoalId: string | null = null; // Track which goal's conversation is currently loaded
+  private preventAutoSelect = false;
 
   private readonly systemPrompt = `You are RocketGoals AI, a helpful assistant for goal-setting and achievement. You help users create, manage, and achieve their goals using the 7-day Rocket Goal challenge methodology.
 
@@ -272,7 +273,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       });
       this.sessions.set(mapped);
 
-      if (selectMostRecent && mapped.length > 0) {
+      if (selectMostRecent && mapped.length > 0 && !this.preventAutoSelect) {
         // If we're loading for a specific goal and already have a session for that goal, use it
         // Otherwise, load the most recent session
         const targetSessionId = this.currentSessionId() && 
@@ -394,6 +395,10 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.currentSessionTitle.set(null);
     this.currentSessionCreatedAt.set(null);
     // Don't clear currentGoalId here - it should persist until explicitly changed
+  }
+
+  setPreventAutoSelect(value: boolean): void {
+    this.preventAutoSelect = value;
   }
 
   async deleteSession(sessionId: string): Promise<void> {
