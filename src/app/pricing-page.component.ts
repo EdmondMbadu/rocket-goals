@@ -130,10 +130,7 @@ import { stripePrices } from '../../environments/environment';
                   autocomplete="off"
                   spellcheck="false"
                 />
-                <button type="button" class="btn-accent md:w-32" (click)="applyPromoCode()" [disabled]="!promoCode() || loading()">
-                  Apply
-                </button>
-                <button type="button" class="btn-primary md:w-32" (click)="redeemPromoCode()" [disabled]="!promoNotice() || loading()">
+                <button type="button" class="btn-accent md:w-32" (click)="redeemPromoCode()" [disabled]="!promoCode() || loading()">
                   {{ loading() ? 'Redeeming...' : 'Redeem' }}
                 </button>
                 <button type="button" class="btn-outline md:w-32" (click)="clearPromoCode()" [disabled]="!promoCode() || loading()">
@@ -481,25 +478,6 @@ export class PricingPageComponent {
     }
   }
 
-  applyPromoCode() {
-    const promoCode = this.promoCode().trim().toUpperCase();
-    if (!promoCode) {
-      this.error.set('Enter a promotion code to apply.');
-      this.promoNotice.set(null);
-      return;
-    }
-
-    const promoPlan = this.promoCodePlanMap[promoCode];
-    if (!promoPlan) {
-      this.error.set('Invalid promotion code.');
-      this.promoNotice.set(null);
-      return;
-    }
-
-    this.error.set(null);
-    this.promoNotice.set(`Promo code applied for ${this.getPlanName(promoPlan)}.`);
-  }
-
   clearPromoCode() {
     this.promoCode.set('');
     this.promoNotice.set(null);
@@ -583,7 +561,7 @@ export class PricingPageComponent {
     const promoPlan = this.promoCodePlanMap[promoCode];
 
     if (!promoPlan) {
-      this.error.set('Invalid promo code. Please apply a valid code first.');
+      this.error.set('Invalid promo code. Enter a valid code first.');
       return;
     }
 
