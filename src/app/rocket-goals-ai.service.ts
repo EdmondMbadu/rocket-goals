@@ -498,7 +498,8 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     const profile = this.authService.profile();
     if (!profile?.userId) return null;
 
-    if (this.currentSessionId()) {
+    // If a fresh prompt is pending, always create a new session (don't reuse old one)
+    if (!this.preventAutoSelect && this.currentSessionId()) {
       return this.currentSessionId();
     }
 
