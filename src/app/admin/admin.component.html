@@ -591,6 +591,132 @@
         }
       </section>
 
+      <!-- Promo Code Management Section -->
+      <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900/80 dark:border-white/10">
+        <div class="flex items-start justify-between px-6 py-5">
+          <div class="space-y-1">
+            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Settings</p>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Promo Code Management</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-300">Manage promo codes for each payment tier</p>
+          </div>
+          <button type="button" (click)="toggleSection('promoCodes')"
+            class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors dark:text-slate-300 dark:hover:text-white">
+            <span>@if (sectionOpen('promoCodes')) { Collapse } @else { Expand }</span>
+            @if (sectionOpen('promoCodes')) {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            }
+          </button>
+        </div>
+        @if (sectionOpen('promoCodes')) {
+        <div class="border-t border-slate-200 px-6 py-5 space-y-6 dark:border-white/10">
+          @if (promoCodesLoading()) {
+          <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+            <div class="w-5 h-5 border-2 border-slate-200 border-t-rose-500 rounded-full animate-spin"></div>
+            <span>Loading promo codes...</span>
+          </div>
+          } @else {
+          <!-- Moonshot Promo Code -->
+          <div class="space-y-2">
+            <label class="block text-slate-700 font-semibold text-sm dark:text-slate-200">
+              Moonshot Promo Code <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <input type="text" [value]="promoCodeMoonshot()" (input)="promoCodeMoonshot.set($any($event.target).value.toUpperCase())"
+                placeholder="Enter Moonshot promo code"
+                class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+            </div>
+          </div>
+
+          <!-- Interplanetary Promo Code -->
+          <div class="space-y-2">
+            <label class="block text-slate-700 font-semibold text-sm dark:text-slate-200">
+              Interplanetary Promo Code <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <input type="text" [value]="promoCodeInterplanetary()" (input)="promoCodeInterplanetary.set($any($event.target).value.toUpperCase())"
+                placeholder="Enter Interplanetary promo code"
+                class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+            </div>
+          </div>
+
+          <!-- Galactic Promo Code -->
+          <div class="space-y-2">
+            <label class="block text-slate-700 font-semibold text-sm dark:text-slate-200">
+              Galactic Promo Code <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <input type="text" [value]="promoCodeGalactic()" (input)="promoCodeGalactic.set($any($event.target).value.toUpperCase())"
+                placeholder="Enter Galactic promo code"
+                class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+            </div>
+          </div>
+
+          @if (promoCodesError()) {
+          <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 dark:bg-rose-500/10 dark:border-rose-400/30 dark:text-rose-200">
+            {{ promoCodesError() }}
+          </div>
+          }
+
+          <!-- Save Button -->
+          <div class="pt-2">
+            <button (click)="savePromoCodes()" [disabled]="promoCodesSaving()"
+              class="w-full sm:w-auto px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+              @if (promoCodesSaving()) {
+              <div class="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+              <span>Saving...</span>
+              } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Save Promo Codes</span>
+              }
+            </button>
+          </div>
+
+          <!-- Info Box -->
+          <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-900/70 dark:border-white/10">
+            <div class="flex gap-3">
+              <svg class="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5 dark:text-slate-400" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="text-sm text-slate-600 dark:text-slate-300">
+                <p class="font-semibold text-slate-700 mb-1 dark:text-slate-200">How this works</p>
+                <p>Promo codes are stored in Firestore and automatically used throughout the application. Changes take effect immediately. All codes must be unique and will be automatically converted to uppercase.</p>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </section>
+
       <!-- Quick Actions -->
       <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="flex items-start justify-between px-6 py-5">

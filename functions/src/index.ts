@@ -1864,14 +1864,38 @@ The final image should make the viewer think:
 });
 
 /**
- * Cloud Function to create a Stripe Checkout Session
- * This allows users to subscribe to a paid plan
+ * Helper function to load promo codes from Firestore
  */
-const promoCodePlanMap: Record<string, string> = {
-    NY2026MOONSHOT: 'moonshot',
-    NY2026INTERPLANETARY: 'interplanetary',
-    NY2026GALACTIC: 'galactic'
-};
+async function getPromoCodePlanMap(): Promise<Record<string, string>> {
+    try {
+        const promoDoc = await admin.firestore()
+            .collection('adminSettings')
+            .doc('promoCodes')
+            .get();
+        
+        if (promoDoc.exists) {
+            const data = promoDoc.data();
+            const moonshot = data?.moonshot?.toUpperCase() || 'NY2026MOONSHOT';
+            const interplanetary = data?.interplanetary?.toUpperCase() || 'NY2026INTERPLANETARY';
+            const galactic = data?.galactic?.toUpperCase() || 'NY2026GALACTIC';
+            
+            return {
+                [moonshot]: 'moonshot',
+                [interplanetary]: 'interplanetary',
+                [galactic]: 'galactic'
+            };
+        }
+    } catch (err) {
+        console.error('Failed to load promo codes from Firestore, using defaults:', err);
+    }
+    
+    // Return defaults if Firestore read fails
+    return {
+        'NY2026MOONSHOT': 'moonshot',
+        'NY2026INTERPLANETARY': 'interplanetary',
+        'NY2026GALACTIC': 'galactic'
+    };
+}
 
 const stripePriceByPlan: Record<string, string> = {
     moonshot: 'price_1ShFV1G26VVCdyeuhiUrkRfy',
@@ -1954,6 +1978,7 @@ export const createCheckoutSession = functions.runWith({
 
         let promotionCodeId: string | undefined;
         if (promoCode) {
+            const promoCodePlanMap = await getPromoCodePlanMap();
             const planKey = promoCodePlanMap[promoCode];
             if (!planKey) {
                 throw new functions.https.HttpsError(
@@ -2269,12 +2294,6 @@ export const reactivateSubscription = functions.runWith({
 });
 
 // Redeem a promo code for a free 1-month subscription
-const PROMO_CODE_PLAN_MAP: Record<string, 'moonshot' | 'interplanetary' | 'galactic'> = {
-    'NY2026MOONSHOT': 'moonshot',
-    'NY2026INTERPLANETARY': 'interplanetary',
-    'NY2026GALACTIC': 'galactic'
-};
-
 export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: string }, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError(
@@ -2291,7 +2310,8 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
         );
     }
 
-    const plan = PROMO_CODE_PLAN_MAP[promoCode];
+    const promoCodePlanMap = await getPromoCodePlanMap();
+    const plan = promoCodePlanMap[promoCode] as 'moonshot' | 'interplanetary' | 'galactic' | undefined;
     if (!plan) {
         throw new functions.https.HttpsError(
             'invalid-argument',

@@ -9,7 +9,7 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 
-type SectionKey = 'users' | 'email' | 'quickActions' | 'aiAnalytics';
+type SectionKey = 'users' | 'email' | 'quickActions' | 'aiAnalytics' | 'promoCodes';
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 type AiAnalytics = {
   path: string;
@@ -62,7 +62,8 @@ export class AdminComponent implements OnInit {
     users: false,
     email: false,
     quickActions: true,
-    aiAnalytics: false
+    aiAnalytics: false,
+    promoCodes: false
   });
   totalUsers = signal<number | null>(null);
   totalGoals = signal<number | null>(null);
@@ -74,6 +75,14 @@ export class AdminComponent implements OnInit {
   dateRange = signal<'1day' | '7days' | '30days' | 'custom'>('30days');
   customStartDate = signal<string>('');
   customEndDate = signal<string>('');
+
+  // Promo code management
+  promoCodeMoonshot = signal('');
+  promoCodeInterplanetary = signal('');
+  promoCodeGalactic = signal('');
+  promoCodesLoading = signal(false);
+  promoCodesSaving = signal(false);
+  promoCodesError = signal<string | null>(null);
 
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
 
@@ -113,6 +122,7 @@ export class AdminComponent implements OnInit {
     this.loadStats();
     this.loadAiAnalytics();
     this.loadUsers();
+    this.loadPromoCodes();
   }
 
   async sendTestEmail() {
@@ -411,6 +421,84 @@ export class AdminComponent implements OnInit {
     } catch (err) {
       console.error('Failed to enrich with auth metadata', err);
       return users;
+    }
+  }
+
+  async loadPromoCodes() {
+    this.promoCodesLoading.set(true);
+    this.promoCodesError.set(null);
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
+      const docSnap = await firestoreModule.getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        this.promoCodeMoonshot.set(data['moonshot'] || '');
+        this.promoCodeInterplanetary.set(data['interplanetary'] || '');
+        this.promoCodeGalactic.set(data['galactic'] || '');
+      } else {
+        // Initialize with default values if document doesn't exist
+        this.promoCodeMoonshot.set('NY2026MOONSHOT');
+        this.promoCodeInterplanetary.set('NY2026INTERPLANETARY');
+        this.promoCodeGalactic.set('NY2026GALACTIC');
+      }
+    } catch (err: any) {
+      console.error('Failed to load promo codes:', err);
+      this.promoCodesError.set('Unable to load promo codes.');
+      // Set defaults on error
+      this.promoCodeMoonshot.set('NY2026MOONSHOT');
+      this.promoCodeInterplanetary.set('NY2026INTERPLANETARY');
+      this.promoCodeGalactic.set('NY2026GALACTIC');
+    } finally {
+      this.promoCodesLoading.set(false);
+    }
+  }
+
+  async savePromoCodes() {
+    const moonshot = this.promoCodeMoonshot().trim().toUpperCase();
+    const interplanetary = this.promoCodeInterplanetary().trim().toUpperCase();
+    const galactic = this.promoCodeGalactic().trim().toUpperCase();
+
+    // Validation
+    if (!moonshot || !interplanetary || !galactic) {
+      this.promoCodesError.set('All promo codes are required.');
+      setTimeout(() => this.promoCodesError.set(null), 5000);
+      return;
+    }
+
+    // Check for duplicates
+    if (moonshot === interplanetary || moonshot === galactic || interplanetary === galactic) {
+      this.promoCodesError.set('Promo codes must be unique.');
+      setTimeout(() => this.promoCodesError.set(null), 5000);
+      return;
+    }
+
+    this.promoCodesSaving.set(true);
+    this.promoCodesError.set(null);
+    this.success.set(null);
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
+      
+      await firestoreModule.setDoc(docRef, {
+        moonshot,
+        interplanetary,
+        galactic,
+        updatedAt: firestoreModule.Timestamp.now()
+      }, { merge: true });
+
+      this.success.set('✅ Promo codes updated successfully!');
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to save promo codes:', err);
+      this.promoCodesError.set('Failed to save promo codes. Please try again.');
+      setTimeout(() => this.promoCodesError.set(null), 5000);
+    } finally {
+      this.promoCodesSaving.set(false);
     }
   }
 }

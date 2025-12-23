@@ -1,10 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { ThemeService } from './theme.service';
 import { AuthService } from './auth.service';
-import { stripePrices } from '../../environments/environment';
+import { stripePrices, firebaseConfig } from '../../environments/environment';
 
 @Component({
   selector: 'app-pricing-page',
@@ -437,7 +437,7 @@ import { stripePrices } from '../../environments/environment';
     .btn-outline:hover { background: black; color: white; transform: translateY(-2px); }
   `]
 })
-export class PricingPageComponent {
+export class PricingPageComponent implements OnInit {
   private readonly theme = inject(ThemeService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -454,11 +454,56 @@ export class PricingPageComponent {
     'interplanetary': 2,
     'galactic': 3
   };
-  private readonly promoCodePlanMap: Record<string, string> = {
+  private readonly promoCodePlanMap = signal<Record<string, string>>({
     'NY2026MOONSHOT': 'moonshot',
     'NY2026INTERPLANETARY': 'interplanetary',
     'NY2026GALACTIC': 'galactic'
-  };
+  });
+  private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
+
+  async ngOnInit() {
+    await this.loadPromoCodes();
+  }
+
+  private async ensureFirestore() {
+    if (!this.firestorePromise) {
+      this.firestorePromise = (async () => {
+        const appModule = await import('firebase/app');
+        const firestoreModule = await import('firebase/firestore');
+        const app =
+          appModule.getApps().length === 0
+            ? appModule.initializeApp(firebaseConfig)
+            : appModule.getApp();
+        return firestoreModule.getFirestore(app);
+      })();
+    }
+    return this.firestorePromise;
+  }
+
+  private async loadPromoCodes() {
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
+      const docSnap = await firestoreModule.getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const moonshot = data['moonshot']?.toUpperCase() || 'NY2026MOONSHOT';
+        const interplanetary = data['interplanetary']?.toUpperCase() || 'NY2026INTERPLANETARY';
+        const galactic = data['galactic']?.toUpperCase() || 'NY2026GALACTIC';
+        
+        this.promoCodePlanMap.set({
+          [moonshot]: 'moonshot',
+          [interplanetary]: 'interplanetary',
+          [galactic]: 'galactic'
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load promo codes from Firestore, using defaults:', err);
+      // Keep default values on error
+    }
+  }
   private readonly priceIdPlanMap: Record<string, string> = {
     [stripePrices.moonshot]: 'moonshot',
     [stripePrices.interplanetary]: 'interplanetary',
@@ -558,7 +603,7 @@ export class PricingPageComponent {
 
   async redeemPromoCode() {
     const promoCode = this.promoCode().trim().toUpperCase();
-    const promoPlan = this.promoCodePlanMap[promoCode];
+    const promoPlan = this.promoCodePlanMap()[promoCode];
 
     if (!promoPlan) {
       this.error.set('Invalid promo code. Enter a valid code first.');
@@ -610,7 +655,7 @@ export class PricingPageComponent {
     const profile = this.authService.profile();
     const planKey = this.priceIdPlanMap[priceId];
     const promoCode = this.promoCode().trim().toUpperCase();
-    const promoPlan = promoCode ? this.promoCodePlanMap[promoCode] : null;
+    const promoPlan = promoCode ? this.promoCodePlanMap()[promoCode] : null;
 
     // Check if user is logged in
     if (!profile) {
