@@ -9,7 +9,7 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 
-type SectionKey = 'users' | 'email' | 'sms' | 'quickActions' | 'aiAnalytics' | 'promoCodes';
+type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes';
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 type AiAnalytics = {
   path: string;
@@ -53,6 +53,18 @@ export class AdminComponent implements OnInit {
   smsPhoneNumber = signal('');
   smsMessage = signal('Hello! This is a test SMS from Rocket Goals Admin Panel to verify Twilio integration is working correctly.');
 
+  // Reminder OS form state
+  reminderGoalTitle = signal('Complete my fitness challenge');
+  reminderParticipantName = signal('John Doe');
+  reminderParticipantEmail = signal('john@example.com');
+  reminderTestEmail = signal('');
+  reminderPreviewHtml = signal<string | null>(null);
+  reminderPreviewSubject = signal<string | null>(null);
+  reminderPreviewText = signal<string | null>(null);
+  reminderLoading = signal(false);
+  reminderBulkLoading = signal(false);
+  reminderBulkResults = signal<{ sent: number; failed: number; total: number; errors: Array<{ goalId: string; email: string; error: string }> } | null>(null);
+
   // UI state
   loading = signal(false);
   success = signal<string | null>(null);
@@ -66,6 +78,7 @@ export class AdminComponent implements OnInit {
     users: false,
     email: false,
     sms: false,
+    reminders: false,
     quickActions: true,
     aiAnalytics: false,
     promoCodes: false
@@ -266,6 +279,162 @@ export class AdminComponent implements OnInit {
         this.success.set(null);
         this.error.set(null);
       }, 8000);
+    }
+  }
+
+  async previewGoalReminder() {
+    const goalTitle = this.reminderGoalTitle().trim();
+    const participantName = this.reminderParticipantName().trim();
+    const participantEmail = this.reminderParticipantEmail().trim();
+
+    if (!goalTitle || !participantName || !participantEmail) {
+      this.error.set('Please fill in all fields to preview the reminder');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    this.reminderLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const previewReminder = httpsCallable(functions, 'previewGoalReminder');
+
+      const result = await previewReminder({ goalTitle, participantName, participantEmail });
+      const data = result.data as { success: boolean; subject: string; text: string; html: string };
+
+      if (data.success) {
+        this.reminderPreviewSubject.set(data.subject);
+        this.reminderPreviewText.set(data.text);
+        this.reminderPreviewHtml.set(data.html);
+        this.success.set('✅ Preview generated successfully');
+      } else {
+        this.error.set('Failed to generate preview');
+      }
+    } catch (err: any) {
+      console.error('Error generating preview:', err);
+      const errorMessage = err.message || 'An unexpected error occurred';
+      this.error.set(`Failed to generate preview: ${errorMessage}`);
+    } finally {
+      this.reminderLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 5000);
+    }
+  }
+
+  async sendTestGoalReminder() {
+    const goalTitle = this.reminderGoalTitle().trim();
+    const participantName = this.reminderParticipantName().trim();
+    const participantEmail = this.reminderParticipantEmail().trim();
+    const testEmail = this.reminderTestEmail().trim();
+
+    if (!goalTitle || !participantName || !participantEmail) {
+      this.error.set('Please fill in goal title, participant name, and email');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (!testEmail) {
+      this.error.set('Please enter a test email address');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      this.error.set('Please enter a valid email address');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    this.reminderLoading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const sendTestReminder = httpsCallable(functions, 'sendTestGoalReminder');
+
+      const result = await sendTestReminder({ goalTitle, participantName, participantEmail, testEmail });
+      const data = result.data as { success: boolean; message: string };
+
+      if (data.success) {
+        this.success.set(`✅ ${data.message}`);
+      } else {
+        this.error.set('Failed to send test reminder');
+      }
+    } catch (err: any) {
+      console.error('Error sending test reminder:', err);
+      const errorMessage = err.message || 'An unexpected error occurred';
+      this.error.set(`Failed to send test reminder: ${errorMessage}`);
+    } finally {
+      this.reminderLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 8000);
+    }
+  }
+
+  async sendBulkGoalReminders() {
+    if (!confirm('Are you sure you want to send reminders to ALL active goals? This action cannot be undone.')) {
+      return;
+    }
+
+    this.reminderBulkLoading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+    this.reminderBulkResults.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const sendBulkReminders = httpsCallable(functions, 'sendBulkGoalReminders');
+
+      const result = await sendBulkReminders({});
+      const data = result.data as {
+        success: boolean;
+        message: string;
+        sent: number;
+        failed: number;
+        total: number;
+        errors: Array<{ goalId: string; email: string; error: string }>;
+      };
+
+      if (data.success) {
+        this.success.set(`✅ ${data.message}`);
+        this.reminderBulkResults.set({
+          sent: data.sent,
+          failed: data.failed,
+          total: data.total,
+          errors: data.errors || []
+        });
+      } else {
+        this.error.set('Failed to send bulk reminders');
+      }
+    } catch (err: any) {
+      console.error('Error sending bulk reminders:', err);
+      const errorMessage = err.message || 'An unexpected error occurred';
+      this.error.set(`Failed to send bulk reminders: ${errorMessage}`);
+    } finally {
+      this.reminderBulkLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 10000);
     }
   }
 

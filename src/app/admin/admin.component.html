@@ -701,6 +701,220 @@
         }
       </section>
 
+      <!-- Reminder OS Section -->
+      <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="flex items-start justify-between px-6 py-5">
+          <div class="space-y-1">
+            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Reminders</p>
+            <h2 class="text-xl font-bold text-slate-900">Reminder OS</h2>
+            <p class="text-sm text-slate-500">Send goal reminders to users to log in and update their progress</p>
+          </div>
+          <button type="button" (click)="toggleSection('reminders')"
+            class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+            <span>@if (sectionOpen('reminders')) { Collapse } @else { Expand }</span>
+            @if (sectionOpen('reminders')) {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            }
+          </button>
+        </div>
+        @if (sectionOpen('reminders')) {
+        <div class="border-t border-slate-200 p-6 space-y-6">
+          <!-- Goal Information Form -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Goal Title -->
+            <div class="space-y-2">
+              <label class="block text-slate-700 font-semibold text-sm">
+                Goal Title <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" [value]="reminderGoalTitle()"
+                (input)="reminderGoalTitle.set($any($event.target).value)"
+                placeholder="e.g., Complete my fitness challenge"
+                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+            </div>
+
+            <!-- Participant Name -->
+            <div class="space-y-2">
+              <label class="block text-slate-700 font-semibold text-sm">
+                Participant Name <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" [value]="reminderParticipantName()"
+                (input)="reminderParticipantName.set($any($event.target).value)" placeholder="e.g., John Doe"
+                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+            </div>
+
+            <!-- Participant Email -->
+            <div class="space-y-2">
+              <label class="block text-slate-700 font-semibold text-sm">
+                Participant Email <span class="text-rose-500">*</span>
+              </label>
+              <input type="email" [value]="reminderParticipantEmail()"
+                (input)="reminderParticipantEmail.set($any($event.target).value)" placeholder="e.g., john@example.com"
+                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+            </div>
+
+            <!-- Test Email -->
+            <div class="space-y-2">
+              <label class="block text-slate-700 font-semibold text-sm">
+                Test Email (for testing)
+              </label>
+              <input type="email" [value]="reminderTestEmail()"
+                (input)="reminderTestEmail.set($any($event.target).value)"
+                placeholder="Enter email to send test reminder"
+                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-3">
+            <button (click)="previewGoalReminder()" [disabled]="reminderLoading() || reminderBulkLoading()"
+              class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              @if (reminderLoading()) {
+              <div class="w-4 h-4 border-2 border-slate-400/50 border-t-slate-400 rounded-full animate-spin"></div>
+              <span>Loading...</span>
+              } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>Preview Email</span>
+              }
+            </button>
+
+            <button (click)="sendTestGoalReminder()" [disabled]="reminderLoading() || reminderBulkLoading()"
+              class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              @if (reminderLoading()) {
+              <div class="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+              <span>Sending...</span>
+              } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              <span>Send Test Reminder</span>
+              }
+            </button>
+
+            <button (click)="sendBulkGoalReminders()" [disabled]="reminderLoading() || reminderBulkLoading()"
+              class="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              @if (reminderBulkLoading()) {
+              <div class="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+              <span>Sending to all goals...</span>
+              } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>Send to All Active Goals</span>
+              }
+            </button>
+          </div>
+
+          <!-- Email Preview -->
+          @if (reminderPreviewHtml()) {
+          <div class="mt-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-slate-900">Email Preview</h3>
+              <button
+                (click)="reminderPreviewHtml.set(null); reminderPreviewSubject.set(null); reminderPreviewText.set(null)"
+                class="text-sm text-slate-500 hover:text-slate-700">
+                Close Preview
+              </button>
+            </div>
+
+            @if (reminderPreviewSubject()) {
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <p class="text-sm font-semibold text-slate-700 mb-1">Subject:</p>
+              <p class="text-slate-900">{{ reminderPreviewSubject() }}</p>
+            </div>
+            }
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <div class="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                <p class="text-xs font-semibold text-slate-600 uppercase">HTML Preview</p>
+              </div>
+              <div class="p-4 bg-white max-h-96 overflow-auto" [innerHTML]="reminderPreviewHtml()"></div>
+            </div>
+
+            @if (reminderPreviewText()) {
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <div class="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                <p class="text-xs font-semibold text-slate-600 uppercase">Plain Text Version</p>
+              </div>
+              <div class="p-4 bg-white max-h-48 overflow-auto">
+                <pre class="whitespace-pre-wrap text-sm text-slate-700 font-mono">{{ reminderPreviewText() }}</pre>
+              </div>
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Bulk Send Results -->
+          @if (reminderBulkResults()) {
+          <div class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <h3 class="text-lg font-bold text-slate-900 mb-3">Bulk Send Results</h3>
+            <div class="grid grid-cols-3 gap-4 mb-4">
+              <div class="text-center">
+                <p class="text-2xl font-bold text-slate-900">{{ reminderBulkResults()!.total }}</p>
+                <p class="text-sm text-slate-600">Total Goals</p>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold text-green-600">{{ reminderBulkResults()!.sent }}</p>
+                <p class="text-sm text-slate-600">Sent Successfully</p>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold text-rose-600">{{ reminderBulkResults()!.failed }}</p>
+                <p class="text-sm text-slate-600">Failed</p>
+              </div>
+            </div>
+            @if (reminderBulkResults()!.errors.length > 0) {
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-slate-700 mb-2">Errors (showing first 10):</p>
+              <div class="space-y-2 max-h-48 overflow-auto">
+                @for (error of reminderBulkResults()!.errors; track error.goalId) {
+                <div class="p-2 bg-white border border-slate-200 rounded text-xs">
+                  <p class="font-semibold text-slate-900">{{ error.email }}</p>
+                  <p class="text-slate-600">{{ error.error }}</p>
+                </div>
+                }
+              </div>
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Info Box -->
+          <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div class="flex gap-3">
+              <svg class="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="text-sm text-slate-600">
+                <p class="font-semibold text-slate-700 mb-1">How this works</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li><strong>Preview:</strong> Generate a preview of the reminder email without sending it</li>
+                  <li><strong>Test:</strong> Send a test reminder to a specific email address to verify the content</li>
+                  <li><strong>Bulk Send:</strong> Send reminders to all users with active goals. This will send one
+                    reminder per active goal in the system.</li>
+                </ul>
+                <p class="mt-2 text-xs text-slate-500">The reminder emails include the goal title and encourage users to
+                  log in and update their progress.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </section>
+
       <!-- Promo Code Management Section -->
       <section
         class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900/80 dark:border-white/10">

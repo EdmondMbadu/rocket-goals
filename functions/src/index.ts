@@ -1466,6 +1466,371 @@ export const sendTestSMS = functions.runWith({
 });
 
 /**
+ * Helper function to generate goal reminder email content
+ */
+function generateGoalReminderEmail(goalTitle: string, participantName: string, participantEmail: string, goalId: string) {
+    const loginUrl = 'https://rocket-goals.web.app/goals';
+    const subject = `🚀 Time to update your progress on: ${goalTitle}`;
+
+    const text = `Hi ${participantName},
+
+It's time to check in on your Rocket Goal!
+
+Goal: ${goalTitle}
+
+Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+
+Visit: ${loginUrl}
+
+Keep pushing forward! 🚀
+
+- The Rocket Goals Team`;
+
+    const html = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+            </div>
+            <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                <h2 style="color: #111827; margin: 0 0 20px 0; font-size: 22px;">Time to update your progress!</h2>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Hi ${participantName},
+                </p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    It's time to check in on your Rocket Goal:
+                </p>
+                <div style="background: #f9fafb; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                    <p style="color: #111827; font-size: 18px; font-weight: 600; margin: 0;">
+                        ${goalTitle}
+                    </p>
+                </div>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                    Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${loginUrl}" 
+                       style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        Log In & Update Progress
+                    </a>
+                </div>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                    Keep pushing forward! 🚀
+                </p>
+                <p style="color: #9ca3af; font-size: 14px; margin: 30px 0 0 0;">
+                    - The Rocket Goals Team
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, text, html };
+}
+
+/**
+ * Cloud Function to preview goal reminder email
+ * Only accessible by admin users
+ */
+export const previewGoalReminder = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: { goalTitle: string; participantName: string; participantEmail: string }, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to preview reminder emails.'
+        );
+    }
+
+    // Check if user is admin
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can preview reminder emails.'
+        );
+    }
+
+    // Validate input
+    const { goalTitle, participantName, participantEmail } = data;
+    if (!goalTitle || !participantName || !participantEmail) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: goalTitle, participantName, participantEmail'
+        );
+    }
+
+    try {
+        const emailContent = generateGoalReminderEmail(goalTitle, participantName, participantEmail, 'preview');
+
+        return {
+            success: true,
+            subject: emailContent.subject,
+            text: emailContent.text,
+            html: emailContent.html
+        };
+    } catch (error: any) {
+        console.error('❌ Error generating preview:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to generate preview: ${error.message}`
+        );
+    }
+});
+
+/**
+ * Cloud Function to send test goal reminder email
+ * Only accessible by admin users
+ */
+export const sendTestGoalReminder = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: { goalTitle: string; participantName: string; participantEmail: string; testEmail: string }, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send test reminder emails.'
+        );
+    }
+
+    // Check if user is admin
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can send test reminder emails.'
+        );
+    }
+
+    // Validate input
+    const { goalTitle, participantName, participantEmail, testEmail } = data;
+    if (!goalTitle || !participantName || !participantEmail || !testEmail) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: goalTitle, participantName, participantEmail, testEmail'
+        );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid test email address format'
+        );
+    }
+
+    try {
+        // Initialize SendGrid with API key
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set. Please set it using: firebase functions:secrets:set SENDGRID_API_KEY');
+        }
+        sgMail.setApiKey(apiKey);
+
+        // Generate email content
+        const emailContent = generateGoalReminderEmail(goalTitle, participantName, participantEmail, 'test');
+
+        // Create email message
+        const msg = {
+            to: testEmail,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: emailContent.subject,
+            text: emailContent.text,
+            html: emailContent.html,
+        };
+
+        // Send the email
+        await sgMail.send(msg);
+
+        console.log(`✅ Test goal reminder sent successfully to ${testEmail}`);
+
+        return {
+            success: true,
+            message: `Test reminder email sent successfully to ${testEmail}`
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending test reminder email:', error);
+
+        // Handle SendGrid specific errors
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send test reminder email: ${error.message}`
+        );
+    }
+});
+
+/**
+ * Cloud Function to send bulk goal reminders to all active goals
+ * Only accessible by admin users
+ */
+export const sendBulkGoalReminders = functions.runWith({
+    secrets: [sendgridApiKey],
+    timeoutSeconds: 540,
+    memory: '512MB'
+}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send bulk reminders.'
+        );
+    }
+
+    // Check if user is admin
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can send bulk reminders.'
+        );
+    }
+
+    try {
+        // Initialize SendGrid with API key
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set. Please set it using: firebase functions:secrets:set SENDGRID_API_KEY');
+        }
+        sgMail.setApiKey(apiKey);
+
+        // Fetch all active goals
+        const goalsSnapshot = await admin.firestore()
+            .collection('rocketGoals')
+            .where('status', '==', 'active')
+            .get();
+
+        if (goalsSnapshot.empty) {
+            return {
+                success: true,
+                message: 'No active goals found to send reminders to.',
+                sent: 0,
+                failed: 0,
+                total: 0
+            };
+        }
+
+        const results = {
+            sent: 0,
+            failed: 0,
+            errors: [] as Array<{ goalId: string; email: string; error: string }>
+        };
+
+        // Process goals in batches to avoid overwhelming SendGrid
+        const batchSize = 10;
+        const goals = goalsSnapshot.docs;
+
+        for (let i = 0; i < goals.length; i += batchSize) {
+            const batch = goals.slice(i, i + batchSize);
+
+            await Promise.allSettled(
+                batch.map(async (goalDoc) => {
+                    try {
+                        const goalData = goalDoc.data();
+                        const goalId = goalDoc.id;
+
+                        // Extract goal information
+                        const goalTitle = goalData.primaryGoal || goalData.answers?.goal_title_label || 'Your Rocket Goal';
+                        const participant = goalData.participant;
+
+                        if (!participant || !participant.email) {
+                            results.failed++;
+                            results.errors.push({
+                                goalId,
+                                email: participant?.email || 'unknown',
+                                error: 'Missing participant email'
+                            });
+                            return;
+                        }
+
+                        const participantName = participant.firstName
+                            ? `${participant.firstName} ${participant.lastName || ''}`.trim()
+                            : participant.email.split('@')[0];
+
+                        // Generate email content
+                        const emailContent = generateGoalReminderEmail(
+                            goalTitle,
+                            participantName,
+                            participant.email,
+                            goalId
+                        );
+
+                        // Create email message
+                        const msg = {
+                            to: participant.email,
+                            from: 'missioncontrol@rocketgoals.com',
+                            subject: emailContent.subject,
+                            text: emailContent.text,
+                            html: emailContent.html,
+                        };
+
+                        // Send the email
+                        await sgMail.send(msg);
+                        results.sent++;
+
+                        console.log(`✅ Reminder sent to ${participant.email} for goal: ${goalTitle}`);
+                    } catch (error: any) {
+                        results.failed++;
+                        const goalData = goalDoc.data();
+                        const participant = goalData.participant;
+                        results.errors.push({
+                            goalId: goalDoc.id,
+                            email: participant?.email || 'unknown',
+                            error: error.message || 'Unknown error'
+                        });
+                        console.error(`❌ Failed to send reminder for goal ${goalDoc.id}:`, error);
+                    }
+                })
+            );
+
+            // Small delay between batches to respect rate limits
+            if (i + batchSize < goals.length) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        console.log(`✅ Bulk reminder sending completed. Sent: ${results.sent}, Failed: ${results.failed}`);
+
+        return {
+            success: true,
+            message: `Bulk reminders sent. ${results.sent} successful, ${results.failed} failed.`,
+            sent: results.sent,
+            failed: results.failed,
+            total: goals.length,
+            errors: results.errors.slice(0, 10) // Return first 10 errors to avoid response size issues
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending bulk reminders:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send bulk reminders: ${error.message}`
+        );
+    }
+});
+
+/**
  * Cloud Function to send custom verification emails via SendGrid
  * Accessible by authenticated users only
  */
