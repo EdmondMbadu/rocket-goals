@@ -114,8 +114,20 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   async ngOnInit() {
+    const initialParams = this.route.snapshot.queryParamMap;
+    const initialAutoPrompt = this.resolveAutoPrompt(
+      initialParams.get('autoLaunch'),
+      initialParams.get('prompt')
+    );
+    const shouldStartFresh = !!initialAutoPrompt;
+
     if (this.isLoggedIn()) {
-      await this.aiService.loadSessionsForCurrentUser();
+      if (shouldStartFresh) {
+        this.aiService.startNewSession();
+        await this.aiService.loadSessionsForCurrentUser(false);
+      } else {
+        await this.aiService.loadSessionsForCurrentUser();
+      }
       // Check if user was redirected back after login with pending goal
       await this.checkPendingGoalCreation();
     }
@@ -133,6 +145,9 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
       const promptText = this.resolveAutoPrompt(autoLaunchToken, inlinePrompt);
       if (promptText) {
+        if (this.isLoggedIn()) {
+          this.aiService.startNewSession();
+        }
         this.queueAutoLaunch(promptText);
       }
 
