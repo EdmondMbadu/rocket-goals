@@ -715,8 +715,6 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       throw new Error(errorMessage);
     } finally {
       this.isLoading.set(false);
-      // Reset preventAutoSelect after message is sent
-      this.preventAutoSelect = false;
     }
   }
 
@@ -817,10 +815,6 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       throw new Error(errorMessage);
     } finally {
       this.isLoading.set(false);
-      // Reset preventAutoSelect after message is sent
-      // This allows normal session operations while preventing old sessions from loading
-      // before the new session and message were created
-      this.preventAutoSelect = false;
     }
   }
 
