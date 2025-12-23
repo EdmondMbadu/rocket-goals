@@ -6,6 +6,7 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import sgMail = require("@sendgrid/mail");
+import twilio = require("twilio");
 import { getToolRegistry, type AgentResponse, type SideEffect } from "./tools";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import * as crypto from "crypto";
@@ -19,6 +20,9 @@ const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const gaPropertyId = defineSecret('GA_PROPERTY_ID');
 const stripeWebhookSecretGoals = defineSecret('STRIPE_WEBHOOK_SECRET_GOALS');
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
+const twilioAccountSid = defineSecret('TWILIO_ACCOUNT_SID');
+const twilioAuthToken = defineSecret('TWILIO_AUTH_TOKEN');
+const twilioPhoneNumber = defineSecret('TWILIO_PHONE_NUMBER');
 
 const stripeSubscriptionEvents = new Set([
     'customer.subscription.created',
@@ -1344,6 +1348,119 @@ export const sendTestEmail = functions.runWith({
         throw new functions.https.HttpsError(
             'internal',
             `Failed to send email: ${error.message}`
+        );
+    }
+});
+
+/**
+ * Cloud Function to send test SMS messages via Twilio
+ * Only accessible by admin users
+ */
+export const sendTestSMS = functions.runWith({
+    secrets: [twilioAccountSid, twilioAuthToken, twilioPhoneNumber]
+}).https.onCall(async (data: { phoneNumber: string; message: string }, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send SMS messages.'
+        );
+    }
+
+    // Check if user is admin
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can send test SMS messages.'
+        );
+    }
+
+    // Validate input
+    const { phoneNumber, message } = data;
+    if (!phoneNumber || !message) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: phoneNumber, message'
+        );
+    }
+
+    // Validate phone number format (basic validation - E.164 format preferred)
+    // Remove any non-digit characters except + at the start
+    const cleanedPhone = phoneNumber.trim();
+    if (!cleanedPhone || cleanedPhone.length < 10) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid phone number format. Please use E.164 format (e.g., +1234567890)'
+        );
+    }
+
+    // Validate message length (SMS limit is 1600 characters for Twilio)
+    if (message.length > 1600) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Message is too long. Maximum length is 1600 characters.'
+        );
+    }
+
+    try {
+        // Get Twilio credentials
+        const accountSid = twilioAccountSid.value();
+        const authToken = twilioAuthToken.value();
+        const fromNumber = twilioPhoneNumber.value();
+
+        if (!accountSid || !authToken || !fromNumber) {
+            throw new Error('Twilio credentials are not set. Please set them using: firebase functions:secrets:set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER');
+        }
+
+        // Initialize Twilio client
+        const client = twilio(accountSid, authToken);
+
+        // Send SMS
+        const result = await client.messages.create({
+            body: message,
+            from: fromNumber,
+            to: cleanedPhone
+        });
+
+        console.log(`✅ Test SMS sent successfully to ${cleanedPhone}. SID: ${result.sid}`);
+
+        return {
+            success: true,
+            message: `SMS sent successfully to ${cleanedPhone}`,
+            sid: result.sid,
+            status: result.status
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending SMS:', error);
+
+        // Handle Twilio specific errors
+        if (error.code) {
+            let errorMessage = `Twilio error (${error.code}): ${error.message}`;
+
+            // Provide helpful error messages for common issues
+            if (error.code === 21211) {
+                errorMessage = 'Invalid phone number format. Please use E.164 format (e.g., +1234567890)';
+            } else if (error.code === 21608) {
+                errorMessage = 'The phone number is not verified for your Twilio account. Please verify it in the Twilio console.';
+            } else if (error.code === 21614) {
+                errorMessage = 'Invalid "from" phone number. Please check your TWILIO_PHONE_NUMBER secret.';
+            }
+
+            throw new functions.https.HttpsError(
+                'internal',
+                errorMessage
+            );
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send SMS: ${error.message}`
         );
     }
 });

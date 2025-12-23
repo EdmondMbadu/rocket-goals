@@ -9,7 +9,7 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 
-type SectionKey = 'users' | 'email' | 'quickActions' | 'aiAnalytics' | 'promoCodes';
+type SectionKey = 'users' | 'email' | 'sms' | 'quickActions' | 'aiAnalytics' | 'promoCodes';
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 type AiAnalytics = {
   path: string;
@@ -49,6 +49,10 @@ export class AdminComponent implements OnInit {
   emailSubject = signal('Test Email from Rocket Goals');
   emailMessage = signal('Hello! This is a test email sent from the Rocket Goals Admin Panel to verify SendGrid integration is working correctly.');
 
+  // SMS form state
+  smsPhoneNumber = signal('');
+  smsMessage = signal('Hello! This is a test SMS from Rocket Goals Admin Panel to verify Twilio integration is working correctly.');
+
   // UI state
   loading = signal(false);
   success = signal<string | null>(null);
@@ -61,6 +65,7 @@ export class AdminComponent implements OnInit {
   sections = signal<Record<SectionKey, boolean>>({
     users: false,
     email: false,
+    sms: false,
     quickActions: true,
     aiAnalytics: false,
     promoCodes: false
@@ -183,6 +188,78 @@ export class AdminComponent implements OnInit {
       console.error('Error sending email:', err);
       const errorMessage = err.message || 'An unexpected error occurred';
       this.error.set(`Failed to send email: ${errorMessage}`);
+    } finally {
+      this.loading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 8000);
+    }
+  }
+
+  async sendTestSMS() {
+    const phoneNumber = this.smsPhoneNumber().trim();
+    const message = this.smsMessage().trim();
+
+    // Validation
+    if (!phoneNumber) {
+      this.error.set('Please enter a recipient phone number');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    // Basic phone number validation (should start with + for E.164 format)
+    if (!phoneNumber.startsWith('+')) {
+      this.error.set('Please enter phone number in E.164 format (e.g., +1234567890)');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (phoneNumber.length < 10) {
+      this.error.set('Please enter a valid phone number');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (!message) {
+      this.error.set('Please enter an SMS message');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (message.length > 1600) {
+      this.error.set('Message is too long. Maximum length is 1600 characters.');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      // Import Firebase functions
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const sendSMS = httpsCallable(functions, 'sendTestSMS');
+
+      const result = await sendSMS({ phoneNumber, message });
+      const data = result.data as { success: boolean; message: string; sid?: string; status?: string };
+
+      if (data.success) {
+        this.success.set(`✅ ${data.message}${data.sid ? ` (SID: ${data.sid})` : ''}`);
+        // Clear form on success
+        this.smsPhoneNumber.set('');
+      } else {
+        this.error.set('Failed to send SMS. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Error sending SMS:', err);
+      const errorMessage = err.message || 'An unexpected error occurred';
+      this.error.set(`Failed to send SMS: ${errorMessage}`);
     } finally {
       this.loading.set(false);
       setTimeout(() => {
