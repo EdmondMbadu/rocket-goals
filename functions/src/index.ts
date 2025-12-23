@@ -21,115 +21,115 @@ const stripeWebhookSecretGoals = defineSecret('STRIPE_WEBHOOK_SECRET_GOALS');
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 
 const stripeSubscriptionEvents = new Set([
-  'customer.subscription.created',
-  'customer.subscription.updated',
-  'customer.subscription.deleted',
-  'invoice.payment_succeeded',
-  'invoice.payment_failed',
-  'checkout.session.completed',
-  'checkout.session.async_payment_succeeded',
-  'checkout.session.async_payment_failed'
+    'customer.subscription.created',
+    'customer.subscription.updated',
+    'customer.subscription.deleted',
+    'invoice.payment_succeeded',
+    'invoice.payment_failed',
+    'checkout.session.completed',
+    'checkout.session.async_payment_succeeded',
+    'checkout.session.async_payment_failed'
 ]);
 
 const toTimestamp = (unixSeconds?: number | null) => {
-  if (!unixSeconds) return null;
-  return admin.firestore.Timestamp.fromMillis(unixSeconds * 1000);
+    if (!unixSeconds) return null;
+    return admin.firestore.Timestamp.fromMillis(unixSeconds * 1000);
 };
 
 // Map Stripe price IDs to plan names
 const PRICE_TO_PLAN: Record<string, 'moonshot' | 'interplanetary' | 'galactic'> = {
-  'price_1ShFV1G26VVCdyeuhiUrkRfy': 'moonshot',
-  'price_1ShFVtG26VVCdyeu1stsZFw5': 'interplanetary',
-  'price_1ShFWGG26VVCdyeuANsvCWFA': 'galactic'
+    'price_1ShFV1G26VVCdyeuhiUrkRfy': 'moonshot',
+    'price_1ShFVtG26VVCdyeu1stsZFw5': 'interplanetary',
+    'price_1ShFWGG26VVCdyeuANsvCWFA': 'galactic'
 };
 
 const getPlanFromPriceId = (priceId: string | null | undefined): 'moonshot' | 'interplanetary' | 'galactic' | null => {
-  if (!priceId) return null;
-  return PRICE_TO_PLAN[priceId] || null;
+    if (!priceId) return null;
+    return PRICE_TO_PLAN[priceId] || null;
 };
 
 const parseStripeSignature = (header: string) => {
-  const parts = header.split(',').map((part) => part.trim());
-  const timestampPart = parts.find((part) => part.startsWith('t='));
-  const timestamp = timestampPart ? Number(timestampPart.slice(2)) : null;
-  const signatures = parts
-    .filter((part) => part.startsWith('v1='))
-    .map((part) => part.slice(3));
-  return { timestamp, signatures };
+    const parts = header.split(',').map((part) => part.trim());
+    const timestampPart = parts.find((part) => part.startsWith('t='));
+    const timestamp = timestampPart ? Number(timestampPart.slice(2)) : null;
+    const signatures = parts
+        .filter((part) => part.startsWith('v1='))
+        .map((part) => part.slice(3));
+    return { timestamp, signatures };
 };
 
 const timingSafeEqual = (a: string, b: string) => {
-  const aBuffer = Buffer.from(a, 'utf8');
-  const bBuffer = Buffer.from(b, 'utf8');
-  if (aBuffer.length !== bBuffer.length) return false;
-  return crypto.timingSafeEqual(aBuffer, bBuffer);
+    const aBuffer = Buffer.from(a, 'utf8');
+    const bBuffer = Buffer.from(b, 'utf8');
+    if (aBuffer.length !== bBuffer.length) return false;
+    return crypto.timingSafeEqual(aBuffer, bBuffer);
 };
 
 const verifyStripeSignature = (rawBody: Buffer, signatureHeader: string, secret: string) => {
-  const { timestamp, signatures } = parseStripeSignature(signatureHeader);
-  if (!timestamp || signatures.length === 0) {
-    return false;
-  }
-  const age = Math.abs(Date.now() / 1000 - timestamp);
-  if (age > 300) {
-    return false;
-  }
-  const payload = `${timestamp}.${rawBody.toString('utf8')}`;
-  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  return signatures.some((signature) => timingSafeEqual(signature, expected));
+    const { timestamp, signatures } = parseStripeSignature(signatureHeader);
+    if (!timestamp || signatures.length === 0) {
+        return false;
+    }
+    const age = Math.abs(Date.now() / 1000 - timestamp);
+    if (age > 300) {
+        return false;
+    }
+    const payload = `${timestamp}.${rawBody.toString('utf8')}`;
+    const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    return signatures.some((signature) => timingSafeEqual(signature, expected));
 };
 
 const findProfileByCustomerId = async (customerId: string) => {
-  const snapshot = await admin.firestore()
-    .collection('userProfiles')
-    .where('stripeCustomerId', '==', customerId)
-    .limit(1)
-    .get();
-  if (snapshot.empty) return null;
-  return snapshot.docs[0];
+    const snapshot = await admin.firestore()
+        .collection('userProfiles')
+        .where('stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0];
 };
 
 const findProfileByEmail = async (email: string) => {
-  const snapshot = await admin.firestore()
-    .collection('userProfiles')
-    .where('email', '==', email)
-    .limit(1)
-    .get();
-  if (snapshot.empty) return null;
-  return snapshot.docs[0];
+    const snapshot = await admin.firestore()
+        .collection('userProfiles')
+        .where('email', '==', email)
+        .limit(1)
+        .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0];
 };
 
 const resolveProfileRef = async ({
-  customerId,
-  metadata,
-  clientReferenceId,
-  email
+    customerId,
+    metadata,
+    clientReferenceId,
+    email
 }: {
-  customerId?: string | null;
-  metadata?: Record<string, string> | null;
-  clientReferenceId?: string | null;
-  email?: string | null;
+    customerId?: string | null;
+    metadata?: Record<string, string> | null;
+    clientReferenceId?: string | null;
+    email?: string | null;
 }) => {
-  const metadataUserId = metadata?.firebaseUserId || metadata?.userId || metadata?.uid;
-  if (metadataUserId) {
-    const docRef = admin.firestore().collection('userProfiles').doc(metadataUserId);
-    const snapshot = await docRef.get();
-    return snapshot.exists ? docRef : null;
-  }
-  if (clientReferenceId) {
-    const docRef = admin.firestore().collection('userProfiles').doc(clientReferenceId);
-    const snapshot = await docRef.get();
-    return snapshot.exists ? docRef : null;
-  }
-  if (customerId) {
-    const doc = await findProfileByCustomerId(customerId);
-    if (doc) return doc.ref;
-  }
-  if (email) {
-    const doc = await findProfileByEmail(email);
-    if (doc) return doc.ref;
-  }
-  return null;
+    const metadataUserId = metadata?.firebaseUserId || metadata?.userId || metadata?.uid;
+    if (metadataUserId) {
+        const docRef = admin.firestore().collection('userProfiles').doc(metadataUserId);
+        const snapshot = await docRef.get();
+        return snapshot.exists ? docRef : null;
+    }
+    if (clientReferenceId) {
+        const docRef = admin.firestore().collection('userProfiles').doc(clientReferenceId);
+        const snapshot = await docRef.get();
+        return snapshot.exists ? docRef : null;
+    }
+    if (customerId) {
+        const doc = await findProfileByCustomerId(customerId);
+        if (doc) return doc.ref;
+    }
+    if (email) {
+        const doc = await findProfileByEmail(email);
+        if (doc) return doc.ref;
+    }
+    return null;
 };
 
 export const stripeWebhookRocketGoals = functions.runWith({
@@ -1504,7 +1504,7 @@ export const sendGoalCreatedEmail = functions.runWith({
     // Map timeframe to readable text
     const timeframeText = timeframe === 'week' ? '7 days' :
         timeframe === 'month' ? '30 days' :
-        timeframe === '3months' ? '90 days' : '6 months'; // Legacy fallback for old '6months' option
+            timeframe === '3months' ? '90 days' : '6 months'; // Legacy fallback for old '6months' option
 
     try {
         // Initialize SendGrid with API key
@@ -1672,7 +1672,7 @@ export const generateGoalVisualization = onCall({
         // Map timeframe to readable text
         const timeframeText = timeframe === 'week' ? 'a 7-day' :
             timeframe === 'month' ? 'a 30-day' :
-            timeframe === '3months' ? 'a 90-day' : 'a 6-month';
+                timeframe === '3months' ? 'a 90-day' : 'a 6-month';
 
         // Build the image generation prompt using the user's template
         // When user photo is provided, instruct the model to use their face
@@ -1872,13 +1872,13 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
             .collection('adminSettings')
             .doc('promoCodes')
             .get();
-        
+
         if (promoDoc.exists) {
             const data = promoDoc.data();
             const moonshot = data?.moonshot?.toUpperCase() || 'NY2026MOONSHOT';
             const interplanetary = data?.interplanetary?.toUpperCase() || 'NY2026INTERPLANETARY';
             const galactic = data?.galactic?.toUpperCase() || 'NY2026GALACTIC';
-            
+
             return {
                 [moonshot]: 'moonshot',
                 [interplanetary]: 'interplanetary',
@@ -1888,7 +1888,7 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
     } catch (err) {
         console.error('Failed to load promo codes from Firestore, using defaults:', err);
     }
-    
+
     // Return defaults if Firestore read fails
     return {
         'NY2026MOONSHOT': 'moonshot',

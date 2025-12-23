@@ -483,7 +483,7 @@ export class AdminComponent implements OnInit {
       const firestore = await this.ensureFirestore();
       const firestoreModule = await import('firebase/firestore');
       const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
-      
+
       await firestoreModule.setDoc(docRef, {
         moonshot,
         interplanetary,
