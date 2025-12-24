@@ -2100,6 +2100,175 @@ export const sendGoalCreatedEmail = functions.runWith({
 });
 
 /**
+ * Cloud Function to send email notification when a fan is invited to a goal
+ * Accessible by authenticated users only
+ */
+export const sendFanInviteEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: {
+    goalId: string;
+    fanEmail: string;
+    fanName?: string;
+    ownerEmail: string;
+    ownerName: string;
+}, context: functions.https.CallableContext) => {
+    // Verify the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send fan invitations.'
+        );
+    }
+
+    // Validate input
+    const { goalId, fanEmail, fanName, ownerEmail, ownerName } = data;
+    if (!goalId || !fanEmail || !ownerEmail) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: goalId, fanEmail, ownerEmail'
+        );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(fanEmail)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid fan email address format'
+        );
+    }
+
+    try {
+        // Get goal details from Firestore
+        const goalDoc = await admin.firestore().collection('rocketGoals').doc(goalId).get();
+        if (!goalDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                'Goal not found'
+            );
+        }
+
+        const goalData = goalDoc.data();
+        const goalTitle = goalData?.answers?.['goal_title_label'] ||
+            goalData?.answers?.['custom_goal_title'] ||
+            goalData?.primaryGoal ||
+            'Untitled Goal';
+
+        // Initialize SendGrid with API key
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set.');
+        }
+        sgMail.setApiKey(apiKey);
+
+        const displayName = fanName?.trim() || 'there';
+        const goalUrl = `https://rocket-goals.web.app/rocketgoal/${goalId}`;
+
+        // Create email message
+        const msg = {
+            to: fanEmail,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: `🚀 ${ownerName} invited you to support their RocketGoal!`,
+            text: `Hi ${displayName},\n\n${ownerName} has invited you to be a fan and supporter of their RocketGoal: "${goalTitle}"\n\nAs a fan, you can:\n- React with emojis to show your support\n- Leave encouraging comments\n- Cheer them on their journey\n\nView the goal and join the support team: ${goalUrl}\n\nIf you don't have an account yet, you can sign up at https://rocket-goals.web.app to join and start supporting!\n\nTo your success,\nThe Rocket Goals Team`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 36px 30px; border-radius: 18px 18px 0 0; text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">🚀</div>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">You've Been Invited!</h1>
+                        <p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
+                            Rocket Goals Fan Invitation
+                        </p>
+                    </div>
+
+                    <!-- Body -->
+                    <div style="background: #ffffff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px;">
+                        <p style="color: #111827; font-size: 16px; line-height: 1.6; margin: 0 0 18px;">
+                            Hi <strong>${displayName}</strong>,
+                        </p>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                            <strong>${ownerName}</strong> has invited you to be a fan and supporter of their RocketGoal!
+                        </p>
+
+                        <!-- Goal Card -->
+                        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fecaca; border-radius: 12px; padding: 24px; margin-bottom: 25px;">
+                            <h2 style="color: #dc2626; margin: 0 0 10px; font-size: 22px; font-weight: 700;">"${goalTitle}"</h2>
+                            <p style="color: #991b1b; margin: 0; font-size: 14px; font-weight: 600;">
+                                🎯 Mission in Progress
+                            </p>
+                        </div>
+
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                            As a fan, you can:
+                        </p>
+                        <ul style="color: #374151; font-size: 16px; line-height: 1.8; margin: 0 0 25px; padding-left: 24px;">
+                            <li>React with emojis to show your support 🚀🔥👏</li>
+                            <li>Leave encouraging comments to cheer them on</li>
+                            <li>Follow their progress and celebrate milestones</li>
+                        </ul>
+
+                        <!-- CTA Button -->
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${goalUrl}"
+                               style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);">
+                                View & Support This Goal →
+                            </a>
+                        </div>
+
+                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
+                            <strong>New to Rocket Goals?</strong> No problem! You can sign up at 
+                            <a href="https://rocket-goals.web.app" style="color: #dc2626; text-decoration: none;">rocket-goals.web.app</a> 
+                            to join and start supporting.
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="background: #1f2937; padding: 25px 30px; border-radius: 0 0 18px 18px; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 14px; margin: 0 0 10px;">
+                            To your success,<br>
+                            <strong style="color: #f3f4f6;">The Rocket Goals Team</strong>
+                        </p>
+                        <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                            © ${new Date().getFullYear()} Rocket Goals. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            `,
+        };
+
+        // Send the email
+        await sgMail.send(msg);
+
+        console.log(`✅ Fan invitation email sent successfully to ${fanEmail} for goal ${goalId}`);
+
+        return {
+            success: true,
+            message: `Fan invitation email sent to ${fanEmail}`
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending fan invitation email:', error);
+
+        // Handle SendGrid specific errors
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send fan invitation email: ${error.message}`
+        );
+    }
+});
+
+/**
  * Cloud Function to generate a visualization image for a goal using Gemini
  * Uses the provided prompt template to create an inspirational image of the user's future self
  */

@@ -73,13 +73,17 @@ export class FansService {
       throw new Error('This person has already been invited');
     }
 
-    const fanData = {
+    const fanData: Record<string, unknown> = {
       goalId,
       email: email.toLowerCase(),
-      name: name || undefined,
       status: 'pending' as const,
       invitedAt: firestoreModule.serverTimestamp()
     };
+
+    // Only include name if it has a value (Firestore doesn't allow undefined)
+    if (name && name.trim()) {
+      fanData['name'] = name.trim();
+    }
 
     const docRef = await firestoreModule.addDoc(collectionRef, fanData);
     await firestoreModule.updateDoc(docRef, { id: docRef.id });
@@ -129,10 +133,14 @@ export class FansService {
     const commentData: Record<string, unknown> = {
       goalId,
       fanEmail: fanEmail.toLowerCase(),
-      fanName: fanName || undefined,
       content,
       createdAt: firestoreModule.serverTimestamp()
     };
+
+    // Only include fanName if it has a value (Firestore doesn't allow undefined)
+    if (fanName && fanName.trim()) {
+      commentData['fanName'] = fanName.trim();
+    }
 
     if (emoji && emoji.trim()) {
       commentData['emoji'] = emoji.trim();
@@ -199,13 +207,17 @@ export class FansService {
       return '';
     }
 
-    const reactionData = {
+    const reactionData: Record<string, unknown> = {
       goalId,
       fanEmail: fanEmail.toLowerCase(),
-      fanName: fanName || undefined,
       emoji,
       createdAt: firestoreModule.serverTimestamp()
     };
+
+    // Only include fanName if it has a value (Firestore doesn't allow undefined)
+    if (fanName && fanName.trim()) {
+      reactionData['fanName'] = fanName.trim();
+    }
 
     const docRef = await firestoreModule.addDoc(collectionRef, reactionData);
     await firestoreModule.updateDoc(docRef, { id: docRef.id });

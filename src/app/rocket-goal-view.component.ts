@@ -754,7 +754,42 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     this.fanInviteError.set(null);
 
     try {
+      // Add the fan to Firestore
       await this.fansService.inviteFan(goal.id, email, name || undefined);
+      
+      // Get owner information for email
+      const profile = this.authService.profile();
+      if (profile?.email) {
+        const ownerName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email;
+        const ownerEmail = profile.email;
+
+        // Send invitation email (don't fail if email fails, fan is already added)
+        try {
+          const { getApp } = await import('firebase/app');
+          const { getFunctions, httpsCallable } = await import('firebase/functions');
+          const app = getApp();
+          const functions = getFunctions(app, 'us-central1');
+          const sendFanInviteEmail = httpsCallable<{
+            goalId: string;
+            fanEmail: string;
+            fanName?: string;
+            ownerEmail: string;
+            ownerName: string;
+          }, { success: boolean }>(functions, 'sendFanInviteEmail');
+
+          await sendFanInviteEmail({
+            goalId: goal.id,
+            fanEmail: email,
+            fanName: name || undefined,
+            ownerEmail,
+            ownerName
+          });
+        } catch (emailError) {
+          // Log but don't fail - fan is already added
+          console.error('Error sending fan invitation email:', emailError);
+        }
+      }
+
       this.currentFanInviteEmail.set('');
       this.currentFanInviteName.set('');
       this.fanInviteSuggestions.set([]);
