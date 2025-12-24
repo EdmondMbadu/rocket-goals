@@ -77,10 +77,14 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     }
 
     // If embedded mode and no goal context, show a greeting for non-logged-in users
-    if (this.embedded && !this.goalContext && !this.hasGreeted() && this.messages().length === 0) {
+    // BUT: Don't show greeting if a fresh prompt is pending (auto-launch scenario)
+    if (this.embedded && !this.goalContext && !this.hasGreeted() && this.messages().length === 0 && !this.aiService.isFreshPromptPending()) {
       // Wait a bit for the UI to settle, then trigger greeting
       setTimeout(() => {
-        this.triggerGreetingForNonLoggedIn();
+        // Double-check: still no messages and no fresh prompt pending
+        if (this.messages().length === 0 && !this.aiService.isFreshPromptPending()) {
+          this.triggerGreetingForNonLoggedIn();
+        }
       }, 1000);
     }
   }
@@ -377,28 +381,55 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     this.aiService.setPreventAutoSelect(true);
     this.aiService.startNewSession();
     
+    // Prevent greeting from showing during auto-launch
+    this.hasGreeted.set(true);
+    
     // Double-check messages are cleared (defensive programming)
     if (this.aiService.messages().length > 0) {
       console.warn('Messages not cleared, forcing clear');
       this.aiService.startNewSession();
     }
     
-    // Set the input field with the prompt
-    // sendMessage() will add it as a visible user message before sending
+    // CRITICAL: Add the user's prompt as a visible message FIRST
+    // This ensures the user can see their question before the AI responds
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: trimmedPrompt,
+      timestamp: new Date()
+    };
+    this.aiService.messages.update(msgs => [...msgs, userMessage]);
+    
+    // Set the input field with the prompt (will be cleared by sendMessage)
     this.inputMessage.set(trimmedPrompt);
     
     // Scroll to bottom to show the new message
     this.shouldScrollToBottom = true;
 
     // Small delay to ensure UI updates and messages are cleared, then send
-    // sendMessage() will add the user's prompt as a visible message before sending to AI
+    // Note: sendMessage() will add the user message again, but we've already added it above
+    // This ensures it's visible even if there's a race condition
     setTimeout(() => {
-      // Final check: if messages were somehow loaded, clear them again
-      if (this.aiService.messages().length > 0 && this.aiService.messages()[0].role !== 'user') {
-        console.warn('Old messages detected before auto-launch, clearing again');
-        this.aiService.startNewSession();
-        this.inputMessage.set(trimmedPrompt);
+      // Final check: ensure user message is visible
+      const currentMessages = this.aiService.messages();
+      const hasUserMessage = currentMessages.some(msg => 
+        msg.role === 'user' && msg.content.trim() === trimmedPrompt
+      );
+      
+      if (!hasUserMessage) {
+        // User message not found, add it again
+        console.warn('User message not found, adding it');
+        this.aiService.messages.update(msgs => [...msgs, userMessage]);
       }
+      
+      // Clear any non-user messages that might have appeared (like greetings)
+      const nonUserMessages = currentMessages.filter(msg => 
+        msg.role !== 'user' || msg.content.trim() !== trimmedPrompt
+      );
+      if (nonUserMessages.length > 0 && currentMessages.length > 1) {
+        // Keep only the user message
+        this.aiService.messages.set([userMessage]);
+      }
+      
       void this.sendMessage();
     }, 200);
   }

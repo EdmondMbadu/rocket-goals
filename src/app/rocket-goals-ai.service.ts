@@ -743,29 +743,58 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     this.error.set(null);
 
     // CRITICAL: If preventAutoSelect is set (fresh prompt pending), ensure we have a clean slate
-    // Clear any messages that might have been loaded by race conditions
+    // Clear any messages that might have been loaded by race conditions, BUT preserve the user message if it's already there
     if (this.preventAutoSelect && this.messages().length > 0) {
-      // Check if there are any messages that aren't from this auto-launch
-      // If the first message is not a user message matching our prompt, clear everything
-      const firstMessage = this.messages()[0];
-      if (firstMessage.role !== 'user' || firstMessage.content.trim() !== userMessage.trim()) {
-        console.warn('Old messages detected during auto-launch, clearing before sending');
-        this.messages.set([]);
-        this.conversationHistory = [];
-        this.currentSessionId.set(null);
+      // Check if the user message is already in the messages array (added by triggerAutoLaunch)
+      const hasUserMessage = this.messages().some(msg => 
+        msg.role === 'user' && msg.content.trim() === userMessage.trim()
+      );
+      
+      if (hasUserMessage) {
+        // User message is already there - just remove any non-user messages (like greetings)
+        const userMsg = this.messages().find(msg => 
+          msg.role === 'user' && msg.content.trim() === userMessage.trim()
+        );
+        if (userMsg) {
+          this.messages.set([userMsg]);
+          this.conversationHistory = [];
+        }
+      } else {
+        // User message not found - check if first message is not a user message matching our prompt
+        const firstMessage = this.messages()[0];
+        if (firstMessage.role !== 'user' || firstMessage.content.trim() !== userMessage.trim()) {
+          console.warn('Old messages detected during auto-launch, clearing before sending');
+          this.messages.set([]);
+          this.conversationHistory = [];
+          this.currentSessionId.set(null);
+        }
       }
     }
 
     const sessionId = await this.ensureActiveSession(userMessage, goalContext?.id);
 
-    // Add user message to conversation
-    const userChatMessage: ChatMessage = {
-      role: 'user',
-      content: userMessage.trim(),
-      timestamp: new Date()
-    };
-    this.messages.update(msgs => [...msgs, userChatMessage]);
-    void this.persistMessageToSession(sessionId, userChatMessage);
+    // Add user message to conversation (only if not already present)
+    const hasUserMessage = this.messages().some(msg => 
+      msg.role === 'user' && msg.content.trim() === userMessage.trim()
+    );
+    
+    if (!hasUserMessage) {
+      const userChatMessage: ChatMessage = {
+        role: 'user',
+        content: userMessage.trim(),
+        timestamp: new Date()
+      };
+      this.messages.update(msgs => [...msgs, userChatMessage]);
+      void this.persistMessageToSession(sessionId, userChatMessage);
+    } else {
+      // User message already exists - just ensure it's persisted
+      const existingUserMsg = this.messages().find(msg => 
+        msg.role === 'user' && msg.content.trim() === userMessage.trim()
+      );
+      if (existingUserMsg) {
+        void this.persistMessageToSession(sessionId, existingUserMsg);
+      }
+    }
 
     try {
       // Prepare conversation history for context (last 10 messages for efficiency)
