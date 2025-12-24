@@ -42,6 +42,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   private shouldScrollToBottom = false;
   private scrollInterval: any = null;
   private lastAutoPrompt: string | null = null;
+  private greetingTimeout: any = null; // Track greeting timeout to cancel it if auto-launch happens
 
   ngOnInit(): void {
     // If a fresh prompt is pending (from rocket-prompt or one-shot), don't load old conversations
@@ -80,11 +81,13 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     // BUT: Don't show greeting if a fresh prompt is pending (auto-launch scenario)
     if (this.embedded && !this.goalContext && !this.hasGreeted() && this.messages().length === 0 && !this.aiService.isFreshPromptPending()) {
       // Wait a bit for the UI to settle, then trigger greeting
-      setTimeout(() => {
+      // Store timeout so we can cancel it if auto-launch happens
+      this.greetingTimeout = setTimeout(() => {
         // Double-check: still no messages and no fresh prompt pending
-        if (this.messages().length === 0 && !this.aiService.isFreshPromptPending()) {
+        if (this.messages().length === 0 && !this.aiService.isFreshPromptPending() && !this.hasGreeted()) {
           this.triggerGreetingForNonLoggedIn();
         }
+        this.greetingTimeout = null;
       }, 1000);
     }
   }
@@ -127,11 +130,20 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   }
 
   private async triggerGreetingForNonLoggedIn(): Promise<void> {
-    if (this.hasGreeted() || this.messages().length > 0) return;
+    // CRITICAL: Never show greeting if a fresh prompt is pending (auto-launch scenario)
+    if (this.hasGreeted() || this.messages().length > 0 || this.aiService.isFreshPromptPending()) {
+      return;
+    }
     this.hasGreeted.set(true);
 
     // Wait a moment for the UI to settle
     await new Promise(resolve => setTimeout(resolve, 800));
+
+    // CRITICAL: Double-check conditions haven't changed (e.g., auto-launch started)
+    if (this.messages().length > 0 || this.aiService.isFreshPromptPending()) {
+      this.hasGreeted.set(false); // Reset so it can show next time if needed
+      return;
+    }
 
     // Check if user is signed in
     const currentUser = this.authService.profile();
@@ -163,8 +175,8 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   private async triggerGreeting(): Promise<void> {
     // Prevent duplicate greetings - check multiple conditions
-    // IMPORTANT: Only show greeting if there are NO existing messages
-    if (this.hasGreeted() || !this.goalContext || this.messages().length > 0) {
+    // IMPORTANT: Only show greeting if there are NO existing messages and no fresh prompt pending
+    if (this.hasGreeted() || !this.goalContext || this.messages().length > 0 || this.aiService.isFreshPromptPending()) {
       return;
     }
     
@@ -174,10 +186,10 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     // Wait a moment for the UI to settle and for any messages to finish loading
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // CRITICAL: Double-check messages are still empty before proceeding
-    // This prevents greeting from appearing after existing conversation loads
-    if (this.messages().length > 0) {
-      // Messages were loaded while we waited - don't show greeting
+    // CRITICAL: Double-check conditions haven't changed (e.g., auto-launch started)
+    // This prevents greeting from appearing after existing conversation loads or auto-launch
+    if (this.messages().length > 0 || this.aiService.isFreshPromptPending()) {
+      // Messages were loaded or auto-launch started while we waited - don't show greeting
       this.hasGreeted.set(false); // Reset flag so it can show next time if needed
       return;
     }
@@ -375,14 +387,20 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
     this.lastAutoPrompt = trimmedPrompt;
     
+    // CRITICAL: Cancel any pending greeting timeout
+    if (this.greetingTimeout) {
+      clearTimeout(this.greetingTimeout);
+      this.greetingTimeout = null;
+    }
+    
+    // CRITICAL: Prevent greeting from showing during auto-launch - do this FIRST
+    this.hasGreeted.set(true);
+    
     // CRITICAL: Clear existing chat state IMMEDIATELY before auto-launching
     // This ensures we start with a fresh chat, not appending to existing messages
     // Must be done synchronously to prevent any race conditions with session loading
     this.aiService.setPreventAutoSelect(true);
     this.aiService.startNewSession();
-    
-    // Prevent greeting from showing during auto-launch
-    this.hasGreeted.set(true);
     
     // Double-check messages are cleared (defensive programming)
     if (this.aiService.messages().length > 0) {
@@ -390,14 +408,20 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
       this.aiService.startNewSession();
     }
     
-    // CRITICAL: Add the user's prompt as a visible message FIRST
+    // CRITICAL: Add the user's prompt as a visible message IMMEDIATELY
     // This ensures the user can see their question before the AI responds
+    // We'll add it to the service's messages array directly so it's visible right away
     const userMessage: ChatMessage = {
       role: 'user',
       content: trimmedPrompt,
       timestamp: new Date()
     };
-    this.aiService.messages.update(msgs => [...msgs, userMessage]);
+    
+    // Add user message to the service - this makes it visible in the UI immediately
+    this.aiService.messages.update(msgs => {
+      // Remove any existing messages (greetings, etc.) and add only the user message
+      return [userMessage];
+    });
     
     // Set the input field with the prompt (will be cleared by sendMessage)
     this.inputMessage.set(trimmedPrompt);
@@ -405,33 +429,28 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     // Scroll to bottom to show the new message
     this.shouldScrollToBottom = true;
 
-    // Small delay to ensure UI updates and messages are cleared, then send
-    // Note: sendMessage() will add the user message again, but we've already added it above
-    // This ensures it's visible even if there's a race condition
+    // Small delay to ensure UI updates, then send
+    // sendMessageWithoutAddingResponse will check if user message exists and preserve it
     setTimeout(() => {
-      // Final check: ensure user message is visible
+      // Final verification: ensure user message is still there and is the only message
       const currentMessages = this.aiService.messages();
-      const hasUserMessage = currentMessages.some(msg => 
+      const userMsg = currentMessages.find(msg => 
         msg.role === 'user' && msg.content.trim() === trimmedPrompt
       );
       
-      if (!hasUserMessage) {
-        // User message not found, add it again
-        console.warn('User message not found, adding it');
-        this.aiService.messages.update(msgs => [...msgs, userMessage]);
-      }
-      
-      // Clear any non-user messages that might have appeared (like greetings)
-      const nonUserMessages = currentMessages.filter(msg => 
-        msg.role !== 'user' || msg.content.trim() !== trimmedPrompt
-      );
-      if (nonUserMessages.length > 0 && currentMessages.length > 1) {
-        // Keep only the user message
+      if (!userMsg) {
+        // User message disappeared - add it back
+        console.warn('User message disappeared, restoring it');
         this.aiService.messages.set([userMessage]);
+      } else if (currentMessages.length > 1) {
+        // There are other messages (like greetings) - keep only the user message
+        console.warn('Non-user messages detected, clearing them');
+        this.aiService.messages.set([userMsg]);
       }
       
+      // Now send the message - sendMessageWithoutAddingResponse will preserve the user message
       void this.sendMessage();
-    }, 200);
+    }, 300);
   }
 
   sendQuickPrompt(prompt: string): void {
