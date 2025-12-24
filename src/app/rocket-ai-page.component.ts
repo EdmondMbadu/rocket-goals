@@ -129,10 +129,12 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
         this.aiService.setPreventAutoSelect(true);
         // Clear any existing goal context to prevent loadConversationForGoal interference
         this.aiService.clearGoalContext();
+        // CRITICAL: Start a fresh session to clear all messages before auto-launching
+        // This ensures the user's prompt appears in an empty chat, not appended to existing messages
         this.aiService.startNewSession();
         // Queue the prompt BEFORE loading sessions to ensure it's ready
         this.queueAutoLaunch(initialAutoPrompt);
-        // Load sessions in background without selecting any
+        // Load sessions in background without selecting any (to populate history sidebar)
         void this.aiService.loadSessionsForCurrentUser(false);
       } else {
         await this.aiService.loadSessionsForCurrentUser();
@@ -140,8 +142,10 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       // Check if user was redirected back after login with pending goal
       await this.checkPendingGoalCreation();
     } else if (shouldStartFresh) {
-      // For non-logged-in users with a prompt, queue it immediately
+      // For non-logged-in users with a prompt, ensure fresh state and queue it
       this.autoPromptHandled = true;
+      // Clear any existing messages to ensure fresh start
+      this.aiService.startNewSession();
       this.queueAutoLaunch(initialAutoPrompt);
     }
 
@@ -163,6 +167,10 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
           if (this.isLoggedIn()) {
             this.aiService.setPreventAutoSelect(true);
             this.aiService.clearGoalContext();
+            // CRITICAL: Start fresh session to clear all messages before auto-launching
+            this.aiService.startNewSession();
+          } else {
+            // For non-logged-in users, also ensure fresh state
             this.aiService.startNewSession();
           }
           this.queueAutoLaunch(promptText);

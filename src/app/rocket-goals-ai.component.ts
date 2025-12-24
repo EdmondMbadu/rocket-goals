@@ -349,11 +349,23 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     }
 
     this.lastAutoPrompt = trimmedPrompt;
+    
+    // CRITICAL: Clear existing chat state before auto-launching
+    // This ensures we start with a fresh chat, not appending to existing messages
+    this.aiService.startNewSession();
+    
+    // Set the input field with the prompt
+    // sendMessage() will add it as a visible user message before sending
     this.inputMessage.set(trimmedPrompt);
+    
+    // Scroll to bottom to show the new message
+    this.shouldScrollToBottom = true;
 
+    // Small delay to ensure UI updates and messages are cleared, then send
+    // sendMessage() will add the user's prompt as a visible message before sending to AI
     setTimeout(() => {
       void this.sendMessage();
-    }, 100);
+    }, 150);
   }
 
   sendQuickPrompt(prompt: string): void {
