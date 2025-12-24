@@ -10,6 +10,7 @@ import { RocketGoalsService } from './rocket-goals.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { stripMarkdownForTTS } from './text-utils';
 import { ThemeService } from './theme.service';
+import { BlogService } from './blog.service';
 import type * as THREE from 'three';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -96,6 +97,7 @@ export class App implements AfterViewInit, OnDestroy {
   protected authService = inject(AuthService);
   private rocketGoalsService = inject(RocketGoalsService);
   private themeService = inject(ThemeService);
+  protected blogService = inject(BlogService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
   private router = inject(Router);
   private routerSubscription: Subscription | null = null;
@@ -144,6 +146,11 @@ export class App implements AfterViewInit, OnDestroy {
       this.checkAndStartChallenge(this.router.url);
     });
 
+    // Fetch blog posts when component initializes (only on landing page)
+    if (!this.isAuthRoute()) {
+      this.blogService.fetchBlogPosts();
+    }
+
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
@@ -169,6 +176,10 @@ export class App implements AfterViewInit, OnDestroy {
             void this.initThreeJs();
           }
         }, 150);
+        // Fetch blog posts when landing page is visible
+        if (this.blogService.blogPosts().length === 0) {
+          this.blogService.fetchBlogPosts();
+        }
       }
     });
   }

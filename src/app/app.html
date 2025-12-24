@@ -227,6 +227,101 @@
     </div>
   </section>
 
+  <!-- Blog Section -->
+  <section
+    class="py-24 bg-white text-black relative overflow-hidden dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="max-w-7xl mx-auto">
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+          <div
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 mb-4 dark:bg-white/5 dark:border-white/10">
+            <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            <span class="text-xs font-bold text-gray-600 tracking-wider uppercase dark:text-slate-200">The Daily
+              Rocket</span>
+          </div>
+          <h2
+            class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-black dark:text-white mb-6">
+            Latest Insights<br />
+            <span class="text-red-600">From Our Blog</span>
+          </h2>
+          <p class="text-xl text-black/70 leading-relaxed font-medium max-w-2xl mx-auto dark:text-slate-300">
+            Discover productivity tips, goal achievement strategies, and insights to accelerate your success.
+          </p>
+        </div>
+
+        <!-- Blog Posts Grid -->
+        @if (blogService.isLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <div class="w-12 h-12 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
+        </div>
+        } @else if (blogService.error()) {
+        <div class="text-center py-12">
+          <p class="text-red-600 font-medium">{{ blogService.error() }}</p>
+        </div>
+        } @else {
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          @for (post of blogService.blogPosts(); track post.url) {
+          <a [href]="post.url" target="_blank" rel="noopener noreferrer"
+            class="group bg-white border border-black/10 rounded-3xl overflow-hidden hover:border-red-600 transition-all duration-300 hover:-translate-y-2 shadow-lg hover:shadow-2xl dark:bg-slate-900/70 dark:border-white/10 dark:hover:border-red-500/70 block">
+            <!-- Image -->
+            @if (post.image) {
+            <div class="relative w-full h-48 overflow-hidden bg-gray-100 dark:bg-slate-800">
+              <img [src]="post.image" [alt]="post.title"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div
+                class="hidden w-full h-full items-center justify-center bg-gradient-to-br from-red-600/20 to-black/20">
+                <svg class="w-16 h-16 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            }
+            <!-- Content -->
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-red-600 uppercase tracking-wider">Blog Post</span>
+                <svg class="w-5 h-5 text-black/40 group-hover:text-red-600 transition-colors dark:text-white/40"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+              <h3
+                class="text-xl font-bold text-black dark:text-white group-hover:text-red-600 transition-colors line-clamp-2">
+                {{ post.title }}
+              </h3>
+              <p class="text-black/60 dark:text-slate-300 text-sm leading-relaxed line-clamp-3">
+                {{ post.excerpt }}
+              </p>
+              <div class="flex items-center gap-2 pt-4 border-t border-black/5 dark:border-white/10">
+                <span class="text-xs text-black/50 dark:text-slate-400">{{ post.date }}</span>
+                @if (post.author) {
+                <span class="text-xs text-black/50 dark:text-slate-400">•</span>
+                <span class="text-xs text-black/50 dark:text-slate-400">{{ post.author }}</span>
+                }
+              </div>
+            </div>
+          </a>
+          }
+        </div>
+
+        <!-- See More Button -->
+        <div class="text-center">
+          <a href="https://rocketgoals.beehiiv.com/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-8 py-4 bg-black text-white font-bold text-lg rounded-full hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
+            <span>See More Posts</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
   <!-- Rocket Dashboard Overlay (White Sci-Fi Ultimate) -->
   @if (isDashboardActive()) {
   <div class="fixed inset-0 z-[100] bg-white-space text-black overflow-hidden animate-fade-in flex flex-col">
