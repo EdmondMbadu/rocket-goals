@@ -203,7 +203,8 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.pendingAutoPrompt && this.aiPanel) {
       this.aiPanel.triggerAutoLaunch(this.pendingAutoPrompt);
       this.pendingAutoPrompt = null;
-      this.aiService.setPreventAutoSelect(false);
+      // DON'T reset preventAutoSelect here - let it stay true until message is sent
+      // The sendMessage() method will reset it after the message is successfully sent
     }
   }
   
@@ -261,7 +262,8 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
   private queueAutoLaunch(promptText: string): void {
     if (this.aiPanel) {
       this.aiPanel.triggerAutoLaunch(promptText);
-      this.aiService.setPreventAutoSelect(false);
+      // DON'T reset preventAutoSelect here - let it stay true until message is sent
+      // The sendMessage() method will reset it after the message is successfully sent
       return;
     }
     this.pendingAutoPrompt = promptText;

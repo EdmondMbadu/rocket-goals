@@ -248,6 +248,13 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       return;
     }
 
+    // CRITICAL: If preventAutoSelect is set (fresh prompt pending), NEVER load messages
+    // Even if selectMostRecent is false, we should not load any session messages
+    if (this.preventAutoSelect && selectMostRecent) {
+      // Only load the session list for the sidebar, but don't select any
+      selectMostRecent = false;
+    }
+
     this.sessionsLoading.set(true);
     this.sessionsError.set(null);
 
@@ -305,6 +312,8 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       });
       this.sessions.set(mapped);
 
+      // CRITICAL: Only auto-select if preventAutoSelect is NOT set
+      // This prevents old sessions from loading when a fresh prompt is pending
       if (selectMostRecent && mapped.length > 0 && !this.preventAutoSelect) {
         // If we're loading for a specific goal and already have a session for that goal, use it
         // Otherwise, load the most recent session
@@ -498,8 +507,14 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     const profile = this.authService.profile();
     if (!profile?.userId) return null;
 
-    // If a fresh prompt is pending, always create a new session (don't reuse old one)
-    if (!this.preventAutoSelect && this.currentSessionId()) {
+    // CRITICAL: If a fresh prompt is pending (preventAutoSelect is true), ALWAYS create a new session
+    // Never reuse an existing session when auto-launching - this ensures a fresh chat
+    if (this.preventAutoSelect) {
+      // Force create a new session - don't reuse existing one
+      // Clear current session ID to ensure new session is created
+      this.currentSessionId.set(null);
+    } else if (this.currentSessionId()) {
+      // Normal flow: reuse existing session if available
       return this.currentSessionId();
     }
 
@@ -726,6 +741,20 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
 
     this.isLoading.set(true);
     this.error.set(null);
+
+    // CRITICAL: If preventAutoSelect is set (fresh prompt pending), ensure we have a clean slate
+    // Clear any messages that might have been loaded by race conditions
+    if (this.preventAutoSelect && this.messages().length > 0) {
+      // Check if there are any messages that aren't from this auto-launch
+      // If the first message is not a user message matching our prompt, clear everything
+      const firstMessage = this.messages()[0];
+      if (firstMessage.role !== 'user' || firstMessage.content.trim() !== userMessage.trim()) {
+        console.warn('Old messages detected during auto-launch, clearing before sending');
+        this.messages.set([]);
+        this.conversationHistory = [];
+        this.currentSessionId.set(null);
+      }
+    }
 
     const sessionId = await this.ensureActiveSession(userMessage, goalContext?.id);
 

@@ -48,6 +48,10 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     // This prevents race conditions where old chat history overwrites the new prompt session
     if (this.aiService.isFreshPromptPending()) {
       // Skip loading goal conversations - a fresh prompt will be processed
+      // CRITICAL: Also ensure messages are cleared to prevent old chat from showing
+      if (this.aiService.messages().length > 0) {
+        this.aiService.startNewSession();
+      }
       return;
     }
 
@@ -65,8 +69,9 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
       });
     } else {
       // Otherwise, load general sessions
+      // BUT: Only if preventAutoSelect is NOT set (i.e., no fresh prompt pending)
       const profile = this.authService.profile();
-      if (profile?.userId && this.aiService.sessions().length === 0) {
+      if (profile?.userId && this.aiService.sessions().length === 0 && !this.aiService.isFreshPromptPending()) {
         void this.aiService.loadSessionsForCurrentUser();
       }
     }
@@ -300,6 +305,9 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     this.inputMessage.set('');
     this.shouldScrollToBottom = true;
 
+    // Track if this was an auto-launch to reset preventAutoSelect after sending
+    const wasAutoLaunch = this.aiService.isFreshPromptPending();
+
     try {
       const result = await this.aiService.sendMessageWithoutAddingResponse(message, this.goalContext);
       // Check if result contains side effects (calendar actions, etc.)
@@ -318,8 +326,21 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
         // Result is just a string (no side effects)
         this.addMessageWithTypewriter(result);
       }
+
+      // After message is successfully sent, reset preventAutoSelect if this was an auto-launch
+      // This allows normal session loading for future interactions
+      if (wasAutoLaunch) {
+        // Small delay to ensure message is fully processed
+        setTimeout(() => {
+          this.aiService.setPreventAutoSelect(false);
+        }, 500);
+      }
     } catch {
       // Error is already handled in service
+      // Still reset preventAutoSelect even on error to prevent blocking future interactions
+      if (wasAutoLaunch) {
+        this.aiService.setPreventAutoSelect(false);
+      }
     }
   }
 
@@ -350,9 +371,17 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
     this.lastAutoPrompt = trimmedPrompt;
     
-    // CRITICAL: Clear existing chat state before auto-launching
+    // CRITICAL: Clear existing chat state IMMEDIATELY before auto-launching
     // This ensures we start with a fresh chat, not appending to existing messages
+    // Must be done synchronously to prevent any race conditions with session loading
+    this.aiService.setPreventAutoSelect(true);
     this.aiService.startNewSession();
+    
+    // Double-check messages are cleared (defensive programming)
+    if (this.aiService.messages().length > 0) {
+      console.warn('Messages not cleared, forcing clear');
+      this.aiService.startNewSession();
+    }
     
     // Set the input field with the prompt
     // sendMessage() will add it as a visible user message before sending
@@ -364,8 +393,14 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     // Small delay to ensure UI updates and messages are cleared, then send
     // sendMessage() will add the user's prompt as a visible message before sending to AI
     setTimeout(() => {
+      // Final check: if messages were somehow loaded, clear them again
+      if (this.aiService.messages().length > 0 && this.aiService.messages()[0].role !== 'user') {
+        console.warn('Old messages detected before auto-launch, clearing again');
+        this.aiService.startNewSession();
+        this.inputMessage.set(trimmedPrompt);
+      }
       void this.sendMessage();
-    }, 150);
+    }, 200);
   }
 
   sendQuickPrompt(prompt: string): void {
