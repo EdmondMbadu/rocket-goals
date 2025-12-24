@@ -1874,6 +1874,283 @@
   }
 }
 
+/* ===== TIMELINE TASK ROCKETS ===== */
+.timeline-task-rocket {
+  transition: all 0.3s ease;
+  z-index: 40;
+  pointer-events: auto;
+  /* Increase clickable area */
+  padding: 8px;
+  margin: -8px;
+}
+
+.task-rocket-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.95) 0%, rgba(20, 20, 35, 0.98) 100%);
+  border: 2px solid rgba(220, 38, 38, 0.5);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(220, 38, 38, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.rocket-emoji-timeline {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: hue-rotate(-50deg) saturate(3.5) brightness(1) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+
+.dark-mode .task-rocket-icon {
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.95) 0%, rgba(20, 20, 35, 0.98) 100%);
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.light-mode .task-rocket-icon {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.task-rocket-icon:hover {
+  transform: scale(1.15);
+  border-color: rgba(220, 38, 38, 0.8);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(220, 38, 38, 0.5);
+  z-index: 45;
+}
+
+.task-rocket-icon:hover .rocket-emoji-timeline {
+  transform: scale(1.15) rotate(-10deg);
+}
+
+.task-rocket-icon.completed {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.15) 100%);
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.task-rocket-icon.completed .rocket-emoji-timeline {
+  filter: hue-rotate(85deg) saturate(2.5) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+
+.task-rocket-icon.completed:hover {
+  border-color: rgba(34, 197, 94, 0.8);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.task-rocket-icon.expanded {
+  transform: scale(1.2);
+  border-color: rgba(220, 38, 38, 1);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(220, 38, 38, 0.6);
+  z-index: 60;
+}
+
+/* Timeline Task Popup */
+.timeline-task-popup {
+  position: absolute;
+  left: 50%;
+  min-width: 240px;
+  max-width: 320px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(220, 38, 38, 0.2);
+  padding: 12px;
+  z-index: 100;
+  animation: popup-fade-in 0.2s ease-out;
+  pointer-events: auto;
+}
+
+.timeline-task-popup.popup-above {
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+}
+
+@keyframes popup-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px) scale(1);
+  }
+}
+
+.light-mode .timeline-task-popup {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+  border-color: rgba(220, 38, 38, 0.3);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.15),
+    0 0 40px rgba(220, 38, 38, 0.1);
+}
+
+.timeline-task-popup-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.timeline-task-popup-title {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.timeline-task-popup-title.completed {
+  text-decoration: line-through;
+  color: #94a3b8;
+  opacity: 0.7;
+}
+
+.light-mode .timeline-task-popup-title {
+  color: #1e293b;
+}
+
+.light-mode .timeline-task-popup-title.completed {
+  color: #64748b;
+}
+
+.timeline-task-popup-close {
+  padding: 4px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.timeline-task-popup-close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.timeline-task-popup-notes {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.light-mode .timeline-task-popup-notes {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.timeline-task-popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.light-mode .timeline-task-popup-footer {
+  border-top-color: rgba(203, 213, 225, 0.6);
+}
+
+.timeline-task-popup-day {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  color: #94a3b8;
+  letter-spacing: 0.1em;
+}
+
+.light-mode .timeline-task-popup-day {
+  color: #64748b;
+}
+
+.timeline-task-popup-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(100, 116, 139, 0.2);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeline-task-popup-toggle:hover {
+  background: rgba(100, 116, 139, 0.3);
+  color: #e2e8f0;
+}
+
+.timeline-task-popup-toggle.completed {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+.timeline-task-popup-toggle.completed:hover {
+  background: rgba(34, 197, 94, 0.3);
+}
+
+.light-mode .timeline-task-popup-toggle {
+  background: rgba(100, 116, 139, 0.1);
+  border-color: rgba(100, 116, 139, 0.2);
+  color: #475569;
+}
+
+.light-mode .timeline-task-popup-toggle:hover {
+  background: rgba(100, 116, 139, 0.2);
+  color: #1e293b;
+}
+
+/* Ensure rockets don't overlap with timeline nodes */
+.timeline-task-rocket {
+  /* Vertical offset handled dynamically via inline styles */
+}
+
+/* Adjust positioning to avoid marker overlap */
+@media (max-width: 640px) {
+  .timeline-task-popup {
+    min-width: 200px;
+    max-width: 280px;
+    font-size: 12px;
+  }
+  
+  .task-rocket-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .task-rocket-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 /* ===== VIEW TOGGLE BUTTON ===== */
 .view-toggle-btn {
   background: rgba(100, 116, 139, 0.2);

@@ -460,8 +460,63 @@
               <div class="absolute top-1/2 left-0 h-1 bg-red-500 -translate-y-1/2 rounded-full shadow-lg shadow-red-500/50 transition-all duration-500"
                    [style.width.%]="getTimelineProgress()"></div>
 
+              <!-- Task Rockets positioned between markers -->
+              @for (taskData of getTasksBetweenMarkers(); track taskData.item.id; let i = $index) {
+              <div class="timeline-task-rocket absolute cursor-pointer group"
+                   [style.left.%]="taskData.positionPercent"
+                   [style.top.%]="50"
+                   [style.transform]="getRocketTransform(taskData, i)"
+                   (click)="toggleTimelineTaskExpanded(taskData.item.id); $event.stopPropagation()"
+                   style="z-index: 40; pointer-events: auto;">
+                <!-- Small Rocket Icon using emoji like pricing page -->
+                <div class="task-rocket-icon"
+                     [class.completed]="taskData.item.completed"
+                     [class.expanded]="expandedTimelineTaskId() === taskData.item.id">
+                  <span class="rocket-emoji-timeline">🚀</span>
+                </div>
+                
+                <!-- Expanded Task Details -->
+                @if (expandedTimelineTaskId() === taskData.item.id) {
+                <div class="timeline-task-popup popup-above">
+                  <div class="timeline-task-popup-header">
+                    <h4 class="timeline-task-popup-title" [class.completed]="taskData.item.completed">
+                      {{ taskData.item.title }}
+                    </h4>
+                    <button (click)="toggleTimelineTaskExpanded(taskData.item.id); $event.stopPropagation()" 
+                            class="timeline-task-popup-close">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  @if (taskData.item.notes) {
+                  <p class="timeline-task-popup-notes">{{ taskData.item.notes }}</p>
+                  }
+                  <div class="timeline-task-popup-footer">
+                    <span class="timeline-task-popup-day">Day {{ taskData.item.dayNumber }}</span>
+                    <button (click)="toggleActionItemComplete(taskData.item); $event.stopPropagation()"
+                            class="timeline-task-popup-toggle"
+                            [class.completed]="taskData.item.completed">
+                      @if (taskData.item.completed) {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Complete
+                      } @else {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Incomplete
+                      }
+                    </button>
+                  </div>
+                </div>
+                }
+              </div>
+              }
+
               <!-- Timeline Nodes -->
-              <div class="flex items-center justify-between relative z-10">
+              <div class="flex items-center justify-between relative z-30">
                 @for (marker of getTimelineMarkers(); track marker.day; let i = $index) {
                 <div class="timeline-node-wrapper flex flex-col items-center gap-1 cursor-pointer group"
                      (click)="addTaskToDay(marker.day)"
@@ -500,10 +555,11 @@
                       <span class="text-[10px] text-gray-500 font-bold" style="font-family: 'Orbitron', monospace;">{{ i + 1 }}</span>
                       }
                     </div>
-                    <span class="timeline-day-label-sm hidden sm:block text-[9px]"
+                    <span class="timeline-day-label-sm hidden sm:block text-[9px] relative z-30"
                           [class.text-white]="getCurrentMissionDay() >= marker.day"
                           [class.font-bold]="getCurrentMissionDay() >= marker.day"
-                          [class.text-gray-600]="getCurrentMissionDay() < marker.day">
+                          [class.text-gray-600]="getCurrentMissionDay() < marker.day"
+                          style="margin-top: 8px;">
                       {{ marker.label }}
                     </span>
                   </div>

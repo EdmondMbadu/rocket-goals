@@ -99,6 +99,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   editingNoteValue = signal('');
   viewAllTasks = signal(false);
   savingTask = signal(false);
+  expandedTimelineTaskId = signal<string | null>(null);
 
   async ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -1167,6 +1168,164 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
+  }
+
+  // Get tasks positioned between timeline markers
+  getTasksBetweenMarkers(): Array<{ item: ActionItem; positionPercent: number }> {
+    const markers = this.getTimelineMarkers();
+    const allTasks = this.actionItems();
+    const result: Array<{ item: ActionItem; positionPercent: number }> = [];
+
+    if (markers.length < 2 || allTasks.length === 0) return result;
+
+    // Group tasks by segment first
+    const tasksBySegment = new Map<number, ActionItem[]>();
+    
+    // For each task, find which segment it belongs to
+    for (const task of allTasks) {
+      const taskDay = task.dayNumber;
+      
+      for (let i = 0; i < markers.length - 1; i++) {
+        const startMarker = markers[i];
+        const endMarker = markers[i + 1];
+        const isLastSegment = i === markers.length - 2;
+        
+        if (taskDay >= startMarker.day && (isLastSegment ? taskDay <= endMarker.day : taskDay < endMarker.day)) {
+          if (!tasksBySegment.has(i)) {
+            tasksBySegment.set(i, []);
+          }
+          tasksBySegment.get(i)!.push(task);
+          break;
+        }
+      }
+    }
+
+    // Now position tasks within each segment, distributing multiple tasks on same day
+    for (const [segmentIndex, segmentTasks] of tasksBySegment.entries()) {
+      const startMarker = markers[segmentIndex];
+      const endMarker = markers[segmentIndex + 1];
+      const segmentStart = startMarker.day;
+      const segmentEnd = endMarker.day;
+      const segmentLength = segmentEnd - segmentStart;
+      
+      // Calculate segment boundaries in percentage
+      const segmentStartPercent = (segmentIndex / (markers.length - 1)) * 100;
+      const segmentEndPercent = ((segmentIndex + 1) / (markers.length - 1)) * 100;
+      const segmentWidth = segmentEndPercent - segmentStartPercent;
+      
+      // Group tasks by day within this segment
+      const tasksByDay = new Map<number, ActionItem[]>();
+      for (const task of segmentTasks) {
+        if (!tasksByDay.has(task.dayNumber)) {
+          tasksByDay.set(task.dayNumber, []);
+        }
+        tasksByDay.get(task.dayNumber)!.push(task);
+      }
+      
+      // Position each task
+      for (const [day, dayTasks] of tasksByDay.entries()) {
+        // Sort tasks for the day by order
+        const sortedDayTasks = dayTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        // Calculate base position for this day
+        let basePositionInSegment = 0;
+        if (segmentLength > 0) {
+          const dayPosition = (day - segmentStart) / segmentLength;
+          // Avoid placing rockets too close to markers (reserve 15% on each side)
+          basePositionInSegment = 0.15 + (dayPosition * 0.70);
+        } else {
+          basePositionInSegment = 0.5;
+        }
+        
+        // If multiple tasks on same day, distribute them horizontally
+        const taskCount = sortedDayTasks.length;
+        const spacing = taskCount > 1 ? Math.min(0.08, 0.70 / taskCount) : 0; // Max 8% spacing or distribute evenly
+        
+        sortedDayTasks.forEach((task, taskIndex) => {
+          let positionInSegment = basePositionInSegment;
+          
+          // Distribute multiple tasks on same day horizontally
+          if (taskCount > 1) {
+            const offset = (taskIndex - (taskCount - 1) / 2) * spacing;
+            positionInSegment = basePositionInSegment + offset;
+            // Clamp to segment bounds
+            positionInSegment = Math.max(0.15, Math.min(0.85, positionInSegment));
+          }
+          
+          const positionPercent = segmentStartPercent + (positionInSegment * segmentWidth);
+          result.push({ item: task, positionPercent: Math.max(2, Math.min(98, positionPercent)) });
+        });
+      }
+    }
+
+    // Sort by position
+    return result.sort((a, b) => {
+      if (Math.abs(a.positionPercent - b.positionPercent) < 0.5) {
+        // If rockets are very close, sort by day number then order
+        if (a.item.dayNumber !== b.item.dayNumber) {
+          return a.item.dayNumber - b.item.dayNumber;
+        }
+        return (a.item.order || 0) - (b.item.order || 0);
+      }
+      return a.positionPercent - b.positionPercent;
+    });
+  }
+
+  // Toggle expanded state for timeline task rocket
+  toggleTimelineTaskExpanded(taskId: string) {
+    if (this.expandedTimelineTaskId() === taskId) {
+      this.expandedTimelineTaskId.set(null);
+    } else {
+      this.expandedTimelineTaskId.set(taskId);
+    }
+  }
+
+  // Get vertical offset for overlapping rockets (returns pixel value)
+  // Get horizontal offset to position rockets slightly to the right of markers
+  getRocketHorizontalOffset(taskData: { item: ActionItem; positionPercent: number }, index: number): number {
+    const markers = this.getTimelineMarkers();
+    const allTasks = this.getTasksBetweenMarkers();
+    const currentPos = taskData.positionPercent;
+    
+    // Check if rocket is too close to any marker (within 8% of marker position)
+    for (const marker of markers) {
+      const markerPercent = this.getMarkerPositionPercent(marker.day);
+      if (Math.abs(currentPos - markerPercent) < 8) {
+        // Position rocket to the right of the marker with more spacing for clickability
+        return 24; // 24px to the right - enough space to click
+      }
+    }
+    
+    // Check for overlapping rockets at similar positions
+    let offsetIndex = 0;
+    for (let i = 0; i < index; i++) {
+      const otherPos = allTasks[i].positionPercent;
+      if (Math.abs(currentPos - otherPos) < 2) {
+        offsetIndex++;
+      }
+    }
+    
+    // Small horizontal offset for overlapping rockets
+    return offsetIndex * 8; // 8px spacing for each overlapping rocket
+  }
+
+  // Get marker position as percentage
+  getMarkerPositionPercent(markerDay: number): number {
+    const markers = this.getTimelineMarkers();
+    if (markers.length < 2) return 0;
+    
+    for (let i = 0; i < markers.length; i++) {
+      if (markers[i].day === markerDay) {
+        return (i / (markers.length - 1)) * 100;
+      }
+    }
+    return 0;
+  }
+
+  // Get transform style for rocket positioning - on the timeline line
+  getRocketTransform(taskData: { item: ActionItem; positionPercent: number }, index: number): string {
+    const horizontalOffset = this.getRocketHorizontalOffset(taskData, index);
+    return `translateX(calc(-50% + ${horizontalOffset}px)) translateY(-50%)`;
   }
 
   private scrollFansIntoView() {
