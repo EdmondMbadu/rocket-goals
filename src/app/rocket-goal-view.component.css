@@ -1325,21 +1325,21 @@
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-columns: 1fr 420px;
+    grid-template-columns: 420px 1fr;
     gap: 12px;
   }
 }
 
 @media (min-width: 1280px) {
   .dashboard-grid {
-    grid-template-columns: 1fr 450px;
+    grid-template-columns: 450px 1fr;
     gap: 16px;
   }
 }
 
 @media (min-width: 1536px) {
   .dashboard-grid {
-    grid-template-columns: 1fr 480px;
+    grid-template-columns: 480px 1fr;
     gap: 20px;
   }
 }
