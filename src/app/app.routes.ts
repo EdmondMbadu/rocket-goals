@@ -6,7 +6,7 @@ export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./auth/login.component').then(m => m.LoginComponent) },
   { path: 'signup', loadComponent: () => import('./auth/signup.component').then(m => m.SignupComponent) },
   { path: 'welcome', loadComponent: () => import('./auth/welcome.component').then(m => m.WelcomeComponent) },
-  { path: 'goals', loadComponent: () => import('./goals-list.component').then(m => m.GoalsListComponent) },
+  { path: 'goals', loadComponent: () => import('./goals-list.component').then(m => m.GoalsListComponent), canActivate: [authGuard] },
   { path: 'rocketgoal/:id', loadComponent: () => import('./rocket-goal-view.component').then(m => m.RocketGoalViewComponent) },
   { path: 'profile', loadComponent: () => import('./profile.component').then(m => m.ProfileComponent) },
   { path: 'admin/ai-stats', loadComponent: () => import('./admin/ai-stats.component').then(m => m.AiStatsComponent) },

@@ -645,11 +645,10 @@
                     </div>
                     <span class="card-icon">💬</span>
                   </div>
-                  <div class="reaction-buttons" [class.disabled]="!canCurrentUserLeaveFeedback()">
+                  <div class="reaction-buttons">
                     @for (emoji of fanReactionPalette; track emoji) {
                       <button type="button"
                         (click)="toggleFanReaction(emoji)"
-                        [disabled]="!canCurrentUserLeaveFeedback()"
                         class="reaction-button">
                         <span class="emoji">{{ emoji }}</span>
                         <span class="count">{{ getReactionCount(emoji) }}</span>
@@ -678,21 +677,19 @@
                     </div>
                     <span class="card-icon">📣</span>
                   </div>
-                  <div class="comment-form" [class.disabled]="!canCurrentUserLeaveFeedback()">
+                  <div class="comment-form">
                     <textarea rows="3"
                       placeholder="Celebrate the latest win or drop a reminder..."
                       [ngModel]="fanCommentInput()"
-                      (ngModelChange)="fanCommentInput.set($event)"
-                      [disabled]="!canCurrentUserLeaveFeedback()"></textarea>
+                      (ngModelChange)="fanCommentInput.set($event)"></textarea>
                     <div class="comment-actions">
                       <input type="text"
                         maxlength="2"
                         placeholder="Emoji"
                         [ngModel]="fanCommentEmoji()"
-                        (ngModelChange)="fanCommentEmoji.set($event)"
-                        [disabled]="!canCurrentUserLeaveFeedback()" />
+                        (ngModelChange)="fanCommentEmoji.set($event)" />
                       <button type="button" (click)="submitFanComment()"
-                        [disabled]="fanCommentSubmitting() || !fanCommentInput().trim() || !canCurrentUserLeaveFeedback()">
+                        [disabled]="fanCommentSubmitting() || !fanCommentInput().trim()">
                         {{ fanCommentSubmitting() ? 'Posting...' : 'Post update' }}
                       </button>
                     </div>

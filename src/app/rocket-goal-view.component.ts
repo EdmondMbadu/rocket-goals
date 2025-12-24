@@ -846,9 +846,15 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   async submitFanComment() {
     const goal = this.goal();
+    if (!goal?.id) {
+      return;
+    }
+
+    // Check if user is logged in, if not redirect to login
     const identity = this.getFeedbackIdentity();
-    if (!goal?.id || !identity?.email) {
-      this.fanCommentError.set('Please sign in to post updates.');
+    if (!identity?.email) {
+      const currentUrl = this.router.url;
+      this.router.navigate(['/login'], { queryParams: { redirectTo: currentUrl } });
       return;
     }
 
@@ -877,8 +883,15 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   async toggleFanReaction(emoji: string) {
     const goal = this.goal();
+    if (!goal?.id) {
+      return;
+    }
+
+    // Check if user is logged in, if not redirect to login
     const identity = this.getFeedbackIdentity();
-    if (!goal?.id || !identity?.email) {
+    if (!identity?.email) {
+      const currentUrl = this.router.url;
+      this.router.navigate(['/login'], { queryParams: { redirectTo: currentUrl } });
       return;
     }
 
