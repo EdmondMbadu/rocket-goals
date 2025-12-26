@@ -548,11 +548,23 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       // Generate visualization image first, then send email with the image
       let visualizationImageUrl: string | undefined;
       try {
+        // Get user photo from profile for visualization
+        let userPhotoBase64: string | null = null;
+        if (profile.rocketGoalPhotoUrl) {
+          // Convert profile photo URL to base64
+          try {
+            userPhotoBase64 = await this.imageUrlToBase64(profile.rocketGoalPhotoUrl);
+          } catch (error) {
+            console.warn('Failed to convert profile photo to base64:', error);
+          }
+        }
+
         const visualizationResult = await this.visualizationService.generateVisualization({
           goalId,
           goalDescription: answers.goalDescription,
           timeframe: answers.timeframe!,
-          hasAccountabilitySupport: answers.hasAccountabilitySupport
+          hasAccountabilitySupport: answers.hasAccountabilitySupport,
+          userPhotoBase64: userPhotoBase64
         });
 
         if (visualizationResult.success && visualizationResult.imageUrl) {
@@ -597,6 +609,25 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.goalCreationError.set(error?.message || 'Failed to create goal. Please try again.');
     } finally {
       this.isCreatingGoal.set(false);
+    }
+  }
+
+  /**
+   * Convert image URL to base64 data URL for visualization
+   */
+  private async imageUrlToBase64(imageUrl: string): Promise<string> {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image URL to base64:', error);
+      throw error;
     }
   }
 

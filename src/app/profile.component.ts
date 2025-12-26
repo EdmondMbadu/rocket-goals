@@ -34,8 +34,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   
   profileImageFile: File | null = null;
   headerImageFile: File | null = null;
+  rocketGoalPhotoFile: File | null = null;
   profileImagePreview = signal<string | null>(null);
   headerImagePreview = signal<string | null>(null);
+  rocketGoalPhotoPreview = signal<string | null>(null);
+  uploadingRocketGoalPhoto = signal(false);
   
   // Goals
   goals = signal<RocketGoal[]>([]);
@@ -74,6 +77,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.headerImagePreview.set(profile.headerImageUrl);
     }
     
+    if (profile.rocketGoalPhotoUrl) {
+      this.rocketGoalPhotoPreview.set(profile.rocketGoalPhotoUrl);
+    }
+    
     await this.initStorage();
     await this.loadGoals();
     
@@ -91,6 +98,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (!this.headerImageFile && currentProfile.headerImageUrl && currentProfile.headerImageUrl !== this.headerImagePreview()) {
           this.headerImagePreview.set(currentProfile.headerImageUrl);
         }
+        if (!this.rocketGoalPhotoFile && currentProfile.rocketGoalPhotoUrl && currentProfile.rocketGoalPhotoUrl !== this.rocketGoalPhotoPreview()) {
+          this.rocketGoalPhotoPreview.set(currentProfile.rocketGoalPhotoUrl);
+        }
       }
     };
     
@@ -107,6 +117,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headerPreview = this.headerImagePreview();
     if (headerPreview && headerPreview.startsWith('blob:')) {
       URL.revokeObjectURL(headerPreview);
+    }
+    const rocketGoalPhotoPreview = this.rocketGoalPhotoPreview();
+    if (rocketGoalPhotoPreview && rocketGoalPhotoPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(rocketGoalPhotoPreview);
     }
   }
 
@@ -279,6 +293,113 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  onRocketGoalPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        this.error.set('Rocket goal photo must be less than 5MB');
+        setTimeout(() => this.error.set(null), 5000);
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        this.error.set('Please select an image file');
+        setTimeout(() => this.error.set(null), 5000);
+        return;
+      }
+      // Clean up old preview URL if it was a blob URL or data URL
+      const oldPreview = this.rocketGoalPhotoPreview();
+      if (oldPreview && (oldPreview.startsWith('blob:') || oldPreview.startsWith('data:'))) {
+        if (oldPreview.startsWith('blob:')) {
+          URL.revokeObjectURL(oldPreview);
+        }
+      }
+      this.rocketGoalPhotoFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newPreview = e.target?.result as string;
+        this.rocketGoalPhotoPreview.set(newPreview);
+        this.error.set(null);
+        this.success.set(null);
+      };
+      reader.readAsDataURL(file);
+      input.value = '';
+    }
+  }
+
+  async uploadRocketGoalPhoto() {
+    if (!this.rocketGoalPhotoFile || !this.storage || !this.profile()) {
+      return;
+    }
+
+    this.uploadingRocketGoalPhoto.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      const storageModule = await import('firebase/storage');
+      const userId = this.profile()!.userId;
+      const fileExtension = this.rocketGoalPhotoFile.name.split('.').pop();
+      const fileName = `rocket-goal-photo-${Date.now()}.${fileExtension}`;
+      const storageRef = storageModule.ref(this.storage, `userProfiles/${userId}/${fileName}`);
+      
+      await storageModule.uploadBytes(storageRef, this.rocketGoalPhotoFile);
+      const downloadURL = await storageModule.getDownloadURL(storageRef);
+      
+      // Update profile in Firestore
+      const updatedProfile = await this.updateProfile({ rocketGoalPhotoUrl: downloadURL });
+      
+      // Clear the file reference after successful upload
+      this.rocketGoalPhotoFile = null;
+      
+      // Update preview with cache busting
+      const timestamp = Date.now();
+      const cacheBustedURL = downloadURL.includes('?') 
+        ? `${downloadURL}&t=${timestamp}` 
+        : `${downloadURL}?t=${timestamp}`;
+      
+      this.rocketGoalPhotoPreview.set(cacheBustedURL);
+      
+      if (updatedProfile) {
+        this.profile.set(updatedProfile);
+      }
+      
+      this.cdr.detectChanges();
+      
+      this.success.set('Rocket goal photo updated successfully!');
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (error: any) {
+      console.error('Error uploading rocket goal photo', error);
+      this.error.set('Failed to upload rocket goal photo. Please try again.');
+    } finally {
+      this.uploadingRocketGoalPhoto.set(false);
+    }
+  }
+
+  async removeRocketGoalPhoto() {
+    if (!confirm('Are you sure you want to remove your rocket goal photo? This will affect future goal visualizations.')) {
+      return;
+    }
+
+    try {
+      // Remove from profile
+      await this.updateProfile({ rocketGoalPhotoUrl: undefined });
+      
+      // Clear preview
+      const oldPreview = this.rocketGoalPhotoPreview();
+      if (oldPreview && oldPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(oldPreview);
+      }
+      this.rocketGoalPhotoPreview.set(null);
+      this.rocketGoalPhotoFile = null;
+      
+      this.success.set('Rocket goal photo removed successfully!');
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (error: any) {
+      console.error('Error removing rocket goal photo', error);
+      this.error.set('Failed to remove rocket goal photo. Please try again.');
+    }
+  }
 
   private async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
     const updatedProfile = await this.authService.updateUserProfile(updates);

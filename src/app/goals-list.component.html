@@ -672,176 +672,8 @@
           </div>
         </div>
 
-      <!-- Step 10: Photo Capture -->
-      <div *ngIf="goalModalStep() === 10 && !showAuthPrompt()" class="space-y-2">
-        <!-- Skip option - compact at top -->
-        <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-200 mb-1">
-          <div class="flex items-center gap-1.5">
-            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-              <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </div>
-            <div>
-              <p class="font-semibold text-gray-700 text-xs leading-tight">Want to skip?</p>
-            </div>
-          </div>
-          <button type="button"
-            [disabled]="isUsingPhoto() || isCreatingGoal()"
-            class="px-2.5 py-1 rounded-md bg-white border border-gray-300 text-gray-700 font-medium text-xs hover:bg-gray-100 hover:border-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            (click)="skipPhoto()">
-            Skip
-          </button>
-        </div>
-
-        <div class="text-center">
-          <div class="photo-capture-icon mb-2">
-            <div class="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
-              <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-          </div>
-          <label class="block text-base font-bold text-gray-900 mb-1">
-            Add Your Photo
-          </label>
-          <p class="text-sm font-semibold text-red-600 mb-2">
-            Personalize your visualization with your face
-          </p>
-        </div>
-
-        <!-- Camera/Photo area -->
-        <div class="photo-capture-container">
-          <!-- Not started state -->
-          <div *ngIf="!isCameraActive() && !capturedPhoto() && !isCameraLoading()" class="photo-capture-placeholder">
-            <div class="w-full h-48 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
-              <svg class="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <p class="text-gray-500 font-medium text-xs mb-3">Your photo will appear here</p>
-              <div class="flex flex-col sm:flex-row items-center gap-2">
-                <button type="button"
-                  [disabled]="isUsingPhoto() || isCreatingGoal()"
-                  class="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  (click)="startCamera()">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Take Photo
-                </button>
-                <span class="text-gray-400 text-xs font-medium">or</span>
-                <label
-                  [class.pointer-events-none]="isUsingPhoto() || isCreatingGoal()"
-                  [class.opacity-50]="isUsingPhoto() || isCreatingGoal()"
-                  class="px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-semibold text-sm hover:border-red-400 hover:bg-red-50 transition cursor-pointer flex items-center gap-1.5">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Upload Photo
-                  <input type="file" accept="image/*" class="hidden" [disabled]="isUsingPhoto() || isCreatingGoal()" (change)="onPhotoFileSelected($event)" />
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Loading camera -->
-          <div *ngIf="isCameraLoading()" class="photo-capture-loading">
-            <div class="w-full h-48 rounded-xl bg-gray-100 flex flex-col items-center justify-center">
-              <div class="w-10 h-10 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mb-3"></div>
-              <p class="text-gray-600 font-medium text-sm">Accessing camera...</p>
-            </div>
-          </div>
-
-          <!-- Camera error -->
-          <div *ngIf="cameraError()" class="photo-capture-error">
-            <div class="w-full h-48 rounded-xl bg-red-50 border-2 border-red-200 flex flex-col items-center justify-center p-4">
-              <svg class="w-10 h-10 text-red-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p class="text-red-600 font-medium text-center text-sm mb-3">{{ cameraError() }}</p>
-              <button type="button"
-                class="px-3 py-1.5 rounded-lg bg-red-100 text-red-600 font-medium text-sm hover:bg-red-200 transition"
-                (click)="startCamera()">
-                Try Again
-              </button>
-            </div>
-          </div>
-
-          <!-- Camera active (video feed) -->
-          <div *ngIf="isCameraActive() && !capturedPhoto()" class="photo-capture-active">
-            <div class="relative w-full h-48 rounded-xl overflow-hidden bg-black">
-              <video id="photo-capture-video"
-                class="w-full h-full object-cover"
-                autoplay
-                playsinline
-                style="transform: scaleX(-1);"></video>
-              <!-- Camera overlay frame -->
-              <div class="absolute inset-0 pointer-events-none">
-                <div class="absolute inset-3 border-2 border-white/30 rounded-lg"></div>
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/50 rounded-full"></div>
-              </div>
-            </div>
-            <div class="flex justify-center gap-3 mt-3">
-              <button type="button"
-                class="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition flex items-center gap-1.5"
-                (click)="capturePhoto()">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                Capture
-              </button>
-              <button type="button"
-                class="px-3 py-2 rounded-lg border-2 border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition"
-                (click)="stopCamera()">
-                Cancel
-              </button>
-            </div>
-          </div>
-
-          <!-- Photo captured (preview) -->
-          <div *ngIf="capturedPhoto()" class="photo-capture-preview">
-            <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden border-4 border-green-400 shadow-md">
-              <img [src]="capturedPhoto()" alt="Captured photo" class="w-full h-full object-contain bg-gray-50" />
-              <div class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <!-- Loading overlay when using photo or creating goal -->
-              <div *ngIf="isUsingPhoto() || isCreatingGoal()" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-xl">
-                <div class="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
-                <p class="text-white font-medium text-xs">{{ isCreatingGoal() ? 'Creating your goal...' : 'Processing...' }}</p>
-              </div>
-            </div>
-            <div class="flex justify-center gap-2 mt-2">
-              <button type="button"
-                [disabled]="isUsingPhoto() || isCreatingGoal()"
-                class="px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                (click)="usePhoto()">
-                <svg *ngIf="!isUsingPhoto() && !isCreatingGoal()" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <svg *ngIf="isUsingPhoto() || isCreatingGoal()" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {{ (isUsingPhoto() || isCreatingGoal()) ? (isCreatingGoal() ? 'Creating Goal...' : 'Processing...') : 'Use This Photo' }}
-              </button>
-              <button type="button"
-                [disabled]="isUsingPhoto() || isCreatingGoal()"
-                class="px-3 py-2 rounded-lg border-2 border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                (click)="retakePhoto()">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Retake
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <!-- Step 10: Photo Capture - REMOVED (now managed in profile page) -->
+      <!-- Photo step has been moved to profile page for better user experience -->
 
       <!-- Auth Prompt for non-logged-in users -->
       <div *ngIf="showAuthPrompt()" class="space-y-6 text-center">
@@ -876,8 +708,8 @@
       </div>
     </div>
 
-    <!-- Modal Footer - Hidden on step 10 (photo capture has its own buttons) -->
-    <div class="goal-modal-footer px-6 py-4 flex justify-between items-center relative z-10" *ngIf="!showAuthPrompt() && goalModalStep() !== 10">
+    <!-- Modal Footer -->
+    <div class="goal-modal-footer px-6 py-4 flex justify-between items-center relative z-10" *ngIf="!showAuthPrompt()">
       <button *ngIf="goalModalStep() > 1" type="button"
         class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition"
         (click)="goToPreviousStep()">
@@ -894,7 +726,7 @@
           Cancel
         </button>
 
-        <!-- Next button for steps 1-9 -->
+        <!-- Next button for steps 1-8 -->
         <button *ngIf="goalModalStep() < totalSteps" type="button"
           class="goal-next-btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           [disabled]="!canProceedToNextStep()"
@@ -903,6 +735,22 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
+        </button>
+
+        <!-- Launch/Create Goal button for final step (step 9) -->
+        <button *ngIf="goalModalStep() === totalSteps" type="button"
+          class="goal-next-btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          [disabled]="isCreatingGoal()"
+          (click)="handleFinalStep()">
+          @if (isCreatingGoal()) {
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <span>Creating Goal...</span>
+          } @else {
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Launch Goal</span>
+          }
         </button>
       </div>
     </div>

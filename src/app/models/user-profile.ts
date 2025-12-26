@@ -14,6 +14,7 @@ export interface UserProfile {
   username?: string;
   profilePictureUrl?: string;
   headerImageUrl?: string;
+  rocketGoalPhotoUrl?: string; // Photo used for rocket goal visualizations
   createdAt?: unknown;
   preferences?: UserPreferences;
   admin?: boolean;

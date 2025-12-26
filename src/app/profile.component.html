@@ -268,6 +268,63 @@
 
     <div class="card glass">
       <div class="card-head">
+        <h3>Rocket Goal Photo</h3>
+        <p class="muted tiny">This photo is used when generating visualizations for your goals</p>
+      </div>
+      <div class="settings">
+        <div class="setting-row">
+          <div class="flex-1">
+            @if (rocketGoalPhotoPreview()) {
+            <div class="rocket-goal-photo-preview">
+              <img [src]="rocketGoalPhotoPreview()" alt="Rocket Goal Photo" class="rocket-goal-photo-img" />
+              <div class="rocket-goal-photo-overlay">
+                <label class="icon-btn" title="Change photo">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <input type="file" accept="image/*" (change)="onRocketGoalPhotoSelected($event)" class="hidden" />
+                </label>
+                <button class="danger xs" (click)="removeRocketGoalPhoto()" title="Remove photo">Remove</button>
+              </div>
+            </div>
+            } @else {
+            <div class="rocket-goal-photo-placeholder">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="muted tiny mt-2">No photo set</p>
+            </div>
+            }
+          </div>
+          <div class="flex flex-col gap-2">
+            @if (rocketGoalPhotoFile && !uploadingRocketGoalPhoto()) {
+            <button class="solid xs" (click)="uploadRocketGoalPhoto()">Upload Photo</button>
+            } @else if (!rocketGoalPhotoPreview()) {
+            <label class="solid xs cursor-pointer">
+              <input type="file" accept="image/*" (change)="onRocketGoalPhotoSelected($event)" class="hidden" />
+              Add Photo
+            </label>
+            }
+            @if (uploadingRocketGoalPhoto()) {
+            <div class="pill muted">Uploading...</div>
+            }
+          </div>
+        </div>
+        @if (rocketGoalPhotoFile && !uploadingRocketGoalPhoto()) {
+        <div class="setting-row">
+          <div>
+            <p class="name">Ready to upload</p>
+            <p class="muted tiny">{{ rocketGoalPhotoFile.name }}</p>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-head">
         <h3>Account</h3>
       </div>
       <div class="settings">

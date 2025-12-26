@@ -77,7 +77,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
   protected readonly goalModalStep = signal<number>(1);
-  protected readonly totalSteps = 10; // Total quiz steps (including photo capture)
+  protected readonly totalSteps = 9; // Total quiz steps (photo step removed - now managed in profile)
   protected readonly isCreatingGoal = signal(false);
   protected readonly goalCreationError = signal<string | null>(null);
   protected readonly showAuthPrompt = signal(false);
@@ -525,7 +525,6 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       case 7: return !!answers.dailyConsistency;
       case 8: return !!answers.hasAccountabilitySupport;
       case 9: return true; // Additional notes is optional
-      case 10: return true; // Photo capture is optional (can skip or use photo)
       default: return false;
     }
   }
@@ -776,12 +775,27 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       // Generate visualization image first, then send email with the image
       let visualizationImageUrl: string | undefined;
       try {
+        // Get user photo from profile (preferred) or fallback to quiz photo
+        let userPhotoBase64: string | null = null;
+        if (profile.rocketGoalPhotoUrl) {
+          // Convert profile photo URL to base64
+          try {
+            userPhotoBase64 = await this.imageUrlToBase64(profile.rocketGoalPhotoUrl);
+          } catch (error) {
+            console.warn('Failed to convert profile photo to base64, using quiz photo if available:', error);
+            userPhotoBase64 = answers.userPhotoBase64;
+          }
+        } else {
+          // Fallback to quiz photo if no profile photo
+          userPhotoBase64 = answers.userPhotoBase64;
+        }
+
         const visualizationResult = await this.visualizationService.generateVisualization({
           goalId,
           goalDescription: answers.goalDescription,
           timeframe: answers.timeframe!,
           hasAccountabilitySupport: answers.hasAccountabilitySupport,
-          userPhotoBase64: answers.userPhotoBase64
+          userPhotoBase64: userPhotoBase64
         });
 
         if (visualizationResult.success && visualizationResult.imageUrl) {
@@ -833,6 +847,25 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       // Clear loading states on error so user can try again
       this.isUsingPhoto.set(false);
       this.isCreatingGoal.set(false);
+    }
+  }
+
+  /**
+   * Convert image URL to base64 data URL for visualization
+   */
+  private async imageUrlToBase64(imageUrl: string): Promise<string> {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image URL to base64:', error);
+      throw error;
     }
   }
 
