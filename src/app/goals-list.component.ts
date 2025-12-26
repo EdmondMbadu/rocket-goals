@@ -57,6 +57,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
   private routerSubscription?: Subscription;
+  private storage: any = null;
 
   goals = signal<RocketGoal[]>([]);
   loading = signal(true);
@@ -77,7 +78,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
   protected readonly goalModalStep = signal<number>(1);
-  protected readonly totalSteps = 9; // Total quiz steps (photo step removed - now managed in profile)
+  protected readonly totalSteps = 10; // Total quiz steps (including photo capture)
   protected readonly isCreatingGoal = signal(false);
   protected readonly goalCreationError = signal<string | null>(null);
   protected readonly showAuthPrompt = signal(false);
@@ -525,6 +526,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       case 7: return !!answers.dailyConsistency;
       case 8: return !!answers.hasAccountabilitySupport;
       case 9: return true; // Additional notes is optional
+      case 10: return true; // Photo capture is optional (can skip or use photo)
       default: return false;
     }
   }
@@ -775,19 +777,27 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       // Generate visualization image first, then send email with the image
       let visualizationImageUrl: string | undefined;
       try {
-        // Get user photo from profile (preferred) or fallback to quiz photo
+        // Get user photo - prioritize quiz photo (from step 10), fallback to profile photo
         let userPhotoBase64: string | null = null;
-        if (profile.rocketGoalPhotoUrl) {
-          // Convert profile photo URL to base64
+        
+        // If user added a photo in step 10, use it and save to profile
+        if (answers.userPhotoBase64) {
+          userPhotoBase64 = answers.userPhotoBase64;
+          
+          // Save the photo to profile for future goals
+          try {
+            await this.savePhotoToProfile(answers.userPhotoBase64);
+          } catch (error) {
+            console.warn('Failed to save photo to profile:', error);
+            // Continue even if profile save fails
+          }
+        } else if (profile.rocketGoalPhotoUrl) {
+          // Fallback to profile photo if no quiz photo
           try {
             userPhotoBase64 = await this.imageUrlToBase64(profile.rocketGoalPhotoUrl);
           } catch (error) {
-            console.warn('Failed to convert profile photo to base64, using quiz photo if available:', error);
-            userPhotoBase64 = answers.userPhotoBase64;
+            console.warn('Failed to convert profile photo to base64:', error);
           }
-        } else {
-          // Fallback to quiz photo if no profile photo
-          userPhotoBase64 = answers.userPhotoBase64;
         }
 
         const visualizationResult = await this.visualizationService.generateVisualization({
@@ -865,6 +875,52 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     } catch (error) {
       console.error('Error converting image URL to base64:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save base64 photo to user profile for future goals
+   */
+  private async savePhotoToProfile(photoBase64: string): Promise<void> {
+    try {
+      const profile = this.authService.profile();
+      if (!profile?.userId) {
+        return;
+      }
+
+      // Convert base64 to blob
+      const response = await fetch(photoBase64);
+      const blob = await response.blob();
+
+      // Initialize storage if needed
+      if (!this.storage) {
+        const appModule = await import('firebase/app');
+        const storageModule = await import('firebase/storage');
+        const { firebaseConfig } = await import('../../environments/environment');
+        
+        const app = appModule.getApps().length === 0
+          ? appModule.initializeApp(firebaseConfig)
+          : appModule.getApp();
+        
+        this.storage = storageModule.getStorage(app);
+      }
+
+      // Upload to Firebase Storage
+      const storageModule = await import('firebase/storage');
+      const fileExtension = 'jpg'; // Default to jpg for base64 images
+      const fileName = `rocket-goal-photo-${Date.now()}.${fileExtension}`;
+      const storageRef = storageModule.ref(this.storage, `userProfiles/${profile.userId}/${fileName}`);
+      
+      await storageModule.uploadBytes(storageRef, blob);
+      const downloadURL = await storageModule.getDownloadURL(storageRef);
+      
+      // Update profile
+      await this.authService.updateUserProfile({ rocketGoalPhotoUrl: downloadURL });
+      
+      console.log('Photo saved to profile successfully');
+    } catch (error) {
+      console.error('Error saving photo to profile:', error);
       throw error;
     }
   }
