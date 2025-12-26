@@ -89,6 +89,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly cameraError = signal<string | null>(null);
   protected readonly capturedPhoto = signal<string | null>(null);
   protected readonly isUsingPhoto = signal(false);
+  protected readonly isSkippingPhoto = signal(false); // True when user clicks Skip
+  protected readonly isPhotoPrefilled = signal(false); // True when photo was loaded from profile
+  protected readonly isLoadingPrefill = signal(false); // True while loading photo from profile
   private videoStream: MediaStream | null = null;
 
   // Quiz answers
@@ -477,7 +480,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Goal creation modal methods (Launch Your GOAL wizard)
-  protected openGoalModal(): void {
+  protected async openGoalModal(): Promise<void> {
     // Always open modal - auth check happens at the end
     this.showGoalModal.set(true);
     this.goalModalStep.set(1);
@@ -495,6 +498,51 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       additionalNotes: '',
       userPhotoBase64: null
     });
+    
+    // Small delay to ensure modal is rendered, then prefill photo from profile if available
+    setTimeout(async () => {
+      await this.prefillPhotoFromProfile();
+    }, 100);
+  }
+
+  /**
+   * Prefill photo from user profile if available
+   */
+  private async prefillPhotoFromProfile(): Promise<void> {
+    try {
+      // Show loading indicator while fetching
+      this.isLoadingPrefill.set(true);
+
+      // Refresh profile to ensure we have the latest data
+      const refreshedProfile = await this.authService.refreshProfile();
+      const profile = refreshedProfile || this.authService.profile();
+
+      console.log('Prefilling photo - profile:', profile ? 'found' : 'not found');
+      console.log('Profile rocketGoalPhotoUrl:', profile?.rocketGoalPhotoUrl);
+
+      if (!profile?.rocketGoalPhotoUrl) {
+        console.log('No rocketGoalPhotoUrl in profile, skipping prefill');
+        this.isLoadingPrefill.set(false);
+        return; // No profile photo to prefill
+      }
+
+      console.log('Converting photo URL to base64:', profile.rocketGoalPhotoUrl);
+      // Convert profile photo URL to base64
+      const photoBase64 = await this.imageUrlToBase64(profile.rocketGoalPhotoUrl);
+
+      console.log('Photo converted successfully, setting in quiz answers');
+      // Set in quiz answers and captured photo signal
+      this.updateQuizAnswer('userPhotoBase64', photoBase64);
+      this.capturedPhoto.set(photoBase64);
+      this.isPhotoPrefilled.set(true); // Mark as prefilled so UI can show appropriate messaging
+
+      console.log('Photo prefilled from profile successfully');
+    } catch (error) {
+      console.error('Failed to prefill photo from profile:', error);
+      // Continue without prefilling - user can still add photo manually
+    } finally {
+      this.isLoadingPrefill.set(false);
+    }
   }
 
   protected closeGoalModal(): void {
@@ -506,6 +554,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isCreatingGoal.set(false);
     this.capturedPhoto.set(null);
     this.cameraError.set(null);
+    this.isPhotoPrefilled.set(false);
+    this.isSkippingPhoto.set(false);
+    this.isLoadingPrefill.set(false);
   }
 
   protected updateQuizAnswer<K extends keyof RocketQuizAnswers>(key: K, value: RocketQuizAnswers[K]): void {
@@ -559,10 +610,11 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected handleFinalStep(): void {
     // Don't clear photo loading state here - keep it until goal creation completes
     // This prevents multiple clicks and goal creation
-    
+
     if (!this.isLoggedIn()) {
-      // Clear loading state if showing auth prompt
+      // Clear loading states if showing auth prompt
       this.isUsingPhoto.set(false);
+      this.isSkippingPhoto.set(false);
       // Show auth prompt within the modal
       this.showAuthPrompt.set(true);
     } else {
@@ -646,6 +698,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected retakePhoto(): void {
     this.capturedPhoto.set(null);
     this.updateQuizAnswer('userPhotoBase64', null);
+    this.isPhotoPrefilled.set(false); // Clear prefilled state when user retakes
     this.startCamera();
   }
 
@@ -682,16 +735,21 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     input.value = '';
   }
 
-  protected skipPhoto(): void {
+  protected async skipPhoto(): Promise<void> {
     // Prevent multiple clicks - if already processing, do nothing
-    if (this.isUsingPhoto() || this.isCreatingGoal()) {
+    if (this.isUsingPhoto() || this.isCreatingGoal() || this.isSkippingPhoto()) {
       return;
     }
-    
+
+    // Show loading state immediately
+    this.isSkippingPhoto.set(true);
+
     this.stopCamera();
     this.capturedPhoto.set(null);
     this.updateQuizAnswer('userPhotoBase64', null);
+
     // Move to final step (auth check or goal creation)
+    // handleFinalStep will set isCreatingGoal which continues showing loading
     this.handleFinalStep();
   }
 
@@ -848,35 +906,60 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       
       // Clear loading states before navigation
       this.isUsingPhoto.set(false);
+      this.isSkippingPhoto.set(false);
       this.isCreatingGoal.set(false);
-      
+
       this.router.navigate(['/rocketgoal', goalId]);
     } catch (error: any) {
       console.error('Failed to create goal:', error);
       this.goalCreationError.set(error?.message || 'Failed to create goal. Please try again.');
       // Clear loading states on error so user can try again
       this.isUsingPhoto.set(false);
+      this.isSkippingPhoto.set(false);
       this.isCreatingGoal.set(false);
     }
   }
 
   /**
    * Convert image URL to base64 data URL for visualization
+   * Uses Image element approach which handles CORS better for Firebase Storage
    */
   private async imageUrlToBase64(imageUrl: string): Promise<string> {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error('Error converting image URL to base64:', error);
-      throw error;
-    }
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; // Required for canvas to work with external images
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0);
+          const base64 = canvas.toDataURL('image/jpeg', 0.9);
+          console.log('Image converted to base64 successfully');
+          resolve(base64);
+        } catch (canvasError) {
+          console.error('Canvas conversion error:', canvasError);
+          reject(canvasError);
+        }
+      };
+
+      img.onerror = (error) => {
+        console.error('Image load error for URL:', imageUrl, error);
+        reject(new Error('Failed to load image'));
+      };
+
+      // Add cache buster to avoid CORS cache issues
+      const separator = imageUrl.includes('?') ? '&' : '?';
+      img.src = `${imageUrl}${separator}t=${Date.now()}`;
+    });
   }
 
   /**
