@@ -382,9 +382,34 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     try {
-      // Remove from profile
-      await this.updateProfile({ rocketGoalPhotoUrl: undefined });
-      
+      // Remove from profile using Firestore deleteField
+      const profile = this.profile();
+      if (!profile?.userId) {
+        throw new Error('No profile found');
+      }
+
+      const firestoreModule = await import('firebase/firestore');
+      const appModule = await import('firebase/app');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app = appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+      const firestore = firestoreModule.getFirestore(app);
+      const docRef = firestoreModule.doc(firestore, 'userProfiles', profile.userId);
+
+      // Use deleteField() to properly remove the field from Firestore
+      await firestoreModule.updateDoc(docRef, {
+        rocketGoalPhotoUrl: firestoreModule.deleteField()
+      });
+
+      // Refresh profile to get updated data
+      const updatedProfile = await this.authService.refreshProfile();
+      if (updatedProfile) {
+        this.profile.set(updatedProfile);
+      }
+
       // Clear preview
       const oldPreview = this.rocketGoalPhotoPreview();
       if (oldPreview && oldPreview.startsWith('blob:')) {
@@ -392,7 +417,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
       this.rocketGoalPhotoPreview.set(null);
       this.rocketGoalPhotoFile = null;
-      
+
       this.success.set('Rocket goal photo removed successfully!');
       setTimeout(() => this.success.set(null), 5000);
     } catch (error: any) {
