@@ -999,8 +999,12 @@ export class PricingPageComponent implements OnInit {
       return;
     }
 
+    // Set loading immediately for all plan upgrades (Moonshot, Interplanetary, Galactic)
     this.loading.set(true);
     this.error.set(null);
+    
+    // Small delay to ensure UI updates and loading screen appears
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
       // Import Firebase modules
