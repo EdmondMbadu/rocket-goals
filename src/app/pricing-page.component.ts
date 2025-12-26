@@ -340,6 +340,29 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
           </div>
         </section>
       </main>
+
+      <!-- Loading Overlay -->
+      @if (loading()) {
+      <div class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-12 max-w-md w-full mx-4 shadow-2xl border border-black/10 dark:border-white/10">
+          <div class="text-center space-y-6">
+            <div class="flex justify-center">
+              <div class="w-16 h-16 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
+            </div>
+            <div>
+              <h3 class="text-2xl font-black text-black dark:text-white mb-2">Preparing Your Mission</h3>
+              <p class="text-black/60 dark:text-slate-300">Setting up your checkout session...</p>
+            </div>
+            <div class="flex items-center justify-center gap-2 text-sm text-black/50 dark:text-slate-400">
+              <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Please wait</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
     </div>
   `,
   styles: [`
@@ -706,6 +729,17 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
     :host-context(.dark) .enterprise-card:hover {
       border-color: rgba(248,113,113,0.6);
       box-shadow: 0 40px 100px rgba(248,113,113,0.35), 0 0 0 1px rgba(248,113,113,0.3);
+    }
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    .animate-fade-in {
+      animation: fade-in 0.2s ease-in-out;
     }
   `]
 })
