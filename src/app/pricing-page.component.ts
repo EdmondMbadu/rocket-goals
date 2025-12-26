@@ -283,6 +283,60 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                 }
               </div>
             </div>
+
+            <!-- Enterprise Card -->
+            <div class="max-w-5xl mx-auto mt-12">
+              <div class="pricing-card enterprise-card relative overflow-hidden">
+                <div
+                  class="absolute inset-0 bg-gradient-to-br from-red-600/5 via-red-600/10 to-black/5 dark:from-red-600/10 dark:via-red-600/20 dark:to-slate-900/50">
+                </div>
+                <div class="relative z-10">
+                  <div class="card-top">
+                    <span class="rocket-emoji rocket-size-5 rocket-red" style="font-size: 64px;">🚀</span>
+                    <div class="badge bg-red-600 text-white animate-pulse">Enterprise</div>
+                  </div>
+                  <div class="space-y-3">
+                    <div class="title text-red-600 dark:text-red-400" style="font-size: 16px;">5. Enterprise Consulting & Build</div>
+                    <div class="price dark:text-white" style="font-size: 48px;">Custom</div>
+                    <div class="sub dark:text-slate-400">Build at light speed</div>
+                    <p class="desc dark:text-slate-300" style="font-size: 16px; line-height: 1.6;">
+                      We build applications using AI at light speed. Custom reminder OS for enterprise, MVP development, and
+                      enterprise-grade solutions tailored to your needs.
+                    </p>
+                  </div>
+                  <div class="grid md:grid-cols-2 gap-4 my-6">
+                    <div>
+                      <h4 class="font-bold text-black text-sm mb-3 dark:text-white uppercase tracking-wider">What We Build
+                      </h4>
+                      <ul class="features dark:text-slate-200" style="gap: 8px;">
+                        <li><span></span>Custom Reminder OS</li>
+                        <li><span></span>MVP at Light Speed</li>
+                        <li><span></span>AI-Powered Applications</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-black text-sm mb-3 dark:text-white uppercase tracking-wider">Enterprise Skills
+                      </h4>
+                      <ul class="features dark:text-slate-200" style="gap: 8px;">
+                        <li><span></span>Cloud Architecture</li>
+                        <li><span></span>Security & Compliance</li>
+                        <li><span></span>API Integration & DevOps</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <a href="mailto:missoncontrol@rocketgoals.com?subject=Enterprise Consulting Inquiry" class="btn-enterprise">
+                    Contact Us to Build
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </a>
+                  <p class="text-center text-sm text-black/50 dark:text-slate-400 mt-4">
+                    Email: <a href="mailto:missoncontrol@rocketgoals.com"
+                      class="text-red-600 hover:underline font-semibold dark:text-red-400">missoncontrol@rocketgoals.com</a>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -417,6 +471,9 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
     }
     .rocket-size-4 {
       font-size: 52px;
+    }
+    .rocket-size-5 {
+      font-size: 64px;
     }
     .rocket-green {
       filter: hue-rotate(85deg) saturate(2.5) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
@@ -607,6 +664,49 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
       background: white;
     }
     .btn-outline:hover { background: black; color: white; transform: translateY(-2px); }
+    .enterprise-card {
+      padding: 48px;
+      border: 2px solid rgba(220, 38, 38, 0.2);
+      box-shadow: 0 20px 60px rgba(220, 38, 38, 0.15), 0 0 0 1px rgba(220, 38, 38, 0.1);
+      transform: scale(1.02);
+    }
+    .enterprise-card:hover {
+      transform: translateY(-12px) scale(1.03);
+      box-shadow: 0 30px 80px rgba(220, 38, 38, 0.25), 0 0 0 1px rgba(220, 38, 38, 0.2);
+      border-color: rgba(220, 38, 38, 0.4);
+    }
+    .btn-enterprise {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 18px 24px;
+      border-radius: 16px;
+      font-weight: 900;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      color: white;
+      box-shadow: 0 15px 40px rgba(220, 38, 38, 0.3);
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-enterprise:hover {
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 50px rgba(220, 38, 38, 0.4);
+    }
+    :host-context(.dark) .enterprise-card {
+      background: linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.9));
+      border-color: rgba(248,113,113,0.4);
+      box-shadow: 0 30px 80px rgba(248,113,113,0.25), 0 0 0 1px rgba(248,113,113,0.2);
+    }
+    :host-context(.dark) .enterprise-card:hover {
+      border-color: rgba(248,113,113,0.6);
+      box-shadow: 0 40px 100px rgba(248,113,113,0.35), 0 0 0 1px rgba(248,113,113,0.3);
+    }
   `]
 })
 export class PricingPageComponent implements OnInit {
