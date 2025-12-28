@@ -1,0 +1,24 @@
+# robots.txt for RocketGoals
+# https://rocket-goals.web.app
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://rocket-goals.web.app/sitemap.xml
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Disallow private/auth routes from indexing
+Disallow: /goals
+Disallow: /profile
+Disallow: /admin
+Disallow: /welcome
