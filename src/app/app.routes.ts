@@ -15,5 +15,6 @@ export const routes: Routes = [
   { path: 'quiz', loadComponent: () => import('./rocket-quiz/rocket-quiz').then(m => m.RocketQuiz) },
   { path: 'pricing', loadComponent: () => import('./pricing-page.component').then(m => m.PricingPageComponent), canActivate: [authGuard] },
   { path: 'contact', loadComponent: () => import('./contact-page.component').then(m => m.ContactPageComponent) },
+  { path: 'about', loadComponent: () => import('./about-page.component').then(m => m.AboutPageComponent) },
   { path: '**', redirectTo: '' }
 ];
