@@ -18,7 +18,7 @@ interface TimeSlot {
     <div class="min-h-screen bg-white text-black dark:bg-slate-950 dark:text-slate-100 flex flex-col transition-colors duration-300">
       <!-- Header -->
       <header class="border-b border-black/5 dark:border-white/10">
-        <div class="container mx-auto px-6 py-5 flex items-center justify-between">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
           <a routerLink="/" class="flex items-center gap-3 group">
             <div class="relative w-12 h-12">
               <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
@@ -43,23 +43,23 @@ interface TimeSlot {
             <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-black/10 rounded-full blur-[120px]"></div>
           </div>
 
-          <div class="container mx-auto px-6 py-12 relative z-10 space-y-6 text-center">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-slate-200">
+          <div class="container mx-auto px-4 py-6 relative z-10 space-y-3 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-slate-200">
               <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
               <span class="text-xs font-bold tracking-wider uppercase">Schedule a Demo</span>
             </div>
-            <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight text-black dark:text-white">
+            <h1 class="text-2xl md:text-4xl font-black tracking-tight leading-tight text-black dark:text-white">
               See Rocket Goals in Action
             </h1>
-            <p class="text-lg text-black/60 dark:text-slate-300 max-w-2xl mx-auto">
+            <p class="text-base text-black/60 dark:text-slate-300 max-w-2xl mx-auto">
               Book a 30-minute personalized demo with our team
             </p>
           </div>
         </section>
 
         <!-- Progress Steps -->
-        <div class="container mx-auto px-6 py-8">
-          <div class="flex items-center justify-center gap-4 mb-8">
+        <div class="container mx-auto px-4 py-4">
+          <div class="flex items-center justify-center gap-4 mb-4">
             @for (stepNum of [1, 2, 3]; track stepNum) {
               <div class="flex items-center gap-2">
                 <div
@@ -179,27 +179,27 @@ interface TimeSlot {
                 <div class="grid md:grid-cols-2 gap-8">
                   <!-- Calendar -->
                   <div class="space-y-4">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-between mb-6">
                       <button
                         (click)="previousMonth()"
                         [disabled]="!canGoToPreviousMonth()"
                         class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                       </button>
-                      <h3 class="text-lg font-bold">{{ currentMonthYear() }}</h3>
+                      <h3 class="text-xl font-bold">{{ currentMonthYear() }}</h3>
                       <button
                         (click)="nextMonth()"
                         class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                       </button>
                     </div>
 
                     <!-- Day Headers -->
-                    <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-black/40 dark:text-slate-500">
+                    <div class="grid grid-cols-7 gap-2 text-center text-sm font-bold text-black/40 dark:text-slate-500">
                       <div>Sun</div>
                       <div>Mon</div>
                       <div>Tue</div>
@@ -210,7 +210,7 @@ interface TimeSlot {
                     </div>
 
                     <!-- Calendar Grid -->
-                    <div class="grid grid-cols-7 gap-1">
+                    <div class="grid grid-cols-7 gap-2">
                       @for (day of calendarDays(); track day.date?.toISOString() || $index) {
                         @if (day.date) {
                           <button
@@ -228,8 +228,8 @@ interface TimeSlot {
                   </div>
 
                   <!-- Time Slots -->
-                  <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-center">
+                  <div class="space-y-6">
+                    <h3 class="text-xl font-bold text-center">
                       @if (selectedDate()) {
                         {{ formatSelectedDate() }}
                       } @else {
@@ -238,18 +238,18 @@ interface TimeSlot {
                     </h3>
 
                     @if (selectedDate()) {
-                      <div class="space-y-3">
+                      <div class="space-y-4">
                         @for (slot of timeSlots; track slot.time) {
                           <button
                             (click)="selectTime(slot.time)"
-                            class="w-full p-4 rounded-2xl border-2 text-left font-semibold transition-all duration-200"
+                            class="w-full p-5 rounded-2xl border-2 text-left font-semibold transition-all duration-200"
                             [class]="selectedTime() === slot.time
                               ? 'border-red-600 bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-200'
                               : 'border-black/10 hover:border-black/30 dark:border-white/10 dark:hover:border-white/30'">
                             <div class="flex items-center justify-between">
-                              <span>{{ slot.displayTime }}</span>
+                              <span class="text-lg">{{ slot.displayTime }}</span>
                               @if (selectedTime() === slot.time) {
-                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                 </svg>
                               }
@@ -257,16 +257,16 @@ interface TimeSlot {
                           </button>
                         }
                       </div>
-                      <p class="text-xs text-center text-black/50 dark:text-slate-400">
+                      <p class="text-sm text-center text-black/50 dark:text-slate-400">
                         All times are in Eastern Time (ET) - New York
                       </p>
                     } @else {
-                      <div class="h-48 flex items-center justify-center text-black/40 dark:text-slate-500">
+                      <div class="h-64 flex items-center justify-center text-black/40 dark:text-slate-500">
                         <div class="text-center">
-                          <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                           </svg>
-                          <p>Click on a Saturday to see available times</p>
+                          <p class="text-lg">Click on a Saturday to see available times</p>
                         </div>
                       </div>
                     }
@@ -307,13 +307,10 @@ interface TimeSlot {
                   <h2 class="text-2xl md:text-3xl font-black tracking-tight text-black dark:text-white">
                     Tell Us About Yourself
                   </h2>
-                  <p class="text-black/60 dark:text-slate-300">
-                    Help us prepare for your demo by sharing a bit about your goals
-                  </p>
                 </div>
 
                 <!-- Selected Date/Time Summary -->
-                <div class="p-4 bg-gray-50 rounded-2xl dark:bg-slate-800/50">
+                <div class="p-5 bg-gray-50 rounded-2xl dark:bg-slate-800/50">
                   <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-xl bg-red-600 text-white flex items-center justify-center">
                       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,8 +318,8 @@ interface TimeSlot {
                       </svg>
                     </div>
                     <div>
-                      <p class="font-bold text-black dark:text-white">{{ formatSelectedDate() }} at {{ getDisplayTime() }}</p>
-                      <p class="text-sm text-black/60 dark:text-slate-400">30-minute demo session (Eastern Time)</p>
+                      <p class="font-bold text-lg text-black dark:text-white">{{ formatSelectedDate() }} at {{ getDisplayTime() }}</p>
+                      <p class="text-sm text-black/60 dark:text-slate-400">30-minute demo (Eastern Time)</p>
                     </div>
                     <button (click)="currentStep.set(2)" class="ml-auto text-red-600 hover:underline font-semibold text-sm">
                       Change
@@ -332,7 +329,7 @@ interface TimeSlot {
 
                 <!-- Form -->
                 <form (ngSubmit)="submitForm()" class="space-y-6">
-                  <div class="grid md:grid-cols-2 gap-4">
+                  <div class="grid md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                       <label class="block text-sm font-bold text-black dark:text-white">First Name *</label>
                       <input
@@ -355,25 +352,26 @@ interface TimeSlot {
                     </div>
                   </div>
 
-                  <div class="space-y-2">
-                    <label class="block text-sm font-bold text-black dark:text-white">Email Address *</label>
-                    <input
-                      type="email"
-                      [(ngModel)]="email"
-                      name="email"
-                      required
-                      class="w-full px-4 py-3 rounded-xl border border-black/10 bg-white focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition dark:bg-slate-800 dark:border-white/10 dark:text-white"
-                      placeholder="john@example.com">
-                  </div>
-
-                  <div class="space-y-2">
-                    <label class="block text-sm font-bold text-black dark:text-white">Company (Optional)</label>
-                    <input
-                      type="text"
-                      [(ngModel)]="company"
-                      name="company"
-                      class="w-full px-4 py-3 rounded-xl border border-black/10 bg-white focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition dark:bg-slate-800 dark:border-white/10 dark:text-white"
-                      placeholder="Your company">
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                      <label class="block text-sm font-bold text-black dark:text-white">Email Address *</label>
+                      <input
+                        type="email"
+                        [(ngModel)]="email"
+                        name="email"
+                        required
+                        class="w-full px-4 py-3 rounded-xl border border-black/10 bg-white focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition dark:bg-slate-800 dark:border-white/10 dark:text-white"
+                        placeholder="john@example.com">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="block text-sm font-bold text-black dark:text-white">Company (Optional)</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="company"
+                        name="company"
+                        class="w-full px-4 py-3 rounded-xl border border-black/10 bg-white focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition dark:bg-slate-800 dark:border-white/10 dark:text-white"
+                        placeholder="Your company">
+                    </div>
                   </div>
 
                   <div class="space-y-2">
@@ -384,11 +382,11 @@ interface TimeSlot {
                       required
                       rows="4"
                       class="w-full px-4 py-3 rounded-xl border border-black/10 bg-white focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition resize-none dark:bg-slate-800 dark:border-white/10 dark:text-white"
-                      placeholder="Tell us about your goals, what problems you're trying to solve, or any specific features you'd like to see..."></textarea>
+                      placeholder="Tell us about your goals, what problems you're trying to solve..."></textarea>
                   </div>
 
                   @if (errorMessage()) {
-                    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-200">
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-200">
                       {{ errorMessage() }}
                     </div>
                   }
@@ -440,60 +438,60 @@ interface TimeSlot {
                   <h2 class="text-2xl md:text-3xl font-black tracking-tight text-black dark:text-white">
                     You're All Set!
                   </h2>
-                  <p class="text-black/60 dark:text-slate-300 max-w-md mx-auto">
+                  <p class="text-lg text-black/60 dark:text-slate-300 max-w-md mx-auto">
                     We've sent a confirmation email to <strong class="text-black dark:text-white">{{ email }}</strong> with all the meeting details.
                   </p>
                 </div>
 
-                <div class="p-6 bg-gray-50 rounded-2xl space-y-4 text-left dark:bg-slate-800/50">
-                  <h3 class="font-bold text-lg text-black dark:text-white">Meeting Details</h3>
+                <div class="p-6 bg-gray-50 rounded-2xl space-y-5 text-left dark:bg-slate-800/50">
+                  <h3 class="font-bold text-xl text-black dark:text-white">Meeting Details</h3>
 
-                  <div class="space-y-3">
-                    <div class="flex items-start gap-3">
-                      <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="space-y-4">
+                    <div class="flex items-start gap-4">
+                      <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                       </svg>
                       <div>
-                        <p class="font-semibold text-black dark:text-white">{{ formatSelectedDate() }}</p>
-                        <p class="text-sm text-black/60 dark:text-slate-400">{{ getDisplayTime() }} EST (30 minutes)</p>
+                        <p class="font-semibold text-lg text-black dark:text-white">{{ formatSelectedDate() }}</p>
+                        <p class="text-black/60 dark:text-slate-400">{{ getDisplayTime() }} EST (30 minutes)</p>
                       </div>
                     </div>
 
-                    <div class="flex items-start gap-3">
-                      <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-start gap-4">
+                      <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                       </svg>
                       <div>
-                        <p class="font-semibold text-black dark:text-white">Google Meet</p>
-                        <a href="https://meet.google.com/cko-gfkj-wqg" target="_blank" class="text-sm text-red-600 hover:underline break-all">
+                        <p class="font-semibold text-lg text-black dark:text-white">Google Meet</p>
+                        <a href="https://meet.google.com/cko-gfkj-wqg" target="_blank" class="text-red-600 hover:underline break-all">
                           meet.google.com/cko-gfkj-wqg
                         </a>
                       </div>
                     </div>
 
-                    <div class="flex items-start gap-3">
-                      <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-start gap-4">
+                      <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                       </svg>
                       <div>
-                        <p class="font-semibold text-black dark:text-white">Join by Phone</p>
-                        <p class="text-sm text-black/60 dark:text-slate-400">+1 904-419-3963 | PIN: 573 033 836#</p>
+                        <p class="font-semibold text-lg text-black dark:text-white">Join by Phone</p>
+                        <p class="text-black/60 dark:text-slate-400">+1 904-419-3963 | PIN: 573 033 836#</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="space-y-4 pt-4">
+                <div class="space-y-6 pt-4">
                   <a
                     href="https://meet.google.com/cko-gfkj-wqg"
                     target="_blank"
-                    class="inline-flex items-center justify-center gap-2 w-full py-4 bg-black text-white font-bold text-lg rounded-2xl hover:bg-red-600 transition shadow-lg dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="inline-flex items-center justify-center gap-3 w-full py-4 bg-black text-white font-bold text-lg rounded-2xl hover:bg-red-600 transition shadow-lg dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                     </svg>
                     Join Google Meet
                   </a>
-                  <a routerLink="/" class="block text-red-600 hover:underline font-semibold">
+                  <a routerLink="/" class="block text-red-600 hover:underline font-semibold text-lg">
                     Return to Home
                   </a>
                 </div>
