@@ -3058,3 +3058,293 @@ export const getAuthMetadata = onCall({}, async (request) => {
 
     return { users };
 });
+
+/**
+ * Cloud Function to send demo scheduling confirmation emails
+ * Sends confirmation to the user and copies mission control + admin
+ */
+export const scheduleDemoEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    company?: string;
+    expectations: string;
+    date: string;
+    time: string;
+}) => {
+    const { firstName, lastName, email, company, expectations, date, time } = data;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !expectations || !date || !time) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: firstName, lastName, email, expectations, date, time'
+        );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid email address format'
+        );
+    }
+
+    const apiKey = sendgridApiKey.value();
+    if (!apiKey) {
+        throw new functions.https.HttpsError(
+            'internal',
+            'SendGrid API key is not configured.'
+        );
+    }
+    sgMail.setApiKey(apiKey);
+
+    // Format the date nicely
+    const meetingDate = new Date(date);
+    const formattedDate = meetingDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    });
+
+    // Format time display
+    const timeDisplayMap: Record<string, string> = {
+        '17:00': '5:00 PM EST',
+        '17:30': '5:30 PM EST',
+        '18:00': '6:00 PM EST',
+        '18:30': '6:30 PM EST'
+    };
+    const displayTime = timeDisplayMap[time] || time;
+
+    const fullName = `${firstName} ${lastName}`;
+
+    // Meeting details
+    const meetingLink = 'https://meet.google.com/cko-gfkj-wqg';
+    const phoneNumber = '+1 904-419-3963';
+    const pin = '573 033 836#';
+    const morePhoneNumbers = 'https://tel.meet/cko-gfkj-wqg?hs=5';
+
+    // Email to user
+    const userEmailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 36px 30px; border-radius: 18px 18px 0 0; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">Your Demo is Confirmed</h1>
+                <p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
+                    Rocket Goals
+                </p>
+            </div>
+
+            <div style="background: #ffffff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px;">
+                <p style="color: #111827; font-size: 16px; line-height: 1.6; margin: 0 0 18px;">
+                    Hi <strong>${firstName}</strong>,
+                </p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                    Thank you for scheduling a demo with Rocket Goals. We're excited to show you how our platform can help you achieve your goals.
+                </p>
+
+                <div style="background: #f9fafb; padding: 24px; border-radius: 12px; margin: 0 0 24px;">
+                    <h2 style="color: #111827; font-size: 18px; font-weight: 700; margin: 0 0 16px;">Meeting Details</h2>
+
+                    <div style="margin-bottom: 12px;">
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Date & Time</p>
+                        <p style="color: #111827; font-size: 16px; font-weight: 600; margin: 0;">${formattedDate}</p>
+                        <p style="color: #111827; font-size: 16px; margin: 4px 0 0;">${displayTime} (30 minutes)</p>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Video Call Link</p>
+                        <a href="${meetingLink}" style="color: #dc2626; font-size: 16px; text-decoration: none;">${meetingLink}</a>
+                    </div>
+
+                    <div>
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Join by Phone</p>
+                        <p style="color: #111827; font-size: 14px; margin: 0;">${phoneNumber}</p>
+                        <p style="color: #111827; font-size: 14px; margin: 4px 0 0;">PIN: ${pin}</p>
+                        <a href="${morePhoneNumbers}" style="color: #dc2626; font-size: 12px; text-decoration: none;">View more phone numbers</a>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 24px 0;">
+                    <a href="${meetingLink}"
+                       style="background: #111827; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; display: inline-block; font-size: 16px;">
+                        Join Meeting
+                    </a>
+                </div>
+
+                <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0;">
+                    If you need to reschedule, please reply to this email or contact us at missioncontrol@rocketgoals.com.
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+
+                <p style="color: #9ca3af; font-size: 13px; margin: 0;">
+                    See you soon,<br>
+                    <strong style="color: #374151;">The Rocket Goals Team</strong>
+                </p>
+            </div>
+        </div>
+    `;
+
+    const userEmailText = `Hi ${firstName},
+
+Thank you for scheduling a demo with Rocket Goals. We're excited to show you how our platform can help you achieve your goals.
+
+MEETING DETAILS
+---------------
+Date: ${formattedDate}
+Time: ${displayTime} (30 minutes)
+
+Video Call: ${meetingLink}
+
+Join by Phone: ${phoneNumber}
+PIN: ${pin}
+More phone numbers: ${morePhoneNumbers}
+
+If you need to reschedule, please reply to this email or contact us at missioncontrol@rocketgoals.com.
+
+See you soon,
+The Rocket Goals Team`;
+
+    // Email to mission control (internal notification)
+    const internalEmailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
+            <div style="background: linear-gradient(135deg, #111827 0%, #374151 100%); padding: 36px 30px; border-radius: 18px 18px 0 0; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">New Demo Scheduled</h1>
+                <p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
+                    Rocket Goals - Demo Request
+                </p>
+            </div>
+
+            <div style="background: #ffffff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px;">
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                    A new demo has been scheduled. Here are the details:
+                </p>
+
+                <div style="background: #f9fafb; padding: 24px; border-radius: 12px; margin: 0 0 24px;">
+                    <h2 style="color: #111827; font-size: 18px; font-weight: 700; margin: 0 0 16px;">Contact Information</h2>
+
+                    <div style="margin-bottom: 12px;">
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Name</p>
+                        <p style="color: #111827; font-size: 16px; font-weight: 600; margin: 0;">${fullName}</p>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Email</p>
+                        <a href="mailto:${email}" style="color: #dc2626; font-size: 16px; text-decoration: none;">${email}</a>
+                    </div>
+
+                    ${company ? `
+                    <div style="margin-bottom: 12px;">
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Company</p>
+                        <p style="color: #111827; font-size: 16px; margin: 0;">${company}</p>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div style="background: #f9fafb; padding: 24px; border-radius: 12px; margin: 0 0 24px;">
+                    <h2 style="color: #111827; font-size: 18px; font-weight: 700; margin: 0 0 16px;">Meeting Details</h2>
+
+                    <div style="margin-bottom: 12px;">
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Date & Time</p>
+                        <p style="color: #111827; font-size: 16px; font-weight: 600; margin: 0;">${formattedDate}</p>
+                        <p style="color: #111827; font-size: 16px; margin: 4px 0 0;">${displayTime} (30 minutes)</p>
+                    </div>
+
+                    <div>
+                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin: 0 0 4px; letter-spacing: 0.05em;">Meeting Link</p>
+                        <a href="${meetingLink}" style="color: #dc2626; font-size: 16px; text-decoration: none;">${meetingLink}</a>
+                    </div>
+                </div>
+
+                <div style="background: #fef3c7; padding: 24px; border-radius: 12px; margin: 0 0 24px; border: 1px solid #fcd34d;">
+                    <h2 style="color: #92400e; font-size: 18px; font-weight: 700; margin: 0 0 12px;">What They Hope to Get From the Demo</h2>
+                    <p style="color: #78350f; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">${expectations}</p>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="${meetingLink}"
+                       style="background: #dc2626; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; display: inline-block; font-size: 16px;">
+                        Join Meeting
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const internalEmailText = `NEW DEMO SCHEDULED
+
+CONTACT INFORMATION
+-------------------
+Name: ${fullName}
+Email: ${email}
+${company ? `Company: ${company}` : ''}
+
+MEETING DETAILS
+---------------
+Date: ${formattedDate}
+Time: ${displayTime} (30 minutes)
+Meeting Link: ${meetingLink}
+
+WHAT THEY HOPE TO GET FROM THE DEMO
+-----------------------------------
+${expectations}`;
+
+    try {
+        // Send confirmation email to the user
+        await sgMail.send({
+            to: email,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: `Rocket Goals Demo Confirmed - ${formattedDate}`,
+            text: userEmailText,
+            html: userEmailHtml
+        });
+
+        // Send internal notification to mission control with CC to admin
+        await sgMail.send({
+            to: 'missioncontrol@rocketgoals.com',
+            cc: 'edmond.mbadu@rocketgoals.com',
+            from: 'missioncontrol@rocketgoals.com',
+            subject: `New Demo Scheduled: ${fullName} - ${formattedDate}`,
+            text: internalEmailText,
+            html: internalEmailHtml,
+            replyTo: email
+        });
+
+        console.log(`Demo scheduled for ${email} on ${formattedDate} at ${displayTime}`);
+
+        // Store the demo request in Firestore for record keeping
+        await admin.firestore().collection('demoRequests').add({
+            firstName,
+            lastName,
+            email,
+            company: company || null,
+            expectations,
+            scheduledDate: meetingDate,
+            scheduledTime: time,
+            displayTime,
+            meetingLink,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error sending demo confirmation emails:', error);
+
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send demo confirmation: ${error.message}`
+        );
+    }
+});
