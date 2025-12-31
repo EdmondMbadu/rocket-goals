@@ -9,7 +9,21 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 
-type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes';
+type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests';
+
+type DemoRequest = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  company: string | null;
+  expectations: string;
+  scheduledDate: Date;
+  scheduledTime: string;
+  displayTime: string;
+  meetingLink: string;
+  createdAt: Date;
+};
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 type AiAnalytics = {
   path: string;
@@ -81,8 +95,14 @@ export class AdminComponent implements OnInit {
     reminders: false,
     quickActions: true,
     aiAnalytics: false,
-    promoCodes: false
+    promoCodes: false,
+    demoRequests: false
   });
+
+  // Demo requests state
+  demoRequests = signal<DemoRequest[]>([]);
+  demoRequestsLoading = signal(false);
+  demoRequestsError = signal<string | null>(null);
   totalUsers = signal<number | null>(null);
   totalGoals = signal<number | null>(null);
   statsLoading = signal(false);
@@ -141,6 +161,7 @@ export class AdminComponent implements OnInit {
     this.loadAiAnalytics();
     this.loadUsers();
     this.loadPromoCodes();
+    this.loadDemoRequests();
   }
 
   async sendTestEmail() {
@@ -746,5 +767,62 @@ export class AdminComponent implements OnInit {
     } finally {
       this.promoCodesSaving.set(false);
     }
+  }
+
+  async loadDemoRequests() {
+    this.demoRequestsLoading.set(true);
+    this.demoRequestsError.set(null);
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const demoRequestsRef = firestoreModule.collection(firestore, 'demoRequests');
+      const q = firestoreModule.query(demoRequestsRef, firestoreModule.orderBy('createdAt', 'desc'));
+      const snapshot = await firestoreModule.getDocs(q);
+
+      const requests: DemoRequest[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        requests.push({
+          id: doc.id,
+          firstName: data['firstName'] || '',
+          lastName: data['lastName'] || '',
+          email: data['email'] || '',
+          company: data['company'] || null,
+          expectations: data['expectations'] || '',
+          scheduledDate: data['scheduledDate']?.toDate?.() || new Date(data['scheduledDate']),
+          scheduledTime: data['scheduledTime'] || '',
+          displayTime: data['displayTime'] || '',
+          meetingLink: data['meetingLink'] || '',
+          createdAt: data['createdAt']?.toDate?.() || new Date()
+        });
+      });
+
+      this.demoRequests.set(requests);
+    } catch (err: any) {
+      console.error('Failed to load demo requests:', err);
+      this.demoRequestsError.set('Unable to load demo requests.');
+    } finally {
+      this.demoRequestsLoading.set(false);
+    }
+  }
+
+  formatDemoDate(date: Date): string {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  formatDemoDateTime(date: Date): string {
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   }
 }
