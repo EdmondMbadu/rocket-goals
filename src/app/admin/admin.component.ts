@@ -825,4 +825,26 @@ export class AdminComponent implements OnInit {
       hour12: true
     });
   }
+
+  async deleteDemoRequest(requestId: string) {
+    if (!confirm('Are you sure you want to delete this demo request? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'demoRequests', requestId);
+      await firestoreModule.deleteDoc(docRef);
+
+      // Update local state to remove the deleted request
+      this.demoRequests.update(requests => requests.filter(r => r.id !== requestId));
+      this.success.set('✅ Demo request deleted successfully');
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to delete demo request:', err);
+      this.error.set('Failed to delete demo request. Please try again.');
+      setTimeout(() => this.error.set(null), 5000);
+    }
+  }
 }
