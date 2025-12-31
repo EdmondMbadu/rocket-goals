@@ -11,6 +11,12 @@ import { ThemeService } from '../theme.service';
 
 type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests';
 
+type PromoCode = {
+  code: string;
+  usageCount: number;
+  createdAt: Date;
+};
+
 type DemoRequest = {
   id: string;
   firstName: string;
@@ -23,6 +29,19 @@ type DemoRequest = {
   displayTime: string;
   meetingLink: string;
   createdAt: Date;
+};
+
+type ScheduledReminder = {
+  id: string;
+  time: string;
+  enabled: boolean;
+  emailSubject: string;
+  emailBodyText: string;
+  emailBodyHtml: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+  lastRunAt?: unknown;
+  createdBy: string;
 };
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
 type AiAnalytics = {
@@ -79,6 +98,18 @@ export class AdminComponent implements OnInit {
   reminderBulkLoading = signal(false);
   reminderBulkResults = signal<{ sent: number; failed: number; total: number; errors: Array<{ goalId: string; email: string; error: string }> } | null>(null);
 
+  // Scheduled reminders state
+  scheduledReminders = signal<ScheduledReminder[]>([]);
+  scheduledRemindersLoading = signal(false);
+  scheduledRemindersError = signal<string | null>(null);
+  newReminderTime = signal('09:00');
+  editingReminder = signal<ScheduledReminder | null>(null);
+  editingEmailSubject = signal('');
+  editingEmailBodyText = signal('');
+  editingEmailBodyHtml = signal('');
+  showEmailPreview = signal(false);
+  savingReminder = signal(false);
+
   // UI state
   loading = signal(false);
   success = signal<string | null>(null);
@@ -115,9 +146,12 @@ export class AdminComponent implements OnInit {
   customEndDate = signal<string>('');
 
   // Promo code management
-  promoCodeMoonshot = signal('');
-  promoCodeInterplanetary = signal('');
-  promoCodeGalactic = signal('');
+  promoCodesMoonshot = signal<PromoCode[]>([]);
+  promoCodesInterplanetary = signal<PromoCode[]>([]);
+  promoCodesGalactic = signal<PromoCode[]>([]);
+  newCodeMoonshot = signal('');
+  newCodeInterplanetary = signal('');
+  newCodeGalactic = signal('');
   promoCodesLoading = signal(false);
   promoCodesSaving = signal(false);
   promoCodesError = signal<string | null>(null);
@@ -162,6 +196,7 @@ export class AdminComponent implements OnInit {
     this.loadUsers();
     this.loadPromoCodes();
     this.loadDemoRequests();
+    this.loadScheduledReminders();
   }
 
   async sendTestEmail() {
@@ -459,6 +494,227 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  // Scheduled Reminders Methods
+  async loadScheduledReminders() {
+    this.scheduledRemindersLoading.set(true);
+    this.scheduledRemindersError.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const getReminders = httpsCallable(functions, 'getScheduledReminders');
+
+      const result = await getReminders({});
+      const data = result.data as { success: boolean; reminders: ScheduledReminder[] };
+
+      if (data.success) {
+        this.scheduledReminders.set(data.reminders);
+      }
+    } catch (err: any) {
+      console.error('Error loading scheduled reminders:', err);
+      this.scheduledRemindersError.set(err.message || 'Failed to load scheduled reminders');
+    } finally {
+      this.scheduledRemindersLoading.set(false);
+    }
+  }
+
+  async addScheduledReminder() {
+    const time = this.newReminderTime().trim();
+
+    if (!time) {
+      this.error.set('Please select a time for the reminder');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    this.scheduledRemindersLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const addReminder = httpsCallable(functions, 'addScheduledReminder');
+
+      const result = await addReminder({ time });
+      const data = result.data as { success: boolean; reminder: ScheduledReminder };
+
+      if (data.success) {
+        this.success.set(`Scheduled reminder added for ${time} (UTC)`);
+        await this.loadScheduledReminders();
+        this.newReminderTime.set('09:00');
+      }
+    } catch (err: any) {
+      console.error('Error adding scheduled reminder:', err);
+      this.error.set(err.message || 'Failed to add scheduled reminder');
+    } finally {
+      this.scheduledRemindersLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 5000);
+    }
+  }
+
+  async deleteScheduledReminder(id: string) {
+    if (!confirm('Are you sure you want to delete this scheduled reminder?')) {
+      return;
+    }
+
+    this.scheduledRemindersLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const deleteReminder = httpsCallable(functions, 'deleteScheduledReminder');
+
+      await deleteReminder({ id });
+      this.success.set('Scheduled reminder deleted');
+      await this.loadScheduledReminders();
+    } catch (err: any) {
+      console.error('Error deleting scheduled reminder:', err);
+      this.error.set(err.message || 'Failed to delete scheduled reminder');
+    } finally {
+      this.scheduledRemindersLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 5000);
+    }
+  }
+
+  async toggleReminderEnabled(reminder: ScheduledReminder) {
+    this.scheduledRemindersLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const updateReminder = httpsCallable(functions, 'updateScheduledReminder');
+
+      await updateReminder({ id: reminder.id, enabled: !reminder.enabled });
+      this.success.set(`Reminder ${!reminder.enabled ? 'enabled' : 'disabled'}`);
+      await this.loadScheduledReminders();
+    } catch (err: any) {
+      console.error('Error toggling reminder:', err);
+      this.error.set(err.message || 'Failed to update reminder');
+    } finally {
+      this.scheduledRemindersLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 5000);
+    }
+  }
+
+  editReminder(reminder: ScheduledReminder) {
+    this.editingReminder.set(reminder);
+    this.editingEmailSubject.set(reminder.emailSubject);
+    this.editingEmailBodyText.set(reminder.emailBodyText);
+    this.editingEmailBodyHtml.set(reminder.emailBodyHtml);
+    this.showEmailPreview.set(false);
+  }
+
+  cancelEditReminder() {
+    this.editingReminder.set(null);
+    this.editingEmailSubject.set('');
+    this.editingEmailBodyText.set('');
+    this.editingEmailBodyHtml.set('');
+    this.showEmailPreview.set(false);
+  }
+
+  toggleEmailPreview() {
+    this.showEmailPreview.update(v => !v);
+  }
+
+  async saveReminderEmail() {
+    const reminder = this.editingReminder();
+    if (!reminder) return;
+
+    this.savingReminder.set(true);
+    this.error.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const updateReminder = httpsCallable(functions, 'updateScheduledReminder');
+
+      await updateReminder({
+        id: reminder.id,
+        emailSubject: this.editingEmailSubject(),
+        emailBodyText: this.editingEmailBodyText(),
+        emailBodyHtml: this.editingEmailBodyHtml()
+      });
+
+      this.success.set('Email template saved');
+      await this.loadScheduledReminders();
+      this.cancelEditReminder();
+    } catch (err: any) {
+      console.error('Error saving reminder email:', err);
+      this.error.set(err.message || 'Failed to save email template');
+    } finally {
+      this.savingReminder.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 5000);
+    }
+  }
+
+  async resetToDefaultTemplate() {
+    if (!confirm('Reset email template to default? This will overwrite your current changes.')) {
+      return;
+    }
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const getDefault = httpsCallable(functions, 'getDefaultEmailTemplate');
+
+      const result = await getDefault({});
+      const data = result.data as { success: boolean; template: { subject: string; text: string; html: string } };
+
+      if (data.success) {
+        this.editingEmailSubject.set(data.template.subject);
+        this.editingEmailBodyText.set(data.template.text);
+        this.editingEmailBodyHtml.set(data.template.html);
+        this.success.set('Template reset to default');
+      }
+    } catch (err: any) {
+      console.error('Error resetting template:', err);
+      this.error.set(err.message || 'Failed to reset template');
+    }
+    setTimeout(() => {
+      this.success.set(null);
+      this.error.set(null);
+    }, 5000);
+  }
+
+  formatTime(time: string): string {
+    const [hours, minutes] = time.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  }
+
   getProfile() {
     return this.authService.profile();
   }
@@ -700,69 +956,177 @@ export class AdminComponent implements OnInit {
       const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
       const docSnap = await firestoreModule.getDoc(docRef);
 
+      const parseCodesArray = (data: unknown): PromoCode[] => {
+        if (Array.isArray(data)) {
+          return data.map(item => ({
+            code: item.code || '',
+            usageCount: item.usageCount || 0,
+            createdAt: item.createdAt?.toDate?.() || new Date(item.createdAt) || new Date()
+          }));
+        }
+        // Handle legacy single code format
+        if (typeof data === 'string' && data) {
+          return [{ code: data, usageCount: 0, createdAt: new Date() }];
+        }
+        return [];
+      };
+
       if (docSnap.exists()) {
         const data = docSnap.data();
-        this.promoCodeMoonshot.set(data['moonshot'] || '');
-        this.promoCodeInterplanetary.set(data['interplanetary'] || '');
-        this.promoCodeGalactic.set(data['galactic'] || '');
+        this.promoCodesMoonshot.set(parseCodesArray(data['moonshot']));
+        this.promoCodesInterplanetary.set(parseCodesArray(data['interplanetary']));
+        this.promoCodesGalactic.set(parseCodesArray(data['galactic']));
       } else {
         // Initialize with default values if document doesn't exist
-        this.promoCodeMoonshot.set('NY2026MOONSHOT');
-        this.promoCodeInterplanetary.set('NY2026INTERPLANETARY');
-        this.promoCodeGalactic.set('NY2026GALACTIC');
+        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date() }]);
+        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date() }]);
+        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date() }]);
       }
     } catch (err: any) {
       console.error('Failed to load promo codes:', err);
       this.promoCodesError.set('Unable to load promo codes.');
-      // Set defaults on error
-      this.promoCodeMoonshot.set('NY2026MOONSHOT');
-      this.promoCodeInterplanetary.set('NY2026INTERPLANETARY');
-      this.promoCodeGalactic.set('NY2026GALACTIC');
     } finally {
       this.promoCodesLoading.set(false);
     }
   }
 
-  async savePromoCodes() {
-    const moonshot = this.promoCodeMoonshot().trim().toUpperCase();
-    const interplanetary = this.promoCodeInterplanetary().trim().toUpperCase();
-    const galactic = this.promoCodeGalactic().trim().toUpperCase();
+  async addPromoCode(tier: 'moonshot' | 'interplanetary' | 'galactic') {
+    let newCode = '';
+    if (tier === 'moonshot') {
+      newCode = this.newCodeMoonshot().trim().toUpperCase();
+    } else if (tier === 'interplanetary') {
+      newCode = this.newCodeInterplanetary().trim().toUpperCase();
+    } else {
+      newCode = this.newCodeGalactic().trim().toUpperCase();
+    }
 
-    // Validation
-    if (!moonshot || !interplanetary || !galactic) {
-      this.promoCodesError.set('All promo codes are required.');
+    if (!newCode) {
+      this.promoCodesError.set('Please enter a promo code.');
       setTimeout(() => this.promoCodesError.set(null), 5000);
       return;
     }
 
-    // Check for duplicates
-    if (moonshot === interplanetary || moonshot === galactic || interplanetary === galactic) {
-      this.promoCodesError.set('Promo codes must be unique.');
+    // Check for duplicates across all tiers
+    const allCodes = [
+      ...this.promoCodesMoonshot().map(c => c.code),
+      ...this.promoCodesInterplanetary().map(c => c.code),
+      ...this.promoCodesGalactic().map(c => c.code)
+    ];
+
+    if (allCodes.includes(newCode)) {
+      this.promoCodesError.set('This promo code already exists.');
       setTimeout(() => this.promoCodesError.set(null), 5000);
       return;
     }
 
     this.promoCodesSaving.set(true);
     this.promoCodesError.set(null);
-    this.success.set(null);
 
     try {
       const firestore = await this.ensureFirestore();
       const firestoreModule = await import('firebase/firestore');
       const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
 
+      const newPromoCode: PromoCode = {
+        code: newCode,
+        usageCount: 0,
+        createdAt: new Date()
+      };
+
+      // Get current codes for the tier and add the new one
+      let currentCodes: PromoCode[];
+      if (tier === 'moonshot') {
+        currentCodes = [...this.promoCodesMoonshot(), newPromoCode];
+      } else if (tier === 'interplanetary') {
+        currentCodes = [...this.promoCodesInterplanetary(), newPromoCode];
+      } else {
+        currentCodes = [...this.promoCodesGalactic(), newPromoCode];
+      }
+
+      // Convert to Firestore format
+      const firestoreCodes = currentCodes.map(c => ({
+        code: c.code,
+        usageCount: c.usageCount,
+        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt)
+      }));
+
       await firestoreModule.setDoc(docRef, {
-        moonshot,
-        interplanetary,
-        galactic,
+        [tier]: firestoreCodes,
         updatedAt: firestoreModule.Timestamp.now()
       }, { merge: true });
 
-      this.success.set('✅ Promo codes updated successfully!');
+      // Update local state
+      if (tier === 'moonshot') {
+        this.promoCodesMoonshot.set(currentCodes);
+        this.newCodeMoonshot.set('');
+      } else if (tier === 'interplanetary') {
+        this.promoCodesInterplanetary.set(currentCodes);
+        this.newCodeInterplanetary.set('');
+      } else {
+        this.promoCodesGalactic.set(currentCodes);
+        this.newCodeGalactic.set('');
+      }
+
+      this.success.set(`Promo code "${newCode}" added successfully!`);
       setTimeout(() => this.success.set(null), 5000);
     } catch (err: any) {
-      console.error('Failed to save promo codes:', err);
-      this.promoCodesError.set('Failed to save promo codes. Please try again.');
+      console.error('Failed to add promo code:', err);
+      this.promoCodesError.set('Failed to add promo code. Please try again.');
+      setTimeout(() => this.promoCodesError.set(null), 5000);
+    } finally {
+      this.promoCodesSaving.set(false);
+    }
+  }
+
+  async deletePromoCode(tier: 'moonshot' | 'interplanetary' | 'galactic', code: string) {
+    if (!confirm(`Are you sure you want to delete the promo code "${code}"?`)) {
+      return;
+    }
+
+    this.promoCodesSaving.set(true);
+    this.promoCodesError.set(null);
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
+
+      // Get current codes for the tier and remove the one to delete
+      let currentCodes: PromoCode[];
+      if (tier === 'moonshot') {
+        currentCodes = this.promoCodesMoonshot().filter(c => c.code !== code);
+      } else if (tier === 'interplanetary') {
+        currentCodes = this.promoCodesInterplanetary().filter(c => c.code !== code);
+      } else {
+        currentCodes = this.promoCodesGalactic().filter(c => c.code !== code);
+      }
+
+      // Convert to Firestore format
+      const firestoreCodes = currentCodes.map(c => ({
+        code: c.code,
+        usageCount: c.usageCount,
+        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt)
+      }));
+
+      await firestoreModule.setDoc(docRef, {
+        [tier]: firestoreCodes,
+        updatedAt: firestoreModule.Timestamp.now()
+      }, { merge: true });
+
+      // Update local state
+      if (tier === 'moonshot') {
+        this.promoCodesMoonshot.set(currentCodes);
+      } else if (tier === 'interplanetary') {
+        this.promoCodesInterplanetary.set(currentCodes);
+      } else {
+        this.promoCodesGalactic.set(currentCodes);
+      }
+
+      this.success.set(`Promo code "${code}" deleted successfully!`);
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to delete promo code:', err);
+      this.promoCodesError.set('Failed to delete promo code. Please try again.');
       setTimeout(() => this.promoCodesError.set(null), 5000);
     } finally {
       this.promoCodesSaving.set(false);

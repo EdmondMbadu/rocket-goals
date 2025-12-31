@@ -1510,7 +1510,7 @@ Keep pushing forward! 🚀
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="${loginUrl}" 
                        style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                        Log In & Update Progress
+                        Update your progress
                     </a>
                 </div>
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -2516,6 +2516,7 @@ The final image should make the viewer think:
 
 /**
  * Helper function to load promo codes from Firestore
+ * Supports both legacy single code format and new array format
  */
 async function getPromoCodePlanMap(): Promise<Record<string, string>> {
     try {
@@ -2526,15 +2527,37 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
 
         if (promoDoc.exists) {
             const data = promoDoc.data();
-            const moonshot = data?.moonshot?.toUpperCase() || 'NY2026MOONSHOT';
-            const interplanetary = data?.interplanetary?.toUpperCase() || 'NY2026INTERPLANETARY';
-            const galactic = data?.galactic?.toUpperCase() || 'NY2026GALACTIC';
+            const result: Record<string, string> = {};
 
-            return {
-                [moonshot]: 'moonshot',
-                [interplanetary]: 'interplanetary',
-                [galactic]: 'galactic'
+            // Helper to extract codes from either array or legacy string format
+            const extractCodes = (tierData: unknown, tierName: string) => {
+                if (Array.isArray(tierData)) {
+                    // New array format: [{code: 'CODE1', usageCount: 0}, ...]
+                    tierData.forEach((item: { code?: string }) => {
+                        if (item.code) {
+                            result[item.code.toUpperCase()] = tierName;
+                        }
+                    });
+                } else if (typeof tierData === 'string' && tierData) {
+                    // Legacy single code format
+                    result[tierData.toUpperCase()] = tierName;
+                }
             };
+
+            extractCodes(data?.moonshot, 'moonshot');
+            extractCodes(data?.interplanetary, 'interplanetary');
+            extractCodes(data?.galactic, 'galactic');
+
+            // If no codes found, return defaults
+            if (Object.keys(result).length === 0) {
+                return {
+                    'NY2026MOONSHOT': 'moonshot',
+                    'NY2026INTERPLANETARY': 'interplanetary',
+                    'NY2026GALACTIC': 'galactic'
+                };
+            }
+
+            return result;
         }
     } catch (err) {
         console.error('Failed to load promo codes from Firestore, using defaults:', err);
@@ -2546,6 +2569,46 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
         'NY2026INTERPLANETARY': 'interplanetary',
         'NY2026GALACTIC': 'galactic'
     };
+}
+
+/**
+ * Helper function to increment usage count for a promo code
+ */
+async function incrementPromoCodeUsage(promoCode: string, tier: string): Promise<void> {
+    try {
+        const promoDocRef = admin.firestore()
+            .collection('adminSettings')
+            .doc('promoCodes');
+
+        const promoDoc = await promoDocRef.get();
+        if (!promoDoc.exists) return;
+
+        const data = promoDoc.data();
+        const tierCodes = data?.[tier];
+
+        if (Array.isArray(tierCodes)) {
+            // Find and update the code's usage count
+            const updatedCodes = tierCodes.map((item: { code?: string; usageCount?: number; createdAt?: unknown }) => {
+                if (item.code?.toUpperCase() === promoCode.toUpperCase()) {
+                    return {
+                        ...item,
+                        usageCount: (item.usageCount || 0) + 1
+                    };
+                }
+                return item;
+            });
+
+            await promoDocRef.update({
+                [tier]: updatedCodes,
+                updatedAt: admin.firestore.Timestamp.now()
+            });
+
+            console.log(`📊 Incremented usage count for promo code ${promoCode} in tier ${tier}`);
+        }
+    } catch (err) {
+        console.error('Failed to increment promo code usage:', err);
+        // Don't throw - this is non-critical
+    }
 }
 
 const stripePriceByPlan: Record<string, string> = {
@@ -3007,6 +3070,9 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
         promoSubscription: true // Flag to indicate this is a promo subscription (no Stripe)
     });
 
+    // Increment usage count for the promo code
+    await incrementPromoCodeUsage(promoCode, plan);
+
     console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} - Plan: ${plan}, Expires: ${expiresAt.toISOString()}`);
 
     return {
@@ -3346,5 +3412,423 @@ ${expectations}`;
             'internal',
             `Failed to send demo confirmation: ${error.message}`
         );
+    }
+});
+
+/**
+ * Interface for scheduled reminder documents
+ */
+interface ScheduledReminder {
+    id?: string;
+    time: string; // 24-hour format HH:MM
+    enabled: boolean;
+    emailSubject: string;
+    emailBodyText: string;
+    emailBodyHtml: string;
+    createdAt: admin.firestore.Timestamp;
+    updatedAt: admin.firestore.Timestamp;
+    lastRunAt?: admin.firestore.Timestamp;
+    createdBy: string;
+}
+
+/**
+ * Default email template for scheduled reminders
+ */
+function getDefaultReminderEmailTemplate() {
+    const subject = '🚀 Time to update your progress on: {{goalTitle}}';
+
+    const text = `Hi {{participantName}},
+
+It's time to check in on your Rocket Goal!
+
+Goal: {{goalTitle}}
+
+Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+
+Visit: https://rocket-goals.web.app/goals
+
+Keep pushing forward! 🚀
+
+- The Rocket Goals Team`;
+
+    const html = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+            </div>
+            <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                <h2 style="color: #111827; margin: 0 0 20px 0; font-size: 22px;">Time to update your progress!</h2>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Hi {{participantName}},
+                </p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    It's time to check in on your Rocket Goal:
+                </p>
+                <div style="background: #f9fafb; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                    <p style="color: #111827; font-size: 18px; font-weight: 600; margin: 0;">
+                        {{goalTitle}}
+                    </p>
+                </div>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                    Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://rocket-goals.web.app/goals"
+                       style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        Update your progress
+                    </a>
+                </div>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+                    Keep pushing forward! 🚀
+                </p>
+                <p style="color: #9ca3af; font-size: 14px; margin: 30px 0 0 0;">
+                    - The Rocket Goals Team
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, text, html };
+}
+
+/**
+ * Replace template placeholders with actual values
+ */
+function applyEmailTemplate(template: string, goalTitle: string, participantName: string): string {
+    return template
+        .replace(/\{\{goalTitle\}\}/g, goalTitle)
+        .replace(/\{\{participantName\}\}/g, participantName);
+}
+
+/**
+ * Cloud Function to get all scheduled reminders
+ * Only accessible by admin users
+ */
+export const getScheduledReminders = functions.runWith({
+    secrets: []
+}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can access scheduled reminders.');
+    }
+
+    try {
+        const snapshot = await admin.firestore()
+            .collection('scheduledReminders')
+            .orderBy('time', 'asc')
+            .get();
+
+        const reminders = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        return { success: true, reminders };
+    } catch (error: any) {
+        console.error('Error fetching scheduled reminders:', error);
+        throw new functions.https.HttpsError('internal', `Failed to fetch scheduled reminders: ${error.message}`);
+    }
+});
+
+/**
+ * Cloud Function to add a new scheduled reminder
+ * Only accessible by admin users
+ */
+export const addScheduledReminder = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: { time: string; emailSubject?: string; emailBodyText?: string; emailBodyHtml?: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can add scheduled reminders.');
+    }
+
+    const { time, emailSubject, emailBodyText, emailBodyHtml } = data;
+
+    // Validate time format (HH:MM)
+    if (!time || !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid time format. Use HH:MM (24-hour format).');
+    }
+
+    try {
+        const defaultTemplate = getDefaultReminderEmailTemplate();
+        const now = admin.firestore.Timestamp.now();
+
+        const reminder: Omit<ScheduledReminder, 'id'> = {
+            time,
+            enabled: true,
+            emailSubject: emailSubject || defaultTemplate.subject,
+            emailBodyText: emailBodyText || defaultTemplate.text,
+            emailBodyHtml: emailBodyHtml || defaultTemplate.html,
+            createdAt: now,
+            updatedAt: now,
+            createdBy: context.auth.uid
+        };
+
+        const docRef = await admin.firestore().collection('scheduledReminders').add(reminder);
+
+        return { success: true, id: docRef.id, reminder: { id: docRef.id, ...reminder } };
+    } catch (error: any) {
+        console.error('Error adding scheduled reminder:', error);
+        throw new functions.https.HttpsError('internal', `Failed to add scheduled reminder: ${error.message}`);
+    }
+});
+
+/**
+ * Cloud Function to update a scheduled reminder
+ * Only accessible by admin users
+ */
+export const updateScheduledReminder = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: { id: string; time?: string; enabled?: boolean; emailSubject?: string; emailBodyText?: string; emailBodyHtml?: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can update scheduled reminders.');
+    }
+
+    const { id, time, enabled, emailSubject, emailBodyText, emailBodyHtml } = data;
+
+    if (!id) {
+        throw new functions.https.HttpsError('invalid-argument', 'Reminder ID is required.');
+    }
+
+    // Validate time format if provided
+    if (time && !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid time format. Use HH:MM (24-hour format).');
+    }
+
+    try {
+        const docRef = admin.firestore().collection('scheduledReminders').doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Scheduled reminder not found.');
+        }
+
+        const updates: Partial<ScheduledReminder> = {
+            updatedAt: admin.firestore.Timestamp.now()
+        };
+
+        if (time !== undefined) updates.time = time;
+        if (enabled !== undefined) updates.enabled = enabled;
+        if (emailSubject !== undefined) updates.emailSubject = emailSubject;
+        if (emailBodyText !== undefined) updates.emailBodyText = emailBodyText;
+        if (emailBodyHtml !== undefined) updates.emailBodyHtml = emailBodyHtml;
+
+        await docRef.update(updates);
+
+        const updated = await docRef.get();
+        return { success: true, reminder: { id: updated.id, ...updated.data() } };
+    } catch (error: any) {
+        console.error('Error updating scheduled reminder:', error);
+        throw new functions.https.HttpsError('internal', `Failed to update scheduled reminder: ${error.message}`);
+    }
+});
+
+/**
+ * Cloud Function to delete a scheduled reminder
+ * Only accessible by admin users
+ */
+export const deleteScheduledReminder = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: { id: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can delete scheduled reminders.');
+    }
+
+    const { id } = data;
+
+    if (!id) {
+        throw new functions.https.HttpsError('invalid-argument', 'Reminder ID is required.');
+    }
+
+    try {
+        const docRef = admin.firestore().collection('scheduledReminders').doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Scheduled reminder not found.');
+        }
+
+        await docRef.delete();
+
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error deleting scheduled reminder:', error);
+        throw new functions.https.HttpsError('internal', `Failed to delete scheduled reminder: ${error.message}`);
+    }
+});
+
+/**
+ * Cloud Function to get default email template
+ * Only accessible by admin users
+ */
+export const getDefaultEmailTemplate = functions.runWith({
+    secrets: []
+}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can access email templates.');
+    }
+
+    const template = getDefaultReminderEmailTemplate();
+    return { success: true, template };
+});
+
+/**
+ * Scheduled Cloud Function that runs every hour to check for scheduled reminders
+ * This checks all enabled reminders and sends emails if the current time matches
+ */
+export const processScheduledReminders = functions.runWith({
+    secrets: [sendgridApiKey],
+    timeoutSeconds: 540,
+    memory: '512MB'
+}).pubsub.schedule('every 1 hours').onRun(async (context) => {
+    console.log('🕐 Processing scheduled reminders...');
+
+    try {
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            console.error('SendGrid API key is not set.');
+            return null;
+        }
+        sgMail.setApiKey(apiKey);
+
+        // Get current hour in 24-hour format (UTC)
+        const now = new Date();
+        const currentHour = now.getUTCHours().toString().padStart(2, '0');
+        const currentMinute = now.getUTCMinutes();
+
+        // Check reminders that should run this hour (check for any reminder where hour matches)
+        const snapshot = await admin.firestore()
+            .collection('scheduledReminders')
+            .where('enabled', '==', true)
+            .get();
+
+        if (snapshot.empty) {
+            console.log('No enabled scheduled reminders found.');
+            return null;
+        }
+
+        for (const reminderDoc of snapshot.docs) {
+            const reminder = reminderDoc.data() as ScheduledReminder;
+            const [reminderHour, reminderMinute] = reminder.time.split(':').map(Number);
+
+            // Check if current hour matches and we're within the first 30 minutes window
+            // This gives a buffer since the function runs every hour
+            if (reminderHour.toString().padStart(2, '0') === currentHour && currentMinute < 30) {
+                console.log(`⏰ Running scheduled reminder at ${reminder.time}`);
+
+                // Check if already run this hour
+                if (reminder.lastRunAt) {
+                    const lastRun = reminder.lastRunAt.toDate();
+                    const hoursSinceLastRun = (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60);
+                    if (hoursSinceLastRun < 1) {
+                        console.log(`Skipping reminder ${reminderDoc.id} - already ran within the last hour`);
+                        continue;
+                    }
+                }
+
+                // Fetch all active goals
+                const goalsSnapshot = await admin.firestore()
+                    .collection('rocketGoals')
+                    .where('status', '==', 'active')
+                    .get();
+
+                if (goalsSnapshot.empty) {
+                    console.log('No active goals found.');
+                    continue;
+                }
+
+                let sent = 0;
+                let failed = 0;
+                const batchSize = 10;
+                const goals = goalsSnapshot.docs;
+
+                for (let i = 0; i < goals.length; i += batchSize) {
+                    const batch = goals.slice(i, i + batchSize);
+
+                    await Promise.allSettled(
+                        batch.map(async (goalDoc) => {
+                            try {
+                                const goalData = goalDoc.data();
+                                const goalTitle = goalData.primaryGoal || goalData.answers?.goal_title_label || 'Your Rocket Goal';
+                                const participant = goalData.participant;
+
+                                if (!participant || !participant.email) {
+                                    failed++;
+                                    return;
+                                }
+
+                                const participantName = participant.firstName
+                                    ? `${participant.firstName} ${participant.lastName || ''}`.trim()
+                                    : participant.email.split('@')[0];
+
+                                // Apply template
+                                const subject = applyEmailTemplate(reminder.emailSubject, goalTitle, participantName);
+                                const text = applyEmailTemplate(reminder.emailBodyText, goalTitle, participantName);
+                                const html = applyEmailTemplate(reminder.emailBodyHtml, goalTitle, participantName);
+
+                                const msg = {
+                                    to: participant.email,
+                                    from: 'missioncontrol@rocketgoals.com',
+                                    subject,
+                                    text,
+                                    html,
+                                };
+
+                                await sgMail.send(msg);
+                                sent++;
+                                console.log(`✅ Scheduled reminder sent to ${participant.email}`);
+                            } catch (error: any) {
+                                failed++;
+                                console.error(`❌ Failed to send scheduled reminder:`, error.message);
+                            }
+                        })
+                    );
+
+                    if (i + batchSize < goals.length) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+
+                // Update lastRunAt
+                await reminderDoc.ref.update({
+                    lastRunAt: admin.firestore.Timestamp.now()
+                });
+
+                console.log(`✅ Scheduled reminder completed. Sent: ${sent}, Failed: ${failed}`);
+            }
+        }
+
+        return null;
+    } catch (error: any) {
+        console.error('❌ Error processing scheduled reminders:', error);
+        return null;
     }
 });

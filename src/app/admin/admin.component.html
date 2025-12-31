@@ -1029,6 +1029,199 @@
           </div>
           }
 
+          <!-- Scheduled Reminders Section -->
+          <div class="mt-8 pt-6 border-t border-slate-200">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Scheduled Reminders</h3>
+                <p class="text-sm text-slate-500">Set up automatic daily reminders that run at specific times (UTC)</p>
+              </div>
+            </div>
+
+            <!-- Add New Reminder -->
+            <div class="flex gap-3 mb-6">
+              <input type="time" [value]="newReminderTime()"
+                (input)="newReminderTime.set($any($event.target).value)"
+                class="px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+              <button (click)="addScheduledReminder()" [disabled]="scheduledRemindersLoading()"
+                class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                @if (scheduledRemindersLoading()) {
+                <div class="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                }
+                <span>Add Reminder</span>
+              </button>
+            </div>
+
+            <!-- Scheduled Reminders List -->
+            @if (scheduledRemindersLoading() && scheduledReminders().length === 0) {
+            <div class="flex items-center gap-3 text-slate-600 py-4">
+              <div class="w-5 h-5 border-2 border-slate-200 border-t-rose-500 rounded-full animate-spin"></div>
+              <span>Loading scheduled reminders...</span>
+            </div>
+            } @else if (scheduledReminders().length === 0) {
+            <div class="text-center py-8 text-slate-500">
+              <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p>No scheduled reminders yet</p>
+              <p class="text-sm">Add a time above to create your first scheduled reminder</p>
+            </div>
+            } @else {
+            <div class="space-y-3">
+              @for (reminder of scheduledReminders(); track reminder.id) {
+              <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="flex items-center gap-4">
+                  <!-- Enable/Disable Toggle -->
+                  <button (click)="toggleReminderEnabled(reminder)"
+                    [class]="reminder.enabled ? 'bg-green-500' : 'bg-slate-300'"
+                    class="relative w-12 h-6 rounded-full transition-colors duration-200">
+                    <span [class]="reminder.enabled ? 'translate-x-6' : 'translate-x-1'"
+                      class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200"></span>
+                  </button>
+
+                  <!-- Time Display -->
+                  <div>
+                    <p class="text-lg font-bold text-slate-900">{{ formatTime(reminder.time) }}</p>
+                    <p class="text-xs text-slate-500">{{ reminder.time }} UTC</p>
+                  </div>
+
+                  <!-- Status Badge -->
+                  <span [class]="reminder.enabled ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'"
+                    class="px-2 py-1 text-xs font-semibold rounded-full">
+                    {{ reminder.enabled ? 'Active' : 'Disabled' }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <!-- Edit Email Button -->
+                  <button (click)="editReminder(reminder)"
+                    class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold rounded-lg transition-all duration-200 text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit Email
+                  </button>
+
+                  <!-- Delete Button -->
+                  <button (click)="deleteScheduledReminder(reminder.id)"
+                    class="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-lg transition-all duration-200 text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+              }
+            </div>
+            }
+
+            <!-- Email Editor Modal -->
+            @if (editingReminder()) {
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                  <div>
+                    <h3 class="text-xl font-bold text-slate-900">Edit Email Template</h3>
+                    <p class="text-sm text-slate-500">Reminder at {{ formatTime(editingReminder()!.time) }} ({{ editingReminder()!.time }} UTC)</p>
+                  </div>
+                  <button (click)="cancelEditReminder()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="flex-1 overflow-auto p-6 space-y-4">
+                  <!-- Template Variables Info -->
+                  <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                    <p class="font-semibold mb-1">Available template variables:</p>
+                    <code class="text-xs">{{'{{goalTitle}}'}}</code> - The goal title,
+                    <code class="text-xs">{{'{{participantName}}'}}</code> - The participant's name
+                  </div>
+
+                  <!-- Subject -->
+                  <div class="space-y-2">
+                    <label class="block text-slate-700 font-semibold text-sm">Email Subject</label>
+                    <input type="text" [value]="editingEmailSubject()"
+                      (input)="editingEmailSubject.set($any($event.target).value)"
+                      class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+                  </div>
+
+                  <!-- Toggle Preview/Edit -->
+                  <div class="flex gap-2">
+                    <button (click)="showEmailPreview.set(false)"
+                      [class]="!showEmailPreview() ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'"
+                      class="px-4 py-2 font-semibold rounded-lg transition-colors">
+                      Edit HTML
+                    </button>
+                    <button (click)="showEmailPreview.set(true)"
+                      [class]="showEmailPreview() ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'"
+                      class="px-4 py-2 font-semibold rounded-lg transition-colors">
+                      Preview
+                    </button>
+                  </div>
+
+                  @if (showEmailPreview()) {
+                  <!-- HTML Preview -->
+                  <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                      <p class="text-xs font-semibold text-slate-600 uppercase">HTML Preview</p>
+                    </div>
+                    <div class="p-4 bg-white max-h-80 overflow-auto" [innerHTML]="editingEmailBodyHtml()"></div>
+                  </div>
+                  } @else {
+                  <!-- HTML Editor -->
+                  <div class="space-y-2">
+                    <label class="block text-slate-700 font-semibold text-sm">Email Body (HTML)</label>
+                    <textarea [value]="editingEmailBodyHtml()"
+                      (input)="editingEmailBodyHtml.set($any($event.target).value)"
+                      rows="12"
+                      class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all"></textarea>
+                  </div>
+                  }
+
+                  <!-- Plain Text -->
+                  <div class="space-y-2">
+                    <label class="block text-slate-700 font-semibold text-sm">Plain Text Version</label>
+                    <textarea [value]="editingEmailBodyText()"
+                      (input)="editingEmailBodyText.set($any($event.target).value)"
+                      rows="6"
+                      class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all"></textarea>
+                  </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+                  <button (click)="resetToDefaultTemplate()"
+                    class="px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold transition-colors">
+                    Reset to Default
+                  </button>
+                  <div class="flex gap-3">
+                    <button (click)="cancelEditReminder()"
+                      class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors">
+                      Cancel
+                    </button>
+                    <button (click)="saveReminderEmail()" [disabled]="savingReminder()"
+                      class="px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-60 flex items-center gap-2">
+                      @if (savingReminder()) {
+                      <div class="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                      }
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+
           <!-- Info Box -->
           <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
             <div class="flex gap-3">
@@ -1040,13 +1233,11 @@
               <div class="text-sm text-slate-600">
                 <p class="font-semibold text-slate-700 mb-1">How this works</p>
                 <ul class="list-disc list-inside space-y-1">
-                  <li><strong>Preview:</strong> Generate a preview of the reminder email without sending it</li>
-                  <li><strong>Test:</strong> Send a test reminder to a specific email address to verify the content</li>
-                  <li><strong>Bulk Send:</strong> Send reminders to all users with active goals. This will send one
-                    reminder per active goal in the system.</li>
+                  <li><strong>Manual:</strong> Use the form above to preview, test, or send reminders to all active goals immediately</li>
+                  <li><strong>Scheduled:</strong> Add scheduled reminders that will automatically run every day at the specified time (UTC)</li>
+                  <li><strong>Edit Email:</strong> Customize the email content for each scheduled reminder. Use template variables for dynamic content.</li>
                 </ul>
-                <p class="mt-2 text-xs text-slate-500">The reminder emails include the goal title and encourage users to
-                  log in and update their progress.</p>
+                <p class="mt-2 text-xs text-slate-500">Scheduled reminders run automatically every day. Times are in UTC timezone.</p>
               </div>
             </div>
           </div>
@@ -1085,60 +1276,144 @@
             <span>Loading promo codes...</span>
           </div>
           } @else {
-          <!-- Moonshot Promo Code -->
-          <div class="space-y-2">
+          <!-- Moonshot Promo Codes -->
+          <div class="space-y-3">
             <label class="block text-slate-700 font-semibold text-sm dark:text-slate-200">
-              Moonshot Promo Code <span class="text-rose-500">*</span>
+              Moonshot Promo Codes
             </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <!-- Existing Codes List -->
+            @if (promoCodesMoonshot().length > 0) {
+            <div class="space-y-2">
+              @for (promo of promoCodesMoonshot(); track promo.code) {
+              <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-white/10">
+                <div class="flex-1 flex items-center gap-3">
+                  <span class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ promo.code }}</span>
+                  <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+                <button (click)="deletePromoCode('moonshot', promo.code)" [disabled]="promoCodesSaving()"
+                  class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 dark:hover:bg-rose-500/10">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
-              <input type="text" [value]="promoCodeMoonshot()"
-                (input)="promoCodeMoonshot.set($any($event.target).value.toUpperCase())"
-                placeholder="Enter Moonshot promo code"
-                class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+              }
+            </div>
+            }
+            <!-- Add New Code -->
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <input type="text" [value]="newCodeMoonshot()"
+                  (input)="newCodeMoonshot.set($any($event.target).value.toUpperCase())"
+                  (keyup.enter)="addPromoCode('moonshot')"
+                  placeholder="Add new Moonshot code"
+                  class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+              </div>
+              <button (click)="addPromoCode('moonshot')" [disabled]="promoCodesSaving() || !newCodeMoonshot()"
+                class="px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Add
+              </button>
             </div>
           </div>
 
-          <!-- Interplanetary Promo Code -->
-          <div class="space-y-2">
+          <!-- Interplanetary Promo Codes -->
+          <div class="space-y-3">
             <label class="block text-slate-700 font-semibold text-sm dark:text-slate-200">
-              Interplanetary Promo Code <span class="text-rose-500">*</span>
+              Interplanetary Promo Codes
             </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <!-- Existing Codes List -->
+            @if (promoCodesInterplanetary().length > 0) {
+            <div class="space-y-2">
+              @for (promo of promoCodesInterplanetary(); track promo.code) {
+              <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-white/10">
+                <div class="flex-1 flex items-center gap-3">
+                  <span class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ promo.code }}</span>
+                  <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+                <button (click)="deletePromoCode('interplanetary', promo.code)" [disabled]="promoCodesSaving()"
+                  class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 dark:hover:bg-rose-500/10">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
-              <input type="text" [value]="promoCodeInterplanetary()"
-                (input)="promoCodeInterplanetary.set($any($event.target).value.toUpperCase())"
-                placeholder="Enter Interplanetary promo code"
-                class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+              }
+            </div>
+            }
+            <!-- Add New Code -->
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <input type="text" [value]="newCodeInterplanetary()"
+                  (input)="newCodeInterplanetary.set($any($event.target).value.toUpperCase())"
+                  (keyup.enter)="addPromoCode('interplanetary')"
+                  placeholder="Add new Interplanetary code"
+                  class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+              </div>
+              <button (click)="addPromoCode('interplanetary')" [disabled]="promoCodesSaving() || !newCodeInterplanetary()"
+                class="px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Add
+              </button>
             </div>
           </div>
 
-          <!-- Galactic Promo Code -->
-          <div class="space-y-2">
+          <!-- Galactic Promo Codes -->
+          <div class="space-y-3">
             <label class="block text-slate-700 font-semibold text-sm dark:text-slate-200">
-              Galactic Promo Code <span class="text-rose-500">*</span>
+              Galactic Promo Codes
             </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <!-- Existing Codes List -->
+            @if (promoCodesGalactic().length > 0) {
+            <div class="space-y-2">
+              @for (promo of promoCodesGalactic(); track promo.code) {
+              <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-white/10">
+                <div class="flex-1 flex items-center gap-3">
+                  <span class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ promo.code }}</span>
+                  <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+                <button (click)="deletePromoCode('galactic', promo.code)" [disabled]="promoCodesSaving()"
+                  class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 dark:hover:bg-rose-500/10">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
-              <input type="text" [value]="promoCodeGalactic()"
-                (input)="promoCodeGalactic.set($any($event.target).value.toUpperCase())"
-                placeholder="Enter Galactic promo code"
-                class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+              }
+            </div>
+            }
+            <!-- Add New Code -->
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <input type="text" [value]="newCodeGalactic()"
+                  (input)="newCodeGalactic.set($any($event.target).value.toUpperCase())"
+                  (keyup.enter)="addPromoCode('galactic')"
+                  placeholder="Add new Galactic code"
+                  class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500" />
+              </div>
+              <button (click)="addPromoCode('galactic')" [disabled]="promoCodesSaving() || !newCodeGalactic()"
+                class="px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Add
+              </button>
             </div>
           </div>
 
@@ -1148,22 +1423,6 @@
             {{ promoCodesError() }}
           </div>
           }
-
-          <!-- Save Button -->
-          <div class="pt-2">
-            <button (click)="savePromoCodes()" [disabled]="promoCodesSaving()"
-              class="w-full sm:w-auto px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
-              @if (promoCodesSaving()) {
-              <div class="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
-              <span>Saving...</span>
-              } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Save Promo Codes</span>
-              }
-            </button>
-          </div>
 
           <!-- Info Box -->
           <div
@@ -1176,8 +1435,7 @@
               </svg>
               <div class="text-sm text-slate-600 dark:text-slate-300">
                 <p class="font-semibold text-slate-700 mb-1 dark:text-slate-200">How this works</p>
-                <p>Promo codes are stored in Firestore and automatically used throughout the application. Changes take
-                  effect immediately. All codes must be unique and will be automatically converted to uppercase.</p>
+                <p>Add multiple promo codes per tier. Each code shows its usage count. Codes are automatically converted to uppercase and must be unique across all tiers. Changes take effect immediately.</p>
               </div>
             </div>
           </div>
