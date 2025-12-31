@@ -2,7 +2,8 @@ import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Functions, httpsCallable } from '@angular/fire/functions';
+import { getApp } from 'firebase/app';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 interface TimeSlot {
   time: string;
@@ -563,7 +564,7 @@ export class ScheduleDemoComponent {
     { time: '18:30', displayTime: '6:30 PM EST' }
   ];
 
-  constructor(private functions: Functions) {}
+  private readonly functions = getFunctions(getApp(), 'us-central1');
 
   currentMonthYear = computed(() => {
     const date = this.currentMonth();
@@ -701,7 +702,15 @@ export class ScheduleDemoComponent {
     this.errorMessage.set(null);
 
     try {
-      const scheduleDemoFn = httpsCallable(this.functions, 'scheduleDemoEmail');
+      const scheduleDemoFn = httpsCallable<{
+        firstName: string;
+        lastName: string;
+        email: string;
+        company: string;
+        expectations: string;
+        date: string;
+        time: string;
+      }, { success: boolean }>(this.functions, 'scheduleDemoEmail');
 
       await scheduleDemoFn({
         firstName: this.firstName.trim(),
@@ -710,7 +719,7 @@ export class ScheduleDemoComponent {
         company: this.company.trim(),
         expectations: this.expectations.trim(),
         date: this.selectedDate()!.toISOString(),
-        time: this.selectedTime()
+        time: this.selectedTime()!
       });
 
       this.currentStep.set(4);
