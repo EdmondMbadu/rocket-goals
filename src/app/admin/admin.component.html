@@ -1285,18 +1285,42 @@
             @if (promoCodesMoonshot().length > 0) {
             <div class="space-y-3">
               @for (promo of promoCodesMoonshot(); track promo.code) {
-              <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-white/10">
+              <div class="p-3 border rounded-xl" [class]="promo.archived ? 'bg-slate-100 border-slate-300 opacity-60 dark:bg-slate-900 dark:border-white/5' : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-white/10'">
                 <div class="flex items-center gap-3">
                   <div class="flex-1 flex items-center gap-3 flex-wrap">
-                    <span class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ promo.code }}</span>
+                    <span class="font-mono text-sm font-semibold" [class]="promo.archived ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-white'">{{ promo.code }}</span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                       {{ promo.durationMonths }} month{{ promo.durationMonths !== 1 ? 's' : '' }}
                     </span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
                     </span>
+                    @if (promo.archived) {
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                      Archived
+                    </span>
+                    }
                   </div>
+                  <!-- Archive/Activate Toggle Button -->
+                  <button (click)="toggleArchivePromoCode('moonshot', promo.code)" [disabled]="promoCodesSaving()"
+                    [title]="promo.archived ? 'Activate code' : 'Archive code'"
+                    class="p-2 rounded-lg transition-colors disabled:opacity-50"
+                    [class]="promo.archived ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' : 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'">
+                    @if (promo.archived) {
+                    <!-- Play/Activate icon -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    } @else {
+                    <!-- Archive icon -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                    }
+                  </button>
                   <button (click)="deletePromoCode('moonshot', promo.code)" [disabled]="promoCodesSaving()"
+                    title="Delete code permanently"
                     class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 dark:hover:bg-rose-500/10">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1368,18 +1392,40 @@
             @if (promoCodesInterplanetary().length > 0) {
             <div class="space-y-3">
               @for (promo of promoCodesInterplanetary(); track promo.code) {
-              <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-white/10">
+              <div class="p-3 border rounded-xl" [class]="promo.archived ? 'bg-slate-100 border-slate-300 opacity-60 dark:bg-slate-900 dark:border-white/5' : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-white/10'">
                 <div class="flex items-center gap-3">
                   <div class="flex-1 flex items-center gap-3 flex-wrap">
-                    <span class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ promo.code }}</span>
+                    <span class="font-mono text-sm font-semibold" [class]="promo.archived ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-white'">{{ promo.code }}</span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                       {{ promo.durationMonths }} month{{ promo.durationMonths !== 1 ? 's' : '' }}
                     </span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
                     </span>
+                    @if (promo.archived) {
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                      Archived
+                    </span>
+                    }
                   </div>
+                  <!-- Archive/Activate Toggle Button -->
+                  <button (click)="toggleArchivePromoCode('interplanetary', promo.code)" [disabled]="promoCodesSaving()"
+                    [title]="promo.archived ? 'Activate code' : 'Archive code'"
+                    class="p-2 rounded-lg transition-colors disabled:opacity-50"
+                    [class]="promo.archived ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' : 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'">
+                    @if (promo.archived) {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    } @else {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                    }
+                  </button>
                   <button (click)="deletePromoCode('interplanetary', promo.code)" [disabled]="promoCodesSaving()"
+                    title="Delete code permanently"
                     class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 dark:hover:bg-rose-500/10">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1451,18 +1497,40 @@
             @if (promoCodesGalactic().length > 0) {
             <div class="space-y-3">
               @for (promo of promoCodesGalactic(); track promo.code) {
-              <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-white/10">
+              <div class="p-3 border rounded-xl" [class]="promo.archived ? 'bg-slate-100 border-slate-300 opacity-60 dark:bg-slate-900 dark:border-white/5' : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-white/10'">
                 <div class="flex items-center gap-3">
                   <div class="flex-1 flex items-center gap-3 flex-wrap">
-                    <span class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ promo.code }}</span>
+                    <span class="font-mono text-sm font-semibold" [class]="promo.archived ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-white'">{{ promo.code }}</span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                       {{ promo.durationMonths }} month{{ promo.durationMonths !== 1 ? 's' : '' }}
                     </span>
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
                     </span>
+                    @if (promo.archived) {
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                      Archived
+                    </span>
+                    }
                   </div>
+                  <!-- Archive/Activate Toggle Button -->
+                  <button (click)="toggleArchivePromoCode('galactic', promo.code)" [disabled]="promoCodesSaving()"
+                    [title]="promo.archived ? 'Activate code' : 'Archive code'"
+                    class="p-2 rounded-lg transition-colors disabled:opacity-50"
+                    [class]="promo.archived ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' : 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'">
+                    @if (promo.archived) {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    } @else {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                    }
+                  </button>
                   <button (click)="deletePromoCode('galactic', promo.code)" [disabled]="promoCodesSaving()"
+                    title="Delete code permanently"
                     class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 dark:hover:bg-rose-500/10">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

@@ -888,9 +888,10 @@ export class PricingPageComponent implements OnInit {
         // Helper to extract codes from either array or legacy string format
         const extractCodes = (tierData: unknown, tierName: string) => {
           if (Array.isArray(tierData)) {
-            // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1}, ...]
-            tierData.forEach((item: { code?: string }) => {
-              if (item.code) {
+            // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1, archived: false}, ...]
+            tierData.forEach((item: { code?: string; archived?: boolean }) => {
+              // Skip archived codes - they should not be usable
+              if (item.code && !item.archived) {
                 result[item.code.toUpperCase()] = tierName;
               }
             });

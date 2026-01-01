@@ -2538,9 +2538,10 @@ async function getPromoCodeInfoMap(): Promise<Record<string, PromoCodeInfo>> {
             // Helper to extract codes from either array or legacy string format
             const extractCodes = (tierData: unknown, tierName: string) => {
                 if (Array.isArray(tierData)) {
-                    // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1}, ...]
-                    tierData.forEach((item: { code?: string; durationMonths?: number }) => {
-                        if (item.code) {
+                    // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1, archived: false}, ...]
+                    tierData.forEach((item: { code?: string; durationMonths?: number; archived?: boolean }) => {
+                        // Skip archived codes
+                        if (item.code && !item.archived) {
                             result[item.code.toUpperCase()] = {
                                 tier: tierName,
                                 durationMonths: item.durationMonths || 1

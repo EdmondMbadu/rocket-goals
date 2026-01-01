@@ -24,6 +24,7 @@ type PromoCode = {
   createdAt: Date;
   durationMonths: number;
   usedBy: PromoCodeUser[];
+  archived: boolean;
 };
 
 type DemoRequest = {
@@ -985,12 +986,13 @@ export class AdminComponent implements OnInit {
             usageCount: item.usageCount || 0,
             createdAt: item.createdAt?.toDate?.() || new Date(item.createdAt) || new Date(),
             durationMonths: item.durationMonths || 1,
-            usedBy: parseUsedBy(item.usedBy)
+            usedBy: parseUsedBy(item.usedBy),
+            archived: item.archived || false
           }));
         }
         // Handle legacy single code format
         if (typeof data === 'string' && data) {
-          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }];
+          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }];
         }
         return [];
       };
@@ -1002,9 +1004,9 @@ export class AdminComponent implements OnInit {
         this.promoCodesGalactic.set(parseCodesArray(data['galactic']));
       } else {
         // Initialize with default values if document doesn't exist
-        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }]);
-        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }]);
-        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }]);
+        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }]);
+        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }]);
+        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }]);
       }
     } catch (err: any) {
       console.error('Failed to load promo codes:', err);
@@ -1066,7 +1068,8 @@ export class AdminComponent implements OnInit {
         usageCount: 0,
         createdAt: new Date(),
         durationMonths: duration,
-        usedBy: []
+        usedBy: [],
+        archived: false
       };
 
       // Get current codes for the tier and add the new one
@@ -1084,7 +1087,14 @@ export class AdminComponent implements OnInit {
         code: c.code,
         usageCount: c.usageCount,
         createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
-        durationMonths: c.durationMonths
+        durationMonths: c.durationMonths,
+        usedBy: c.usedBy.map(u => ({
+          userId: u.userId,
+          name: u.name,
+          email: u.email,
+          redeemedAt: firestoreModule.Timestamp.fromDate(u.redeemedAt)
+        })),
+        archived: c.archived
       }));
 
       await firestoreModule.setDoc(docRef, {
@@ -1146,7 +1156,14 @@ export class AdminComponent implements OnInit {
         code: c.code,
         usageCount: c.usageCount,
         createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
-        durationMonths: c.durationMonths
+        durationMonths: c.durationMonths,
+        usedBy: c.usedBy.map(u => ({
+          userId: u.userId,
+          name: u.name,
+          email: u.email,
+          redeemedAt: firestoreModule.Timestamp.fromDate(u.redeemedAt)
+        })),
+        archived: c.archived
       }));
 
       await firestoreModule.setDoc(docRef, {
@@ -1168,6 +1185,74 @@ export class AdminComponent implements OnInit {
     } catch (err: any) {
       console.error('Failed to delete promo code:', err);
       this.promoCodesError.set('Failed to delete promo code. Please try again.');
+      setTimeout(() => this.promoCodesError.set(null), 5000);
+    } finally {
+      this.promoCodesSaving.set(false);
+    }
+  }
+
+  async toggleArchivePromoCode(tier: 'moonshot' | 'interplanetary' | 'galactic', code: string) {
+    this.promoCodesSaving.set(true);
+    this.promoCodesError.set(null);
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
+
+      // Get current codes for the tier and toggle the archived status
+      let currentCodes: PromoCode[];
+      if (tier === 'moonshot') {
+        currentCodes = this.promoCodesMoonshot().map(c =>
+          c.code === code ? { ...c, archived: !c.archived } : c
+        );
+      } else if (tier === 'interplanetary') {
+        currentCodes = this.promoCodesInterplanetary().map(c =>
+          c.code === code ? { ...c, archived: !c.archived } : c
+        );
+      } else {
+        currentCodes = this.promoCodesGalactic().map(c =>
+          c.code === code ? { ...c, archived: !c.archived } : c
+        );
+      }
+
+      const targetCode = currentCodes.find(c => c.code === code);
+      const isNowArchived = targetCode?.archived;
+
+      // Convert to Firestore format
+      const firestoreCodes = currentCodes.map(c => ({
+        code: c.code,
+        usageCount: c.usageCount,
+        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
+        durationMonths: c.durationMonths,
+        usedBy: c.usedBy.map(u => ({
+          userId: u.userId,
+          name: u.name,
+          email: u.email,
+          redeemedAt: firestoreModule.Timestamp.fromDate(u.redeemedAt)
+        })),
+        archived: c.archived
+      }));
+
+      await firestoreModule.setDoc(docRef, {
+        [tier]: firestoreCodes,
+        updatedAt: firestoreModule.Timestamp.now()
+      }, { merge: true });
+
+      // Update local state
+      if (tier === 'moonshot') {
+        this.promoCodesMoonshot.set(currentCodes);
+      } else if (tier === 'interplanetary') {
+        this.promoCodesInterplanetary.set(currentCodes);
+      } else {
+        this.promoCodesGalactic.set(currentCodes);
+      }
+
+      this.success.set(`Promo code "${code}" ${isNowArchived ? 'archived' : 'activated'} successfully!`);
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to toggle archive status:', err);
+      this.promoCodesError.set('Failed to update promo code. Please try again.');
       setTimeout(() => this.promoCodesError.set(null), 5000);
     } finally {
       this.promoCodesSaving.set(false);
