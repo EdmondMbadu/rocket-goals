@@ -188,6 +188,10 @@ export class App implements AfterViewInit, OnDestroy {
     this.themeService.toggleDarkMode();
   }
 
+  getCurrentYear(): number {
+    return new Date().getFullYear();
+  }
+
   private checkAndStartChallenge(urlString: string) {
     if (urlString.includes('startChallenge=true')) {
       console.log('checkAndStartChallenge: URL contains startChallenge=true', urlString);
