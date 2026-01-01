@@ -549,7 +549,7 @@ export class AdminComponent implements OnInit {
       const data = result.data as { success: boolean; reminder: ScheduledReminder };
 
       if (data.success) {
-        this.success.set(`Scheduled reminder added for ${time} (UTC)`);
+        this.success.set(`Scheduled reminder added for ${time} (Eastern Time)`);
         await this.loadScheduledReminders();
         this.newReminderTime.set('09:00');
       }

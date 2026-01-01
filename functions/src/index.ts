@@ -3736,7 +3736,7 @@ export const processScheduledReminders = functions.runWith({
     secrets: [sendgridApiKey],
     timeoutSeconds: 540,
     memory: '512MB'
-}).pubsub.schedule('every 1 hours').onRun(async (context) => {
+}).pubsub.schedule('every 1 hours').timeZone('America/New_York').onRun(async (context) => {
     console.log('🕐 Processing scheduled reminders...');
 
     try {
@@ -3747,10 +3747,11 @@ export const processScheduledReminders = functions.runWith({
         }
         sgMail.setApiKey(apiKey);
 
-        // Get current hour in 24-hour format (UTC)
+        // Get current hour in 24-hour format (Eastern Time)
         const now = new Date();
-        const currentHour = now.getUTCHours().toString().padStart(2, '0');
-        const currentMinute = now.getUTCMinutes();
+        const easternTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const currentHour = easternTime.getHours().toString().padStart(2, '0');
+        const currentMinute = easternTime.getMinutes();
 
         // Check reminders that should run this hour (check for any reminder where hour matches)
         const snapshot = await admin.firestore()
