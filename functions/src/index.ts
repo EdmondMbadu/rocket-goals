@@ -3798,9 +3798,9 @@ export const processScheduledReminders = functions.runWith({
             const reminder = reminderDoc.data() as ScheduledReminder;
             const [reminderHour, reminderMinute] = reminder.time.split(':').map(Number);
 
-            // Check if current hour matches and we're within the first 30 minutes window
-            // This gives a buffer since the function runs every hour
-            if (reminderHour.toString().padStart(2, '0') === currentHour && currentMinute < 30) {
+            // Check if current hour matches the reminder time
+            // The function runs once per hour, so we just need to match the hour
+            if (reminderHour.toString().padStart(2, '0') === currentHour) {
                 console.log(`⏰ Running scheduled reminder at ${reminder.time}`);
 
                 // Check if already run this hour
