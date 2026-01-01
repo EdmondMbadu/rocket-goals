@@ -836,6 +836,8 @@ export const rocketGoalsAI = onCall({
     cors: [
         "https://rocket-goals.web.app",
         "https://rocket-goals.firebaseapp.com",
+        "https://www.rocketgoals.com",
+        "https://rocketgoals.com",
         "http://localhost:4200",
         "http://127.0.0.1:4200"
     ]
@@ -2276,6 +2278,14 @@ export const generateGoalVisualization = onCall({
     region: "us-central1",
     secrets: [geminiApiKey],
     timeoutSeconds: 120, // Image generation can take longer
+    cors: [
+        "https://rocket-goals.web.app",
+        "https://rocket-goals.firebaseapp.com",
+        "https://www.rocketgoals.com",
+        "https://rocketgoals.com",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    ]
 }, async (request: any) => {
     const startTime = Date.now();
 
