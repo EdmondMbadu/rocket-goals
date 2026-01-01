@@ -2514,11 +2514,17 @@ The final image should make the viewer think:
     }
 });
 
+type PromoCodeInfo = {
+    tier: string;
+    durationMonths: number;
+};
+
 /**
  * Helper function to load promo codes from Firestore
  * Supports both legacy single code format and new array format
+ * Returns a map of code -> { tier, durationMonths }
  */
-async function getPromoCodePlanMap(): Promise<Record<string, string>> {
+async function getPromoCodeInfoMap(): Promise<Record<string, PromoCodeInfo>> {
     try {
         const promoDoc = await admin.firestore()
             .collection('adminSettings')
@@ -2527,20 +2533,26 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
 
         if (promoDoc.exists) {
             const data = promoDoc.data();
-            const result: Record<string, string> = {};
+            const result: Record<string, PromoCodeInfo> = {};
 
             // Helper to extract codes from either array or legacy string format
             const extractCodes = (tierData: unknown, tierName: string) => {
                 if (Array.isArray(tierData)) {
-                    // New array format: [{code: 'CODE1', usageCount: 0}, ...]
-                    tierData.forEach((item: { code?: string }) => {
+                    // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1}, ...]
+                    tierData.forEach((item: { code?: string; durationMonths?: number }) => {
                         if (item.code) {
-                            result[item.code.toUpperCase()] = tierName;
+                            result[item.code.toUpperCase()] = {
+                                tier: tierName,
+                                durationMonths: item.durationMonths || 1
+                            };
                         }
                     });
                 } else if (typeof tierData === 'string' && tierData) {
-                    // Legacy single code format
-                    result[tierData.toUpperCase()] = tierName;
+                    // Legacy single code format - default to 1 month
+                    result[tierData.toUpperCase()] = {
+                        tier: tierName,
+                        durationMonths: 1
+                    };
                 }
             };
 
@@ -2551,9 +2563,9 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
             // If no codes found, return defaults
             if (Object.keys(result).length === 0) {
                 return {
-                    'NY2026MOONSHOT': 'moonshot',
-                    'NY2026INTERPLANETARY': 'interplanetary',
-                    'NY2026GALACTIC': 'galactic'
+                    'NY2026MOONSHOT': { tier: 'moonshot', durationMonths: 1 },
+                    'NY2026INTERPLANETARY': { tier: 'interplanetary', durationMonths: 1 },
+                    'NY2026GALACTIC': { tier: 'galactic', durationMonths: 1 }
                 };
             }
 
@@ -2565,10 +2577,22 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
 
     // Return defaults if Firestore read fails
     return {
-        'NY2026MOONSHOT': 'moonshot',
-        'NY2026INTERPLANETARY': 'interplanetary',
-        'NY2026GALACTIC': 'galactic'
+        'NY2026MOONSHOT': { tier: 'moonshot', durationMonths: 1 },
+        'NY2026INTERPLANETARY': { tier: 'interplanetary', durationMonths: 1 },
+        'NY2026GALACTIC': { tier: 'galactic', durationMonths: 1 }
     };
+}
+
+/**
+ * Helper function to get just the plan map (for backward compatibility)
+ */
+async function getPromoCodePlanMap(): Promise<Record<string, string>> {
+    const infoMap = await getPromoCodeInfoMap();
+    const result: Record<string, string> = {};
+    for (const [code, info] of Object.entries(infoMap)) {
+        result[code] = info.tier;
+    }
+    return result;
 }
 
 /**
@@ -3024,14 +3048,17 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
         );
     }
 
-    const promoCodePlanMap = await getPromoCodePlanMap();
-    const plan = promoCodePlanMap[promoCode] as 'moonshot' | 'interplanetary' | 'galactic' | undefined;
-    if (!plan) {
+    const promoCodeInfoMap = await getPromoCodeInfoMap();
+    const codeInfo = promoCodeInfoMap[promoCode];
+    if (!codeInfo) {
         throw new functions.https.HttpsError(
             'invalid-argument',
             'Invalid promo code.'
         );
     }
+
+    const plan = codeInfo.tier as 'moonshot' | 'interplanetary' | 'galactic';
+    const durationMonths = codeInfo.durationMonths;
 
     const userId = context.auth.uid;
     const userDocRef = admin.firestore().collection('userProfiles').doc(userId);
@@ -3055,10 +3082,10 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
         );
     }
 
-    // Calculate expiration date (1 month from now)
+    // Calculate expiration date based on the code's duration
     const now = new Date();
     const expiresAt = new Date(now);
-    expiresAt.setMonth(expiresAt.getMonth() + 1);
+    expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
 
     // Update user profile with the new subscription
     await userDocRef.update({
@@ -3073,13 +3100,14 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
     // Increment usage count for the promo code
     await incrementPromoCodeUsage(promoCode, plan);
 
-    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} - Plan: ${plan}, Expires: ${expiresAt.toISOString()}`);
+    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} - Plan: ${plan}, Duration: ${durationMonths} months, Expires: ${expiresAt.toISOString()}`);
 
     return {
         success: true,
         plan,
+        durationMonths,
         expiresAt: expiresAt.toISOString(),
-        message: `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription is now active for 1 month!`
+        message: `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription is now active for ${durationMonths} month${durationMonths !== 1 ? 's' : ''}!`
     };
 });
 

@@ -15,6 +15,7 @@ type PromoCode = {
   code: string;
   usageCount: number;
   createdAt: Date;
+  durationMonths: number;
 };
 
 type DemoRequest = {
@@ -152,6 +153,9 @@ export class AdminComponent implements OnInit {
   newCodeMoonshot = signal('');
   newCodeInterplanetary = signal('');
   newCodeGalactic = signal('');
+  newDurationMoonshot = signal(1);
+  newDurationInterplanetary = signal(1);
+  newDurationGalactic = signal(1);
   promoCodesLoading = signal(false);
   promoCodesSaving = signal(false);
   promoCodesError = signal<string | null>(null);
@@ -961,12 +965,13 @@ export class AdminComponent implements OnInit {
           return data.map(item => ({
             code: item.code || '',
             usageCount: item.usageCount || 0,
-            createdAt: item.createdAt?.toDate?.() || new Date(item.createdAt) || new Date()
+            createdAt: item.createdAt?.toDate?.() || new Date(item.createdAt) || new Date(),
+            durationMonths: item.durationMonths || 1
           }));
         }
         // Handle legacy single code format
         if (typeof data === 'string' && data) {
-          return [{ code: data, usageCount: 0, createdAt: new Date() }];
+          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1 }];
         }
         return [];
       };
@@ -978,9 +983,9 @@ export class AdminComponent implements OnInit {
         this.promoCodesGalactic.set(parseCodesArray(data['galactic']));
       } else {
         // Initialize with default values if document doesn't exist
-        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date() }]);
-        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date() }]);
-        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date() }]);
+        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1 }]);
+        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1 }]);
+        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1 }]);
       }
     } catch (err: any) {
       console.error('Failed to load promo codes:', err);
@@ -992,16 +997,26 @@ export class AdminComponent implements OnInit {
 
   async addPromoCode(tier: 'moonshot' | 'interplanetary' | 'galactic') {
     let newCode = '';
+    let duration = 1;
     if (tier === 'moonshot') {
       newCode = this.newCodeMoonshot().trim().toUpperCase();
+      duration = this.newDurationMoonshot();
     } else if (tier === 'interplanetary') {
       newCode = this.newCodeInterplanetary().trim().toUpperCase();
+      duration = this.newDurationInterplanetary();
     } else {
       newCode = this.newCodeGalactic().trim().toUpperCase();
+      duration = this.newDurationGalactic();
     }
 
     if (!newCode) {
       this.promoCodesError.set('Please enter a promo code.');
+      setTimeout(() => this.promoCodesError.set(null), 5000);
+      return;
+    }
+
+    if (duration < 1 || duration > 12) {
+      this.promoCodesError.set('Duration must be between 1 and 12 months.');
       setTimeout(() => this.promoCodesError.set(null), 5000);
       return;
     }
@@ -1030,7 +1045,8 @@ export class AdminComponent implements OnInit {
       const newPromoCode: PromoCode = {
         code: newCode,
         usageCount: 0,
-        createdAt: new Date()
+        createdAt: new Date(),
+        durationMonths: duration
       };
 
       // Get current codes for the tier and add the new one
@@ -1047,7 +1063,8 @@ export class AdminComponent implements OnInit {
       const firestoreCodes = currentCodes.map(c => ({
         code: c.code,
         usageCount: c.usageCount,
-        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt)
+        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
+        durationMonths: c.durationMonths
       }));
 
       await firestoreModule.setDoc(docRef, {
@@ -1055,16 +1072,19 @@ export class AdminComponent implements OnInit {
         updatedAt: firestoreModule.Timestamp.now()
       }, { merge: true });
 
-      // Update local state
+      // Update local state and reset inputs
       if (tier === 'moonshot') {
         this.promoCodesMoonshot.set(currentCodes);
         this.newCodeMoonshot.set('');
+        this.newDurationMoonshot.set(1);
       } else if (tier === 'interplanetary') {
         this.promoCodesInterplanetary.set(currentCodes);
         this.newCodeInterplanetary.set('');
+        this.newDurationInterplanetary.set(1);
       } else {
         this.promoCodesGalactic.set(currentCodes);
         this.newCodeGalactic.set('');
+        this.newDurationGalactic.set(1);
       }
 
       this.success.set(`Promo code "${newCode}" added successfully!`);
@@ -1105,7 +1125,8 @@ export class AdminComponent implements OnInit {
       const firestoreCodes = currentCodes.map(c => ({
         code: c.code,
         usageCount: c.usageCount,
-        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt)
+        createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
+        durationMonths: c.durationMonths
       }));
 
       await firestoreModule.setDoc(docRef, {
