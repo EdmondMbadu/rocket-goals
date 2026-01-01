@@ -307,14 +307,20 @@ export class AuthService {
   }
 
   private async fetchUserProfile(userId: string) {
-    const { firestore } = await this.ensureFirebase();
-    const firestoreModule = await import('firebase/firestore');
-    const docRef = firestoreModule.doc(firestore, 'userProfiles', userId);
-    const snapshot = await firestoreModule.getDoc(docRef);
-    if (!snapshot.exists()) {
+    try {
+      const { firestore } = await this.ensureFirebase();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'userProfiles', userId);
+      const snapshot = await firestoreModule.getDoc(docRef);
+      if (!snapshot.exists()) {
+        return null;
+      }
+      return snapshot.data() as UserProfile;
+    } catch (error) {
+      // Handle permission errors gracefully - user may exist in Auth but not have a profile yet
+      console.warn('Could not fetch user profile, will create one:', error);
       return null;
     }
-    return snapshot.data() as UserProfile;
   }
 
   private async findProfileByEmail(email: string) {
@@ -334,16 +340,22 @@ export class AuthService {
   }
 
   private async createOrUpdateUserProfile(userId: string, profile: UserProfile) {
-    const { firestore } = await this.ensureFirebase();
-    const firestoreModule = await import('firebase/firestore');
-    const docRef = firestoreModule.doc(firestore, 'userProfiles', userId);
-    const payload = {
-      ...profile,
-      id: userId,
-      userId,
-      createdAt: profile.createdAt || firestoreModule.serverTimestamp()
-    };
-    await firestoreModule.setDoc(docRef, payload, { merge: true });
+    try {
+      const { firestore } = await this.ensureFirebase();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'userProfiles', userId);
+      const payload = {
+        ...profile,
+        id: userId,
+        userId,
+        createdAt: profile.createdAt || firestoreModule.serverTimestamp()
+      };
+      await firestoreModule.setDoc(docRef, payload, { merge: true });
+    } catch (error) {
+      // Log but don't throw - allow user to continue even if profile save fails
+      // The profile will be created on next successful write
+      console.warn('Could not save user profile:', error);
+    }
   }
 
   private mapFirebaseError(error: any) {
