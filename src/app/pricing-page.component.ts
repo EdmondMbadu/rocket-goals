@@ -796,15 +796,31 @@ export class PricingPageComponent implements OnInit {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const moonshot = data['moonshot']?.toUpperCase() || 'NY2026MOONSHOT';
-        const interplanetary = data['interplanetary']?.toUpperCase() || 'NY2026INTERPLANETARY';
-        const galactic = data['galactic']?.toUpperCase() || 'NY2026GALACTIC';
-        
-        this.promoCodePlanMap.set({
-          [moonshot]: 'moonshot',
-          [interplanetary]: 'interplanetary',
-          [galactic]: 'galactic'
-        });
+        const result: Record<string, string> = {};
+
+        // Helper to extract codes from either array or legacy string format
+        const extractCodes = (tierData: unknown, tierName: string) => {
+          if (Array.isArray(tierData)) {
+            // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1}, ...]
+            tierData.forEach((item: { code?: string }) => {
+              if (item.code) {
+                result[item.code.toUpperCase()] = tierName;
+              }
+            });
+          } else if (typeof tierData === 'string' && tierData) {
+            // Legacy single code format
+            result[tierData.toUpperCase()] = tierName;
+          }
+        };
+
+        extractCodes(data['moonshot'], 'moonshot');
+        extractCodes(data['interplanetary'], 'interplanetary');
+        extractCodes(data['galactic'], 'galactic');
+
+        // Only update if we found at least one code
+        if (Object.keys(result).length > 0) {
+          this.promoCodePlanMap.set(result);
+        }
       }
     } catch (err) {
       console.error('Failed to load promo codes from Firestore, using defaults:', err);
