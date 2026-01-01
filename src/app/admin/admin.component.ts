@@ -11,11 +11,19 @@ import { ThemeService } from '../theme.service';
 
 type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests';
 
+type PromoCodeUser = {
+  userId: string;
+  name: string;
+  email: string;
+  redeemedAt: Date;
+};
+
 type PromoCode = {
   code: string;
   usageCount: number;
   createdAt: Date;
   durationMonths: number;
+  usedBy: PromoCodeUser[];
 };
 
 type DemoRequest = {
@@ -960,18 +968,29 @@ export class AdminComponent implements OnInit {
       const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
       const docSnap = await firestoreModule.getDoc(docRef);
 
+      const parseUsedBy = (usedByData: unknown): PromoCodeUser[] => {
+        if (!Array.isArray(usedByData)) return [];
+        return usedByData.map(user => ({
+          userId: user.userId || '',
+          name: user.name || 'Unknown',
+          email: user.email || '',
+          redeemedAt: user.redeemedAt?.toDate?.() || new Date(user.redeemedAt) || new Date()
+        }));
+      };
+
       const parseCodesArray = (data: unknown): PromoCode[] => {
         if (Array.isArray(data)) {
           return data.map(item => ({
             code: item.code || '',
             usageCount: item.usageCount || 0,
             createdAt: item.createdAt?.toDate?.() || new Date(item.createdAt) || new Date(),
-            durationMonths: item.durationMonths || 1
+            durationMonths: item.durationMonths || 1,
+            usedBy: parseUsedBy(item.usedBy)
           }));
         }
         // Handle legacy single code format
         if (typeof data === 'string' && data) {
-          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1 }];
+          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }];
         }
         return [];
       };
@@ -983,9 +1002,9 @@ export class AdminComponent implements OnInit {
         this.promoCodesGalactic.set(parseCodesArray(data['galactic']));
       } else {
         // Initialize with default values if document doesn't exist
-        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1 }]);
-        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1 }]);
-        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1 }]);
+        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }]);
+        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }]);
+        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [] }]);
       }
     } catch (err: any) {
       console.error('Failed to load promo codes:', err);
@@ -1046,7 +1065,8 @@ export class AdminComponent implements OnInit {
         code: newCode,
         usageCount: 0,
         createdAt: new Date(),
-        durationMonths: duration
+        durationMonths: duration,
+        usedBy: []
       };
 
       // Get current codes for the tier and add the new one

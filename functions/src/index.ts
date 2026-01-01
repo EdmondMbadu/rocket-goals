@@ -2598,7 +2598,14 @@ async function getPromoCodePlanMap(): Promise<Record<string, string>> {
 /**
  * Helper function to increment usage count for a promo code
  */
-async function incrementPromoCodeUsage(promoCode: string, tier: string): Promise<void> {
+type PromoCodeUser = {
+    userId: string;
+    name: string;
+    email: string;
+    redeemedAt: admin.firestore.Timestamp;
+};
+
+async function incrementPromoCodeUsage(promoCode: string, tier: string, userId: string, userName: string, userEmail: string): Promise<void> {
     try {
         const promoDocRef = admin.firestore()
             .collection('adminSettings')
@@ -2611,12 +2618,20 @@ async function incrementPromoCodeUsage(promoCode: string, tier: string): Promise
         const tierCodes = data?.[tier];
 
         if (Array.isArray(tierCodes)) {
-            // Find and update the code's usage count
-            const updatedCodes = tierCodes.map((item: { code?: string; usageCount?: number; createdAt?: unknown }) => {
+            // Find and update the code's usage count and add user to usedBy list
+            const updatedCodes = tierCodes.map((item: { code?: string; usageCount?: number; createdAt?: unknown; usedBy?: PromoCodeUser[] }) => {
                 if (item.code?.toUpperCase() === promoCode.toUpperCase()) {
+                    const usedBy = item.usedBy || [];
+                    usedBy.push({
+                        userId,
+                        name: userName,
+                        email: userEmail,
+                        redeemedAt: admin.firestore.Timestamp.now()
+                    });
                     return {
                         ...item,
-                        usageCount: (item.usageCount || 0) + 1
+                        usageCount: (item.usageCount || 0) + 1,
+                        usedBy
                     };
                 }
                 return item;
@@ -2627,7 +2642,7 @@ async function incrementPromoCodeUsage(promoCode: string, tier: string): Promise
                 updatedAt: admin.firestore.Timestamp.now()
             });
 
-            console.log(`📊 Incremented usage count for promo code ${promoCode} in tier ${tier}`);
+            console.log(`📊 Incremented usage count for promo code ${promoCode} in tier ${tier} by user ${userName} (${userEmail})`);
         }
     } catch (err) {
         console.error('Failed to increment promo code usage:', err);
@@ -3097,10 +3112,14 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
         promoSubscription: true // Flag to indicate this is a promo subscription (no Stripe)
     });
 
-    // Increment usage count for the promo code
-    await incrementPromoCodeUsage(promoCode, plan);
+    // Get user name and email for tracking
+    const userName = `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Unknown';
+    const userEmail = userData?.email || context.auth.token.email || 'Unknown';
 
-    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} - Plan: ${plan}, Duration: ${durationMonths} months, Expires: ${expiresAt.toISOString()}`);
+    // Increment usage count for the promo code and track the user
+    await incrementPromoCodeUsage(promoCode, plan, userId, userName, userEmail);
+
+    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} (${userName}) - Plan: ${plan}, Duration: ${durationMonths} months, Expires: ${expiresAt.toISOString()}`);
 
     return {
         success: true,

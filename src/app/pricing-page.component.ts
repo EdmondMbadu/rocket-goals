@@ -363,6 +363,85 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
         </div>
       </div>
       }
+
+      <!-- Success Modal -->
+      @if (showSuccessModal() && successModalData()) {
+      <div class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in" (click)="closeSuccessModal()">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl border border-black/10 dark:border-white/10 relative" (click)="$event.stopPropagation()">
+          <!-- Close Button -->
+          <button (click)="closeSuccessModal()" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+            <svg class="w-5 h-5 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div class="text-center space-y-6">
+            <!-- Success Icon -->
+            <div class="flex justify-center">
+              <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Thank You Message -->
+            <div>
+              <h3 class="text-3xl font-black text-black dark:text-white mb-2">Welcome Aboard!</h3>
+              <p class="text-lg text-black/60 dark:text-slate-300">Your promo code has been successfully redeemed</p>
+            </div>
+
+            <!-- Current Plan Badge -->
+            <div class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl">
+              <span class="text-3xl">🚀</span>
+              <div class="text-left">
+                <p class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Your Plan</p>
+                <p class="text-xl font-black text-red-600 dark:text-red-400">{{ formatPlanName(successModalData()!.plan) }}</p>
+              </div>
+            </div>
+
+            <!-- Subscription Details -->
+            <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-slate-400">Duration</span>
+                <span class="font-semibold text-black dark:text-white">{{ successModalData()!.durationMonths }} month{{ successModalData()!.durationMonths !== 1 ? 's' : '' }}</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-slate-400">Access Until</span>
+                <span class="font-semibold text-black dark:text-white">{{ formatExpiryDate(successModalData()!.expiresAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Features You Now Have Access To -->
+            <div class="text-left">
+              <p class="text-sm font-bold text-gray-700 dark:text-slate-200 mb-3">You now have access to:</p>
+              <ul class="space-y-2">
+                @for (feature of getPlanFeatures(successModalData()!.plan); track feature) {
+                <li class="flex items-start gap-2 text-sm text-gray-600 dark:text-slate-300">
+                  <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>{{ feature }}</span>
+                </li>
+                }
+              </ul>
+            </div>
+
+            <!-- Action Button -->
+            <button (click)="startExploring()" class="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all duration-200 flex items-center justify-center gap-2">
+              <span>Start Exploring</span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+
+            <p class="text-xs text-gray-400 dark:text-slate-500">
+              You can manage your subscription anytime from your profile
+            </p>
+          </div>
+        </div>
+      </div>
+      }
     </div>
   `,
   styles: [`
@@ -754,6 +833,14 @@ export class PricingPageComponent implements OnInit {
   readonly promoNotice = signal<string | null>(null);
   protected readonly stripePrices = stripePrices;
 
+  // Success modal state
+  protected readonly showSuccessModal = signal(false);
+  protected readonly successModalData = signal<{
+    plan: string;
+    durationMonths: number;
+    expiresAt: string;
+  } | null>(null);
+
   // Plan hierarchy for upgrade logic
   private readonly planHierarchy: Record<string, number> = {
     'free': 0,
@@ -966,15 +1053,19 @@ export class PricingPageComponent implements OnInit {
       const redeemPromoCodeFn = functionsModule.httpsCallable(functions, 'redeemPromoCode');
 
       const result = await redeemPromoCodeFn({ promoCode });
-      const data = result.data as { success: boolean; plan: string; expiresAt: string; message: string };
+      const data = result.data as { success: boolean; plan: string; durationMonths: number; expiresAt: string; message: string };
 
       if (data.success) {
         // Refresh the user profile to get the updated subscription
         await this.authService.refreshProfile();
-        this.promoNotice.set(data.message);
         this.promoCode.set('');
-        // Navigate to goals page with success message
-        this.router.navigate(['/goals'], { queryParams: { promo: 'success' } });
+        // Show success modal instead of navigating
+        this.successModalData.set({
+          plan: data.plan,
+          durationMonths: data.durationMonths,
+          expiresAt: data.expiresAt
+        });
+        this.showSuccessModal.set(true);
       }
     } catch (err: any) {
       console.error('Error redeeming promo code:', err);
@@ -1057,5 +1148,49 @@ export class PricingPageComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  closeSuccessModal() {
+    this.showSuccessModal.set(false);
+    this.successModalData.set(null);
+  }
+
+  startExploring() {
+    this.closeSuccessModal();
+    this.router.navigate(['/goals']);
+  }
+
+  formatPlanName(plan: string): string {
+    return plan.charAt(0).toUpperCase() + plan.slice(1);
+  }
+
+  formatExpiryDate(isoDate: string): string {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  getPlanFeatures(plan: string): string[] {
+    const features: Record<string, string[]> = {
+      moonshot: [
+        'Custom reminders + AI encouragement',
+        'Weekly PDF + bottleneck nudges',
+        'Dynamic micro-wins + ROCKET Blast'
+      ],
+      interplanetary: [
+        'App + Email + SMS reminders',
+        'Personality-coached, predictive nudges',
+        'Deep weekly report + ROCKET Blast Pro'
+      ],
+      galactic: [
+        'Dedicated AI coaching sessions',
+        'Unlimited goals + team features',
+        'Priority support + custom integrations'
+      ]
+    };
+    return features[plan] || [];
   }
 }
