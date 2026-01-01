@@ -1471,7 +1471,7 @@ export const sendTestSMS = functions.runWith({
  * Helper function to generate goal reminder email content
  */
 function generateGoalReminderEmail(goalTitle: string, participantName: string, participantEmail: string, goalId: string) {
-    const loginUrl = 'https://rocket-goals.web.app/goals';
+    const loginUrl = 'https://www.rocketgoals.com/goals';
     const subject = `🚀 Time to update your progress on: ${goalTitle}`;
 
     const text = `Hi ${participantName},
@@ -1480,7 +1480,7 @@ It's time to check in on your Rocket Goal!
 
 Goal: ${goalTitle}
 
-Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
 
 Visit: ${loginUrl}
 
@@ -1507,7 +1507,7 @@ Keep pushing forward! 🚀
                     </p>
                 </div>
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                    Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+                    Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
                 </p>
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="${loginUrl}" 
@@ -1867,7 +1867,7 @@ export const sendVerificationEmail = functions.runWith({
         sgMail.setApiKey(apiKey);
 
         const actionCodeSettings = {
-            url: 'https://rocket-goals.web.app/login?verified=1',
+            url: 'https://www.rocketgoals.com/login?verified=1',
             handleCodeInApp: false
         };
 
@@ -2003,7 +2003,7 @@ export const sendGoalCreatedEmail = functions.runWith({
             to: userEmail,
             from: 'missioncontrol@rocketgoals.com',
             subject: `🚀 Your RocketGoal "${goalTitle}" has launched!`,
-            text: `Hi ${userName},\n\nCongratulations! You've just created a new RocketGoal: "${goalTitle}"\n\nYour mission timeframe: ${timeframeText}\n\nYour AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!\n\nView your goal: https://rocket-goals.web.app/rocketgoal/${goalId}\n\nRemember: Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!\n\nTo your success,\nThe Rocket Goals Team`,
+            text: `Hi ${userName},\n\nCongratulations! You've just created a new RocketGoal: "${goalTitle}"\n\nYour mission timeframe: ${timeframeText}\n\nYour AI-powered daily plan is ready and waiting for you. Visit your RocketGoal page to see your personalized action steps and start making progress today!\n\nView your goal: https://www.rocketgoals.com/rocketgoal/${goalId}\n\nRemember: Every great achievement starts with a single step. You've already taken that step by committing to your goal. Now let's make it happen!\n\nTo your success,\nThe Rocket Goals Team`,
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0;">
                     <!-- Header -->
@@ -2045,7 +2045,7 @@ export const sendGoalCreatedEmail = functions.runWith({
 
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="https://rocket-goals.web.app/rocketgoal/${goalId}"
+                            <a href="https://www.rocketgoals.com/rocketgoal/${goalId}"
                                style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);">
                                 View Your RocketGoal →
                             </a>
@@ -2164,14 +2164,14 @@ export const sendFanInviteEmail = functions.runWith({
         sgMail.setApiKey(apiKey);
 
         const displayName = fanName?.trim() || 'there';
-        const goalUrl = `https://rocket-goals.web.app/rocketgoal/${goalId}`;
+        const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}`;
 
         // Create email message
         const msg = {
             to: fanEmail,
             from: 'missioncontrol@rocketgoals.com',
             subject: `🚀 ${ownerName} invited you to support their RocketGoal!`,
-            text: `Hi ${displayName},\n\n${ownerName} has invited you to be a fan and supporter of their RocketGoal: "${goalTitle}"\n\nAs a fan, you can:\n- React with emojis to show your support\n- Leave encouraging comments\n- Cheer them on their journey\n\nView the goal and join the support team: ${goalUrl}\n\nIf you don't have an account yet, you can sign up at https://rocket-goals.web.app to join and start supporting!\n\nTo your success,\nThe Rocket Goals Team`,
+            text: `Hi ${displayName},\n\n${ownerName} has invited you to be a fan and supporter of their RocketGoal: "${goalTitle}"\n\nAs a fan, you can:\n- React with emojis to show your support\n- Leave encouraging comments\n- Cheer them on their journey\n\nView the goal and join the support team: ${goalUrl}\n\nIf you don't have an account yet, you can sign up at https://www.rocketgoals.com to join and start supporting!\n\nTo your success,\nThe Rocket Goals Team`,
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
                     <!-- Header -->
@@ -2218,8 +2218,8 @@ export const sendFanInviteEmail = functions.runWith({
                         </div>
 
                         <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
-                            <strong>New to Rocket Goals?</strong> No problem! You can sign up at 
-                            <a href="https://rocket-goals.web.app" style="color: #dc2626; text-decoration: none;">rocket-goals.web.app</a> 
+                            <strong>New to Rocket Goals?</strong> No problem! You can sign up at
+                            <a href="https://www.rocketgoals.com" style="color: #dc2626; text-decoration: none;">www.rocketgoals.com</a>
                             to join and start supporting.
                         </p>
                     </div>
@@ -2678,8 +2678,8 @@ export const createCheckoutSession = functions.runWith({
     }
 
     const priceId = data.priceId;
-    const successUrl = data.successUrl || 'https://rocket-goals.web.app/goals?payment=success';
-    const cancelUrl = data.cancelUrl || 'https://rocket-goals.web.app/pricing?payment=cancelled';
+    const successUrl = data.successUrl || 'https://www.rocketgoals.com/goals?payment=success';
+    const cancelUrl = data.cancelUrl || 'https://www.rocketgoals.com/pricing?payment=cancelled';
     const promoCode = data.promoCode?.trim().toUpperCase();
 
     if (!priceId) {
@@ -2831,7 +2831,7 @@ export const createBillingPortalSession = functions.runWith({
         );
     }
 
-    const returnUrl = data.returnUrl || 'https://rocket-goals.web.app/profile';
+    const returnUrl = data.returnUrl || 'https://www.rocketgoals.com/profile';
 
     try {
         const stripeKey = stripeSecretKey.value();
@@ -3501,9 +3501,9 @@ It's time to check in on your Rocket Goal!
 
 Goal: {{goalTitle}}
 
-Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
 
-Visit: https://rocket-goals.web.app/goals
+Visit: https://www.rocketgoals.com/goals
 
 Keep pushing forward! 🚀
 
@@ -3528,10 +3528,10 @@ Keep pushing forward! 🚀
                     </p>
                 </div>
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                    Log in to Rocket Goals to mark what you've accomplished and keep your momentum going.
+                    Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
                 </p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://rocket-goals.web.app/goals"
+                    <a href="https://www.rocketgoals.com/goals"
                        style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                         Update your progress
                     </a>
