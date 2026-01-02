@@ -1471,7 +1471,7 @@ export const sendTestSMS = functions.runWith({
  * Helper function to generate goal reminder email content
  */
 function generateGoalReminderEmail(goalTitle: string, participantName: string, participantEmail: string, goalId: string) {
-    const loginUrl = 'https://www.rocketgoals.com/goals';
+    const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}`;
     const subject = `🚀 Time to update your progress on: ${goalTitle}`;
 
     const text = `Hi ${participantName},
@@ -1482,7 +1482,7 @@ Goal: ${goalTitle}
 
 Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
 
-Visit: ${loginUrl}
+Visit: ${goalUrl}
 
 Keep pushing forward! 🚀
 
@@ -1510,7 +1510,7 @@ Keep pushing forward! 🚀
                     Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
                 </p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="${loginUrl}" 
+                    <a href="${goalUrl}"
                        style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                         Update your progress
                     </a>
@@ -3503,7 +3503,7 @@ Goal: {{goalTitle}}
 
 Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
 
-Visit: https://www.rocketgoals.com/goals
+Visit: {{goalUrl}}
 
 Keep pushing forward! 🚀
 
@@ -3531,7 +3531,7 @@ Keep pushing forward! 🚀
                     Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
                 </p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://www.rocketgoals.com/goals"
+                    <a href="{{goalUrl}}"
                        style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                         Update your progress
                     </a>
@@ -3552,10 +3552,14 @@ Keep pushing forward! 🚀
 /**
  * Replace template placeholders with actual values
  */
-function applyEmailTemplate(template: string, goalTitle: string, participantName: string): string {
+function applyEmailTemplate(template: string, goalTitle: string, participantName: string, goalUrl: string): string {
     return template
         .replace(/\{\{goalTitle\}\}/g, goalTitle)
-        .replace(/\{\{participantName\}\}/g, participantName);
+        .replace(/\{\{participantName\}\}/g, participantName)
+        .replace(/\{\{goalUrl\}\}/g, goalUrl)
+        // Replace old hardcoded URLs with the specific goal URL (for existing templates in Firestore)
+        .replace(/https:\/\/rocket-goals\.web\.app\/goals/g, goalUrl)
+        .replace(/https:\/\/www\.rocketgoals\.com\/goals/g, goalUrl);
 }
 
 /**
@@ -3848,10 +3852,13 @@ export const processScheduledReminders = functions.runWith({
                                     ? `${participant.firstName} ${participant.lastName || ''}`.trim()
                                     : participant.email.split('@')[0];
 
+                                // Build the specific goal URL
+                                const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}`;
+
                                 // Apply template
-                                const subject = applyEmailTemplate(reminder.emailSubject, goalTitle, participantName);
-                                const text = applyEmailTemplate(reminder.emailBodyText, goalTitle, participantName);
-                                const html = applyEmailTemplate(reminder.emailBodyHtml, goalTitle, participantName);
+                                const subject = applyEmailTemplate(reminder.emailSubject, goalTitle, participantName, goalUrl);
+                                const text = applyEmailTemplate(reminder.emailBodyText, goalTitle, participantName, goalUrl);
+                                const html = applyEmailTemplate(reminder.emailBodyHtml, goalTitle, participantName, goalUrl);
 
                                 const msg = {
                                     to: participant.email,
