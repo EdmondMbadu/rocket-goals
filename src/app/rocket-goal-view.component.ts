@@ -103,6 +103,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   savingTask = signal(false);
   expandedTimelineTaskId = signal<string | null>(null);
 
+  // Fan Join Modal state
+  showFanJoinModal = signal(false);
+  fanJoinNotificationPreference = signal<'occasional' | 'frequent'>('occasional');
+  joiningFanbase = signal(false);
+  fanJoinError = signal<string | null>(null);
+  showFanWelcomePrompt = signal(false);
+  private currentUserFan = signal<Fan | null>(null);
+
   async ngOnInit() {
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
@@ -122,7 +130,13 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
     const goalId = this.route.snapshot.paramMap.get('id');
     if (goalId) {
-      this.loadGoal(goalId);
+      await this.loadGoal(goalId);
+
+      // Check for pending fan join from sessionStorage (after login redirect)
+      await this.checkPendingFanJoin();
+
+      // Check if this is a fan invite link
+      await this.checkFanInviteFlow();
     } else {
       this.error.set('Goal ID not found');
       this.loading.set(false);
@@ -430,7 +444,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   async copyLink() {
-    const url = window.location.href;
+    const url = this.getGoalUrl();
     try {
       await navigator.clipboard.writeText(url);
       this.copyLinkSuccess.set(true);
@@ -447,9 +461,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   getGoalUrl(): string {
     const goal = this.goal();
     if (goal?.id) {
-      // Build absolute URL with the goal ID
+      // Build absolute URL with the goal ID and fan invite parameter
       const baseUrl = window.location.origin;
-      return `${baseUrl}/rocketgoal/${goal.id}`;
+      return `${baseUrl}/rocketgoal/${goal.id}?fan=invite`;
     }
     return window.location.href;
   }
@@ -1022,6 +1036,158 @@ ${url}`;
       return 'Just now';
     }
     return 'Just now';
+  }
+
+  // Fan Join Modal Methods
+  async checkFanInviteFlow(): Promise<void> {
+    const fanParam = this.route.snapshot.queryParamMap.get('fan');
+    if (fanParam !== 'invite') return;
+
+    const goal = this.goal();
+    if (!goal) return;
+
+    // Don't show modal to goal owner
+    if (this.isGoalOwner()) return;
+
+    // Check if user is already an accepted fan
+    const profile = this.authService.profile();
+    if (profile?.email) {
+      const existingFan = await this.fansService.getFanByEmail(goal.id, profile.email);
+      this.currentUserFan.set(existingFan);
+
+      // If already accepted, don't show modal
+      if (existingFan?.status === 'accepted') {
+        return;
+      }
+    }
+
+    // Show the join modal
+    this.showFanJoinModal.set(true);
+  }
+
+  async checkPendingFanJoin(): Promise<void> {
+    const pendingJoinData = sessionStorage.getItem('pendingFanJoin');
+    if (!pendingJoinData) return;
+
+    const profile = this.authService.profile();
+    if (!profile?.email || !profile?.userId) return;
+
+    const goal = this.goal();
+    if (!goal) return;
+
+    try {
+      const { goalId, notificationPreference } = JSON.parse(pendingJoinData);
+
+      // Verify this is the same goal
+      if (goalId !== goal.id) return;
+
+      // Complete the fan join
+      const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+      await this.fansService.createFanFromVisitor(
+        goal.id,
+        profile.email,
+        fullName,
+        profile.userId,
+        notificationPreference
+      );
+
+      // Clear pending data
+      sessionStorage.removeItem('pendingFanJoin');
+
+      // Reload fans and show welcome
+      await this.loadFans(goal.id);
+      this.showFanWelcomePrompt.set(true);
+      this.activePrimaryTab.set('fans');
+
+      // Scroll to fans section after a brief delay
+      setTimeout(() => this.scrollFansIntoView(), 300);
+
+      // Hide welcome prompt after 8 seconds
+      setTimeout(() => this.showFanWelcomePrompt.set(false), 8000);
+    } catch (error) {
+      console.error('Error completing pending fan join:', error);
+      sessionStorage.removeItem('pendingFanJoin');
+    }
+  }
+
+  closeFanJoinModal(): void {
+    this.showFanJoinModal.set(false);
+    this.fanJoinError.set(null);
+  }
+
+  setFanNotificationPreference(preference: 'occasional' | 'frequent'): void {
+    this.fanJoinNotificationPreference.set(preference);
+  }
+
+  async joinFanbase(): Promise<void> {
+    const goal = this.goal();
+    if (!goal) return;
+
+    const profile = this.authService.profile();
+    const preference = this.fanJoinNotificationPreference();
+
+    // If not logged in, save to sessionStorage and redirect to login
+    if (!profile?.email || !profile?.userId) {
+      sessionStorage.setItem('pendingFanJoin', JSON.stringify({
+        goalId: goal.id,
+        notificationPreference: preference
+      }));
+
+      const currentUrl = `/rocketgoal/${goal.id}?fan=invite`;
+      this.router.navigate(['/login'], { queryParams: { redirectTo: currentUrl } });
+      return;
+    }
+
+    this.joiningFanbase.set(true);
+    this.fanJoinError.set(null);
+
+    try {
+      const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+      const existingFan = this.currentUserFan();
+
+      if (existingFan) {
+        // Update existing pending fan to accepted
+        await this.fansService.acceptFanInvite(
+          goal.id,
+          existingFan.id,
+          preference,
+          profile.userId,
+          fullName
+        );
+      } else {
+        // Create new fan record
+        await this.fansService.createFanFromVisitor(
+          goal.id,
+          profile.email,
+          fullName,
+          profile.userId,
+          preference
+        );
+      }
+
+      // Close modal and show success
+      this.showFanJoinModal.set(false);
+      await this.loadFans(goal.id);
+
+      // Show welcome prompt and switch to fans tab
+      this.showFanWelcomePrompt.set(true);
+      this.activePrimaryTab.set('fans');
+
+      // Scroll to fans section
+      setTimeout(() => this.scrollFansIntoView(), 300);
+
+      // Hide welcome prompt after 8 seconds
+      setTimeout(() => this.showFanWelcomePrompt.set(false), 8000);
+    } catch (error: any) {
+      console.error('Error joining fanbase:', error);
+      this.fanJoinError.set(error?.message || 'Unable to join fanbase. Please try again.');
+    } finally {
+      this.joiningFanbase.set(false);
+    }
+  }
+
+  dismissFanWelcomePrompt(): void {
+    this.showFanWelcomePrompt.set(false);
   }
 
   // Action Items Methods

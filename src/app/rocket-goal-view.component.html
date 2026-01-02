@@ -890,6 +890,23 @@
                     </div>
                     <span class="card-icon">📣</span>
                   </div>
+
+                  <!-- Welcome Prompt for New Fans -->
+                  @if (showFanWelcomePrompt()) {
+                  <div class="fan-welcome-prompt" [class.dark-mode]="isDarkMode()" [class.light-mode]="!isDarkMode()">
+                    <span class="fan-welcome-icon">🎉</span>
+                    <div class="fan-welcome-content">
+                      <div class="fan-welcome-title">Welcome to the crew!</div>
+                      <p class="fan-welcome-text">Leave an encouraging message for {{ getGoalOwnerName() }}</p>
+                    </div>
+                    <button type="button" class="fan-welcome-dismiss" (click)="dismissFanWelcomePrompt()">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  }
+
                   <div class="comment-form">
                     <textarea rows="3"
                       placeholder="Celebrate the latest win or drop a reminder..."
@@ -1316,6 +1333,118 @@
       <h3 class="text-xl font-bold text-white mb-2" style="font-family: 'Exo 2', sans-serif;">Your Future Self</h3>
       <p class="text-gray-300 text-sm">This AI-generated image visualizes you achieving your goal: "{{ getGoalTitleDisplay() }}"</p>
       <p class="text-red-400 text-xs mt-3 italic">"This is achievable. This is me — soon."</p>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Fan Join Modal -->
+@if (showFanJoinModal()) {
+<div class="fan-join-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="closeFanJoinModal()">
+  <div class="fan-join-modal" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button class="fan-join-modal-close" (click)="closeFanJoinModal()">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Modal Content -->
+    <div class="fan-join-content">
+      <!-- Header with rocket icon -->
+      <div class="fan-join-header">
+        <div class="fan-join-icon">
+          <span class="fan-join-rocket">🚀</span>
+        </div>
+        <h2 class="fan-join-title">Join {{ getGoalOwnerName() }}'s Crew</h2>
+        <p class="fan-join-subtitle">Support them on their journey to achieve their goal</p>
+      </div>
+
+      <!-- Goal Preview -->
+      <div class="fan-join-goal-preview">
+        <div class="goal-preview-label">Their Goal</div>
+        <p class="goal-preview-text">"{{ getGoalTitleDisplay() }}"</p>
+      </div>
+
+      <!-- Notification Preference -->
+      <div class="fan-join-preference">
+        <h3 class="preference-title">How often do you want updates?</h3>
+        <div class="preference-options">
+          <button
+            type="button"
+            class="preference-option"
+            [class.selected]="fanJoinNotificationPreference() === 'occasional'"
+            (click)="setFanNotificationPreference('occasional')">
+            <div class="preference-icon">📬</div>
+            <div class="preference-details">
+              <span class="preference-name">Occasional Updates</span>
+              <span class="preference-desc">Key milestones & achievements</span>
+            </div>
+            @if (fanJoinNotificationPreference() === 'occasional') {
+            <svg class="preference-check w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            }
+          </button>
+          <button
+            type="button"
+            class="preference-option"
+            [class.selected]="fanJoinNotificationPreference() === 'frequent'"
+            (click)="setFanNotificationPreference('frequent')">
+            <div class="preference-icon">🔔</div>
+            <div class="preference-details">
+              <span class="preference-name">Frequent Updates</span>
+              <span class="preference-desc">Daily progress & activity</span>
+            </div>
+            @if (fanJoinNotificationPreference() === 'frequent') {
+            <svg class="preference-check w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      @if (fanJoinError()) {
+      <div class="fan-join-error">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span>{{ fanJoinError() }}</span>
+      </div>
+      }
+
+      <!-- Action Buttons -->
+      <div class="fan-join-actions">
+        <button
+          type="button"
+          class="fan-join-btn primary"
+          [disabled]="joiningFanbase()"
+          (click)="joinFanbase()">
+          @if (joiningFanbase()) {
+            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <span>Joining...</span>
+          } @else {
+            <span>🎉</span>
+            <span>Join the Crew</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="fan-join-btn secondary"
+          [disabled]="joiningFanbase()"
+          (click)="closeFanJoinModal()">
+          Maybe Later
+        </button>
+      </div>
+
+      <!-- Login hint for non-logged in users -->
+      @if (!authService.profile()) {
+      <p class="fan-join-login-hint">
+        You'll be asked to sign in to complete joining
+      </p>
+      }
     </div>
   </div>
 </div>

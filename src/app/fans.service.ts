@@ -11,6 +11,7 @@ export interface Fan {
   status: 'pending' | 'accepted';
   invitedAt: unknown;
   acceptedAt?: unknown;
+  notificationPreference?: 'occasional' | 'frequent';
 }
 
 export interface FanComment {
@@ -293,5 +294,109 @@ export class FansService {
       id: doc.id,
       ...doc.data()
     } as Fan));
+  }
+
+  // Get a specific fan by email for a goal
+  async getFanByEmail(goalId: string, email: string): Promise<Fan | null> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'fans');
+
+    const q = firestoreModule.query(
+      collectionRef,
+      firestoreModule.where('email', '==', email.toLowerCase())
+    );
+    const snapshot = await firestoreModule.getDocs(q);
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    const doc = snapshot.docs[0];
+    return {
+      id: doc.id,
+      ...doc.data()
+    } as Fan;
+  }
+
+  // Accept a fan invite (update status and set notification preference)
+  async acceptFanInvite(
+    goalId: string,
+    fanId: string,
+    notificationPreference: 'occasional' | 'frequent',
+    userId?: string,
+    name?: string
+  ): Promise<void> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId, 'fans', fanId);
+
+    const updateData: Record<string, unknown> = {
+      status: 'accepted',
+      notificationPreference,
+      acceptedAt: firestoreModule.serverTimestamp()
+    };
+
+    if (userId) {
+      updateData['userId'] = userId;
+    }
+
+    if (name && name.trim()) {
+      updateData['name'] = name.trim();
+    }
+
+    await firestoreModule.updateDoc(docRef, updateData);
+  }
+
+  // Create a new fan directly (for visitors who weren't previously invited)
+  async createFanFromVisitor(
+    goalId: string,
+    email: string,
+    name: string,
+    userId: string,
+    notificationPreference: 'occasional' | 'frequent'
+  ): Promise<string> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'fans');
+
+    // Check if already a fan
+    const existingFan = await this.getFanByEmail(goalId, email);
+    if (existingFan) {
+      // Update existing fan record instead
+      await this.acceptFanInvite(goalId, existingFan.id, notificationPreference, userId, name);
+      return existingFan.id;
+    }
+
+    const fanData: Record<string, unknown> = {
+      goalId,
+      email: email.toLowerCase(),
+      userId,
+      status: 'accepted',
+      notificationPreference,
+      invitedAt: firestoreModule.serverTimestamp(),
+      acceptedAt: firestoreModule.serverTimestamp()
+    };
+
+    if (name && name.trim()) {
+      fanData['name'] = name.trim();
+    }
+
+    const docRef = await firestoreModule.addDoc(collectionRef, fanData);
+    await firestoreModule.updateDoc(docRef, { id: docRef.id });
+    return docRef.id;
+  }
+
+  // Update notification preference for an existing fan
+  async updateFanPreference(
+    goalId: string,
+    fanId: string,
+    notificationPreference: 'occasional' | 'frequent'
+  ): Promise<void> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId, 'fans', fanId);
+
+    await firestoreModule.updateDoc(docRef, { notificationPreference });
   }
 }

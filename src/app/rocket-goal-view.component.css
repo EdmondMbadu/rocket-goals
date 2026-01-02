@@ -5074,3 +5074,525 @@
     height: 100%;
   }
 }
+
+/* ===== FAN JOIN MODAL ===== */
+.fan-join-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fan-join-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dark-mode .fan-join-modal {
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.98), rgba(15, 15, 25, 0.99));
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(220, 38, 38, 0.15);
+}
+
+.light-mode .fan-join-modal {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.99));
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 0 40px rgba(220, 38, 38, 0.08);
+}
+
+.fan-join-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.dark-mode .fan-join-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dark-mode .fan-join-modal-close:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+.light-mode .fan-join-modal-close {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.light-mode .fan-join-modal-close:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.fan-join-content {
+  padding: 2rem;
+}
+
+/* Header */
+.fan-join-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.fan-join-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.dark-mode .fan-join-icon {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.2), rgba(220, 38, 38, 0.15));
+  border: 2px solid rgba(248, 113, 113, 0.3);
+}
+
+.light-mode .fan-join-icon {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(185, 28, 28, 0.08));
+  border: 2px solid rgba(220, 38, 38, 0.2);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.fan-join-rocket {
+  font-size: 2.5rem;
+}
+
+.fan-join-title {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.dark-mode .fan-join-title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.light-mode .fan-join-title {
+  color: rgba(15, 23, 42, 0.95);
+}
+
+.fan-join-subtitle {
+  font-size: 0.9rem;
+}
+
+.dark-mode .fan-join-subtitle {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.light-mode .fan-join-subtitle {
+  color: rgba(100, 116, 139, 0.9);
+}
+
+/* Goal Preview */
+.fan-join-goal-preview {
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.dark-mode .fan-join-goal-preview {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.08), rgba(220, 38, 38, 0.05));
+  border: 1px solid rgba(248, 113, 113, 0.15);
+}
+
+.light-mode .fan-join-goal-preview {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.06), rgba(185, 28, 28, 0.03));
+  border: 1px solid rgba(220, 38, 38, 0.1);
+}
+
+.goal-preview-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.dark-mode .goal-preview-label {
+  color: rgba(248, 113, 113, 0.8);
+}
+
+.light-mode .goal-preview-label {
+  color: rgba(220, 38, 38, 0.75);
+}
+
+.goal-preview-text {
+  font-size: 1rem;
+  font-weight: 600;
+  font-style: italic;
+  margin: 0;
+}
+
+.dark-mode .goal-preview-text {
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.light-mode .goal-preview-text {
+  color: rgba(30, 41, 59, 0.95);
+}
+
+/* Notification Preference */
+.fan-join-preference {
+  margin-bottom: 1.5rem;
+}
+
+.preference-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.dark-mode .preference-title {
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.light-mode .preference-title {
+  color: rgba(71, 85, 105, 0.9);
+}
+
+.preference-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.preference-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.dark-mode .preference-option {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .preference-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.dark-mode .preference-option.selected {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.12), rgba(220, 38, 38, 0.08));
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.light-mode .preference-option {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .preference-option:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.light-mode .preference-option.selected {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(185, 28, 28, 0.05));
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.preference-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.preference-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.preference-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dark-mode .preference-name {
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.light-mode .preference-name {
+  color: rgba(30, 41, 59, 0.95);
+}
+
+.preference-desc {
+  font-size: 0.75rem;
+}
+
+.dark-mode .preference-desc {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.light-mode .preference-desc {
+  color: rgba(100, 116, 139, 0.8);
+}
+
+.preference-check {
+  flex-shrink: 0;
+}
+
+.dark-mode .preference-check {
+  color: #f87171;
+}
+
+.light-mode .preference-check {
+  color: #dc2626;
+}
+
+/* Error Message */
+.fan-join-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.dark-mode .fan-join-error {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.light-mode .fan-join-error {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+/* Action Buttons */
+.fan-join-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fan-join-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.fan-join-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fan-join-btn.primary {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.fan-join-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f87171, #ef4444);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+  transform: translateY(-1px);
+}
+
+.fan-join-btn.secondary {
+  background: transparent;
+  font-weight: 500;
+}
+
+.dark-mode .fan-join-btn.secondary {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.dark-mode .fan-join-btn.secondary:hover:not(:disabled) {
+  color: rgba(226, 232, 240, 1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.light-mode .fan-join-btn.secondary {
+  color: rgba(100, 116, 139, 0.9);
+}
+
+.light-mode .fan-join-btn.secondary:hover:not(:disabled) {
+  color: rgba(30, 41, 59, 1);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Login Hint */
+.fan-join-login-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.dark-mode .fan-join-login-hint {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.light-mode .fan-join-login-hint {
+  color: rgba(100, 116, 139, 0.7);
+}
+
+/* ===== FAN WELCOME PROMPT ===== */
+.fan-welcome-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  animation: slideIn 0.4s ease-out, glow 2s ease-in-out infinite;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(220, 38, 38, 0.35); }
+}
+
+.dark-mode .fan-welcome-prompt {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.15), rgba(220, 38, 38, 0.1));
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.light-mode .fan-welcome-prompt {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(185, 28, 28, 0.06));
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.fan-welcome-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.fan-welcome-content {
+  flex: 1;
+}
+
+.fan-welcome-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.dark-mode .fan-welcome-title {
+  color: #f87171;
+}
+
+.light-mode .fan-welcome-title {
+  color: #dc2626;
+}
+
+.fan-welcome-text {
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.dark-mode .fan-welcome-text {
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.light-mode .fan-welcome-text {
+  color: rgba(71, 85, 105, 0.9);
+}
+
+.fan-welcome-dismiss {
+  padding: 0.35rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .fan-welcome-dismiss {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dark-mode .fan-welcome-dismiss:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.light-mode .fan-welcome-dismiss {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.light-mode .fan-welcome-dismiss:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.7);
+}
