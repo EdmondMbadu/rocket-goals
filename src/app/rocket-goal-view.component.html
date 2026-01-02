@@ -208,9 +208,74 @@
       <!-- Two Column Layout: AI (Left) + Mission Info (Right) -->
       <div class="dashboard-grid gap-5 md:gap-6" style="min-height: calc(100vh - 140px);">
         
-        <!-- LEFT COLUMN: AI Co-Pilot (Fixed width on desktop) -->
+        <!-- LEFT COLUMN: AI Co-Pilot (for owner) or Launch Your Goal (for fans) -->
         <div class="right-column flex flex-col">
-          <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
+          @if (isGoalOwner()) {
+            <!-- Owner sees the AI Co-Pilot -->
+            <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
+          } @else {
+            <!-- Fans/Visitors see Launch Your Goal prompt -->
+            <div class="fan-launch-goal-card hud-card shimmer flex-1 flex flex-col p-6 relative overflow-hidden">
+              <div class="scanline"></div>
+
+              <!-- Header -->
+              <div class="fan-launch-header">
+                <div class="fan-launch-icon">
+                  <span class="launch-rocket">🚀</span>
+                </div>
+                <h2 class="fan-launch-title">Ready to Launch Your Own Goal?</h2>
+                <p class="fan-launch-subtitle">You're supporting {{ getGoalOwnerName() }}'s journey. Now it's time to start yours!</p>
+              </div>
+
+              <!-- Benefits -->
+              <div class="fan-launch-benefits">
+                <div class="benefit-item">
+                  <span class="benefit-icon">🎯</span>
+                  <div class="benefit-text">
+                    <span class="benefit-title">Set Your Mission</span>
+                    <span class="benefit-desc">Define a goal that matters to you</span>
+                  </div>
+                </div>
+                <div class="benefit-item">
+                  <span class="benefit-icon">🤖</span>
+                  <div class="benefit-text">
+                    <span class="benefit-title">AI Co-Pilot</span>
+                    <span class="benefit-desc">Get personalized guidance & support</span>
+                  </div>
+                </div>
+                <div class="benefit-item">
+                  <span class="benefit-icon">👥</span>
+                  <div class="benefit-text">
+                    <span class="benefit-title">Build Your Crew</span>
+                    <span class="benefit-desc">Invite fans to cheer you on</span>
+                  </div>
+                </div>
+                <div class="benefit-item">
+                  <span class="benefit-icon">📈</span>
+                  <div class="benefit-text">
+                    <span class="benefit-title">Track Progress</span>
+                    <span class="benefit-desc">See your journey unfold day by day</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CTA Button -->
+              <div class="fan-launch-cta">
+                <a routerLink="/ai" class="launch-goal-btn">
+                  <span>🚀</span>
+                  <span>Launch Your Goal</span>
+                </a>
+                <p class="launch-hint">It only takes 2 minutes to get started</p>
+              </div>
+
+              <!-- Decorative elements -->
+              <div class="fan-launch-decoration">
+                <div class="decoration-ring ring-1"></div>
+                <div class="decoration-ring ring-2"></div>
+                <div class="decoration-ring ring-3"></div>
+              </div>
+            </div>
+          }
         </div>
 
         <!-- RIGHT COLUMN: Mission Info -->
