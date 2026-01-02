@@ -3753,6 +3753,12 @@
   gap: 0.85rem;
 }
 
+.fan-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
 .fan-pill-row {
   display: flex;
   align-items: center;
@@ -3761,7 +3767,7 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
 }
 
-.fan-pill-row:last-child {
+.fan-pill:last-child .fan-pill-row {
   border-bottom: none;
 }
 
@@ -3780,6 +3786,131 @@
   width: 40px;
   height: 40px;
   font-size: 0.9rem;
+}
+
+.fan-avatar-spotlight {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(248, 113, 113, 0.65);
+  background: radial-gradient(circle at 30% 20%, rgba(248, 113, 113, 0.35), rgba(15, 23, 42, 0.35));
+  box-shadow: 0 12px 24px rgba(248, 113, 113, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.25);
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fan-avatar-spotlight img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.fan-avatar-spotlight.editable {
+  cursor: pointer;
+}
+
+.fan-avatar-spotlight.editable:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 16px 30px rgba(248, 113, 113, 0.35), 0 0 0 4px rgba(15, 23, 42, 0.25);
+}
+
+.fan-avatar-spotlight.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.avatar-edit-hint {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  background: linear-gradient(120deg, #f97316, #f43f5e);
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 16px rgba(244, 63, 94, 0.35);
+}
+
+.fan-avatar-picker {
+  margin-left: 74px;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: linear-gradient(140deg, rgba(15, 23, 42, 0.6), rgba(248, 113, 113, 0.2));
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(248, 250, 252, 0.05), 0 16px 24px rgba(15, 23, 42, 0.25);
+}
+
+.fan-avatar-picker-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+}
+
+.fan-avatar-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.fan-avatar-option {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.4);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fan-avatar-option img {
+  width: 100%;
+  height: 52px;
+  object-fit: cover;
+  display: block;
+}
+
+.fan-avatar-option:hover {
+  transform: translateY(-2px);
+  border-color: rgba(248, 113, 113, 0.6);
+  box-shadow: 0 10px 16px rgba(248, 113, 113, 0.2);
+}
+
+.fan-avatar-option.selected {
+  border-color: rgba(74, 222, 128, 0.8);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.35);
+}
+
+.light-mode .fan-avatar-spotlight {
+  box-shadow: 0 10px 24px rgba(248, 113, 113, 0.25), 0 0 0 4px rgba(248, 250, 252, 0.7);
+}
+
+.light-mode .fan-avatar-picker {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(254, 226, 226, 0.8));
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.light-mode .fan-avatar-option {
+  background: rgba(248, 250, 252, 0.8);
+}
+
+@media (max-width: 640px) {
+  .fan-avatar-picker {
+    margin-left: 0;
+  }
+
+  .fan-avatar-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .fan-meta {

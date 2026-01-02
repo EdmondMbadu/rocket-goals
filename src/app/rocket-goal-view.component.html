@@ -933,15 +933,42 @@
                       </div>
                     } @else {
                       @for (fan of fans(); track fan.id) {
-                      <div class="fan-pill-row">
-                        <div class="fan-avatar">{{ getFanInitials(fan.name, fan.email) }}</div>
-                        <div class="fan-meta">
-                          <p class="fan-name">{{ getFanDisplayName(fan.name, fan.email) }}</p>
-                          <p class="fan-email">{{ fan.email }}</p>
+                      <div class="fan-pill">
+                        <div class="fan-pill-row">
+                          <button type="button"
+                            class="fan-avatar-spotlight"
+                            [class.editable]="canEditFanAvatar(fan)"
+                            [class.is-loading]="updatingFanAvatarId() === fan.id"
+                            (click)="toggleFanAvatarPicker(fan)"
+                            [attr.aria-label]="canEditFanAvatar(fan) ? 'Change your avatar' : 'Fan avatar'">
+                            <img [src]="getFanAvatarUrl(fan.avatar)" [alt]="getFanDisplayName(fan.name, fan.email) + ' avatar'" />
+                            @if (canEditFanAvatar(fan)) {
+                              <span class="avatar-edit-hint">Edit</span>
+                            }
+                          </button>
+                          <div class="fan-meta">
+                            <p class="fan-name">{{ getFanDisplayName(fan.name, fan.email) }}</p>
+                            <p class="fan-email">{{ fan.email }}</p>
+                          </div>
+                          <span class="fan-status" [class.fan-status-active]="fan.status === 'accepted'">
+                            {{ getFanStatusLabel(fan.status) }}
+                          </span>
                         </div>
-                        <span class="fan-status" [class.fan-status-active]="fan.status === 'accepted'">
-                          {{ getFanStatusLabel(fan.status) }}
-                        </span>
+                        @if (activeAvatarPickerFanId() === fan.id && canEditFanAvatar(fan)) {
+                          <div class="fan-avatar-picker">
+                            <p class="fan-avatar-picker-title">Choose your crew badge</p>
+                            <div class="fan-avatar-options">
+                              @for (avatarId of fanAvatarIds; track avatarId) {
+                                <button type="button"
+                                  class="fan-avatar-option"
+                                  [class.selected]="fan.avatar === avatarId"
+                                  (click)="selectFanAvatar(fan, avatarId)">
+                                  <img [src]="getFanAvatarUrl(avatarId)" [alt]="'Avatar ' + avatarId" />
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
                       </div>
                       }
                     }

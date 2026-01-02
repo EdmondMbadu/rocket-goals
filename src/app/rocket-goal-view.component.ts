@@ -14,7 +14,7 @@ import type { RocketGoal } from './models/rocket-goal';
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
-import { FansService, Fan, FanComment } from './fans.service';
+import { FansService, Fan, FanComment, FAN_AVATAR_IDS } from './fans.service';
 import { VisualizationService } from './visualization.service';
 
 @Component({
@@ -114,6 +114,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   fanJoinError = signal<string | null>(null);
   showFanWelcomePrompt = signal(false);
   private currentUserFan = signal<Fan | null>(null);
+  activeAvatarPickerFanId = signal<string | null>(null);
+  updatingFanAvatarId = signal<string | null>(null);
+  readonly fanAvatarIds = FAN_AVATAR_IDS;
 
   async ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -1036,7 +1039,9 @@ ${url}`;
     this.fansLoading.set(true);
     try {
       const fans = await this.fansService.getFansByGoalId(goalId);
-      this.fans.set(fans);
+      const fansWithAvatars = await this.ensureFanAvatars(goalId, fans);
+      this.fans.set(fansWithAvatars);
+      this.syncCurrentUserFan(fansWithAvatars);
     } catch (error) {
       console.error('Error loading fans:', error);
     } finally {
@@ -1164,6 +1169,45 @@ ${url}`;
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
   }
 
+  getFanAvatarUrl(avatarId?: string): string {
+    return `assets/${this.resolveAvatarId(avatarId)}.jpg`;
+  }
+
+  canEditFanAvatar(fan: Fan): boolean {
+    const profile = this.authService.profile();
+    if (!profile?.email) return false;
+    return profile.email.toLowerCase() === fan.email.toLowerCase();
+  }
+
+  toggleFanAvatarPicker(fan: Fan): void {
+    if (!this.canEditFanAvatar(fan)) return;
+    const current = this.activeAvatarPickerFanId();
+    this.activeAvatarPickerFanId.set(current === fan.id ? null : fan.id);
+  }
+
+  async selectFanAvatar(fan: Fan, avatarId: string): Promise<void> {
+    if (!this.canEditFanAvatar(fan) || fan.avatar === avatarId) {
+      this.activeAvatarPickerFanId.set(null);
+      return;
+    }
+
+    this.updatingFanAvatarId.set(fan.id);
+    try {
+      await this.fansService.updateFanAvatar(fan.goalId, fan.id, avatarId);
+      this.fans.update(entries =>
+        entries.map(entry => entry.id === fan.id ? { ...entry, avatar: avatarId } : entry)
+      );
+      if (this.currentUserFan()?.id === fan.id) {
+        this.currentUserFan.set({ ...fan, avatar: avatarId });
+      }
+    } catch (error) {
+      console.error('Error updating fan avatar:', error);
+    } finally {
+      this.updatingFanAvatarId.set(null);
+      this.activeAvatarPickerFanId.set(null);
+    }
+  }
+
   formatFanTimestamp(raw: unknown): string {
     if (!raw) return 'Just now';
     try {
@@ -1180,6 +1224,49 @@ ${url}`;
       return 'Just now';
     }
     return 'Just now';
+  }
+
+  private resolveAvatarId(avatarId?: string): string {
+    if (avatarId && this.fanAvatarIds.includes(avatarId)) {
+      return avatarId;
+    }
+    return this.fanAvatarIds[0];
+  }
+
+  private pickRandomAvatarId(): string {
+    const index = Math.floor(Math.random() * this.fanAvatarIds.length);
+    return this.fanAvatarIds[index];
+  }
+
+  private syncCurrentUserFan(fans: Fan[]): void {
+    const profile = this.authService.profile();
+    if (!profile?.email) {
+      this.currentUserFan.set(null);
+      return;
+    }
+    const match = fans.find(fan => fan.email.toLowerCase() === profile.email.toLowerCase()) || null;
+    this.currentUserFan.set(match);
+  }
+
+  private async ensureFanAvatars(goalId: string, fans: Fan[]): Promise<Fan[]> {
+    const missing = fans.filter(fan => !fan.avatar);
+    if (!missing.length) return fans;
+
+    const updates = await Promise.all(
+      missing.map(async fan => {
+        const avatarId = this.pickRandomAvatarId();
+        try {
+          await this.fansService.updateFanAvatar(goalId, fan.id, avatarId);
+          return { ...fan, avatar: avatarId };
+        } catch (error) {
+          console.error('Error assigning fan avatar:', error);
+          return fan;
+        }
+      })
+    );
+
+    const updatesById = new Map(updates.map(entry => [entry.id, entry]));
+    return fans.map(fan => updatesById.get(fan.id) ?? fan);
   }
 
   // Fan Join Modal Methods

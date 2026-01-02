@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import type { Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 
+export const FAN_AVATAR_IDS = ['a-1', 'a-2', 'a-3', 'a-4', 'a-5', 'a-6', 'a-7', 'a-8', 'a-9', 'a-10'];
+
 export interface Fan {
   id: string;
   goalId: string;
@@ -12,6 +14,7 @@ export interface Fan {
   invitedAt: unknown;
   acceptedAt?: unknown;
   notificationPreference?: 'occasional' | 'frequent';
+  avatar?: string;
 }
 
 export interface FanComment {
@@ -37,6 +40,7 @@ export interface FanReaction {
 
 @Injectable({ providedIn: 'root' })
 export class FansService {
+  private readonly avatarIds = FAN_AVATAR_IDS;
   private firestoreInstance?: Promise<Firestore>;
 
   private async getFirestore(): Promise<Firestore> {
@@ -78,7 +82,8 @@ export class FansService {
       goalId,
       email: email.toLowerCase(),
       status: 'pending' as const,
-      invitedAt: firestoreModule.serverTimestamp()
+      invitedAt: firestoreModule.serverTimestamp(),
+      avatar: this.pickRandomAvatarId()
     };
 
     // Only include name if it has a value (Firestore doesn't allow undefined)
@@ -375,7 +380,8 @@ export class FansService {
       status: 'accepted',
       notificationPreference,
       invitedAt: firestoreModule.serverTimestamp(),
-      acceptedAt: firestoreModule.serverTimestamp()
+      acceptedAt: firestoreModule.serverTimestamp(),
+      avatar: this.pickRandomAvatarId()
     };
 
     if (name && name.trim()) {
@@ -398,5 +404,17 @@ export class FansService {
     const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId, 'fans', fanId);
 
     await firestoreModule.updateDoc(docRef, { notificationPreference });
+  }
+
+  async updateFanAvatar(goalId: string, fanId: string, avatar: string): Promise<void> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId, 'fans', fanId);
+    await firestoreModule.updateDoc(docRef, { avatar });
+  }
+
+  private pickRandomAvatarId(): string {
+    const index = Math.floor(Math.random() * this.avatarIds.length);
+    return this.avatarIds[index];
   }
 }
