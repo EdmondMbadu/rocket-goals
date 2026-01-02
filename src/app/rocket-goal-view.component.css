@@ -3365,6 +3365,28 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }
 
+.share-btn-facebook {
+  background: #1877f2;
+  color: white;
+  box-shadow: 0 6px 18px rgba(24, 119, 242, 0.35);
+}
+
+.share-btn-facebook:hover {
+  background: #166fe5;
+  box-shadow: 0 10px 25px rgba(24, 119, 242, 0.45);
+}
+
+.share-btn-linkedin {
+  background: #0a66c2;
+  color: white;
+  box-shadow: 0 6px 18px rgba(10, 102, 194, 0.35);
+}
+
+.share-btn-linkedin:hover {
+  background: #095bb5;
+  box-shadow: 0 10px 25px rgba(10, 102, 194, 0.45);
+}
+
 .share-btn-whatsapp {
   background: linear-gradient(135deg, #25d366, #128c7e);
   color: white;
@@ -3392,6 +3414,14 @@
 
 .light-mode .share-btn-twitter {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .share-btn-facebook {
+  box-shadow: 0 6px 18px rgba(24, 119, 242, 0.25);
+}
+
+.light-mode .share-btn-linkedin {
+  box-shadow: 0 6px 18px rgba(10, 102, 194, 0.25);
 }
 
 .light-mode .share-btn-whatsapp {

@@ -430,38 +430,63 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     }
   }
 
+  getShareMessage(): string {
+    const title = this.getGoalTitleDisplay();
+    const url = window.location.href;
+    return `Hi - I'm setting a ROCKET Goal to ${title}
+
+I'd love for you to join my support CREW. Click below to join my CREW for free.
+You can send me emojis, DMs and track my progress over the coming months.
+Your support will mean a lot.
+Thanks in advance!
+
+${url}`;
+  }
+
+  getShareMessageShort(): string {
+    const title = this.getGoalTitleDisplay();
+    const url = window.location.href;
+    return `Hi - I'm setting a ROCKET Goal to ${title}. Join my support CREW for free! Send emojis, DMs & track my progress. Your support means a lot! ${url}`;
+  }
+
   shareOnTwitter() {
     const goal = this.goal();
     if (!goal) return;
-    
-    const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent(this.getGoalTitleDisplay());
-    const text = encodeURIComponent(`Check out my Rocket Goal: ${title}`);
-    const twitterUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+
+    // Twitter/X has character limits, use shorter message
+    const text = encodeURIComponent(this.getShareMessageShort());
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${text}`;
     window.open(twitterUrl, '_blank', 'width=550,height=420');
     this.closeShareDropdown();
   }
 
   shareOnFacebook() {
+    const goal = this.goal();
+    if (!goal) return;
+
     const url = encodeURIComponent(window.location.href);
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    const quote = encodeURIComponent(this.getShareMessage());
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`;
     window.open(facebookUrl, '_blank', 'width=550,height=420');
     this.closeShareDropdown();
   }
 
   shareOnLinkedIn() {
+    const goal = this.goal();
+    if (!goal) return;
+
     const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent(this.getGoalTitleDisplay());
-    const summary = encodeURIComponent(`Check out my Rocket Goal: ${title}`);
     const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
     window.open(linkedInUrl, '_blank', 'width=550,height=420');
     this.closeShareDropdown();
   }
 
   shareOnWhatsApp() {
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(`Check out my Rocket Goal: ${this.getGoalTitleDisplay()}`);
-    const whatsappUrl = `https://wa.me/?text=${text}%20${url}`;
+    const goal = this.goal();
+    if (!goal) return;
+
+    const text = encodeURIComponent(this.getShareMessage());
+    const whatsappUrl = `https://wa.me/?text=${text}`;
     window.open(whatsappUrl, '_blank');
     this.closeShareDropdown();
   }
@@ -469,11 +494,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   shareViaEmail() {
     const goal = this.goal();
     if (!goal) return;
-    
-    const url = window.location.href;
+
     const title = this.getGoalTitleDisplay();
-    const subject = encodeURIComponent(`Check out my Rocket Goal: ${title}`);
-    const body = encodeURIComponent(`I wanted to share my Rocket Goal with you:\n\n${title}\n\nView it here: ${url}`);
+    const subject = encodeURIComponent(`Join my ROCKET Goal CREW: ${title}`);
+    const body = encodeURIComponent(this.getShareMessage());
     const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
     window.location.href = mailtoUrl;
     this.emailShareSuccess.set(true);
