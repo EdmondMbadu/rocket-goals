@@ -430,9 +430,19 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     }
   }
 
+  getGoalUrl(): string {
+    const goal = this.goal();
+    if (goal?.id) {
+      // Build absolute URL with the goal ID
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/rocketgoal/${goal.id}`;
+    }
+    return window.location.href;
+  }
+
   getShareMessage(): string {
     const title = this.getGoalTitleDisplay();
-    const url = window.location.href;
+    const url = this.getGoalUrl();
     return `Hi - I'm setting a ROCKET Goal to ${title}
 
 I'd love for you to join my support CREW. Click below to join my CREW for free.
@@ -445,7 +455,7 @@ ${url}`;
 
   getShareMessageShort(): string {
     const title = this.getGoalTitleDisplay();
-    const url = window.location.href;
+    const url = this.getGoalUrl();
     return `Hi - I'm setting a ROCKET Goal to ${title}. Join my support CREW for free! Send emojis, DMs & track my progress. Your support means a lot! ${url}`;
   }
 
@@ -460,24 +470,45 @@ ${url}`;
     this.closeShareDropdown();
   }
 
-  shareOnFacebook() {
+  async shareOnFacebook() {
     const goal = this.goal();
     if (!goal) return;
 
-    const url = encodeURIComponent(window.location.href);
-    const quote = encodeURIComponent(this.getShareMessage());
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`;
+    // Copy message to clipboard so user can paste it
+    const message = this.getShareMessage();
+    try {
+      await navigator.clipboard.writeText(message);
+    } catch (err) {
+      console.error('Failed to copy message to clipboard:', err);
+    }
+
+    const url = encodeURIComponent(this.getGoalUrl());
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
     window.open(facebookUrl, '_blank', 'width=550,height=420');
+
+    // Show a brief alert to let user know message is copied
+    alert('Your message has been copied to clipboard! Paste it in your Facebook post.');
     this.closeShareDropdown();
   }
 
-  shareOnLinkedIn() {
+  async shareOnLinkedIn() {
     const goal = this.goal();
     if (!goal) return;
 
-    const url = encodeURIComponent(window.location.href);
+    // Copy message to clipboard so user can paste it
+    const message = this.getShareMessage();
+    try {
+      await navigator.clipboard.writeText(message);
+    } catch (err) {
+      console.error('Failed to copy message to clipboard:', err);
+    }
+
+    const url = encodeURIComponent(this.getGoalUrl());
     const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
     window.open(linkedInUrl, '_blank', 'width=550,height=420');
+
+    // Show a brief alert to let user know message is copied
+    alert('Your message has been copied to clipboard! Paste it in your LinkedIn post.');
     this.closeShareDropdown();
   }
 
