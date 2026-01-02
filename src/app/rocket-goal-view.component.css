@@ -668,6 +668,140 @@
   letter-spacing: 0.3em;
 }
 
+.deadline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.deadline-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.deadline-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.deadline-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deadline-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deadline-edit-link {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(148, 163, 184, 0.7);
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.deadline-edit-link:hover {
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.deadline-set-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f87171;
+  background: rgba(15, 23, 42, 0.4);
+  transition: all 0.2s ease;
+}
+
+.deadline-set-btn:hover {
+  border-color: rgba(248, 113, 113, 0.7);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.35);
+}
+
+.deadline-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.deadline-edit-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.deadline-input {
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+}
+
+.deadline-save-btn,
+.deadline-cancel-btn {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.deadline-save-btn {
+  background: rgba(248, 113, 113, 0.2);
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  color: #f87171;
+}
+
+.deadline-cancel-btn {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.deadline-error {
+  font-size: 11px;
+  color: #f87171;
+}
+
+.light-mode .deadline-date {
+  color: #0f172a;
+}
+
+.light-mode .deadline-label {
+  color: rgba(71, 85, 105, 0.8);
+}
+
+.light-mode .deadline-input {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.light-mode .deadline-set-btn {
+  background: rgba(248, 113, 113, 0.1);
+}
+
 /* Barcode decoration */
 .barcode {
   height: 24px;

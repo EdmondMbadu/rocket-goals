@@ -593,6 +593,54 @@
               </div>
             </div>
 
+            @if (isGoalOwner()) {
+            <div class="deadline-row">
+              @if (isEditingDeadline()) {
+              <div class="deadline-edit">
+                <label class="deadline-label">Target date</label>
+                <div class="deadline-edit-controls">
+                  <input type="date" class="deadline-input"
+                    [ngModel]="deadlineInputValue()"
+                    (ngModelChange)="deadlineInputValue.set($event)"
+                    [disabled]="savingDeadline()" />
+                  <button type="button" class="deadline-save-btn" (click)="saveDeadline()" [disabled]="savingDeadline()">
+                    Save
+                  </button>
+                  <button type="button" class="deadline-cancel-btn" (click)="cancelEditingDeadline()" [disabled]="savingDeadline()">
+                    Cancel
+                  </button>
+                </div>
+                @if (deadlineError()) {
+                <p class="deadline-error">{{ deadlineError() }}</p>
+                }
+              </div>
+              } @else {
+              @if (hasCustomDeadline()) {
+              <div class="deadline-display">
+                <div class="deadline-meta">
+                  <span class="deadline-label">Target date</span>
+                  <span class="deadline-date">{{ getDeadlineDateDisplay() }}</span>
+                </div>
+                <button type="button" class="deadline-edit-link" (click)="startEditingDeadline()">Edit</button>
+              </div>
+              } @else {
+              <button type="button" class="deadline-set-btn" (click)="startEditingDeadline()">
+                Set exact deadline
+              </button>
+              }
+              }
+            </div>
+            } @else if (hasCustomDeadline()) {
+            <div class="deadline-row">
+              <div class="deadline-display readonly">
+                <div class="deadline-meta">
+                  <span class="deadline-label">Target date</span>
+                  <span class="deadline-date">{{ getDeadlineDateDisplay() }}</span>
+                </div>
+              </div>
+            </div>
+            }
+
             <!-- Timeline Track -->
             <div class="relative py-6">
               <!-- Background Line -->

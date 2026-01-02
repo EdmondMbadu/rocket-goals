@@ -86,6 +86,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   fanCommentsExpanded = signal(false);
   customReactionEmoji = signal('');
   private readonly fanSectionId = 'fan-mission-panel';
+  isEditingDeadline = signal(false);
+  deadlineInputValue = signal('');
+  deadlineError = signal<string | null>(null);
+  savingDeadline = signal(false);
 
   // Action Items state
   actionItems = signal<ActionItem[]>([]);
@@ -164,6 +168,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const goal = this.goal();
     if (!goal) return 7;
 
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    if (deadlineTimestamp) {
+      return this.getTimeframeDaysFromDeadline(deadlineTimestamp);
+    }
+
     // Check for timeframe in answers (from AI chat created goals)
     const timeframeDays = goal.answers?.['timeframe_days'];
     if (timeframeDays) return timeframeDays;
@@ -180,6 +189,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   // Get timeline markers based on timeframe
   getTimelineMarkers(): { label: string; day: number }[] {
     const days = this.getTimeframeDays();
+
+    if (this.hasCustomDeadline()) {
+      return this.getCustomTimelineMarkers(days);
+    }
 
     if (days <= 7) {
       // 7-day sprint: show all 7 days
@@ -237,6 +250,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   // Get timeframe display text
   getTimeframeDisplay(): string {
+    if (this.hasCustomDeadline()) return 'TARGET DATE';
     const days = this.getTimeframeDays();
     if (days <= 7) return '7-DAY SPRINT';
     if (days <= 30) return '30-DAY JOURNEY';
@@ -251,9 +265,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
     // Use startTime from goal, or default to now if not set
     const startTime = goal.startTime || Date.now();
-    const timeframeDays = this.getTimeframeDays();
-    const challengeDuration = timeframeDays * 24 * 60 * 60 * 1000; // Duration in milliseconds
-    const endTime = startTime + challengeDuration;
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    const endTime = deadlineTimestamp
+      ? deadlineTimestamp
+      : startTime + (this.getTimeframeDays() * 24 * 60 * 60 * 1000);
 
     const updateCountdown = () => {
       const now = Date.now();
@@ -280,6 +295,135 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
     // Update every second
     this.countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
+  getDeadlineDateDisplay(): string {
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    if (!deadlineTimestamp) return '';
+    const deadline = new Date(deadlineTimestamp);
+    return deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  hasCustomDeadline(): boolean {
+    return !!this.getDeadlineTimestamp();
+  }
+
+  startEditingDeadline(): void {
+    const goal = this.goal();
+    if (!goal || !this.isGoalOwner()) return;
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    const fallbackEndTime = (goal.startTime || Date.now()) + (this.getTimeframeDays() * 24 * 60 * 60 * 1000);
+    const initialDate = new Date(deadlineTimestamp ?? fallbackEndTime);
+    this.deadlineInputValue.set(this.formatDateInputValue(initialDate));
+    this.deadlineError.set(null);
+    this.isEditingDeadline.set(true);
+  }
+
+  cancelEditingDeadline(): void {
+    this.isEditingDeadline.set(false);
+    this.deadlineError.set(null);
+  }
+
+  async saveDeadline(): Promise<void> {
+    const goal = this.goal();
+    if (!goal || !this.isGoalOwner()) return;
+
+    const inputValue = this.deadlineInputValue().trim();
+    if (!inputValue) {
+      this.deadlineError.set('Pick a deadline date to continue.');
+      return;
+    }
+
+    const [year, month, day] = inputValue.split('-').map(value => Number(value));
+    if (!year || !month || !day) {
+      this.deadlineError.set('Pick a valid deadline date.');
+      return;
+    }
+
+    const deadline = new Date(year, month - 1, day, 23, 59, 59, 999);
+    if (Number.isNaN(deadline.getTime())) {
+      this.deadlineError.set('Pick a valid deadline date.');
+      return;
+    }
+
+    this.savingDeadline.set(true);
+    this.deadlineError.set(null);
+
+    try {
+      const startTime = goal.startTime || Date.now();
+      const updatedAnswers = {
+        ...(goal.answers || {}),
+        deadlineDate: deadline.getTime(),
+        timeframe_days: this.getTimeframeDaysFromDeadline(deadline.getTime(), startTime)
+      };
+
+      await this.rocketGoalsService.updateRocketGoal(goal.id, { answers: updatedAnswers });
+      this.goal.set({ ...goal, answers: updatedAnswers });
+      this.isEditingDeadline.set(false);
+      this.startCountdown();
+    } catch (error) {
+      console.error('Error saving deadline:', error);
+      this.deadlineError.set('Could not save deadline. Please try again.');
+    } finally {
+      this.savingDeadline.set(false);
+    }
+  }
+
+  private getDeadlineTimestamp(): number | null {
+    const goal = this.goal();
+    const deadlineValue = goal?.answers?.['deadlineDate'];
+    if (!deadlineValue) return null;
+    if (typeof deadlineValue === 'number') return deadlineValue;
+    if (typeof deadlineValue === 'string') {
+      const parsed = Date.parse(deadlineValue);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    if (typeof deadlineValue?.toMillis === 'function') return deadlineValue.toMillis();
+    return null;
+  }
+
+  private getTimeframeDaysFromDeadline(deadlineTimestamp: number, startTimeOverride?: number): number {
+    const startTime = startTimeOverride ?? (this.goal()?.startTime || Date.now());
+    const dayMs = 24 * 60 * 60 * 1000;
+    const diffDays = Math.ceil((deadlineTimestamp - startTime) / dayMs);
+    return Math.max(1, diffDays);
+  }
+
+  private formatDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getCustomTimelineMarkers(totalDays: number): { label: string; day: number }[] {
+    if (totalDays <= 7) {
+      return Array.from({ length: totalDays }, (_value, index) => ({
+        label: `DAY ${index + 1}`,
+        day: index + 1
+      }));
+    }
+
+    if (totalDays <= 30) {
+      const markers = [1, 8, 15, 22, totalDays];
+      const uniqueDays = Array.from(new Set(markers.filter(day => day <= totalDays)));
+      return uniqueDays.map((day, index) => ({
+        label: day === totalDays ? 'FINISH' : `WEEK ${index + 1}`,
+        day
+      }));
+    }
+
+    const segments = totalDays <= 90 ? 3 : 6;
+    const step = Math.ceil(totalDays / segments);
+    const markers = Array.from({ length: segments + 1 }, (_value, index) => {
+      if (index === segments) return totalDays;
+      return Math.min(1 + (index * step), totalDays);
+    });
+    const uniqueMarkers = Array.from(new Set(markers));
+    return uniqueMarkers.map((day, index) => ({
+      label: day === totalDays ? 'FINISH' : `PHASE ${index + 1}`,
+      day
+    }));
   }
 
   async loadGoal(goalId: string) {
