@@ -120,6 +120,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       initialParams.get('autoLaunch'),
       initialParams.get('prompt')
     );
+    const shouldOpenLaunchGoal = initialParams.get('launchGoal') === 'true';
     const shouldStartFresh = !!initialAutoPrompt;
 
     if (this.isLoggedIn()) {
@@ -149,8 +150,13 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.queueAutoLaunch(initialAutoPrompt);
     }
 
+    if (shouldOpenLaunchGoal) {
+      this.openGoalModal();
+    }
+
     this.route.queryParamMap.subscribe(params => {
       const hasSevenDayChallenge = params.get('sevenDayChallenge') === 'true';
+      const hasLaunchGoal = params.get('launchGoal') === 'true';
       const autoLaunchToken = params.get('autoLaunch');
       const inlinePrompt = params.get('prompt');
 
@@ -158,6 +164,8 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isSevenDayChallenge.set(true);
         // Open modal and pre-fill for 7-day challenge
         this.openGoalModalForSevenDayChallenge();
+      } else if (hasLaunchGoal) {
+        this.openGoalModal();
       }
 
       // Only process prompt if we haven't already handled it in ngOnInit
@@ -177,7 +185,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
 
-      if (hasSevenDayChallenge || autoLaunchToken || inlinePrompt) {
+      if (hasSevenDayChallenge || hasLaunchGoal || autoLaunchToken || inlinePrompt) {
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: {},

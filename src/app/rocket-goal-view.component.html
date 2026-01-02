@@ -261,7 +261,7 @@
 
               <!-- CTA Button -->
               <div class="fan-launch-cta">
-                <a routerLink="/ai" class="launch-goal-btn">
+                <a [routerLink]="['/ai']" [queryParams]="{ launchGoal: 'true' }" class="launch-goal-btn">
                   <span>🚀</span>
                   <span>Launch Your Goal</span>
                 </a>
