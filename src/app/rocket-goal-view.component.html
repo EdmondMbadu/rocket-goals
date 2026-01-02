@@ -294,17 +294,80 @@
                 </div>
               </div>
 
-              <!-- Fan Reactions Display - Love from Fans -->
-              @if (fanReactions().length > 0 && !reactionsLoading()) {
+              <!-- Fan Reactions & Comments Display -->
+              @if ((fanReactions().length > 0 || fanComments().length > 0) && !reactionsLoading() && !commentsLoading()) {
               <div class="fan-reactions-display mt-4 pt-4 relative z-10">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xs font-mono uppercase tracking-wider fan-reactions-label">Love from Fans</span>
-                </div>
-                <div class="flex flex-wrap items-center gap-3">
-                  @for (reaction of fanReactions(); track reaction.emoji) {
-                  <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg fan-reaction-badge transition-colors">
-                    <span class="text-xl">{{ reaction.emoji }}</span>
-                    <span class="text-sm font-semibold fan-reaction-count">{{ reaction.count }}</span>
+                <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <!-- Emoji Reactions Section -->
+                  @if (fanReactions().length > 0) {
+                  <div class="flex-shrink-0">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs font-mono uppercase tracking-wider fan-reactions-label">Love from Fans</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      @for (reaction of fanReactions(); track reaction.emoji) {
+                      <div class="flex items-center gap-1 px-2 py-1 rounded-lg fan-reaction-badge transition-colors">
+                        <span class="text-lg">{{ reaction.emoji }}</span>
+                        <span class="text-xs font-semibold fan-reaction-count">{{ reaction.count }}</span>
+                      </div>
+                      }
+                    </div>
+                  </div>
+                  }
+
+                  <!-- Compact Fan Comments Section -->
+                  @if (fanComments().length > 0) {
+                  <div class="fan-comments-preview flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                      <span class="text-xs font-mono uppercase tracking-wider fan-reactions-label flex items-center gap-1.5">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Fan Notes ({{ fanComments().length }})
+                      </span>
+                      <button
+                        type="button"
+                        class="fan-comments-toggle text-xs"
+                        (click)="fanCommentsExpanded.set(!fanCommentsExpanded())">
+                        {{ fanCommentsExpanded() ? 'Collapse' : 'Expand' }}
+                        <svg class="w-3 h-3 inline-block ml-0.5 transition-transform duration-200" [class.rotate-180]="fanCommentsExpanded()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Comments Container -->
+                    <div class="fan-comments-compact-container rounded-lg overflow-hidden" [class.expanded]="fanCommentsExpanded()">
+                      <div class="fan-comments-compact-scroll" [class.scrollable]="fanCommentsExpanded()">
+                        @for (comment of fanCommentsExpanded() ? fanComments() : fanComments().slice(0, 2); track comment.id; let i = $index) {
+                        <div class="fan-comment-compact" [class.first]="i === 0">
+                          <div class="fan-comment-compact-avatar">
+                            {{ getFanInitials(comment.fanName, comment.fanEmail) }}
+                          </div>
+                          <div class="fan-comment-compact-content min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <span class="fan-comment-compact-name">{{ getFanDisplayName(comment.fanName, comment.fanEmail) }}</span>
+                              @if (comment.emoji) {
+                              <span class="fan-comment-compact-emoji">{{ comment.emoji }}</span>
+                              }
+                              <span class="fan-comment-compact-time">{{ formatFanTimestamp(comment.createdAt) }}</span>
+                            </div>
+                            <p class="fan-comment-compact-text" [class.truncate]="!fanCommentsExpanded()">{{ comment.content }}</p>
+                          </div>
+                        </div>
+                        }
+                      </div>
+
+                      <!-- Show more indicator when collapsed -->
+                      @if (!fanCommentsExpanded() && fanComments().length > 2) {
+                      <button
+                        type="button"
+                        class="fan-comments-more"
+                        (click)="fanCommentsExpanded.set(true)">
+                        +{{ fanComments().length - 2 }} more note{{ fanComments().length - 2 > 1 ? 's' : '' }}
+                      </button>
+                      }
+                    </div>
                   </div>
                   }
                 </div>

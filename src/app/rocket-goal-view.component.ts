@@ -83,6 +83,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   fanCommentError = signal<string | null>(null);
   fanCommentSubmitting = signal(false);
   readonly fanReactionPalette = ['🚀', '🔥', '👏', '💯', '❤️', '🌟'];
+  fanCommentsExpanded = signal(false);
   private readonly fanSectionId = 'fan-mission-panel';
 
   // Action Items state
