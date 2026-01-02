@@ -779,6 +779,21 @@
                       </button>
                     }
                   </div>
+                  <div class="custom-reaction-input">
+                    <input type="text"
+                      maxlength="2"
+                      placeholder="Your emoji"
+                      [ngModel]="customReactionEmoji()"
+                      (ngModelChange)="customReactionEmoji.set($event)"
+                      (keydown.enter)="submitCustomReaction()"
+                      class="custom-emoji-input" />
+                    <button type="button"
+                      (click)="submitCustomReaction()"
+                      [disabled]="!customReactionEmoji().trim()"
+                      class="custom-emoji-btn">
+                      Add
+                    </button>
+                  </div>
                   <div class="reaction-summary">
                     @if (reactionsLoading()) {
                       <p class="text-sm text-gray-400">Loading reactions...</p>

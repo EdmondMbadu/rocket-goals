@@ -84,6 +84,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   fanCommentSubmitting = signal(false);
   readonly fanReactionPalette = ['🚀', '🔥', '👏', '💯', '❤️', '🌟'];
   fanCommentsExpanded = signal(false);
+  customReactionEmoji = signal('');
   private readonly fanSectionId = 'fan-mission-panel';
 
   // Action Items state
@@ -903,6 +904,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     } catch (error) {
       console.error('Error toggling fan reaction:', error);
     }
+  }
+
+  async submitCustomReaction() {
+    const emoji = this.customReactionEmoji().trim();
+    if (!emoji) return;
+
+    await this.toggleFanReaction(emoji);
+    this.customReactionEmoji.set('');
   }
 
   canCurrentUserLeaveFeedback(): boolean {

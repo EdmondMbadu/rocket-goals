@@ -3534,6 +3534,81 @@
   transform: translateY(-2px);
 }
 
+/* Custom Emoji Input */
+.custom-reaction-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.2);
+}
+
+.custom-emoji-input {
+  flex: 1;
+  max-width: 120px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  font-size: 1rem;
+  text-align: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark-mode .custom-emoji-input {
+  color: #fff;
+}
+
+.light-mode .custom-emoji-input {
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.custom-emoji-input:focus {
+  outline: none;
+  border-color: rgba(248, 113, 113, 0.6);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+}
+
+.custom-emoji-input::placeholder {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.custom-emoji-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-emoji-btn:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.custom-emoji-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.light-mode .custom-emoji-btn {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.light-mode .custom-emoji-btn:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.7);
+}
+
 .reaction-summary {
   margin-top: 1rem;
 }

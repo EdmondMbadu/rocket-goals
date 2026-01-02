@@ -162,9 +162,9 @@ export class AdminComponent implements OnInit {
   newCodeMoonshot = signal('');
   newCodeInterplanetary = signal('');
   newCodeGalactic = signal('');
-  newDurationMoonshot = signal(1);
-  newDurationInterplanetary = signal(1);
-  newDurationGalactic = signal(1);
+  newDurationMoonshot = signal(12);
+  newDurationInterplanetary = signal(12);
+  newDurationGalactic = signal(12);
   promoCodesLoading = signal(false);
   promoCodesSaving = signal(false);
   promoCodesError = signal<string | null>(null);
@@ -1106,15 +1106,15 @@ export class AdminComponent implements OnInit {
       if (tier === 'moonshot') {
         this.promoCodesMoonshot.set(currentCodes);
         this.newCodeMoonshot.set('');
-        this.newDurationMoonshot.set(1);
+        this.newDurationMoonshot.set(12);
       } else if (tier === 'interplanetary') {
         this.promoCodesInterplanetary.set(currentCodes);
         this.newCodeInterplanetary.set('');
-        this.newDurationInterplanetary.set(1);
+        this.newDurationInterplanetary.set(12);
       } else {
         this.promoCodesGalactic.set(currentCodes);
         this.newCodeGalactic.set('');
-        this.newDurationGalactic.set(1);
+        this.newDurationGalactic.set(12);
       }
 
       this.success.set(`Promo code "${newCode}" added successfully!`);
