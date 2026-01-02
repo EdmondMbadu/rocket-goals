@@ -3238,6 +3238,191 @@
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
 }
 
+/* ===== SHARE GOAL CARD - PROMINENT SHARE SECTION ===== */
+.share-goal-card {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(249, 115, 22, 0.1), rgba(15, 23, 42, 0.8)) !important;
+  border: 2px solid rgba(239, 68, 68, 0.4) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.share-goal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+  animation: shimmer-share 2s ease-in-out infinite;
+}
+
+@keyframes shimmer-share {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.light-mode .share-goal-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(249, 115, 22, 0.05), rgba(255, 255, 255, 0.95)) !important;
+  border: 2px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+.share-goal-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.share-goal-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
+}
+
+.share-goal-text {
+  flex: 1;
+}
+
+.share-goal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.25rem;
+  font-family: 'Exo 2', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.light-mode .share-goal-title {
+  color: #0f172a;
+}
+
+.share-goal-subtitle {
+  font-size: 0.9rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.light-mode .share-goal-subtitle {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.share-goal-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.share-goal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.share-goal-btn:hover {
+  transform: translateY(-2px);
+}
+
+.share-btn-copy {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+}
+
+.share-btn-copy:hover {
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.45);
+}
+
+.share-btn-copy.success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+}
+
+.share-btn-twitter {
+  background: #000;
+  color: white;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.share-btn-twitter:hover {
+  background: #1a1a1a;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+.share-btn-whatsapp {
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: white;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.35);
+}
+
+.share-btn-whatsapp:hover {
+  box-shadow: 0 10px 25px rgba(37, 211, 102, 0.45);
+}
+
+.share-btn-email {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+
+.share-btn-email:hover {
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.45);
+}
+
+/* Light mode share buttons */
+.light-mode .share-btn-copy {
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.25);
+}
+
+.light-mode .share-btn-twitter {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .share-btn-whatsapp {
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.25);
+}
+
+.light-mode .share-btn-email {
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.25);
+}
+
+/* Responsive adjustments for share card */
+@media (max-width: 640px) {
+  .share-goal-card {
+    grid-column: span 1;
+  }
+
+  .share-goal-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .share-goal-buttons {
+    justify-content: center;
+  }
+
+  .share-goal-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
+  }
+}
+
 .card-header {
   display: flex;
   align-items: center;
