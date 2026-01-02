@@ -222,7 +222,7 @@
             <!-- PRIMARY DIRECTIVE CARD -->
             <div class="hud-card directive-card shimmer p-6 relative overflow-hidden group">
               <div class="scanline"></div>
-              
+
               <!-- Decorative rocket icon -->
               <div class="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
                 <svg class="w-20 h-20 text-red-500" fill="currentColor" viewBox="0 0 24 24">
@@ -230,10 +230,13 @@
                 </svg>
               </div>
 
-              <!-- Badge -->
-              <div class="directive-badge mb-4 flex items-center gap-2">
-                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></span>
-                <span>PRIMARY DIRECTIVE</span>
+              <!-- Owner Name Badge - Prominent Display -->
+              <div class="goal-owner-badge mb-5">
+                <div class="goal-owner-glow"></div>
+                <div class="goal-owner-content">
+                  <span class="goal-owner-icon">🚀</span>
+                  <span class="goal-owner-name">{{ getGoalOwnerDisplayTitle() }}</span>
+                </div>
               </div>
 
               <!-- Goal Title (Editable) -->
@@ -294,61 +297,89 @@
                 </div>
               </div>
 
-              <!-- Fan Reactions & Shout Outs Display -->
+              <!-- Fan Reactions & Shout Outs Display - Enhanced Section -->
               @if ((fanReactions().length > 0 || fanComments().length > 0) && !reactionsLoading() && !commentsLoading()) {
-              <div class="fan-love-bar mt-3 pt-3 relative z-10">
-                <!-- Emoji Reactions - wraps naturally to show all -->
+              <div class="fan-support-section mt-5 pt-5 relative z-10">
+                <!-- Section Header -->
+                <div class="fan-support-header">
+                  <span class="fan-support-icon">💫</span>
+                  <span class="fan-support-title">Fan Support</span>
+                  <span class="fan-support-count">{{ fanReactions().length + fanComments().length }} cheers</span>
+                </div>
+
+                <!-- Emoji Reactions - Beautiful Grid -->
                 @if (fanReactions().length > 0) {
-                <div class="fan-love-row">
-                  <span class="fan-love-label">Fans:</span>
+                <div class="fan-reactions-grid">
                   @for (reaction of fanReactions(); track reaction.emoji) {
-                  <span class="fan-love-emoji" title="{{ reaction.count }} reactions">{{ reaction.emoji }}<sup>{{ reaction.count }}</sup></span>
+                  <div class="fan-reaction-bubble" title="{{ reaction.count }} reactions">
+                    <span class="reaction-emoji">{{ reaction.emoji }}</span>
+                    <span class="reaction-count">{{ reaction.count }}</span>
+                  </div>
                   }
                 </div>
                 }
 
-                <!-- Shout Outs Section -->
+                <!-- Shout Outs Section - Enhanced Cards -->
                 @if (fanComments().length > 0) {
-                <div class="fan-shoutouts" [class.mt-2]="fanReactions().length > 0">
-                  <!-- Always show first shout out -->
-                  <div class="fan-shoutout-preview">
-                    <span class="fan-shoutout-label">Shout Outs:</span>
-                    <span class="fan-shoutout-avatar">{{ getFanInitials(fanComments()[0].fanName, fanComments()[0].fanEmail) }}</span>
-                    <span class="fan-shoutout-text">
-                      <strong>{{ getFanDisplayName(fanComments()[0].fanName, fanComments()[0].fanEmail) }}</strong>
-                      @if (fanComments()[0].emoji) {
-                      <span class="fan-shoutout-emoji">{{ fanComments()[0].emoji }}</span>
-                      }
-                      {{ fanComments()[0].content }}
-                    </span>
-                    @if (fanComments().length > 1) {
-                    <button
-                      type="button"
-                      class="fan-shoutout-toggle"
-                      (click)="fanCommentsExpanded.set(!fanCommentsExpanded())">
-                      {{ fanCommentsExpanded() ? 'Hide' : '+' + (fanComments().length - 1) + ' more' }}
-                    </button>
-                    }
+                <div class="fan-shoutouts-section" [class.mt-4]="fanReactions().length > 0">
+                  <div class="shoutouts-label">
+                    <span class="shoutouts-icon">📣</span>
+                    <span>Latest Shout Outs</span>
                   </div>
+
+                  <!-- First shout out - Featured -->
+                  <div class="fan-shoutout-card featured">
+                    <div class="shoutout-avatar">{{ getFanInitials(fanComments()[0].fanName, fanComments()[0].fanEmail) }}</div>
+                    <div class="shoutout-content">
+                      <div class="shoutout-author">
+                        {{ getFanDisplayName(fanComments()[0].fanName, fanComments()[0].fanEmail) }}
+                        @if (fanComments()[0].emoji) {
+                        <span class="shoutout-emoji">{{ fanComments()[0].emoji }}</span>
+                        }
+                      </div>
+                      <p class="shoutout-message">{{ fanComments()[0].content }}</p>
+                    </div>
+                  </div>
+
+                  @if (fanComments().length > 1) {
+                  <button
+                    type="button"
+                    class="shoutouts-expand-btn"
+                    (click)="fanCommentsExpanded.set(!fanCommentsExpanded())">
+                    @if (fanCommentsExpanded()) {
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                      <span>Hide</span>
+                    } @else {
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                      <span>+{{ fanComments().length - 1 }} more</span>
+                    }
+                  </button>
+                  }
 
                   <!-- Expandable additional shout outs -->
                   @if (fanCommentsExpanded() && fanComments().length > 1) {
-                  <div class="fan-shoutouts-expanded">
+                  <div class="fan-shoutouts-list">
                     @for (comment of fanComments().slice(1, 5); track comment.id) {
-                    <div class="fan-shoutout-item">
-                      <span class="fan-shoutout-avatar">{{ getFanInitials(comment.fanName, comment.fanEmail) }}</span>
-                      <span class="fan-shoutout-text">
-                        <strong>{{ getFanDisplayName(comment.fanName, comment.fanEmail) }}</strong>
-                        @if (comment.emoji) {
-                        <span class="fan-shoutout-emoji">{{ comment.emoji }}</span>
-                        }
-                        {{ comment.content }}
-                      </span>
+                    <div class="fan-shoutout-card">
+                      <div class="shoutout-avatar small">{{ getFanInitials(comment.fanName, comment.fanEmail) }}</div>
+                      <div class="shoutout-content">
+                        <div class="shoutout-author">
+                          {{ getFanDisplayName(comment.fanName, comment.fanEmail) }}
+                          @if (comment.emoji) {
+                          <span class="shoutout-emoji">{{ comment.emoji }}</span>
+                          }
+                        </div>
+                        <p class="shoutout-message">{{ comment.content }}</p>
+                      </div>
                     </div>
                     }
                     @if (fanComments().length > 5) {
                     <div class="fan-shoutouts-more">
-                      +{{ fanComments().length - 5 }} more in Fan Log below
+                      <span>+{{ fanComments().length - 5 }} more in Fan Log below</span>
                     </div>
                     }
                   </div>

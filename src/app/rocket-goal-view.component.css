@@ -4616,3 +4616,420 @@
   background: rgba(220, 38, 38, 0.12);
   color: #dc2626;
 }
+
+/* ===== GOAL OWNER BADGE - Prominent Name Display ===== */
+.goal-owner-badge {
+  position: relative;
+  display: inline-flex;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.goal-owner-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.08));
+  border-radius: 12px;
+  animation: goalOwnerGlow 3s ease-in-out infinite;
+}
+
+@keyframes goalOwnerGlow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.goal-owner-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.goal-owner-icon {
+  font-size: 1.5rem;
+  animation: rocketBob 2s ease-in-out infinite;
+}
+
+@keyframes rocketBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.goal-owner-name {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #f87171, #ef4444, #dc2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 10px rgba(220, 38, 38, 0.3);
+}
+
+.dark-mode .goal-owner-badge {
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  box-shadow:
+    0 4px 20px rgba(220, 38, 38, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.light-mode .goal-owner-badge {
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  box-shadow:
+    0 4px 20px rgba(220, 38, 38, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.light-mode .goal-owner-glow {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+}
+
+/* ===== ENHANCED FAN SUPPORT SECTION ===== */
+.fan-support-section {
+  border-top: 1px solid;
+  padding-top: 1.25rem;
+}
+
+.dark-mode .fan-support-section {
+  border-top-color: rgba(248, 113, 113, 0.15);
+}
+
+.light-mode .fan-support-section {
+  border-top-color: rgba(220, 38, 38, 0.1);
+}
+
+.fan-support-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.fan-support-icon {
+  font-size: 1.25rem;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
+}
+
+.fan-support-title {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.dark-mode .fan-support-title {
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.light-mode .fan-support-title {
+  color: rgba(220, 38, 38, 0.85);
+}
+
+.fan-support-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
+.dark-mode .fan-support-count {
+  background: rgba(248, 113, 113, 0.15);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.light-mode .fan-support-count {
+  background: rgba(220, 38, 38, 0.1);
+  color: rgba(220, 38, 38, 0.85);
+}
+
+/* Fan Reactions Grid */
+.fan-reactions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.fan-reaction-bubble {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.dark-mode .fan-reaction-bubble {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.12), rgba(220, 38, 38, 0.08));
+  border: 1px solid rgba(248, 113, 113, 0.15);
+}
+
+.dark-mode .fan-reaction-bubble:hover {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.2), rgba(220, 38, 38, 0.15));
+  transform: scale(1.05);
+}
+
+.light-mode .fan-reaction-bubble {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(185, 28, 28, 0.05));
+  border: 1px solid rgba(220, 38, 38, 0.12);
+}
+
+.light-mode .fan-reaction-bubble:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(185, 28, 28, 0.1));
+  transform: scale(1.05);
+}
+
+.reaction-emoji {
+  font-size: 1.1rem;
+}
+
+.reaction-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dark-mode .reaction-count {
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.light-mode .reaction-count {
+  color: rgba(220, 38, 38, 0.85);
+}
+
+/* Shoutouts Section */
+.fan-shoutouts-section {
+  /* Container for enhanced shoutouts */
+}
+
+.shoutouts-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dark-mode .shoutouts-label {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.light-mode .shoutouts-label {
+  color: rgba(100, 116, 139, 0.85);
+}
+
+.shoutouts-icon {
+  font-size: 0.9rem;
+}
+
+/* Enhanced Shoutout Card */
+.fan-shoutout-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .fan-shoutout-card {
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.6), rgba(20, 20, 35, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .fan-shoutout-card:hover {
+  background: linear-gradient(135deg, rgba(35, 35, 50, 0.7), rgba(25, 25, 40, 0.8));
+  border-color: rgba(248, 113, 113, 0.15);
+}
+
+.dark-mode .fan-shoutout-card.featured {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.08), rgba(220, 38, 38, 0.05));
+  border: 1px solid rgba(248, 113, 113, 0.15);
+}
+
+.light-mode .fan-shoutout-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.light-mode .fan-shoutout-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 1));
+  border-color: rgba(220, 38, 38, 0.12);
+}
+
+.light-mode .fan-shoutout-card.featured {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.05), rgba(185, 28, 28, 0.03));
+  border: 1px solid rgba(220, 38, 38, 0.12);
+}
+
+.shoutout-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.shoutout-avatar.small {
+  width: 28px;
+  height: 28px;
+  font-size: 0.65rem;
+}
+
+.dark-mode .shoutout-avatar {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.25), rgba(220, 38, 38, 0.2));
+  color: #f87171;
+  border: 2px solid rgba(248, 113, 113, 0.3);
+}
+
+.light-mode .shoutout-avatar {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(185, 28, 28, 0.1));
+  color: #dc2626;
+  border: 2px solid rgba(220, 38, 38, 0.2);
+}
+
+.shoutout-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.shoutout-author {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dark-mode .shoutout-author {
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.light-mode .shoutout-author {
+  color: rgba(30, 41, 59, 0.95);
+}
+
+.shoutout-emoji {
+  font-size: 0.9rem;
+}
+
+.shoutout-message {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.dark-mode .shoutout-message {
+  color: rgba(203, 213, 225, 0.85);
+}
+
+.light-mode .shoutout-message {
+  color: rgba(71, 85, 105, 0.9);
+}
+
+/* Expand Button */
+.shoutouts-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+}
+
+.dark-mode .shoutouts-expand-btn {
+  background: rgba(248, 113, 113, 0.12);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.dark-mode .shoutouts-expand-btn:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+.light-mode .shoutouts-expand-btn {
+  background: rgba(220, 38, 38, 0.08);
+  color: rgba(220, 38, 38, 0.85);
+}
+
+.light-mode .shoutouts-expand-btn:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+/* Shoutouts List */
+.fan-shoutouts-list {
+  margin-top: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dark-mode .fan-shoutouts-list {
+  border-left-color: rgba(248, 113, 113, 0.25);
+}
+
+.light-mode .fan-shoutouts-list {
+  border-left-color: rgba(220, 38, 38, 0.15);
+}
+
+.fan-shoutouts-list .fan-shoutout-card {
+  margin-left: 0.5rem;
+}
+
+.fan-shoutouts-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dark-mode .fan-shoutouts-more {
+  background: rgba(248, 113, 113, 0.08);
+  color: rgba(248, 113, 113, 0.8);
+}
+
+.light-mode .fan-shoutouts-more {
+  background: rgba(220, 38, 38, 0.06);
+  color: rgba(220, 38, 38, 0.75);
+}
