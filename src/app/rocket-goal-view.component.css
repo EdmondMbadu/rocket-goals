@@ -5033,3 +5033,44 @@
   background: rgba(220, 38, 38, 0.06);
   color: rgba(220, 38, 38, 0.75);
 }
+
+/* ===== VISUALIZATION IMAGE - Flexible Fit ===== */
+.visualization-image-container {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.visualization-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* On larger screens, let the image fill available space */
+@media (min-width: 768px) {
+  .visualization-image-container {
+    min-height: 160px;
+  }
+
+  /* When directive card has fan support, visualization card should match height */
+  .visualization-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .visualization-card .visualization-image-container {
+    flex: 1;
+    min-height: 0; /* Allow shrinking */
+  }
+
+  .visualization-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
