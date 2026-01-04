@@ -1429,27 +1429,27 @@
           autofocus />
       </div>
 
-      <!-- Day Selection -->
+      <!-- Date Selection -->
       <div class="task-modal-field">
         <label class="task-modal-label">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          Schedule For
+          Target Date
         </label>
-        <div class="task-day-selector">
-          @for (marker of getTimelineMarkers(); track marker.day) {
-          <button type="button"
-            class="day-option"
-            [class.selected]="selectedDayForNewTask() === marker.day"
-            [class.current]="marker.day === getCurrentMissionDay()"
-            (click)="selectedDayForNewTask.set(marker.day)">
-            <span class="day-option-label">{{ marker.label }}</span>
-            @if (marker.day === getCurrentMissionDay()) {
-            <span class="day-option-badge">TODAY</span>
+        <div class="milestone-date-picker">
+          <input type="date"
+            class="task-modal-input date-input"
+            [ngModel]="selectedDateForNewTask()"
+            (ngModelChange)="onMilestoneDateChange($event)"
+            [min]="getMinMilestoneDate()"
+            [max]="getMaxMilestoneDate()" />
+          <div class="date-info">
+            @if (selectedDateForNewTask()) {
+              <span class="date-day-badge">Day {{ selectedDayForNewTask() }}</span>
+              <span class="date-formatted">{{ getFormattedDateFromDayNumber(selectedDayForNewTask()) }}</span>
             }
-          </button>
-          }
+          </div>
         </div>
       </div>
 
@@ -1560,7 +1560,7 @@
               </div>
               <div class="milestone-content">
                 <span class="milestone-title">{{ milestone.title }}</span>
-                <span class="milestone-day-badge">Day {{ milestone.dayNumber }}</span>
+                <span class="milestone-day-badge">{{ getFormattedDateFromDayNumber(milestone.dayNumber) }}</span>
               </div>
             </div>
           }

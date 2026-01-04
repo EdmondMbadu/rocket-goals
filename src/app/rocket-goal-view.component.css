@@ -3251,7 +3251,58 @@
   background: #ffffff;
 }
 
-/* Day Selector */
+/* ===== MILESTONE DATE PICKER ===== */
+.milestone-date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-modal-input.date-input {
+  cursor: pointer;
+}
+
+.task-modal-input.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+.light-mode .task-modal-input.date-input::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+.date-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-day-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+  color: #ef4444;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.date-formatted {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.light-mode .date-day-badge {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.08) 100%);
+  color: #dc2626;
+}
+
+.light-mode .date-formatted {
+  color: #64748b;
+}
+
+/* Day Selector (legacy support) */
 .task-day-selector {
   display: flex;
   flex-wrap: wrap;

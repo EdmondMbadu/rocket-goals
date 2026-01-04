@@ -112,9 +112,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
   generatingMilestones = signal(false);
-  generatedMilestones = signal<Array<{ title: string; dayNumber: number; selected: boolean }>>([]);
+  generatedMilestones = signal<Array<{ title: string; date: string; dayNumber: number; selected: boolean }>>([]);
   milestoneGenerationError = signal<string | null>(null);
   addingGeneratedMilestones = signal(false);
+
+  // Add Milestone modal - date selection
+  selectedDateForNewTask = signal<string>(''); // ISO date string YYYY-MM-DD
 
   // Fan Join Modal state
   showFanJoinModal = signal(false);
@@ -1521,6 +1524,9 @@ ${url}`;
     this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
+    // Set default date to today or current mission day
+    const currentDayDate = this.getDateFromDayNumber(this.getCurrentMissionDay());
+    this.selectedDateForNewTask.set(this.formatDateISO(currentDayDate));
     this.selectedDayForNewTask.set(this.getCurrentMissionDay());
   }
 
@@ -1528,6 +1534,37 @@ ${url}`;
     this.showTaskModal.set(false);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
+    this.selectedDateForNewTask.set('');
+  }
+
+  onMilestoneDateChange(dateStr: string) {
+    this.selectedDateForNewTask.set(dateStr);
+    // Update the day number based on the selected date
+    const goal = this.goal();
+    if (goal?.startTime && dateStr) {
+      const dayNumber = this.calculateDayNumberFromDate(dateStr, goal.startTime);
+      this.selectedDayForNewTask.set(Math.max(1, dayNumber));
+    }
+  }
+
+  // Get min date for milestone date picker (start date)
+  getMinMilestoneDate(): string {
+    const goal = this.goal();
+    const startTime = goal?.startTime || Date.now();
+    return this.formatDateISO(new Date(startTime));
+  }
+
+  // Get max date for milestone date picker (deadline)
+  getMaxMilestoneDate(): string {
+    const goal = this.goal();
+    const startTime = goal?.startTime || Date.now();
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    if (deadlineTimestamp) {
+      return this.formatDateISO(new Date(deadlineTimestamp));
+    }
+    const totalDays = this.getTimeframeDays();
+    const endDate = new Date(startTime + (totalDays * 24 * 60 * 60 * 1000));
+    return this.formatDateISO(endDate);
   }
 
   async addNewActionItem() {
@@ -1627,20 +1664,36 @@ ${url}`;
 
     try {
       const goalTitle = goal.answers?.['goal_title_label'] || goal.answers?.['custom_goal_title'] || goal.primaryGoal || 'my goal';
-      const timeframe = goal.answers?.['timeframe'] || '7-day sprint';
-      const targetDate = goal.answers?.['target_date'] || '';
+
+      // Get actual start and end dates
+      const startTime = goal.startTime || Date.now();
+      const startDate = new Date(startTime);
+      const deadlineTimestamp = this.getDeadlineTimestamp();
+      const totalDays = this.getTimeframeDays();
+
+      // Calculate end date
+      let endDate: Date;
+      if (deadlineTimestamp) {
+        endDate = new Date(deadlineTimestamp);
+      } else {
+        endDate = new Date(startTime + (totalDays * 24 * 60 * 60 * 1000));
+      }
+
+      const startDateStr = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const endDateStr = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
       const prompt = `Generate 5-8 specific, actionable milestones for achieving this goal: "${goalTitle}".
-Timeframe: ${timeframe}${targetDate ? ` (Target date: ${targetDate})` : ''}.
+
+Timeline: From ${startDateStr} to ${endDateStr} (${totalDays} days total).
 
 IMPORTANT: Return ONLY a JSON array, no other text. Each milestone should have:
 - "title": A clear, actionable milestone (e.g., "Complete initial research phase")
-- "dayNumber": Which day of the mission (1 to ${this.getTimeframeDays()})
+- "date": The target date in YYYY-MM-DD format (must be between ${this.formatDateISO(startDate)} and ${this.formatDateISO(endDate)})
 
 Example format:
-[{"title": "Research best practices", "dayNumber": 1}, {"title": "Create action plan", "dayNumber": 2}]
+[{"title": "Research best practices", "date": "${this.formatDateISO(startDate)}"}, {"title": "Final review", "date": "${this.formatDateISO(endDate)}"}]
 
-Distribute milestones across the timeframe. Make them specific and achievable.`;
+Distribute milestones evenly across the timeline. Make them specific and achievable.`;
 
       const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
 
@@ -1650,11 +1703,21 @@ Distribute milestones across the timeframe. Make them specific and achievable.`;
         const milestones = JSON.parse(jsonMatch[0]);
         if (Array.isArray(milestones)) {
           this.generatedMilestones.set(
-            milestones.map((m: any) => ({
-              title: m.title || '',
-              dayNumber: Math.min(Math.max(1, m.dayNumber || 1), this.getTimeframeDays()),
-              selected: true // Pre-select all milestones
-            })).filter((m: any) => m.title.trim())
+            milestones.map((m: any) => {
+              // Parse the date and calculate day number
+              let milestoneDate = m.date || this.formatDateISO(startDate);
+              let dayNumber = this.calculateDayNumberFromDate(milestoneDate, startTime);
+
+              // Clamp day number to valid range
+              dayNumber = Math.min(Math.max(1, dayNumber), totalDays);
+
+              return {
+                title: m.title || '',
+                date: milestoneDate,
+                dayNumber,
+                selected: true
+              };
+            }).filter((m: any) => m.title.trim())
           );
         } else {
           throw new Error('Invalid milestone format');
@@ -1668,6 +1731,40 @@ Distribute milestones across the timeframe. Make them specific and achievable.`;
     } finally {
       this.generatingMilestones.set(false);
     }
+  }
+
+  // Helper to format date as ISO string (YYYY-MM-DD)
+  formatDateISO(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Helper to calculate day number from a date string
+  private calculateDayNumberFromDate(dateStr: string, startTime: number): number {
+    const targetDate = new Date(dateStr);
+    const startDate = new Date(startTime);
+    startDate.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+    const diffMs = targetDate.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1;
+    return diffDays;
+  }
+
+  // Helper to calculate date from day number
+  getDateFromDayNumber(dayNumber: number): Date {
+    const goal = this.goal();
+    const startTime = goal?.startTime || Date.now();
+    const date = new Date(startTime);
+    date.setDate(date.getDate() + dayNumber - 1);
+    return date;
+  }
+
+  // Get formatted date string from day number
+  getFormattedDateFromDayNumber(dayNumber: number): string {
+    const date = this.getDateFromDayNumber(dayNumber);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   toggleMilestoneSelection(index: number) {
