@@ -16,6 +16,7 @@ import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
 import { FansService, Fan, FanComment, FAN_AVATAR_IDS } from './fans.service';
 import { VisualizationService } from './visualization.service';
+import { RocketGoalsAIService } from './rocket-goals-ai.service';
 
 @Component({
   selector: 'app-rocket-goal-view',
@@ -32,6 +33,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private actionItemsService = inject(ActionItemsService);
   private fansService = inject(FansService);
   private visualizationService = inject(VisualizationService);
+  private rocketGoalsAIService = inject(RocketGoalsAIService);
   authService = inject(AuthService); // Make public for template access
   private themeService = inject(ThemeService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
@@ -91,7 +93,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   deadlineError = signal<string | null>(null);
   savingDeadline = signal(false);
 
-  // Action Items state
+  // Action Items (Milestones) state
   actionItems = signal<ActionItem[]>([]);
   loadingActionItems = signal(false);
   editingActionItemId = signal<string | null>(null);
@@ -106,6 +108,13 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   viewAllTasks = signal(false);
   savingTask = signal(false);
   expandedTimelineTaskId = signal<string | null>(null);
+
+  // Milestone Generation state
+  showGenerateMilestonesModal = signal(false);
+  generatingMilestones = signal(false);
+  generatedMilestones = signal<Array<{ title: string; dayNumber: number; selected: boolean }>>([]);
+  milestoneGenerationError = signal<string | null>(null);
+  addingGeneratedMilestones = signal(false);
 
   // Fan Join Modal state
   showFanJoinModal = signal(false);
@@ -1590,6 +1599,146 @@ ${url}`;
   // Toggle viewing all tasks vs current day only
   toggleViewAllTasks() {
     this.viewAllTasks.update(v => !v);
+  }
+
+  // Milestone Generation Methods
+  openGenerateMilestonesModal() {
+    this.showGenerateMilestonesModal.set(true);
+    this.generatedMilestones.set([]);
+    this.milestoneGenerationError.set(null);
+    this.generateMilestones();
+  }
+
+  closeGenerateMilestonesModal() {
+    this.showGenerateMilestonesModal.set(false);
+    this.generatedMilestones.set([]);
+    this.milestoneGenerationError.set(null);
+  }
+
+  async generateMilestones() {
+    const goal = this.goal();
+    if (!goal) {
+      this.milestoneGenerationError.set('No goal context available');
+      return;
+    }
+
+    this.generatingMilestones.set(true);
+    this.milestoneGenerationError.set(null);
+
+    try {
+      const goalTitle = goal.answers?.['goal_title_label'] || goal.answers?.['custom_goal_title'] || goal.primaryGoal || 'my goal';
+      const timeframe = goal.answers?.['timeframe'] || '7-day sprint';
+      const targetDate = goal.answers?.['target_date'] || '';
+
+      const prompt = `Generate 5-8 specific, actionable milestones for achieving this goal: "${goalTitle}".
+Timeframe: ${timeframe}${targetDate ? ` (Target date: ${targetDate})` : ''}.
+
+IMPORTANT: Return ONLY a JSON array, no other text. Each milestone should have:
+- "title": A clear, actionable milestone (e.g., "Complete initial research phase")
+- "dayNumber": Which day of the mission (1 to ${this.getTimeframeDays()})
+
+Example format:
+[{"title": "Research best practices", "dayNumber": 1}, {"title": "Create action plan", "dayNumber": 2}]
+
+Distribute milestones across the timeframe. Make them specific and achievable.`;
+
+      const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
+
+      // Parse the response - try to extract JSON array
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const milestones = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(milestones)) {
+          this.generatedMilestones.set(
+            milestones.map((m: any) => ({
+              title: m.title || '',
+              dayNumber: Math.min(Math.max(1, m.dayNumber || 1), this.getTimeframeDays()),
+              selected: true // Pre-select all milestones
+            })).filter((m: any) => m.title.trim())
+          );
+        } else {
+          throw new Error('Invalid milestone format');
+        }
+      } else {
+        throw new Error('Could not parse milestones from response');
+      }
+    } catch (error: any) {
+      console.error('Error generating milestones:', error);
+      this.milestoneGenerationError.set(error?.message || 'Failed to generate milestones. Please try again.');
+    } finally {
+      this.generatingMilestones.set(false);
+    }
+  }
+
+  toggleMilestoneSelection(index: number) {
+    this.generatedMilestones.update(milestones =>
+      milestones.map((m, i) => i === index ? { ...m, selected: !m.selected } : m)
+    );
+  }
+
+  selectAllMilestones() {
+    this.generatedMilestones.update(milestones =>
+      milestones.map(m => ({ ...m, selected: true }))
+    );
+  }
+
+  deselectAllMilestones() {
+    this.generatedMilestones.update(milestones =>
+      milestones.map(m => ({ ...m, selected: false }))
+    );
+  }
+
+  getSelectedMilestonesCount(): number {
+    return this.generatedMilestones().filter(m => m.selected).length;
+  }
+
+  hasSelectedMilestones(): boolean {
+    return this.getSelectedMilestonesCount() > 0;
+  }
+
+  async addSelectedMilestones() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const selectedMilestones = this.generatedMilestones().filter(m => m.selected);
+    if (selectedMilestones.length === 0) return;
+
+    this.addingGeneratedMilestones.set(true);
+
+    try {
+      for (const milestone of selectedMilestones) {
+        const existingItems = this.getActionItemsForDay(milestone.dayNumber);
+        const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
+
+        const newId = await this.actionItemsService.createActionItem({
+          goalId: goal.id,
+          title: milestone.title,
+          dayNumber: milestone.dayNumber,
+          completed: false,
+          order: nextOrder
+        });
+
+        // Update local state
+        const newItem: ActionItem = {
+          id: newId,
+          goalId: goal.id,
+          title: milestone.title,
+          dayNumber: milestone.dayNumber,
+          completed: false,
+          order: nextOrder,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        this.actionItems.update(items => [...items, newItem]);
+      }
+
+      this.closeGenerateMilestonesModal();
+    } catch (error) {
+      console.error('Error adding milestones:', error);
+      this.milestoneGenerationError.set('Failed to add some milestones. Please try again.');
+    } finally {
+      this.addingGeneratedMilestones.set(false);
+    }
   }
 
   // Get tasks to display based on view mode

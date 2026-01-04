@@ -792,7 +792,7 @@
               <button class="collab-tab"
                 [class.active]="activePrimaryTab() === 'tasks'"
                 (click)="selectPrimaryTab('tasks')">
-                <span>Tasks</span>
+                <span>Milestones</span>
                 @if (getTotalItemsCount() > 0) {
                   <span class="tab-pill">{{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }}</span>
                 }
@@ -1113,7 +1113,7 @@
                 </div>
               </div>
               } @else if (activePrimaryTab() === 'tasks') {
-              <!-- TASKS TAB -->
+              <!-- MILESTONES TAB -->
               <div class="hud-card action-items-card shimmer p-6 md:p-8">
                 <div class="scanline"></div>
 
@@ -1122,16 +1122,16 @@
                   <div class="flex items-center gap-3">
                     <h3 class="timeline-badge text-red-500">
                       @if (viewAllTasks()) {
-                        ALL TASKS
+                        ALL MILESTONES
                       } @else {
-                        DAY {{ getCurrentMissionDay() }} ACTIONS
+                        DAY {{ getCurrentMissionDay() }} MILESTONES
                       }
                     </h3>
                     <span class="task-counter">
                       {{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }} COMPLETE
                     </span>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
                     <!-- View Toggle -->
                     <button (click)="toggleViewAllTasks()"
                       class="view-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -1145,13 +1145,27 @@
                       </svg>
                       {{ viewAllTasks() ? 'Today' : 'All' }}
                     </button>
-                    <!-- Add Task Button -->
+                    <!-- Generate Milestones Button -->
+                    <button (click)="openGenerateMilestonesModal()"
+                      class="generate-milestones-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                      [disabled]="generatingMilestones()">
+                      @if (generatingMilestones()) {
+                        <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Generating...</span>
+                      } @else {
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>Generate Milestones</span>
+                      }
+                    </button>
+                    <!-- Add Milestone Button -->
                     <button (click)="openAddActionItem()"
                       class="add-task-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                       </svg>
-                      Add Task
+                      Add Milestone
                     </button>
                   </div>
                 </div>
@@ -1165,21 +1179,37 @@
                   } @else if (getDisplayedTasks().length === 0) {
                   <div class="empty-tasks-state text-center py-10">
                     <div class="text-6xl mb-4">🎯</div>
-                    <h4 class="text-lg font-bold text-white mb-2">No tasks yet</h4>
+                    <h4 class="text-lg font-bold text-white mb-2">No milestones yet</h4>
                     <p class="text-gray-400 mb-6">
                       @if (viewAllTasks()) {
-                        Start planning your mission by adding tasks!
+                        Start planning your mission by adding milestones!
                       } @else {
-                        No action items for Day {{ getCurrentMissionDay() }}.
+                        No milestones for Day {{ getCurrentMissionDay() }}.
                       }
                     </p>
-                    <button (click)="openAddActionItem()"
-                      class="add-first-task-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Your First Task
-                    </button>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <button (click)="openGenerateMilestonesModal()"
+                        class="generate-milestones-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
+                        [disabled]="generatingMilestones()">
+                        @if (generatingMilestones()) {
+                          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Generating...</span>
+                        } @else {
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>Generate Milestones for My Goal</span>
+                        }
+                      </button>
+                      <span class="text-gray-500">or</span>
+                      <button (click)="openAddActionItem()"
+                        class="add-first-task-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Your Milestone
+                      </button>
+                    </div>
                   </div>
                   } @else {
                   <!-- Existing Items -->
@@ -1358,7 +1388,7 @@
   </app-event-modal>
 }
 
-<!-- Task Modal -->
+<!-- Milestone Modal -->
 @if (showTaskModal()) {
 <div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="closeTaskModal()">
   <div class="task-modal" (click)="$event.stopPropagation()">
@@ -1370,8 +1400,8 @@
         </svg>
       </div>
       <div>
-        <h2 class="task-modal-title">Add New Task</h2>
-        <p class="task-modal-subtitle">Plan your mission action item</p>
+        <h2 class="task-modal-title">Add New Milestone</h2>
+        <p class="task-modal-subtitle">Plan your mission milestone</p>
       </div>
       <button (click)="closeTaskModal()" class="task-modal-close">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1388,14 +1418,14 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          Task Title
+          Milestone Title
         </label>
         <input type="text"
           class="task-modal-input"
           [ngModel]="newActionItemTitle()"
           (ngModelChange)="newActionItemTitle.set($event)"
           (keyup.enter)="addNewActionItem()"
-          placeholder="What do you need to accomplish?"
+          placeholder="What milestone do you want to achieve?"
           autofocus />
       </div>
 
@@ -1455,10 +1485,119 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          Add Task
+          Add Milestone
         }
       </button>
     </div>
+  </div>
+</div>
+}
+
+<!-- Generate Milestones Modal -->
+@if (showGenerateMilestonesModal()) {
+<div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="closeGenerateMilestonesModal()">
+  <div class="task-modal generate-milestones-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="task-modal-header">
+      <div class="task-modal-icon generate-icon">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="task-modal-title">Generate Milestones</h2>
+        <p class="task-modal-subtitle">AI-powered milestones for your goal</p>
+      </div>
+      <button (click)="closeGenerateMilestonesModal()" class="task-modal-close">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="task-modal-body">
+      @if (generatingMilestones()) {
+        <!-- Loading State -->
+        <div class="flex flex-col items-center justify-center py-12">
+          <div class="w-12 h-12 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin mb-4"></div>
+          <p class="text-gray-400 text-center">Generating personalized milestones for your goal...</p>
+        </div>
+      } @else if (milestoneGenerationError()) {
+        <!-- Error State -->
+        <div class="flex flex-col items-center justify-center py-8">
+          <div class="text-5xl mb-4">⚠️</div>
+          <p class="text-red-400 text-center mb-4">{{ milestoneGenerationError() }}</p>
+          <button (click)="generateMilestones()" class="generate-milestones-btn px-4 py-2 rounded-lg font-semibold">
+            Try Again
+          </button>
+        </div>
+      } @else if (generatedMilestones().length > 0) {
+        <!-- Generated Milestones List -->
+        <div class="mb-4 flex items-center justify-between">
+          <p class="text-gray-400 text-sm">Select milestones to add to your mission:</p>
+          <div class="flex gap-2">
+            <button (click)="selectAllMilestones()" class="text-xs text-red-400 hover:text-red-300 transition-colors">
+              Select All
+            </button>
+            <span class="text-gray-600">|</span>
+            <button (click)="deselectAllMilestones()" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">
+              Deselect All
+            </button>
+          </div>
+        </div>
+        <div class="generated-milestones-list space-y-3 max-h-96 overflow-y-auto pr-2">
+          @for (milestone of generatedMilestones(); track $index) {
+            <div class="generated-milestone-item"
+                 [class.selected]="milestone.selected"
+                 (click)="toggleMilestoneSelection($index)">
+              <div class="milestone-checkbox" [class.checked]="milestone.selected">
+                @if (milestone.selected) {
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                }
+              </div>
+              <div class="milestone-content">
+                <span class="milestone-title">{{ milestone.title }}</span>
+                <span class="milestone-day-badge">Day {{ milestone.dayNumber }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="flex flex-col items-center justify-center py-8">
+          <div class="text-5xl mb-4">🎯</div>
+          <p class="text-gray-400 text-center">No milestones generated yet.</p>
+        </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    @if (!generatingMilestones() && generatedMilestones().length > 0) {
+    <div class="task-modal-footer">
+      <button (click)="generateMilestones()" class="task-modal-btn cancel flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Regenerate
+      </button>
+      <button (click)="addSelectedMilestones()"
+        class="task-modal-btn save"
+        [disabled]="addingGeneratedMilestones() || !hasSelectedMilestones()">
+        @if (addingGeneratedMilestones()) {
+          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          Adding...
+        } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add {{ getSelectedMilestonesCount() }} Milestone{{ getSelectedMilestonesCount() !== 1 ? 's' : '' }}
+        }
+      </button>
+    </div>
+    }
   </div>
 </div>
 }

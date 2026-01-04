@@ -2481,6 +2481,150 @@
   box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
+/* ===== GENERATE MILESTONES BUTTON ===== */
+.generate-milestones-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.generate-milestones-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+.generate-milestones-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== GENERATE MILESTONES MODAL ===== */
+.generate-milestones-modal {
+  max-width: 550px;
+}
+
+.task-modal-icon.generate-icon {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.generated-milestones-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 38, 38, 0.5) transparent;
+}
+
+.generated-milestones-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.generated-milestones-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.generated-milestones-list::-webkit-scrollbar-thumb {
+  background: rgba(220, 38, 38, 0.5);
+  border-radius: 3px;
+}
+
+.generated-milestone-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generated-milestone-item:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.generated-milestone-item.selected {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.milestone-checkbox {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+.milestone-checkbox.checked {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+  border-color: #dc2626;
+}
+
+.milestone-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.milestone-title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.milestone-day-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+  white-space: nowrap;
+}
+
+/* Light mode styles for generate milestones */
+.light-mode .generated-milestone-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .generated-milestone-item:hover {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.light-mode .generated-milestone-item.selected {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.light-mode .milestone-checkbox {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.light-mode .milestone-title {
+  color: #1f2937;
+}
+
+.light-mode .milestone-day-badge {
+  background: rgba(220, 38, 38, 0.15);
+  color: #b91c1c;
+}
+
 /* ===== TASK CARD ===== */
 .task-card {
   background: rgba(30, 41, 59, 0.6);
