@@ -1523,8 +1523,29 @@ ${url}`;
       await this.actionItemsService.deleteActionItem(goal.id, item.id);
       // Update local state
       this.actionItems.update(items => items.filter(i => i.id !== item.id));
+
+      // Also delete the corresponding calendar event (if it exists)
+      await this.deleteCalendarEventForMilestone(goal.id, item.title);
     } catch (error) {
       console.error('Error deleting action item:', error);
+    }
+  }
+
+  // Helper to delete a calendar event that matches a milestone title
+  private async deleteCalendarEventForMilestone(goalId: string, milestoneTitle: string) {
+    try {
+      // Find the calendar event with matching title (with 🎯 prefix)
+      const eventTitle = `🎯 ${milestoneTitle}`;
+      const matchingEvent = this.calendarEvents().find(e => e.title === eventTitle);
+
+      if (matchingEvent) {
+        await this.calendarEventsService.deleteEvent(goalId, matchingEvent.id);
+        // Update local calendar events state
+        this.calendarEvents.update(events => events.filter(e => e.id !== matchingEvent.id));
+      }
+    } catch (error) {
+      console.error('Error deleting calendar event for milestone:', error);
+      // Don't throw - milestone was still deleted successfully
     }
   }
 
