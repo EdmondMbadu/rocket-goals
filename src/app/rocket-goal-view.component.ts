@@ -1582,27 +1582,34 @@ ${url}`;
     const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
 
     try {
-      const newId = await this.actionItemsService.createActionItem({
+      // Build the item data - only include notes if it has content
+      const itemData: any = {
         goalId: goal.id,
         title,
-        notes: notes || undefined,
         dayNumber: selectedDay,
         completed: false,
         order: nextOrder
-      });
+      };
+      if (notes) {
+        itemData.notes = notes;
+      }
+
+      const newId = await this.actionItemsService.createActionItem(itemData);
 
       // Update local state
       const newItem: ActionItem = {
         id: newId,
         goalId: goal.id,
         title,
-        notes: notes || undefined,
         dayNumber: selectedDay,
         completed: false,
         order: nextOrder,
         createdAt: new Date(),
         updatedAt: new Date()
       };
+      if (notes) {
+        newItem.notes = notes;
+      }
       this.actionItems.update(items => [...items, newItem]);
       this.closeTaskModal();
     } catch (error) {
