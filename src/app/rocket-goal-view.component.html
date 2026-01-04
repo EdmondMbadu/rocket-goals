@@ -1546,7 +1546,7 @@
             </button>
           </div>
         </div>
-        <div class="generated-milestones-list space-y-3 max-h-96 overflow-y-auto pr-2">
+        <div class="generated-milestones-list space-y-2 max-h-[60vh] overflow-y-auto pr-2">
           @for (milestone of generatedMilestones(); track $index) {
             <div class="generated-milestone-item"
                  [class.selected]="milestone.selected"
@@ -1558,12 +1558,19 @@
                   </svg>
                 }
               </div>
-              <div class="milestone-content">
+              <div class="milestone-day-number">Day {{ milestone.dayNumber }}</div>
+              <div class="milestone-content flex-1">
                 <span class="milestone-title">{{ milestone.title }}</span>
-                <span class="milestone-day-badge">{{ getFormattedDateFromDayNumber(milestone.dayNumber) }}</span>
               </div>
+              <span class="milestone-day-badge">{{ getFormattedDateFromDayNumber(milestone.dayNumber) }}</span>
             </div>
           }
+        </div>
+        <div class="milestone-summary mt-4 pt-4 border-t border-white/10">
+          <p class="text-sm text-gray-400">
+            {{ generatedMilestones().length }} daily milestones generated •
+            {{ getSelectedMilestonesCount() }} selected
+          </p>
         </div>
       } @else {
         <!-- Empty State -->

@@ -1736,6 +1736,12 @@ ${url}`;
     try {
       const goalTitle = goal.answers?.['goal_title_label'] || goal.answers?.['custom_goal_title'] || goal.primaryGoal || 'my goal';
 
+      // Get additional context from goal answers
+      const futureResult = goal.answers?.['future_result'] || '';
+      const dailyEffort = goal.answers?.['daily_effort'] || '';
+      const obstacles = goal.answers?.['obstacles'] || '';
+      const motivation = goal.answers?.['motivation'] || '';
+
       // Get actual start and end dates
       const startTime = goal.startTime || Date.now();
       const startDate = new Date(startTime);
@@ -1750,21 +1756,57 @@ ${url}`;
         endDate = new Date(startTime + (totalDays * 24 * 60 * 60 * 1000));
       }
 
-      const startDateStr = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      const endDateStr = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const startDateStr = startDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      const endDateStr = endDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-      const prompt = `Generate 5-8 specific, actionable milestones for achieving this goal: "${goalTitle}".
+      // Build context section
+      let contextSection = '';
+      if (futureResult) contextSection += `\nDesired outcome: ${futureResult}`;
+      if (dailyEffort) contextSection += `\nDaily commitment: ${dailyEffort}`;
+      if (obstacles) contextSection += `\nPotential obstacles to address: ${obstacles}`;
+      if (motivation) contextSection += `\nCore motivation: ${motivation}`;
 
-Timeline: From ${startDateStr} to ${endDateStr} (${totalDays} days total).
+      const prompt = `You are creating a comprehensive, day-by-day milestone plan for someone committed to achieving: "${goalTitle}"
 
-IMPORTANT: Return ONLY a JSON array, no other text. Each milestone should have:
-- "title": A clear, actionable milestone (e.g., "Complete initial research phase")
-- "date": The target date in YYYY-MM-DD format (must be between ${this.formatDateISO(startDate)} and ${this.formatDateISO(endDate)})
+TIMELINE: ${startDateStr} to ${endDateStr} (${totalDays} days total)
+${contextSection}
 
-Example format:
-[{"title": "Research best practices", "date": "${this.formatDateISO(startDate)}"}, {"title": "Final review", "date": "${this.formatDateISO(endDate)}"}]
+Create a DAILY milestone for EVERY SINGLE DAY from Day 1 to Day ${totalDays}. This person needs specific, actionable guidance for each day of their journey.
 
-Distribute milestones evenly across the timeline. Make them specific and achievable.`;
+REQUIREMENTS:
+1. Generate EXACTLY ${totalDays} milestones - one for each day
+2. Each milestone must be specific, actionable, and measurable
+3. Build progressive momentum - early days focus on foundation, later days on mastery
+4. Include variety: learning, practicing, reflecting, adjusting, celebrating small wins
+5. Make milestones realistic for a single day's effort
+6. Address potential obstacles with specific mitigation actions
+7. Include rest/reflection days strategically (every 5-7 days)
+
+STRUCTURE YOUR PLAN:
+- Days 1-3: Foundation & Setup (research, planning, gathering resources)
+- Days 4-7: Initial Action (first attempts, establishing routines)
+- Middle days: Building momentum (progressive challenges, skill development)
+- Days before deadline: Refinement & Push (intensify efforts, address gaps)
+- Final days: Polish & Completion (final review, celebrate achievement)
+
+IMPORTANT: Return ONLY a valid JSON array with NO additional text. Each object must have:
+- "title": Specific action for that day (e.g., "Research 3 proven methods for X and choose one to start")
+- "date": Date in YYYY-MM-DD format
+
+Generate milestones from ${this.formatDateISO(startDate)} to ${this.formatDateISO(endDate)}.
+
+Example format for a 7-day goal:
+[
+  {"title": "Define your specific success criteria and write down 3 measurable outcomes", "date": "2026-01-04"},
+  {"title": "Research and identify the top 3 strategies used by successful people in this area", "date": "2026-01-05"},
+  {"title": "Create your detailed action plan with specific daily time blocks", "date": "2026-01-06"},
+  {"title": "Take your first concrete action - spend 30 minutes on the most important task", "date": "2026-01-07"},
+  {"title": "Review progress, identify what's working, and adjust your approach", "date": "2026-01-08"},
+  {"title": "Push through resistance - double your effort on the hardest part", "date": "2026-01-09"},
+  {"title": "Final push and celebration - complete remaining tasks and acknowledge your growth", "date": "2026-01-10"}
+]
+
+Now generate ${totalDays} daily milestones:`;
 
       const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
 
