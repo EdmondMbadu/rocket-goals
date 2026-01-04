@@ -5872,6 +5872,7 @@
   border: 1px solid rgba(220, 38, 38, 0.25);
   box-shadow: 0 4px 30px rgba(220, 38, 38, 0.1);
   transition: all 0.3s ease;
+  min-height: 0;
 }
 
 .fan-launch-goal-card:hover {
@@ -5888,10 +5889,22 @@
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
 }
 
+.light-mode .fan-launch-cta {
+  background: linear-gradient(to top,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 100%);
+}
+
+.light-mode .benefit-acronym {
+  color: #b91c1c;
+}
+
 /* Header Section */
 .fan-launch-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .fan-launch-icon {
@@ -5970,7 +5983,30 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 1.5rem;
+  min-height: 0;
+  padding-right: 0.5rem;
+}
+
+.fan-launch-benefits::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fan-launch-benefits::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.fan-launch-benefits::-webkit-scrollbar-thumb {
+  background: rgba(220, 38, 38, 0.3);
+  border-radius: 3px;
+}
+
+.fan-launch-benefits::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 38, 38, 0.5);
 }
 
 .benefit-item {
@@ -6025,12 +6061,24 @@
 
 .benefit-text {
   flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .benefit-title {
   font-weight: 700;
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
+  display: block;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.benefit-acronym {
+  font-weight: 800;
+  color: #dc2626;
+  margin-right: 0.25rem;
 }
 
 .dark-mode .benefit-title {
@@ -6057,6 +6105,15 @@
 /* CTA Section */
 .fan-launch-cta {
   text-align: center;
+  flex-shrink: 0;
+  padding-top: 1rem;
+  background: linear-gradient(to top,
+    rgba(15, 23, 42, 0.95) 0%,
+    rgba(15, 23, 42, 0.85) 50%,
+    transparent 100%);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .launch-goal-btn {

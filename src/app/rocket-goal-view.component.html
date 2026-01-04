@@ -215,7 +215,7 @@
             <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
           } @else {
             <!-- Fans/Visitors see Launch Your Goal prompt -->
-            <div class="fan-launch-goal-card hud-card shimmer flex-1 flex flex-col p-6 relative overflow-hidden">
+            <div class="fan-launch-goal-card hud-card shimmer flex-1 flex flex-col p-6 relative">
               <div class="scanline"></div>
 
               <!-- Header -->
@@ -227,34 +227,48 @@
                 <p class="fan-launch-subtitle">You're supporting {{ getGoalOwnerName() }}'s journey. Now it's time to start yours!</p>
               </div>
 
-              <!-- Benefits -->
+              <!-- LAUNCH Framework - Scrollable -->
               <div class="fan-launch-benefits">
+                <div class="benefit-item">
+                  <span class="benefit-icon">🔒</span>
+                  <div class="benefit-text">
+                    <span class="benefit-title"><span class="benefit-acronym">L:</span> Lock In Your Future Outcome</span>
+                    <span class="benefit-desc">Write a clear outcome statement & visualize success</span>
+                  </div>
+                </div>
                 <div class="benefit-item">
                   <span class="benefit-icon">🎯</span>
                   <div class="benefit-text">
-                    <span class="benefit-title">Set Your Mission</span>
-                    <span class="benefit-desc">Define a goal that matters to you</span>
+                    <span class="benefit-title"><span class="benefit-acronym">A:</span> Align with One Priority</span>
+                    <span class="benefit-desc">Translate your ONE Thing into a daily executable task</span>
                   </div>
                 </div>
                 <div class="benefit-item">
-                  <span class="benefit-icon">🤖</span>
+                  <span class="benefit-icon">📊</span>
                   <div class="benefit-text">
-                    <span class="benefit-title">AI Co-Pilot</span>
-                    <span class="benefit-desc">Get personalized guidance & support</span>
+                    <span class="benefit-title"><span class="benefit-acronym">U:</span> Unpack Milestones & Metrics</span>
+                    <span class="benefit-desc">Break your goal into phases with clear proof of done</span>
                   </div>
                 </div>
                 <div class="benefit-item">
-                  <span class="benefit-icon">👥</span>
+                  <span class="benefit-icon">⛓️</span>
                   <div class="benefit-text">
-                    <span class="benefit-title">Build Your Crew</span>
-                    <span class="benefit-desc">Invite fans to cheer you on</span>
+                    <span class="benefit-title"><span class="benefit-acronym">N:</span> Name Your Constraints</span>
+                    <span class="benefit-desc">Identify bottlenecks & set boundaries that protect flow</span>
                   </div>
                 </div>
                 <div class="benefit-item">
-                  <span class="benefit-icon">📈</span>
+                  <span class="benefit-icon">⚙️</span>
                   <div class="benefit-text">
-                    <span class="benefit-title">Track Progress</span>
-                    <span class="benefit-desc">See your journey unfold day by day</span>
+                    <span class="benefit-title"><span class="benefit-acronym">C:</span> Create an Action Ritual</span>
+                    <span class="benefit-desc">Choose a trigger + action + reward to hardwire habit</span>
+                  </div>
+                </div>
+                <div class="benefit-item">
+                  <span class="benefit-icon">🤝</span>
+                  <div class="benefit-text">
+                    <span class="benefit-title"><span class="benefit-acronym">H:</span> Harness Accountability & CREW Support</span>
+                    <span class="benefit-desc">Name your accountability partner & schedule check-ins</span>
                   </div>
                 </div>
               </div>
