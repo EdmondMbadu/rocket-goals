@@ -1503,11 +1503,26 @@ export const sendTestSMS = functions.runWith({
     }
 });
 
+type MilestoneEmailItem = {
+    id: string;
+    title: string;
+    dayNumber: number;
+    dateLabel: string;
+    updateUrl: string;
+};
+
 /**
  * Helper function to generate goal reminder email content
  */
-function generateGoalReminderEmail(goalTitle: string, participantName: string, participantEmail: string, goalId: string) {
-    const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}`;
+function generateGoalReminderEmail(
+    goalTitle: string,
+    participantName: string,
+    participantEmail: string,
+    goalId: string,
+    milestones: MilestoneEmailItem[] = []
+) {
+    const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}?tab=milestones`;
+    const milestoneBlocks = buildMilestoneEmailBlocks(milestones);
     const subject = `🚀 Time to update your progress on: ${goalTitle}`;
 
     const text = `Hi ${participantName},
@@ -1516,7 +1531,7 @@ It's time to check in on your Rocket Goal!
 
 Goal: ${goalTitle}
 
-Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
+${milestoneBlocks.text}Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
 
 Visit: ${goalUrl}
 
@@ -1542,6 +1557,7 @@ Keep pushing forward! 🚀
                         ${goalTitle}
                     </p>
                 </div>
+                ${milestoneBlocks.html}
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
                     Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
                 </p>
@@ -1562,6 +1578,107 @@ Keep pushing forward! 🚀
     `;
 
     return { subject, text, html };
+}
+
+function buildMilestoneEmailBlocks(milestones: MilestoneEmailItem[]): { text: string; html: string } {
+    if (!milestones.length) {
+        return { text: '', html: '' };
+    }
+
+    const textLines = milestones.map(milestone =>
+        `- ${milestone.title} (${milestone.dateLabel})\n  Update: ${milestone.updateUrl}`
+    );
+    const text = `Upcoming milestones:\n${textLines.join('\n')}\n\n`;
+
+    const htmlItems = milestones.map(milestone => `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+            <div>
+                <p style="margin: 0; color: #111827; font-weight: 600; font-size: 16px;">${milestone.title}</p>
+                <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px;">${milestone.dateLabel}</p>
+            </div>
+            <a href="${milestone.updateUrl}"
+               style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 14px;">
+                Update
+            </a>
+        </div>
+    `);
+
+    const html = `
+        <div style="margin: 20px 0; padding: 16px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 12px 0; color: #111827; font-weight: 700; font-size: 16px;">Upcoming milestones</p>
+            ${htmlItems.join('')}
+        </div>
+    `;
+
+    return { text, html };
+}
+
+function getTimestampMs(value: unknown): number | null {
+    if (!value) return null;
+    if (value instanceof admin.firestore.Timestamp) {
+        return value.toDate().getTime();
+    }
+    if (value instanceof Date) {
+        return value.getTime();
+    }
+    if (typeof value === 'number') {
+        return value;
+    }
+    if (typeof value === 'string') {
+        const parsed = Date.parse(value);
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+}
+
+function getCurrentMissionDay(startTimeMs: number | null): number {
+    if (!startTimeMs) return 1;
+    const elapsed = Date.now() - startTimeMs;
+    const daysPassed = Math.floor(elapsed / (24 * 60 * 60 * 1000)) + 1;
+    return Math.max(1, daysPassed);
+}
+
+function formatMilestoneDateLabel(startTimeMs: number | null, dayNumber: number): string {
+    if (!startTimeMs) {
+        return `Day ${dayNumber}`;
+    }
+    const date = new Date(startTimeMs + (dayNumber - 1) * 24 * 60 * 60 * 1000);
+    const dateLabel = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${dateLabel} · Day ${dayNumber}`;
+}
+
+async function getUpcomingMilestones(goalId: string, goalData: FirebaseFirestore.DocumentData): Promise<MilestoneEmailItem[]> {
+    const startTimeMs = getTimestampMs(goalData.startTime) ?? getTimestampMs(goalData.createdAt);
+    const currentDay = getCurrentMissionDay(startTimeMs);
+    const updateUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}?tab=milestones`;
+
+    const snapshot = await admin.firestore()
+        .collection('rocketGoals')
+        .doc(goalId)
+        .collection('actionItems')
+        .get();
+
+    if (snapshot.empty) return [];
+
+    const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as { title?: string; dayNumber?: number; completed?: boolean; order?: number })
+    }));
+
+    return items
+        .filter(item => !item.completed && typeof item.dayNumber === 'number' && item.dayNumber > currentDay)
+        .sort((a, b) => {
+            const dayDiff = (a.dayNumber || 0) - (b.dayNumber || 0);
+            if (dayDiff !== 0) return dayDiff;
+            return (a.order || 0) - (b.order || 0);
+        })
+        .map(item => ({
+            id: item.id,
+            title: item.title || 'Untitled milestone',
+            dayNumber: item.dayNumber || currentDay,
+            dateLabel: formatMilestoneDateLabel(startTimeMs, item.dayNumber || currentDay),
+            updateUrl
+        }));
 }
 
 /**
@@ -1807,12 +1924,15 @@ export const sendBulkGoalReminders = functions.runWith({
                             ? `${participant.firstName} ${participant.lastName || ''}`.trim()
                             : participant.email.split('@')[0];
 
+                        const milestones = await getUpcomingMilestones(goalId, goalData);
+
                         // Generate email content
                         const emailContent = generateGoalReminderEmail(
                             goalTitle,
                             participantName,
                             participant.email,
-                            goalId
+                            goalId,
+                            milestones
                         );
 
                         // Create email message
@@ -3537,7 +3657,7 @@ It's time to check in on your Rocket Goal!
 
 Goal: {{goalTitle}}
 
-Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
+{{milestonesText}}Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
 
 Visit: {{goalUrl}}
 
@@ -3563,6 +3683,7 @@ Keep pushing forward! 🚀
                         {{goalTitle}}
                     </p>
                 </div>
+                {{milestonesHtml}}
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
                     Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
                 </p>
@@ -3588,11 +3709,20 @@ Keep pushing forward! 🚀
 /**
  * Replace template placeholders with actual values
  */
-function applyEmailTemplate(template: string, goalTitle: string, participantName: string, goalUrl: string): string {
+function applyEmailTemplate(
+    template: string,
+    goalTitle: string,
+    participantName: string,
+    goalUrl: string,
+    milestonesText = '',
+    milestonesHtml = ''
+): string {
     return template
         .replace(/\{\{goalTitle\}\}/g, goalTitle)
         .replace(/\{\{participantName\}\}/g, participantName)
         .replace(/\{\{goalUrl\}\}/g, goalUrl)
+        .replace(/\{\{milestonesText\}\}/g, milestonesText)
+        .replace(/\{\{milestonesHtml\}\}/g, milestonesHtml)
         // Replace old hardcoded URLs with the specific goal URL (for existing templates in Firestore)
         .replace(/https:\/\/rocket-goals\.web\.app\/goals/g, goalUrl)
         .replace(/https:\/\/www\.rocketgoals\.com\/goals/g, goalUrl);
@@ -3889,12 +4019,41 @@ export const processScheduledReminders = functions.runWith({
                                     : participant.email.split('@')[0];
 
                                 // Build the specific goal URL
-                                const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}`;
+                                const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}?tab=milestones`;
+                                const milestones = await getUpcomingMilestones(goalDoc.id, goalData);
+                                const milestoneBlocks = buildMilestoneEmailBlocks(milestones);
 
                                 // Apply template
-                                const subject = applyEmailTemplate(reminder.emailSubject, goalTitle, participantName, goalUrl);
-                                const text = applyEmailTemplate(reminder.emailBodyText, goalTitle, participantName, goalUrl);
-                                const html = applyEmailTemplate(reminder.emailBodyHtml, goalTitle, participantName, goalUrl);
+                                const subject = applyEmailTemplate(
+                                    reminder.emailSubject,
+                                    goalTitle,
+                                    participantName,
+                                    goalUrl
+                                );
+                                let text = applyEmailTemplate(
+                                    reminder.emailBodyText,
+                                    goalTitle,
+                                    participantName,
+                                    goalUrl,
+                                    milestoneBlocks.text,
+                                    milestoneBlocks.html
+                                );
+                                let html = applyEmailTemplate(
+                                    reminder.emailBodyHtml,
+                                    goalTitle,
+                                    participantName,
+                                    goalUrl,
+                                    milestoneBlocks.text,
+                                    milestoneBlocks.html
+                                );
+
+                                if (milestoneBlocks.text && !reminder.emailBodyText.includes('{{milestonesText}}')) {
+                                    text = `${text}\n${milestoneBlocks.text}`.trim();
+                                }
+
+                                if (milestoneBlocks.html && !reminder.emailBodyHtml.includes('{{milestonesHtml}}')) {
+                                    html = `${html}\n${milestoneBlocks.html}`;
+                                }
 
                                 const msg = {
                                     to: participant.email,

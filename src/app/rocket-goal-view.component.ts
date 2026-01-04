@@ -150,6 +150,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const goalId = this.route.snapshot.paramMap.get('id');
     if (goalId) {
       await this.loadGoal(goalId);
+      this.applyTabFromQuery();
 
       // Check for pending fan join from sessionStorage (after login redirect)
       await this.checkPendingFanJoin();
@@ -942,6 +943,13 @@ ${url}`;
 
   selectPrimaryTab(tab: 'fans' | 'tasks' | 'calendar') {
     this.activePrimaryTab.set(tab);
+  }
+
+  private applyTabFromQuery(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab') || this.route.snapshot.queryParamMap.get('section');
+    if (tabParam === 'milestones' || tabParam === 'tasks' || tabParam === 'milestone') {
+      this.activePrimaryTab.set('tasks');
+    }
   }
 
   onFanInviteEmailChange(value: string) {
