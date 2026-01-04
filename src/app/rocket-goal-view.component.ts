@@ -1604,7 +1604,7 @@ ${url}`;
 
       const newId = await this.actionItemsService.createActionItem(itemData);
 
-      // Update local state
+      // Update local state for action items
       const newItem: ActionItem = {
         id: newId,
         goalId: goal.id,
@@ -1619,11 +1619,46 @@ ${url}`;
         newItem.notes = notes;
       }
       this.actionItems.update(items => [...items, newItem]);
+
+      // Also create a calendar event for this milestone
+      const milestoneDate = this.getDateFromDayNumber(selectedDay);
+      await this.createCalendarEventForMilestone(goal.id, title, milestoneDate, notes);
+
       this.closeTaskModal();
     } catch (error) {
       console.error('Error adding action item:', error);
     } finally {
       this.savingTask.set(false);
+    }
+  }
+
+  // Helper to create a calendar event for a milestone
+  private async createCalendarEventForMilestone(goalId: string, title: string, date: Date, description?: string) {
+    try {
+      const eventData: any = {
+        title: `🎯 ${title}`,
+        date,
+        color: '#9333ea', // Purple for milestones
+        completed: false
+      };
+      if (description) {
+        eventData.description = description;
+      }
+
+      const eventId = await this.calendarEventsService.createEvent(goalId, eventData);
+
+      // Update local calendar events state
+      const newEvent: CalendarEvent = {
+        id: eventId,
+        title: eventData.title,
+        date,
+        color: eventData.color,
+        completed: false
+      };
+      this.calendarEvents.update(events => [...events, newEvent]);
+    } catch (error) {
+      console.error('Error creating calendar event for milestone:', error);
+      // Don't throw - milestone was still created successfully
     }
   }
 
@@ -1830,7 +1865,7 @@ Distribute milestones evenly across the timeline. Make them specific and achieva
           order: nextOrder
         });
 
-        // Update local state
+        // Update local action items state
         const newItem: ActionItem = {
           id: newId,
           goalId: goal.id,
@@ -1842,6 +1877,10 @@ Distribute milestones evenly across the timeline. Make them specific and achieva
           updatedAt: new Date()
         };
         this.actionItems.update(items => [...items, newItem]);
+
+        // Also create a calendar event for this milestone
+        const milestoneDate = this.getDateFromDayNumber(milestone.dayNumber);
+        await this.createCalendarEventForMilestone(goal.id, milestone.title, milestoneDate);
       }
 
       this.closeGenerateMilestonesModal();
