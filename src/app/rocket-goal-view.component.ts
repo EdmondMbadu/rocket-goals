@@ -102,6 +102,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   newActionItemNotes = signal('');
   showTaskModal = signal(false);
   selectedDayForNewTask = signal<number>(1);
+  deletingAllMilestones = signal(false);
+  showDeleteAllConfirm = signal(false);
   expandedNoteItemId = signal<string | null>(null);
   editingNoteItemId = signal<string | null>(null);
   editingNoteValue = signal('');
@@ -1546,6 +1548,36 @@ ${url}`;
     } catch (error) {
       console.error('Error deleting calendar event for milestone:', error);
       // Don't throw - milestone was still deleted successfully
+    }
+  }
+
+  // Delete all milestones and their calendar events
+  async deleteAllMilestones() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const items = this.actionItems();
+    if (items.length === 0) {
+      this.showDeleteAllConfirm.set(false);
+      return;
+    }
+
+    this.deletingAllMilestones.set(true);
+
+    try {
+      // Delete all action items and their calendar events
+      for (const item of items) {
+        await this.actionItemsService.deleteActionItem(goal.id, item.id);
+        await this.deleteCalendarEventForMilestone(goal.id, item.title);
+      }
+
+      // Clear local state
+      this.actionItems.set([]);
+      this.showDeleteAllConfirm.set(false);
+    } catch (error) {
+      console.error('Error deleting all milestones:', error);
+    } finally {
+      this.deletingAllMilestones.set(false);
     }
   }
 

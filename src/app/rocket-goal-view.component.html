@@ -1167,6 +1167,17 @@
                       </svg>
                       Add Milestone
                     </button>
+                    <!-- Delete All Milestones Button (subtle) -->
+                    @if (actionItems().length > 0) {
+                      <button (click)="showDeleteAllConfirm.set(true)"
+                        class="delete-all-milestones-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all"
+                        [disabled]="deletingAllMilestones()">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Clear All
+                      </button>
+                    }
                   </div>
                 </div>
 
@@ -1486,6 +1497,36 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           Add Milestone
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Delete All Milestones Confirmation Modal -->
+@if (showDeleteAllConfirm()) {
+<div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="showDeleteAllConfirm.set(false)">
+  <div class="delete-confirm-modal" (click)="$event.stopPropagation()">
+    <div class="delete-confirm-icon">
+      <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </div>
+    <h3 class="delete-confirm-title">Delete All Milestones?</h3>
+    <p class="delete-confirm-text">
+      This will permanently delete all <strong>{{ actionItems().length }}</strong> milestones and remove them from your calendar. This action cannot be undone.
+    </p>
+    <div class="delete-confirm-actions">
+      <button (click)="showDeleteAllConfirm.set(false)" class="delete-confirm-cancel" [disabled]="deletingAllMilestones()">
+        Cancel
+      </button>
+      <button (click)="deleteAllMilestones()" class="delete-confirm-btn" [disabled]="deletingAllMilestones()">
+        @if (deletingAllMilestones()) {
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <span>Deleting...</span>
+        } @else {
+          <span>Delete All</span>
         }
       </button>
     </div>
