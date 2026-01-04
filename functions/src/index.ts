@@ -346,8 +346,26 @@ export const processAIPrompt = functions.runWith({
             const aiStartTime = Date.now();
             const genAI = new GoogleGenerativeAI(apiKey);
 
+            // Get current date information for AI awareness
+            const currentDate = new Date();
+            const currentDateStr = currentDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const currentTimeStr = currentDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+
             // Base identity and framework description
-            const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.`;
+            const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework, which incorporates the wisdom of leading motivational thinkers, neuroscientists, and visionaries like Tony Robbins, Dr. Wayne Dyer, Emily Balcetis, and Buckminster Fuller. You also draw upon David Goggins's relentless mindset of embracing pain, overcoming adversity, and unlocking peak performance through discipline and grit. You are here to push users beyond their limits, help them master personal accountability, and foster team growth through the CREW Team Method—focusing on Courage to Risk, Recognition of Progress, Expanding Horizons, and Wisdom through Mentorship.
+
+CURRENT DATE AND TIME:
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.
+Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.`;
 
             // Mode-specific conversation guidelines
             let conversationGuidelines = '';
@@ -509,7 +527,7 @@ This blueprint embodies your unique approach to achieving opulence through both 
 
             // Use fastest model for speed
             const model = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash-exp", // Fastest model available
+                model: "gemini-3-flash-preview", // Upgraded to Gemini 3 Flash for better reasoning
                 systemInstruction: systemInstruction,
                 generationConfig: {
                     temperature: mode === 'chat' ? 0.9 : 0.8, // Slightly higher for chat mode for more natural conversation
@@ -712,7 +730,25 @@ This blueprint embodies your unique approach to achieving opulence through both 
  * Build system prompt for the AI with calendar context
  */
 function buildSystemPrompt(goalContext: any, calendarEvents: any[]): string {
-    const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework. You also help users manage their calendar and schedule for achieving their goals.`;
+    // Get current date information for AI awareness
+    const now = new Date();
+    const currentDateStr = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const currentTimeStr = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+
+    const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework. You also help users manage their calendar and schedule for achieving their goals.
+
+CURRENT DATE AND TIME:
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.
+Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.`;
 
     const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES:
 - Be helpful, concise, and action-oriented
@@ -879,7 +915,7 @@ export const rocketGoalsAI = onCall({
 
         // Initialize Gemini with function calling
         const genAI = new GoogleGenerativeAI(apiKey);
-        const modelName = "gemini-2.0-flash-exp";
+        const modelName = "gemini-3-flash-preview"; // Upgraded to Gemini 3 Flash for better reasoning
 
         const model = genAI.getGenerativeModel({
             model: modelName,
@@ -888,7 +924,7 @@ export const rocketGoalsAI = onCall({
                 temperature: 0.8,
                 topP: 0.95,
                 topK: 40,
-                maxOutputTokens: 300,
+                maxOutputTokens: 8192, // High ceiling - let the AI decide response length naturally
             },
             tools: [{
                 functionDeclarations: toolDeclarations
