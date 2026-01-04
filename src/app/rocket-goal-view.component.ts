@@ -105,7 +105,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   expandedNoteItemId = signal<string | null>(null);
   editingNoteItemId = signal<string | null>(null);
   editingNoteValue = signal('');
-  viewAllTasks = signal(false);
+  viewAllTasks = signal(true);
   savingTask = signal(false);
   expandedTimelineTaskId = signal<string | null>(null);
 
