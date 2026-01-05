@@ -355,7 +355,7 @@
 
 .weekday-headers {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
   margin-bottom: 8px;
 }
@@ -380,12 +380,12 @@
 
 .days-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
+  width: 100%;
 }
 
 .day-cell {
-  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -397,6 +397,7 @@
   transition: all 0.3s ease;
   position: relative;
   min-height: 80px;
+  min-width: 0;
 }
 
 :host-context(.light-mode) .day-cell {
@@ -983,5 +984,4 @@
 .year-view {
   animation: fade-in 0.3s ease-out;
 }
-
 
