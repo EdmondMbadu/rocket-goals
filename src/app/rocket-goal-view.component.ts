@@ -1780,11 +1780,12 @@ ${url}`;
       const deadlineTimestamp = this.getDeadlineTimestamp();
       const totalDays = this.getTimeframeDays();
 
-      // Calculate end date
+      // Calculate end date based on deadline or timeframe
       let endDate: Date;
       if (deadlineTimestamp) {
         endDate = new Date(deadlineTimestamp);
       } else {
+        // No specific deadline - calculate from timeframe
         endDate = new Date(startTime + (totalDays * 24 * 60 * 60 * 1000));
       }
 
@@ -1798,77 +1799,91 @@ ${url}`;
       if (obstacles) contextSection += `\nPotential obstacles to address: ${obstacles}`;
       if (motivation) contextSection += `\nCore motivation: ${motivation}`;
 
-      const prompt = `You are creating a comprehensive, day-by-day milestone plan for someone committed to achieving: "${goalTitle}"
+      // For longer goals (>30 days), generate weekly milestones instead of daily
+      const isLongGoal = totalDays > 30;
+      const milestoneCount = isLongGoal ? Math.min(Math.ceil(totalDays / 7), 52) : totalDays;
+      const milestoneType = isLongGoal ? 'weekly' : 'daily';
+
+      const prompt = `Create a ${milestoneType} milestone plan for achieving: "${goalTitle}"
 
 TIMELINE: ${startDateStr} to ${endDateStr} (${totalDays} days total)
 ${contextSection}
 
-Create a DAILY milestone for EVERY SINGLE DAY from Day 1 to Day ${totalDays}. This person needs specific, actionable guidance for each day of their journey.
+${isLongGoal
+  ? `Generate ${milestoneCount} WEEKLY milestones spread across the ${totalDays}-day journey. Each milestone represents a week's focus.`
+  : `Generate ${milestoneCount} DAILY milestones - one for each day of the ${totalDays}-day journey.`
+}
 
 REQUIREMENTS:
-1. Generate EXACTLY ${totalDays} milestones - one for each day
+1. Generate EXACTLY ${milestoneCount} milestones
 2. Each milestone must be specific, actionable, and measurable
-3. Build progressive momentum - early days focus on foundation, later days on mastery
-4. Include variety: learning, practicing, reflecting, adjusting, celebrating small wins
-5. Make milestones realistic for a single day's effort
-6. Address potential obstacles with specific mitigation actions
-7. Include rest/reflection days strategically (every 5-7 days)
+3. Build progressive momentum - early period focuses on foundation, later on mastery
+4. Make milestones realistic for ${isLongGoal ? 'a week' : 'a single day'}'s effort
 
-STRUCTURE YOUR PLAN:
-- Days 1-3: Foundation & Setup (research, planning, gathering resources)
-- Days 4-7: Initial Action (first attempts, establishing routines)
-- Middle days: Building momentum (progressive challenges, skill development)
-- Days before deadline: Refinement & Push (intensify efforts, address gaps)
-- Final days: Polish & Completion (final review, celebrate achievement)
+IMPORTANT: Return ONLY a valid JSON array. Each object must have:
+- "title": Specific action (keep it concise, under 100 characters)
+- "dayNumber": The day number (1 to ${totalDays})
 
-IMPORTANT: Return ONLY a valid JSON array with NO additional text. Each object must have:
-- "title": Specific action for that day (e.g., "Research 3 proven methods for X and choose one to start")
-- "date": Date in YYYY-MM-DD format
-
-Generate milestones from ${this.formatDateISO(startDate)} to ${this.formatDateISO(endDate)}.
-
-Example format for a 7-day goal:
+Example format:
 [
-  {"title": "Define your specific success criteria and write down 3 measurable outcomes", "date": "2026-01-04"},
-  {"title": "Research and identify the top 3 strategies used by successful people in this area", "date": "2026-01-05"},
-  {"title": "Create your detailed action plan with specific daily time blocks", "date": "2026-01-06"},
-  {"title": "Take your first concrete action - spend 30 minutes on the most important task", "date": "2026-01-07"},
-  {"title": "Review progress, identify what's working, and adjust your approach", "date": "2026-01-08"},
-  {"title": "Push through resistance - double your effort on the hardest part", "date": "2026-01-09"},
-  {"title": "Final push and celebration - complete remaining tasks and acknowledge your growth", "date": "2026-01-10"}
+  {"title": "Define success criteria and 3 measurable outcomes", "dayNumber": 1},
+  {"title": "Research top 3 strategies from successful people", "dayNumber": ${isLongGoal ? 7 : 2}},
+  {"title": "Create detailed action plan with time blocks", "dayNumber": ${isLongGoal ? 14 : 3}}
 ]
 
-Now generate ${totalDays} daily milestones:`;
+Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
 
       const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
 
       // Parse the response - try to extract JSON array
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      let milestones: any[] = [];
+
+      // Try to find JSON array in response
+      const jsonMatch = response.match(/\[[\s\S]*?\]/);
       if (jsonMatch) {
-        const milestones = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(milestones)) {
-          this.generatedMilestones.set(
-            milestones.map((m: any) => {
-              // Parse the date and calculate day number
-              let milestoneDate = m.date || this.formatDateISO(startDate);
-              let dayNumber = this.calculateDayNumberFromDate(milestoneDate, startTime);
-
-              // Clamp day number to valid range
-              dayNumber = Math.min(Math.max(1, dayNumber), totalDays);
-
-              return {
-                title: m.title || '',
-                date: milestoneDate,
-                dayNumber,
-                selected: true
-              };
-            }).filter((m: any) => m.title.trim())
-          );
-        } else {
-          throw new Error('Invalid milestone format');
+        try {
+          milestones = JSON.parse(jsonMatch[0]);
+        } catch (parseError) {
+          // Try to fix common JSON issues
+          let cleanedJson = jsonMatch[0]
+            .replace(/,\s*\]/g, ']') // Remove trailing commas
+            .replace(/'/g, '"') // Replace single quotes
+            .replace(/(\w+):/g, '"$1":'); // Add quotes to keys
+          try {
+            milestones = JSON.parse(cleanedJson);
+          } catch {
+            console.error('Failed to parse cleaned JSON:', cleanedJson);
+          }
         }
+      }
+
+      if (Array.isArray(milestones) && milestones.length > 0) {
+        this.generatedMilestones.set(
+          milestones.map((m: any, index: number) => {
+            // Get day number from response or calculate it
+            let dayNumber = m.dayNumber || m.day || (index + 1);
+            if (typeof dayNumber === 'string') {
+              dayNumber = parseInt(dayNumber, 10) || (index + 1);
+            }
+
+            // Clamp day number to valid range
+            dayNumber = Math.min(Math.max(1, dayNumber), totalDays);
+
+            // Calculate the actual date from day number
+            const milestoneDate = new Date(startTime + ((dayNumber - 1) * 24 * 60 * 60 * 1000));
+            const dateStr = this.formatDateISO(milestoneDate);
+
+            return {
+              title: m.title || m.milestone || '',
+              date: dateStr,
+              dayNumber,
+              selected: true
+            };
+          }).filter((m: any) => m.title.trim())
+        );
       } else {
-        throw new Error('Could not parse milestones from response');
+        console.error('Could not parse milestones. Response:', response);
+        throw new Error('Could not parse milestones from AI response. Please try again.');
       }
     } catch (error: any) {
       console.error('Error generating milestones:', error);
