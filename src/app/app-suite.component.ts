@@ -227,6 +227,9 @@ export class AppSuiteComponent implements OnInit {
   ];
 
   async ngOnInit() {
+    // Scroll to top when component loads
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     // Check for pending prebuilt creation after login/signup
     if (this.isLoggedIn()) {
       await this.checkPendingPrebuilt();

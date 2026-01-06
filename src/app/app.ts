@@ -511,6 +511,10 @@ export class App implements AfterViewInit, OnDestroy {
     }
   }
 
+  public scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async startConversation(): Promise<void> {
     this.isConversationActive.set(true);
     this.conversationHistory = []; // Reset conversation history
