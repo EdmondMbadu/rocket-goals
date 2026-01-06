@@ -112,7 +112,8 @@
             <span class="flex items-center gap-2">
               Schedule a Demo
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </span>
           </a>
@@ -1008,61 +1009,121 @@
     class="py-24 bg-gradient-to-b from-white via-gray-50/50 to-white text-black relative overflow-hidden dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-100 transition-colors duration-300">
     <!-- Background decoration -->
     <div class="absolute inset-0 opacity-30 pointer-events-none">
-      <div class="absolute top-[-200px] right-[-200px] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] dark:bg-red-600/20"></div>
-      <div class="absolute bottom-[-200px] left-[-150px] w-[400px] h-[400px] bg-orange-500/10 rounded-full blur-[100px] dark:bg-orange-500/20"></div>
+      <div
+        class="absolute top-[-200px] right-[-200px] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] dark:bg-red-600/20">
+      </div>
+      <div
+        class="absolute bottom-[-200px] left-[-150px] w-[400px] h-[400px] bg-orange-500/10 rounded-full blur-[100px] dark:bg-orange-500/20">
+      </div>
     </div>
 
     <div class="container mx-auto px-4 relative z-10">
       <div class="max-w-7xl mx-auto">
         <!-- Section Header -->
-        <div class="text-center mb-16">
+        <div class="text-center mb-20">
           <div
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-50 to-orange-50 border border-red-200/50 mb-6 dark:from-red-900/20 dark:to-orange-900/20 dark:border-red-500/20">
-            <span class="w-2 h-2 bg-gradient-to-r from-red-600 to-orange-500 rounded-full animate-pulse"></span>
-            <span class="text-xs font-bold bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent tracking-wider uppercase">App Suite</span>
+            class="inline-flex items-center gap-2 px-6 py-2 rounded-full glass border border-red-200/50 mb-8 dark:border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+            <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_#ef4444]"></span>
+            <span class="text-[10px] font-black tracking-[0.4em] uppercase transition-colors duration-300"
+              [class]="isDarkMode() ? 'text-white/60' : 'text-slate-500'">Exclusive Access</span>
           </div>
-          <h2
-            class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-black dark:text-white mb-6">
-            Specialized Apps for<br />
-            <span class="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 bg-clip-text text-transparent">Every Achiever</span>
+          <h2 class="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] text-black dark:text-white mb-8">
+            PRECISION<br />
+            <span
+              class="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 bg-clip-text text-transparent italic px-2">SYSTEMS</span>
           </h2>
-          <p class="text-xl text-black/70 leading-relaxed font-medium max-w-3xl mx-auto dark:text-slate-300">
-            Pre-built goal templates designed for specific niches. Choose your path and start achieving immediately.
+          <p class="text-xl text-black/60 leading-relaxed font-medium max-w-2xl mx-auto dark:text-slate-300 opacity-80">
+            Elite AI-powered engines for high-performance individuals.<br />
+            Choose your orbit and execute with total clarity.
           </p>
         </div>
 
         <!-- App Cards Preview -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           <!-- HustleOrbit -->
-          <div class="group bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-3xl p-6 cursor-pointer overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-slate-900/50">
-            <div class="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-3xl border border-white/20 mb-4 group-hover:scale-110 transition-transform">🚀</div>
-            <h3 class="text-lg font-black text-white mb-1">HustleOrbit</h3>
-            <p class="text-sm text-white/70 font-medium mb-3">Solopreneur execution co-pilot</p>
-            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider px-2 py-1 bg-black/30 rounded-full">Business</span>
+          <div routerLink="/app-suite"
+            class="premium-app-card group relative rounded-[2rem] cursor-pointer overflow-hidden transition-all duration-700 hover:-translate-y-2">
+            <div class="absolute inset-0 z-0 transition-transform duration-1000 group-hover:scale-110">
+              <img src="/assets/app-suite/hustle-orbit.png" alt="HustleOrbit" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+            </div>
+            <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
+              <div class="flex items-center gap-2 mb-2">
+                <div
+                  class="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl shadow-2xl">
+                  🚀</div>
+                <div class="px-2 py-0.5 rounded-md bg-black/40 backdrop-blur-sm border border-white/10">
+                  <span class="text-[8px] font-black text-white/70 uppercase tracking-widest">Business</span>
+                </div>
+              </div>
+              <h3 class="text-xl font-black text-white mb-1 group-hover:text-red-500 transition-colors">HustleOrbit</h3>
+              <p class="text-xs text-white/70 font-medium line-clamp-2">Solopreneur & Indie Hacker execution co-pilot.
+              </p>
+            </div>
           </div>
 
           <!-- OptiHuman -->
-          <div class="group bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-600 rounded-3xl p-6 cursor-pointer overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-900/50">
-            <div class="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-3xl border border-white/20 mb-4 group-hover:scale-110 transition-transform">🧬</div>
-            <h3 class="text-lg font-black text-white mb-1">OptiHuman</h3>
-            <p class="text-sm text-white/70 font-medium mb-3">Biohacker performance optimizer</p>
-            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider px-2 py-1 bg-black/30 rounded-full">Health</span>
+          <div routerLink="/app-suite"
+            class="premium-app-card group relative rounded-[2rem] cursor-pointer overflow-hidden transition-all duration-700 hover:-translate-y-2">
+            <div class="absolute inset-0 z-0 transition-transform duration-1000 group-hover:scale-110">
+              <img src="/assets/app-suite/opti-human.png" alt="OptiHuman" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+            </div>
+            <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
+              <div class="flex items-center gap-2 mb-2">
+                <div
+                  class="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl shadow-2xl">
+                  🧬</div>
+                <div class="px-2 py-0.5 rounded-md bg-black/40 backdrop-blur-sm border border-white/10">
+                  <span class="text-[8px] font-black text-white/70 uppercase tracking-widest">Health</span>
+                </div>
+              </div>
+              <h3 class="text-xl font-black text-white mb-1 group-hover:text-red-500 transition-colors">OptiHuman</h3>
+              <p class="text-xs text-white/70 font-medium line-clamp-2">Biohacker performance & health optimization.</p>
+            </div>
           </div>
 
-          <!-- CreatorCraft -->
-          <div class="group bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 rounded-3xl p-6 cursor-pointer overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-900/50">
-            <div class="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-3xl border border-white/20 mb-4 group-hover:scale-110 transition-transform">🎨</div>
-            <h3 class="text-lg font-black text-white mb-1">CreatorCraft</h3>
-            <p class="text-sm text-white/70 font-medium mb-3">Creative freelancer project tool</p>
-            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider px-2 py-1 bg-black/30 rounded-full">Creative</span>
+          <!-- PipelinePilot (Previously MoonlightMaker or similar) -->
+          <div routerLink="/app-suite"
+            class="premium-app-card group relative rounded-[2rem] cursor-pointer overflow-hidden transition-all duration-700 hover:-translate-y-2">
+            <div class="absolute inset-0 z-0 transition-transform duration-1000 group-hover:scale-110">
+              <img src="/assets/app-suite/pipeline-pilot.png" alt="PipelinePilot" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+            </div>
+            <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
+              <div class="flex items-center gap-2 mb-2">
+                <div
+                  class="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl shadow-2xl">
+                  📈</div>
+                <div class="px-2 py-0.5 rounded-md bg-black/40 backdrop-blur-sm border border-white/10">
+                  <span class="text-[8px] font-black text-white/70 uppercase tracking-widest">Sales</span>
+                </div>
+              </div>
+              <h3 class="text-xl font-black text-white mb-1 group-hover:text-red-500 transition-colors">PipelinePilot
+              </h3>
+              <p class="text-xs text-white/70 font-medium line-clamp-2">Real Estate & Sales Pro deal accelerator.</p>
+            </div>
           </div>
 
-          <!-- BossBeam -->
-          <div class="group bg-gradient-to-br from-fuchsia-600 via-pink-600 to-rose-600 rounded-3xl p-6 cursor-pointer overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-fuchsia-900/50">
-            <div class="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-3xl border border-white/20 mb-4 group-hover:scale-110 transition-transform">👑</div>
-            <h3 class="text-lg font-black text-white mb-1">BossBeam</h3>
-            <p class="text-sm text-white/70 font-medium mb-3">Female founder scaling platform</p>
-            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider px-2 py-1 bg-black/30 rounded-full">Founder</span>
+          <!-- ApexAscend (Previously BossBeam or similar) -->
+          <div routerLink="/app-suite"
+            class="premium-app-card group relative rounded-[2rem] cursor-pointer overflow-hidden transition-all duration-700 hover:-translate-y-2">
+            <div class="absolute inset-0 z-0 transition-transform duration-1000 group-hover:scale-110">
+              <img src="/assets/app-suite/apex-ascend.png" alt="ApexAscend" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+            </div>
+            <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
+              <div class="flex items-center gap-2 mb-2">
+                <div
+                  class="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl shadow-2xl">
+                  ⛰️</div>
+                <div class="px-2 py-0.5 rounded-md bg-black/40 backdrop-blur-sm border border-white/10">
+                  <span class="text-[8px] font-black text-white/70 uppercase tracking-widest">Career</span>
+                </div>
+              </div>
+              <h3 class="text-xl font-black text-white mb-1 group-hover:text-red-500 transition-colors">ApexAscend</h3>
+              <p class="text-xs text-white/70 font-medium line-clamp-2">Corporate Climber leadership & strategy.</p>
+            </div>
           </div>
         </div>
 
@@ -1071,12 +1132,14 @@
           <a routerLink="/app-suite"
             class="group inline-flex items-center gap-3 px-10 py-5 bg-black text-white font-bold text-lg rounded-full hover:bg-red-600 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-red-600/30 hover:-translate-y-1 dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
             <span>Explore All 12 Apps</span>
-            <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </a>
           <p class="mt-4 text-sm text-black/50 dark:text-slate-400 font-medium">
-            🚀 HustleOrbit • 🧬 OptiHuman • 🌙 MoonlightMaker • 📈 PipelinePilot • ⛰️ ApexAscend • 🎨 CreatorCraft • 🧠 NeuroNexus • 👑 BossBeam • 🍎 MySugarShift • 🚴 MyRocketRide • 🏃 MarathonMover • 💼 CareerQuest
+            🚀 HustleOrbit • 🧬 OptiHuman • 🌙 MoonlightMaker • 📈 PipelinePilot • ⛰️ ApexAscend • 🎨 CreatorCraft • 🧠
+            NeuroNexus • 👑 BossBeam • 🍎 MySugarShift • 🚴 MyRocketRide • 🏃 MarathonMover • 💼 CareerQuest
           </p>
         </div>
       </div>
@@ -1589,7 +1652,8 @@
             <span class="flex items-center gap-2">
               Schedule a Demo
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </span>
           </a>
@@ -1657,7 +1721,8 @@
       </div>
       <div
         class="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 dark:border-white/5">
-        <p class="text-black/40 text-sm font-medium dark:text-slate-400">&copy; {{ getCurrentYear() }} RocketGoals. All rights reserved.
+        <p class="text-black/40 text-sm font-medium dark:text-slate-400">&copy; {{ getCurrentYear() }} RocketGoals. All
+          rights reserved.
         </p>
         <div class="flex gap-6">
           <a href="https://x.com/RocketGoals" target="_blank" rel="noopener noreferrer"
