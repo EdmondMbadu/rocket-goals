@@ -17,5 +17,6 @@ export const routes: Routes = [
   { path: 'contact', loadComponent: () => import('./contact-page.component').then(m => m.ContactPageComponent) },
   { path: 'about', loadComponent: () => import('./about-page.component').then(m => m.AboutPageComponent) },
   { path: 'schedule', loadComponent: () => import('./schedule-demo.component').then(m => m.ScheduleDemoComponent) },
+  { path: 'app-suite', loadComponent: () => import('./app-suite.component').then(m => m.AppSuiteComponent) },
   { path: '**', redirectTo: '' }
 ];
