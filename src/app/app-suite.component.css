@@ -17,7 +17,7 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  background-image: 
+  background-image:
     radial-gradient(ellipse at 20% 30%, rgba(239, 68, 68, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 70%, rgba(251, 146, 60, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 60%);
@@ -27,7 +27,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
     linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px);
   background-size: 60px 60px;
@@ -53,7 +53,7 @@
 }
 
 .stars-1 {
-  background-image: 
+  background-image:
     radial-gradient(1px 1px at 25px 50px, rgba(255, 255, 255, 0.5), transparent),
     radial-gradient(1px 1px at 100px 150px, rgba(255, 255, 255, 0.4), transparent),
     radial-gradient(1.5px 1.5px at 175px 250px, rgba(255, 255, 255, 0.6), transparent),
@@ -67,7 +67,7 @@
 }
 
 .stars-2 {
-  background-image: 
+  background-image:
     radial-gradient(1.5px 1.5px at 75px 100px, rgba(255, 255, 255, 0.6), transparent),
     radial-gradient(2px 2px at 200px 200px, rgba(255, 255, 255, 0.5), transparent),
     radial-gradient(1.5px 1.5px at 300px 50px, rgba(255, 255, 255, 0.4), transparent),
@@ -79,7 +79,7 @@
 }
 
 .stars-3 {
-  background-image: 
+  background-image:
     radial-gradient(2px 2px at 50px 175px, rgba(255, 255, 255, 0.5), transparent),
     radial-gradient(1.5px 1.5px at 150px 75px, rgba(255, 255, 255, 0.6), transparent),
     radial-gradient(2.5px 2.5px at 275px 300px, rgba(255, 255, 255, 0.4), transparent),
@@ -91,9 +91,12 @@
 }
 
 @keyframes twinkle {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.5;
   }
+
   50% {
     opacity: 1;
   }
@@ -104,7 +107,7 @@
   position: absolute;
   inset: 0;
   opacity: 0.03;
-  background-image: 
+  background-image:
     linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.1) 55%, transparent 60%),
     linear-gradient(-45deg, transparent 40%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.1) 55%, transparent 60%);
   background-size: 200px 200px;
@@ -140,12 +143,10 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(255, 255, 255, 0.03) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 100%);
   transform: rotate(30deg);
   transition: transform 0.5s ease;
   pointer-events: none;
@@ -160,6 +161,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -170,6 +172,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -261,9 +264,12 @@ button:focus-visible {
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1.1);
   }
+
   50% {
     transform: translateY(-5px) scale(1.1);
   }
@@ -280,9 +286,12 @@ button:focus-visible {
 
 /* Pulse animation for status indicator */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -297,6 +306,7 @@ button:focus-visible {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -312,24 +322,60 @@ button:focus-visible {
   animation: card-enter 0.5s ease-out forwards;
 }
 
-.app-card:nth-child(1) { animation-delay: 0.05s; }
-.app-card:nth-child(2) { animation-delay: 0.1s; }
-.app-card:nth-child(3) { animation-delay: 0.15s; }
-.app-card:nth-child(4) { animation-delay: 0.2s; }
-.app-card:nth-child(5) { animation-delay: 0.25s; }
-.app-card:nth-child(6) { animation-delay: 0.3s; }
-.app-card:nth-child(7) { animation-delay: 0.35s; }
-.app-card:nth-child(8) { animation-delay: 0.4s; }
-.app-card:nth-child(9) { animation-delay: 0.45s; }
-.app-card:nth-child(10) { animation-delay: 0.5s; }
-.app-card:nth-child(11) { animation-delay: 0.55s; }
-.app-card:nth-child(12) { animation-delay: 0.6s; }
+.app-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.app-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.app-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.app-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.app-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.app-card:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+.app-card:nth-child(7) {
+  animation-delay: 0.35s;
+}
+
+.app-card:nth-child(8) {
+  animation-delay: 0.4s;
+}
+
+.app-card:nth-child(9) {
+  animation-delay: 0.45s;
+}
+
+.app-card:nth-child(10) {
+  animation-delay: 0.5s;
+}
+
+.app-card:nth-child(11) {
+  animation-delay: 0.55s;
+}
+
+.app-card:nth-child(12) {
+  animation-delay: 0.6s;
+}
 
 @keyframes card-enter {
   from {
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -349,4 +395,3 @@ button:focus-visible {
 .light-theme .app-card:hover {
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
 }
-

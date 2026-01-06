@@ -12,7 +12,8 @@ export interface PrebuiltTemplate {
   name: string;
   tagline: string;
   description: string;
-  icon: string; // Emoji or icon identifier
+  icon: string; // Emoji kept for fallback/simple UI
+  imageUrl: string; // Premium image path
   color: string; // Gradient colors for the card
   category: string;
   defaultGoals: {
@@ -50,7 +51,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Solopreneur & Indie Hacker execution co-pilot.',
       description: 'Build your indie empire with focused execution. Track product launches, customer acquisition, and revenue milestones.',
       icon: '🚀',
-      color: 'from-slate-800 via-slate-700 to-slate-600',
+      imageUrl: '/assets/app-suite/hustle-orbit.png',
+      color: 'from-slate-900 via-slate-800 to-slate-900',
       category: 'Business',
       defaultGoals: {
         primaryGoal: 'Launch and grow my indie product',
@@ -65,7 +67,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Biohacker performance & health optimization.',
       description: 'Optimize your biology for peak performance. Track sleep, nutrition, exercise, and cognitive enhancement protocols.',
       icon: '🧬',
-      color: 'from-purple-700 via-purple-600 to-indigo-600',
+      imageUrl: '/assets/app-suite/opti-human.png',
+      color: 'from-indigo-950 via-purple-900 to-indigo-900',
       category: 'Health',
       defaultGoals: {
         primaryGoal: 'Optimize my health and performance',
@@ -80,7 +83,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Side Hustler empire building after hours.',
       description: 'Build your side hustle after your 9-5. Track progress on your passion project while balancing work-life.',
       icon: '🌙',
-      color: 'from-indigo-800 via-indigo-700 to-blue-700',
+      imageUrl: '/assets/app-suite/moonlight-maker.png',
+      color: 'from-blue-950 via-indigo-950 to-slate-900',
       category: 'Business',
       defaultGoals: {
         primaryGoal: 'Build a profitable side hustle',
@@ -95,7 +99,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Real Estate & Sales Pro deal accelerator.',
       description: 'Close more deals and grow your pipeline. Track leads, follow-ups, and revenue targets with precision.',
       icon: '📈',
-      color: 'from-emerald-600 via-teal-600 to-cyan-600',
+      imageUrl: '/assets/app-suite/pipeline-pilot.png',
+      color: 'from-emerald-950 via-teal-900 to-cyan-950',
       category: 'Sales',
       defaultGoals: {
         primaryGoal: 'Close more deals and grow revenue',
@@ -110,7 +115,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Corporate Climber leadership & strategy.',
       description: 'Advance your corporate career with strategic moves. Track promotions, skill building, and leadership development.',
       icon: '⛰️',
-      color: 'from-sky-600 via-blue-600 to-indigo-600',
+      imageUrl: '/assets/app-suite/apex-ascend.png',
+      color: 'from-slate-900 via-blue-950 to-indigo-950',
       category: 'Career',
       defaultGoals: {
         primaryGoal: 'Advance my corporate career',
@@ -125,7 +131,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Creative Freelancer project completion tool.',
       description: 'Ship creative projects on time. Track client work, personal projects, and portfolio building.',
       icon: '🎨',
-      color: 'from-orange-500 via-amber-500 to-yellow-500',
+      imageUrl: '/assets/app-suite/creator-craft.png',
+      color: 'from-orange-950 via-amber-900 to-yellow-950',
       category: 'Creative',
       defaultGoals: {
         primaryGoal: 'Complete creative projects consistently',
@@ -140,7 +147,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'AI Early Adopter neural network coaching.',
       description: 'Master AI tools and stay ahead of the curve. Track learning, experiments, and AI project implementations.',
       icon: '🧠',
-      color: 'from-cyan-600 via-teal-600 to-emerald-600',
+      imageUrl: '/assets/app-suite/opti-human.png', // Reusing opti-human for technical vibe
+      color: 'from-cyan-950 via-teal-900 to-emerald-950',
       category: 'Learning',
       defaultGoals: {
         primaryGoal: 'Master AI tools and applications',
@@ -155,7 +163,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Female Founder vision & scaling platform.',
       description: 'Scale your vision with confidence. Track fundraising, team building, and company milestones.',
       icon: '👑',
-      color: 'from-fuchsia-600 via-pink-600 to-rose-600',
+      imageUrl: '/assets/app-suite/pipeline-pilot.png', // Reusing pipeline-pilot for office vibe
+      color: 'from-fuchsia-950 via-pink-900 to-rose-950',
       category: 'Founder',
       defaultGoals: {
         primaryGoal: 'Scale my company and vision',
@@ -170,7 +179,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Wellness & nutrition balance assistant.',
       description: 'Transform your relationship with food and energy. Track nutrition, blood sugar, and wellness habits.',
       icon: '🍎',
-      color: 'from-lime-500 via-green-500 to-emerald-500',
+      imageUrl: '/assets/app-suite/opti-human.png', // Reusing opti-human for lab/health vibe
+      color: 'from-lime-950 via-green-900 to-emerald-950',
       category: 'Health',
       defaultGoals: {
         primaryGoal: 'Optimize nutrition and energy levels',
@@ -185,7 +195,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Distance Biker mileage & route planner.',
       description: 'Conquer long-distance cycling goals. Track mileage, routes, and training progress.',
       icon: '🚴',
-      color: 'from-orange-600 via-red-500 to-rose-500',
+      imageUrl: '/assets/app-suite/moonlight-maker.png', // Reusing moonlight-maker for atmospheric vibe
+      color: 'from-orange-950 via-red-900 to-rose-950',
       category: 'Fitness',
       defaultGoals: {
         primaryGoal: 'Complete my cycling distance goals',
@@ -200,7 +211,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Marathon runner training & pacing guide.',
       description: 'Train for your marathon with precision. Track runs, pacing strategies, and race preparation.',
       icon: '🏃',
-      color: 'from-amber-500 via-orange-500 to-red-500',
+      imageUrl: '/assets/app-suite/apex-ascend.png', // Reusing apex-ascend for goal-oriented vibe
+      color: 'from-amber-950 via-orange-900 to-red-950',
       category: 'Fitness',
       defaultGoals: {
         primaryGoal: 'Complete my marathon training',
@@ -215,7 +227,8 @@ export class AppSuiteComponent implements OnInit {
       tagline: 'Job Seeker application & interview tracker.',
       description: 'Land your dream job with organized tracking. Manage applications, interviews, and networking.',
       icon: '💼',
-      color: 'from-slate-600 via-zinc-600 to-neutral-600',
+      imageUrl: '/assets/app-suite/pipeline-pilot.png', // Reusing pipeline-pilot for corporate vibe
+      color: 'from-slate-900 via-zinc-900 to-neutral-800',
       category: 'Career',
       defaultGoals: {
         primaryGoal: 'Land my dream job',
@@ -229,7 +242,7 @@ export class AppSuiteComponent implements OnInit {
   async ngOnInit() {
     // Scroll to top when component loads
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     // Check for pending prebuilt creation after login/signup
     if (this.isLoggedIn()) {
       await this.checkPendingPrebuilt();
