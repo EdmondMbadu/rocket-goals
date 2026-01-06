@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import { ThemeService } from './theme.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
+import { VisualizationService } from './visualization.service';
 
 export interface PrebuiltTemplate {
   id: string;
@@ -34,6 +35,7 @@ export class AppSuiteComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);
   private readonly theme = inject(ThemeService);
+  private readonly visualizationService = inject(VisualizationService);
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
@@ -291,7 +293,9 @@ export class AppSuiteComponent implements OnInit {
           prebuilt_template_name: template.name,
           prebuilt_tagline: template.tagline,
           objectives: template.defaultGoals.objectives,
-          custom_goal_title: `${template.name} Mission`
+          custom_goal_title: `${template.name} Mission`,
+          goalDescription: template.description,
+          timeframe: 'week' // Default to 7-day challenge
         },
         participant: {
           firstName: profile.firstName || '',
@@ -303,6 +307,40 @@ export class AppSuiteComponent implements OnInit {
         startTime: now
       });
 
+      // Generate visualization image for the goal
+      try {
+        // Get user photo from profile for visualization if available
+        let userPhotoBase64: string | null = null;
+        if (profile.rocketGoalPhotoUrl) {
+          try {
+            userPhotoBase64 = await this.imageUrlToBase64(profile.rocketGoalPhotoUrl);
+          } catch (error) {
+            console.warn('Failed to convert profile photo to base64:', error);
+          }
+        }
+
+        const visualizationResult = await this.visualizationService.generateVisualization({
+          goalId,
+          goalDescription: `${template.name}: ${template.description}. Goal: ${template.defaultGoals.primaryGoal}`,
+          timeframe: 'week',
+          hasAccountabilitySupport: 'yes',
+          userPhotoBase64
+        });
+
+        if (visualizationResult.success && visualizationResult.imageUrl) {
+          // Update the goal with the visualization image URL
+          await this.goalsService.updateRocketGoal(goalId, {
+            visualizationImageUrl: visualizationResult.imageUrl
+          });
+          console.log('Visualization generated successfully:', visualizationResult.imageUrl);
+        } else {
+          console.warn('Failed to generate visualization:', visualizationResult.message);
+        }
+      } catch (visualizationError) {
+        console.warn('Error generating visualization:', visualizationError);
+        // Continue even if visualization fails - goal is already created
+      }
+
       this.closeConfirmModal();
       this.isCreating.set(false);
 
@@ -311,6 +349,30 @@ export class AppSuiteComponent implements OnInit {
     } catch (error) {
       console.error('Error creating prebuilt goal:', error);
       this.isCreating.set(false);
+    }
+  }
+
+  /**
+   * Convert an image URL to base64
+   */
+  private async imageUrlToBase64(url: string): Promise<string | null> {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          // Remove data URL prefix if present
+          const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image URL to base64:', error);
+      return null;
     }
   }
 
