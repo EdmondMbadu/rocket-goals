@@ -4596,12 +4596,6 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-.calendar-connect-btn.google {
-  background: linear-gradient(135deg, #4285f4, #34a853);
-  color: #ffffff;
-  box-shadow: 0 10px 20px rgba(52, 168, 83, 0.2);
-}
-
 .calendar-connect-btn.apple {
   background: linear-gradient(135deg, #111827, #374151);
   color: #ffffff;

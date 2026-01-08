@@ -902,17 +902,6 @@ ${url}`;
     this.selectedEvent.set(null);
   }
 
-  connectGoogleCalendar() {
-    const calendarName = this.getGoalTitleDisplay() || 'Rocket Goals';
-    const events = this.calendarEvents();
-    if (events.length === 0) {
-      alert('No calendar events to sync yet. Add a milestone or event first.');
-      return;
-    }
-    this.downloadCalendarIcs(calendarName);
-    window.open('https://calendar.google.com/calendar/u/0/r/settings/import', '_blank', 'noopener');
-  }
-
   connectAppleCalendar() {
     const calendarName = this.getGoalTitleDisplay() || 'Rocket Goals';
     const events = this.calendarEvents();
@@ -938,6 +927,7 @@ ${url}`;
     document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
   }
+
 
   private buildCalendarIcs(events: CalendarEvent[], calendarName: string, goalId: string): string {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
