@@ -11,10 +11,53 @@ import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate } from './launchpad.types';
   standalone: true,
   imports: [CommonModule, RouterLink, AvatarDropdownComponent],
   template: `
-    <div class="launchpad-page" 
-      [class.light-theme]="!isDarkMode()" 
+    <!-- Full-Screen Launch Loading Overlay -->
+    @if (isLaunching()) {
+      <div class="launch-loading-overlay">
+        <div class="launch-loading-content">
+          <!-- Animated Rocket -->
+          <div class="launch-rocket-animation">
+            <div class="rocket-container">
+              <span class="rocket-emoji">🚀</span>
+              <div class="rocket-flames">
+                <span class="flame flame-1">🔥</span>
+                <span class="flame flame-2">🔥</span>
+                <span class="flame flame-3">🔥</span>
+              </div>
+            </div>
+            <div class="launch-particles">
+              <span class="particle"></span>
+              <span class="particle"></span>
+              <span class="particle"></span>
+              <span class="particle"></span>
+              <span class="particle"></span>
+            </div>
+          </div>
+
+          <!-- Loading Text -->
+          <h2 class="launch-loading-title">Initiating Mission</h2>
+          <p class="launch-loading-subtitle">Preparing your {{ template()?.name }} experience...</p>
+
+          <!-- Progress Bar -->
+          <div class="launch-progress-container">
+            <div class="launch-progress-bar">
+              <div class="launch-progress-fill"></div>
+            </div>
+          </div>
+
+          <!-- Co-Pilot Intro -->
+          <div class="launch-copilot-intro">
+            <img [src]="template()?.coPilotAvatar" [alt]="template()?.coPilotName" class="launch-copilot-avatar" />
+            <p class="launch-copilot-message">{{ template()?.coPilotName }} is standing by...</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="launchpad-page"
+      [class.light-theme]="!isDarkMode()"
       [class.dark-theme]="isDarkMode()">
-      
+
       <!-- Animated Backgrounds -->
       <div class="absolute inset-0 bg-page-gradient"></div>
       
