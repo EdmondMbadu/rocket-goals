@@ -880,3 +880,37 @@
     transform: rotate(360deg);
   }
 }
+
+/* ===== LIGHT MODE LOADING OVERLAY ===== */
+.launch-loading-overlay.light-mode {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+}
+
+.launch-loading-overlay.light-mode .launch-loading-title {
+  color: #0f172a;
+}
+
+.launch-loading-overlay.light-mode .launch-loading-subtitle {
+  color: #475569;
+}
+
+.launch-loading-overlay.light-mode .launch-progress-bar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.launch-loading-overlay.light-mode .launch-copilot-intro {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.launch-loading-overlay.light-mode .launch-copilot-message {
+  color: #334155;
+}
+
+.launch-loading-overlay.light-mode .rocket-emoji {
+  filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.4));
+}
+
+.launch-loading-overlay.light-mode .particle {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}

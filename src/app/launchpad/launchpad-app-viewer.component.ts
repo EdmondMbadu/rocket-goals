@@ -13,7 +13,7 @@ import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate } from './launchpad.types';
   template: `
     <!-- Full-Screen Launch Loading Overlay -->
     @if (isLaunching()) {
-      <div class="launch-loading-overlay">
+      <div class="launch-loading-overlay" [class.light-mode]="!isDarkMode()">
         <div class="launch-loading-content">
           <!-- Animated Rocket -->
           <div class="launch-rocket-animation">
