@@ -1571,6 +1571,7 @@
 @if (showCelebration()) {
 <div class="celebration-overlay" aria-hidden="true">
   <div class="celebration-backdrop"></div>
+  <div class="celebration-glow"></div>
   <div class="celebration-confetti">
     @for (particle of celebrationParticles; track $index) {
       <span class="confetti-piece"
@@ -1578,7 +1579,9 @@
         [style.--d.s]="particle.delay"
         [style.--t.s]="particle.duration"
         [style.--s.px]="particle.size"
-        [style.--h]="particle.hue"></span>
+        [style.--h]="particle.hue"
+        [style.--dx.px]="particle.drift"
+        [style.--r]="particle.rotation"></span>
     }
   </div>
   <div class="celebration-burst">

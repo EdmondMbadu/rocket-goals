@@ -115,12 +115,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   taskModalEditingItem = signal<ActionItem | null>(null);
   showCelebration = signal(false);
   private celebrationTimeout?: any;
-  readonly celebrationParticles = Array.from({ length: 24 }, (_value, index) => ({
-    left: (index * 100) / 24,
-    delay: (index % 6) * 0.12,
-    duration: 2.4 + (index % 5) * 0.25,
-    size: 6 + (index % 4) * 2,
-    hue: (index * 23) % 360
+  readonly celebrationParticles = Array.from({ length: 70 }, (_value, index) => ({
+    left: (index * 100) / 70,
+    delay: (index % 10) * 0.08,
+    duration: 2.4 + (index % 7) * 0.2,
+    size: 5 + (index % 5) * 2,
+    hue: (index * 19) % 360,
+    drift: ((index % 12) - 6) * 12,
+    rotation: (index * 37) % 360
   }));
 
   // Milestone Generation state
