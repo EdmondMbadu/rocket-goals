@@ -100,6 +100,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   editingActionItemTitle = signal('');
   newActionItemTitle = signal('');
   newActionItemNotes = signal('');
+  newActionItemCompleted = signal(false);
   showTaskModal = signal(false);
   selectedDayForNewTask = signal<number>(1);
   deletingAllMilestones = signal(false);
@@ -1690,6 +1691,7 @@ ${url}`;
     this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
+    this.newActionItemCompleted.set(false);
     // Set default date to today or current mission day
     const currentDayDate = this.getDateFromDayNumber(this.getCurrentMissionDay());
     this.selectedDateForNewTask.set(this.formatDateISO(currentDayDate));
@@ -1700,6 +1702,7 @@ ${url}`;
     this.showTaskModal.set(false);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
+    this.newActionItemCompleted.set(false);
     this.selectedDateForNewTask.set('');
   }
 
@@ -1744,6 +1747,7 @@ ${url}`;
 
     const selectedDay = this.selectedDayForNewTask();
     const notes = this.newActionItemNotes().trim();
+    const completed = this.newActionItemCompleted();
     const existingItems = this.getActionItemsForDay(selectedDay);
     const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
 
@@ -1753,7 +1757,7 @@ ${url}`;
         goalId: goal.id,
         title,
         dayNumber: selectedDay,
-        completed: false,
+        completed,
         order: nextOrder
       };
       if (notes) {
@@ -1768,7 +1772,7 @@ ${url}`;
         goalId: goal.id,
         title,
         dayNumber: selectedDay,
-        completed: false,
+        completed,
         order: nextOrder,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -1780,7 +1784,7 @@ ${url}`;
 
       // Also create a calendar event for this milestone
       const milestoneDate = this.getDateFromDayNumber(selectedDay);
-      await this.createCalendarEventForMilestone(goal.id, title, milestoneDate, notes);
+      await this.createCalendarEventForMilestone(goal.id, title, milestoneDate, notes, completed);
 
       this.closeTaskModal();
     } catch (error) {
@@ -1791,13 +1795,13 @@ ${url}`;
   }
 
   // Helper to create a calendar event for a milestone
-  private async createCalendarEventForMilestone(goalId: string, title: string, date: Date, description?: string) {
+  private async createCalendarEventForMilestone(goalId: string, title: string, date: Date, description?: string, completed: boolean = false) {
     try {
       const eventData: any = {
         title: `🎯 ${title}`,
         date,
         color: '#9333ea', // Purple for milestones
-        completed: false
+        completed
       };
       if (description) {
         eventData.description = description;
@@ -1811,7 +1815,7 @@ ${url}`;
         title: eventData.title,
         date,
         color: eventData.color,
-        completed: false,
+        completed,
         description: eventData.description
       };
       this.calendarEvents.update(events => [...events, newEvent]);

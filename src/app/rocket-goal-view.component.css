@@ -3417,6 +3417,38 @@
   background: #ffffff;
 }
 
+.task-modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 2px solid rgba(100, 116, 139, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  color: #e2e8f0;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.task-modal-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #dc2626;
+}
+
+.task-modal-checkbox:hover {
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.light-mode.task-modal-overlay .task-modal-checkbox,
+.light-mode .task-modal-checkbox {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+  color: #0f172a;
+}
+
 /* ===== MILESTONE DATE PICKER ===== */
 .milestone-date-picker {
   display: flex;

@@ -1501,6 +1501,23 @@
           (ngModelChange)="newActionItemNotes.set($event)"
           placeholder="Add any additional details, links, or reminders..."></textarea>
       </div>
+
+      <!-- Completion -->
+      <div class="task-modal-field">
+        <label class="task-modal-label">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Status
+        </label>
+        <label class="task-modal-checkbox">
+          <input
+            type="checkbox"
+            [ngModel]="newActionItemCompleted()"
+            (ngModelChange)="newActionItemCompleted.set($event)" />
+          <span>Mark as completed</span>
+        </label>
+      </div>
     </div>
 
     <!-- Modal Footer -->
