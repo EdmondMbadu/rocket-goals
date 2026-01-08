@@ -113,6 +113,15 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   expandedTimelineTaskId = signal<string | null>(null);
   private autoOpenedMilestoneId = signal<string | null>(null);
   taskModalEditingItem = signal<ActionItem | null>(null);
+  showCelebration = signal(false);
+  private celebrationTimeout?: any;
+  readonly celebrationParticles = Array.from({ length: 24 }, (_value, index) => ({
+    left: (index * 100) / 24,
+    delay: (index % 6) * 0.12,
+    duration: 2.4 + (index % 5) * 0.25,
+    size: 6 + (index % 4) * 2,
+    hue: (index * 23) % 360
+  }));
 
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
@@ -1588,12 +1597,16 @@ ${url}`;
     const goal = this.goal();
     if (!goal?.id) return;
 
+    const wasCompleted = item.completed;
     try {
       await this.actionItemsService.toggleActionItemComplete(goal.id, item.id, !item.completed);
       // Update local state
       this.actionItems.update(items =>
         items.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i)
       );
+      if (!wasCompleted) {
+        this.triggerCelebration();
+      }
     } catch (error) {
       console.error('Error toggling action item:', error);
     }
@@ -1765,6 +1778,7 @@ ${url}`;
 
     try {
       if (editingItem) {
+        const wasCompleted = editingItem.completed;
         const updates: { title: string; dayNumber: number; completed: boolean; notes?: string } = {
           title,
           dayNumber: selectedDay,
@@ -1786,6 +1800,9 @@ ${url}`;
           completed
         });
 
+        if (!wasCompleted && completed) {
+          this.triggerCelebration();
+        }
         this.closeTaskModal();
         return;
       }
@@ -1824,6 +1841,9 @@ ${url}`;
       const milestoneDate = this.getDateFromDayNumber(selectedDay);
       await this.createCalendarEventForMilestone(goal.id, title, milestoneDate, notes, completed);
 
+      if (completed) {
+        this.triggerCelebration();
+      }
       this.closeTaskModal();
     } catch (error) {
       console.error('Error adding action item:', error);
@@ -2149,6 +2169,16 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
     if (!this.taskModalEditingItem()) return;
     this.newActionItemCompleted.set(true);
     await this.addNewActionItem();
+  }
+
+  private triggerCelebration() {
+    this.showCelebration.set(true);
+    if (this.celebrationTimeout) {
+      clearTimeout(this.celebrationTimeout);
+    }
+    this.celebrationTimeout = setTimeout(() => {
+      this.showCelebration.set(false);
+    }, 2800);
   }
 
   toggleMilestoneSelection(index: number) {

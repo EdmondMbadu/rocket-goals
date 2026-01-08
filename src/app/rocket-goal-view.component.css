@@ -3694,6 +3694,170 @@
   cursor: not-allowed;
 }
 
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+
+.celebration-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(220, 38, 38, 0.25), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(59, 130, 246, 0.18), transparent 45%),
+    radial-gradient(circle at 40% 80%, rgba(34, 197, 94, 0.2), transparent 45%);
+  opacity: 0.85;
+  animation: celebration-fade 2.8s ease forwards;
+}
+
+.celebration-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10%;
+  left: calc(var(--x) * 1%);
+  width: var(--s);
+  height: calc(var(--s) * 2);
+  background: hsl(var(--h), 85%, 60%);
+  border-radius: 999px;
+  opacity: 0.9;
+  animation: confetti-fall var(--t) ease-in forwards;
+  animation-delay: var(--d);
+}
+
+.celebration-burst {
+  position: relative;
+  display: grid;
+  place-items: center;
+  animation: celebration-pop 0.6s ease;
+}
+
+.celebration-ring {
+  position: absolute;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  opacity: 0.7;
+  animation: celebration-ring 1.4s ease-out forwards;
+}
+
+.celebration-ring.ring-one {
+  width: 220px;
+  height: 220px;
+}
+
+.celebration-ring.ring-two {
+  width: 320px;
+  height: 320px;
+  animation-delay: 0.1s;
+}
+
+.celebration-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 28px 36px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.celebration-emoji {
+  font-size: 40px;
+  margin-bottom: 10px;
+  animation: celebration-float 1.6s ease-in-out infinite;
+}
+
+.celebration-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  color: #f8fafc;
+  text-transform: uppercase;
+}
+
+.celebration-subtitle {
+  margin-top: 6px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.light-mode .celebration-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(148, 163, 184, 0.4);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.light-mode .celebration-title {
+  color: #0f172a;
+}
+
+.light-mode .celebration-subtitle {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(340deg);
+    opacity: 0;
+  }
+}
+
+@keyframes celebration-pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes celebration-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes celebration-fade {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes celebration-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 .light-mode.task-modal-overlay .task-modal-btn.cancel,
 .light-mode .task-modal-btn.cancel {
   color: #64748b;

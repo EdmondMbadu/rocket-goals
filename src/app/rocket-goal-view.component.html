@@ -1568,6 +1568,31 @@
 </div>
 }
 
+@if (showCelebration()) {
+<div class="celebration-overlay" aria-hidden="true">
+  <div class="celebration-backdrop"></div>
+  <div class="celebration-confetti">
+    @for (particle of celebrationParticles; track $index) {
+      <span class="confetti-piece"
+        [style.--x.%]="particle.left"
+        [style.--d.s]="particle.delay"
+        [style.--t.s]="particle.duration"
+        [style.--s.px]="particle.size"
+        [style.--h]="particle.hue"></span>
+    }
+  </div>
+  <div class="celebration-burst">
+    <div class="celebration-ring ring-one"></div>
+    <div class="celebration-ring ring-two"></div>
+    <div class="celebration-card">
+      <div class="celebration-emoji">🚀</div>
+      <div class="celebration-title">Milestone Complete</div>
+      <div class="celebration-subtitle">Momentum looks good on you.</div>
+    </div>
+  </div>
+</div>
+}
+
 <!-- Delete All Milestones Confirmation Modal -->
 @if (showDeleteAllConfirm()) {
 <div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="showDeleteAllConfirm.set(false)">
