@@ -253,11 +253,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     if (!goal) return 1;
 
     const startTime = goal.startTime || Date.now();
-    const now = Date.now();
-    const elapsed = now - startTime;
+    const startDate = new Date(startTime);
+    const nowDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    nowDate.setHours(0, 0, 0, 0);
+    const elapsed = nowDate.getTime() - startDate.getTime();
     const daysPassed = Math.floor(elapsed / (24 * 60 * 60 * 1000)) + 1;
 
-    return Math.min(daysPassed, this.getTimeframeDays());
+    return Math.min(Math.max(1, daysPassed), this.getTimeframeDays());
   }
 
   // Get progress percentage for the timeline
