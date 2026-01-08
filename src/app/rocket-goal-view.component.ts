@@ -2116,19 +2116,30 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
   private parseMilestonesResponse(response: string, totalDays: number, startTime: number): Array<{ title: string; date: string; dayNumber: number }> {
     let milestones: any[] = [];
 
-    const jsonMatch = response.match(/\[[\s\S]*?\]/);
+    // Use greedy match to capture as much of the array as possible
+    const jsonMatch = response.match(/\[[\s\S]*/);
     if (jsonMatch) {
+      let jsonStr = jsonMatch[0];
+
+      // Try parsing as-is first
       try {
-        milestones = JSON.parse(jsonMatch[0]);
+        milestones = JSON.parse(jsonStr);
       } catch {
-        const cleanedJson = jsonMatch[0]
-          .replace(/,\s*\]/g, ']')
-          .replace(/'/g, '"')
-          .replace(/(\w+):/g, '"$1":');
-        try {
-          milestones = JSON.parse(cleanedJson);
-        } catch {
-          console.error('Failed to parse cleaned JSON:', cleanedJson);
+        // Try to recover from truncated JSON by extracting complete objects
+        milestones = this.extractCompleteMilestones(jsonStr);
+
+        // If extraction failed, try cleaning and parsing again
+        if (milestones.length === 0) {
+          const cleanedJson = jsonStr
+            .replace(/,\s*\]/g, ']')
+            .replace(/'/g, '"')
+            .replace(/(\w+):/g, '"$1":');
+          try {
+            milestones = JSON.parse(cleanedJson);
+          } catch {
+            // Try extraction on cleaned version
+            milestones = this.extractCompleteMilestones(cleanedJson);
+          }
         }
       }
     }
@@ -2155,6 +2166,28 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
         dayNumber
       };
     }).filter(m => m.title);
+  }
+
+  // Extract complete milestone objects from potentially truncated JSON
+  private extractCompleteMilestones(jsonStr: string): any[] {
+    const milestones: any[] = [];
+
+    // Find all complete JSON objects within the array
+    // Match objects that have both title and dayNumber fields
+    const objectPattern = /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"dayNumber"\s*:\s*(\d+)\s*\}|\{\s*"dayNumber"\s*:\s*(\d+)\s*,\s*"title"\s*:\s*"([^"]+)"\s*\}/g;
+
+    let match;
+    while ((match = objectPattern.exec(jsonStr)) !== null) {
+      // Handle both orderings of title/dayNumber
+      const title = match[1] || match[4];
+      const dayNumber = parseInt(match[2] || match[3], 10);
+
+      if (title && !isNaN(dayNumber)) {
+        milestones.push({ title, dayNumber });
+      }
+    }
+
+    return milestones;
   }
 
   // Helper to format date as ISO string (YYYY-MM-DD)
