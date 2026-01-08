@@ -78,19 +78,19 @@ export class AppSuiteComponent implements OnInit {
       }
     },
     {
-      id: 'moonlight-maker',
-      name: 'MoonlightMaker',
-      tagline: 'Side Hustler empire building after hours.',
-      description: 'Build your side hustle after your 9-5. Track progress on your passion project while balancing work-life.',
+      id: 'marketing-maven',
+      name: 'MarketingMaven',
+      tagline: 'Campaign strategist for consistent growth.',
+      description: 'Plan sharper marketing moves after hours. Track experiments, conversions, and brand momentum without burning out.',
       icon: '🌙',
       imageUrl: '/assets/app-suite/moonlight-maker.png',
       color: 'from-blue-950 via-indigo-950 to-slate-900',
       category: 'Business',
       defaultGoals: {
-        primaryGoal: 'Build a profitable side hustle',
+        primaryGoal: 'Build a profitable marketing engine',
         theme: 'career',
         dailyEffort: '1hour',
-        objectives: ['Evening work blocks', 'Weekend sprints', 'Revenue goals']
+        objectives: ['Run experiments', 'Improve conversion', 'Scale channels']
       }
     },
     {
@@ -414,4 +414,3 @@ export class AppSuiteComponent implements OnInit {
     return new Date().getFullYear();
   }
 }
-

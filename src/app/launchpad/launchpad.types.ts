@@ -88,16 +88,16 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       objectives: ['Sleep optimization', 'Nutrition tracking', 'Energy management']
     }
   },
-  'moonlight-maker': {
-    id: 'moonlight-maker',
-    name: 'MoonlightMaker',
-    tagline: 'Side Hustler empire building after hours.',
-    description: 'Build your side hustle after your 9-5. Track progress on your passion project while balancing work-life with intelligent time blocking.',
+  'marketing-maven': {
+    id: 'marketing-maven',
+    name: 'MarketingMaven',
+    tagline: 'Campaign strategist for consistent growth.',
+    description: 'Plan sharper marketing moves after hours. Track experiments, conversions, and brand momentum with focused time blocks.',
     icon: '🌙',
     imageUrl: '/assets/app-suite/moonlight-maker.png',
     coPilotAvatar: '/assets/a-3.jpg',
     coPilotName: 'Sarah Jenkins',
-    coPilotRole: 'Side Hustle Coach',
+    coPilotRole: 'Growth Marketing Coach',
     color: 'from-blue-950 via-indigo-950 to-slate-900',
     category: 'Business',
     accentColor: '#6366f1',
@@ -105,18 +105,18 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     gradientVia: '#1e1b4b',
     gradientTo: '#0f172a',
     features: [
-      'Evening productivity blocks',
-      'Work-life balance tracker',
-      'Weekend sprint planning',
-      'Energy-aware scheduling',
-      'Side project milestones',
-      'Passive income tracking'
+      'Campaign planning sprints',
+      'Experiment tracking',
+      'Conversion lift dashboards',
+      'Audience growth playbooks',
+      'Brand positioning checklists',
+      'Channel scaling milestones'
     ],
     defaultGoals: {
-      primaryGoal: 'Build a profitable side hustle',
+      primaryGoal: 'Build a profitable marketing engine',
       theme: 'career',
       dailyEffort: '1hour',
-      objectives: ['Evening work blocks', 'Weekend sprints', 'Revenue goals']
+      objectives: ['Run experiments', 'Improve conversion', 'Scale channels']
     }
   },
   'pipeline-pilot': {
