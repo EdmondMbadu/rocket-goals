@@ -1619,6 +1619,11 @@
 @if (showMilestoneLandingModal()) {
 <div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="showMilestoneLandingModal.set(false)">
   <div class="milestone-landing-modal" (click)="$event.stopPropagation()">
+    <button class="milestone-landing-close" (click)="showMilestoneLandingModal.set(false)">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
     <div class="milestone-landing-icon">🎯</div>
     <h3 class="milestone-landing-title">No milestone for today yet</h3>
     <p class="milestone-landing-text">Pick how you'd like to set today's target.</p>
