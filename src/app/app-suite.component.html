@@ -147,9 +147,9 @@
       <!-- App Cards Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         @for (template of prebuiltTemplates; track template.id) {
-        <div
-          class="premium-app-card group relative rounded-[2rem] cursor-pointer overflow-hidden transition-all duration-700 hover:-translate-y-2"
-          (click)="selectTemplate(template)">
+        <a
+          [routerLink]="['/launchpad', template.id]"
+          class="premium-app-card group relative rounded-[2rem] cursor-pointer overflow-hidden transition-all duration-700 hover:-translate-y-2 block no-underline">
 
           <!-- Background Image -->
           <div class="absolute inset-0 z-0 transition-transform duration-1000 group-hover:scale-110">
@@ -187,21 +187,21 @@
             </p>
 
             <!-- Launch Button -->
-            <button
-              class="w-full py-4 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 shadow-2xl flex items-center justify-center gap-3">
-              <span>Launch Mission</span>
+            <div
+              class="w-full py-4 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest group-hover:bg-red-600 group-hover:text-white transition-all duration-300 shadow-2xl flex items-center justify-center gap-3">
+              <span>Explore App</span>
               <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
                 stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </button>
+            </div>
           </div>
 
           <!-- Hover Glow -->
           <div
             class="absolute inset-0 z-20 border-2 border-transparent group-hover:border-white/20 rounded-[2rem] transition-colors duration-500 pointer-events-none">
           </div>
-        </div>
+        </a>
         }
       </div>
 
@@ -242,115 +242,3 @@
     </div>
   </footer>
 </div>
-
-<!-- Confirmation Modal -->
-@if (showConfirmModal() && selectedTemplate()) {
-<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
-  [class]="isDarkMode() ? 'bg-black/80' : 'bg-black/50'" (click)="closeConfirmModal()">
-  <div class="rounded-3xl max-w-lg w-full p-8 border shadow-2xl animate-slide-up transition-colors duration-300"
-    [class]="isDarkMode() ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-white/10' : 'bg-white border-slate-200'"
-    (click)="$event.stopPropagation()">
-
-    <!-- Close button -->
-    <button (click)="closeConfirmModal()" class="absolute top-4 right-4 p-2 transition-colors"
-      [class]="isDarkMode() ? 'text-white/40 hover:text-white' : 'text-slate-400 hover:text-slate-700'">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-
-    <!-- Modal Content -->
-    <div class="text-center">
-      <!-- Image Header -->
-      <div class="relative w-full h-48 mb-8 rounded-2xl overflow-hidden shadow-2xl">
-        <img [src]="selectedTemplate()!.imageUrl" class="w-full h-full object-cover">
-        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-        <div
-          class="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-3xl">
-          {{ selectedTemplate()!.icon }}
-        </div>
-      </div>
-
-      <h2 class="text-4xl font-black mb-2 transition-colors duration-300 tracking-tighter"
-        [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
-        {{ selectedTemplate()!.name }}
-      </h2>
-
-      <p class="text-lg font-bold mb-4 bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-        {{ selectedTemplate()!.tagline }}
-      </p>
-
-      <p class="text-sm mb-8 leading-relaxed transition-colors duration-300 opacity-60 font-medium"
-        [class]="isDarkMode() ? 'text-white' : 'text-slate-600'">
-        {{ selectedTemplate()!.description }}
-      </p>
-
-      <!-- What you'll get -->
-      <div class="rounded-3xl p-8 mb-8 text-left border transition-colors duration-300 glass"
-        [class]="isDarkMode() ? 'border-white/10' : 'bg-slate-50 border-slate-200'">
-        <h4 class="text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-40 transition-colors duration-300"
-          [class]="isDarkMode() ? 'text-white/40' : 'text-slate-500/60'">Mission Parameters</h4>
-        <ul class="space-y-4">
-          <li class="flex items-center gap-4 transition-colors duration-300"
-            [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">
-            <span
-              class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-              <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-              </svg>
-            </span>
-            <span class="text-sm font-bold tracking-tight">Standard Objective: "{{
-              selectedTemplate()!.defaultGoals.primaryGoal }}"</span>
-          </li>
-          <li class="flex items-center gap-4 transition-colors duration-300"
-            [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">
-            <span
-              class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-              <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-              </svg>
-            </span>
-            <span class="text-sm font-bold tracking-tight">AI Calibration for {{ selectedTemplate()!.category }}</span>
-          </li>
-          <li class="flex items-center gap-4 transition-colors duration-300"
-            [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">
-            <span
-              class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-              <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-              </svg>
-            </span>
-            <span class="text-sm font-bold tracking-tight">Neural accountability integration</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row gap-4">
-        <button (click)="launchPrebuilt()" [disabled]="isCreating()"
-          class="flex-1 py-4 bg-red-600 text-white font-bold rounded-xl hover:bg-red-500 transition-all duration-300 shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-          @if (isCreating()) {
-          <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          <span>Creating...</span>
-          } @else {
-          <span>🚀</span>
-          <span>Launch {{ selectedTemplate()!.name }}</span>
-          }
-        </button>
-        <button (click)="closeConfirmModal()"
-          class="flex-1 py-4 border font-bold rounded-xl transition-all duration-300"
-          [class]="isDarkMode() ? 'border-white/20 text-white hover:bg-white/10' : 'border-slate-300 text-slate-700 hover:bg-slate-100'">
-          Cancel
-        </button>
-      </div>
-
-      @if (!isLoggedIn()) {
-      <p class="mt-4 text-sm transition-colors duration-300"
-        [class]="isDarkMode() ? 'text-white/40' : 'text-slate-500'">
-        You'll need to create an account to launch this app.
-      </p>
-      }
-    </div>
-  </div>
-</div>
-}
