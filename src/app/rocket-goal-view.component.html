@@ -1596,6 +1596,61 @@
 </div>
 }
 
+@if (showDeadlineOverdueModal()) {
+<div class="task-modal-overlay" [class.light-mode]="!isDarkMode()">
+  <div class="deadline-overdue-modal" (click)="$event.stopPropagation()">
+    <div class="deadline-overdue-icon">⏳</div>
+    <h3 class="deadline-overdue-title">Your deadline has passed</h3>
+    <p class="deadline-overdue-text">
+      Update your deadline to keep the mission active, or mark this goal complete.
+    </p>
+    <div class="deadline-overdue-actions">
+      <button (click)="startDeadlineUpdateFromModal()" class="deadline-overdue-btn update">
+        Update Deadline
+      </button>
+      <button (click)="markGoalCompleteFromDeadline()" class="deadline-overdue-btn complete">
+        Mark Goal Complete
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showMilestoneLandingModal()) {
+<div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="showMilestoneLandingModal.set(false)">
+  <div class="milestone-landing-modal" (click)="$event.stopPropagation()">
+    <div class="milestone-landing-icon">🎯</div>
+    <h3 class="milestone-landing-title">No milestone for today yet</h3>
+    <p class="milestone-landing-text">Pick how you'd like to set today's target.</p>
+    <div class="milestone-landing-actions">
+      <button (click)="openLandingAddMilestone()" class="milestone-landing-btn primary">
+        Add Milestone Manually
+      </button>
+      <button (click)="generateLandingMilestoneToday()"
+        class="milestone-landing-btn secondary"
+        [disabled]="landingMilestoneAction() !== null">
+        @if (landingMilestoneAction() === 'today') {
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          Generating...
+        } @else {
+          Generate Today’s Milestone
+        }
+      </button>
+      <button (click)="generateLandingMilestonesRemaining()"
+        class="milestone-landing-btn secondary"
+        [disabled]="landingMilestoneAction() !== null">
+        @if (landingMilestoneAction() === 'remaining') {
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          Generating...
+        } @else {
+          Generate Today + Remaining Days
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
 <!-- Delete All Milestones Confirmation Modal -->
 @if (showDeleteAllConfirm()) {
 <div class="task-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="showDeleteAllConfirm.set(false)">

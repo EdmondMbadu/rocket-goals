@@ -124,6 +124,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     drift: ((index % 12) - 6) * 12,
     rotation: (index * 37) % 360
   }));
+  showMilestoneLandingModal = signal(false);
+  landingMilestoneAction = signal<'today' | 'remaining' | null>(null);
+  showDeadlineOverdueModal = signal(false);
+  private landingFlowHandled = false;
+  private pendingLandingAfterDeadline = false;
 
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
@@ -357,6 +362,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   cancelEditingDeadline(): void {
     this.isEditingDeadline.set(false);
     this.deadlineError.set(null);
+    this.pendingLandingAfterDeadline = false;
   }
 
   async saveDeadline(): Promise<void> {
@@ -396,6 +402,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       this.goal.set({ ...goal, answers: updatedAnswers });
       this.isEditingDeadline.set(false);
       this.startCountdown();
+      if (this.pendingLandingAfterDeadline) {
+        this.pendingLandingAfterDeadline = false;
+        this.handleLandingMilestonesFlow(true);
+      }
     } catch (error) {
       console.error('Error saving deadline:', error);
       this.deadlineError.set('Could not save deadline. Please try again.');
@@ -464,6 +474,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   async loadGoal(goalId: string) {
     this.loading.set(true);
     this.error.set(null);
+    this.landingFlowHandled = false;
     try {
       const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
       if (goal) {
@@ -497,6 +508,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       if (currentGoal?.id) {
         await this.loadCalendarEvents(currentGoal.id);
         await this.loadActionItems(currentGoal.id);
+        this.handleLandingMilestonesFlow();
         await this.loadFans(currentGoal.id);
         await this.loadFanComments(currentGoal.id);
         await this.loadFanReactions(currentGoal.id);
@@ -1952,6 +1964,66 @@ ${url}`;
     this.milestoneGenerationError.set(null);
   }
 
+  async generateMilestonesForRange(startDay: number, endDay: number) {
+    const goal = this.goal();
+    if (!goal) {
+      throw new Error('No goal context available');
+    }
+
+    const totalDays = this.getTimeframeDays();
+    const clampedStart = Math.min(Math.max(1, startDay), totalDays);
+    const clampedEnd = Math.min(Math.max(clampedStart, endDay), totalDays);
+    const rangeDays = clampedEnd - clampedStart + 1;
+
+    const goalTitle = goal.answers?.['goal_title_label'] || goal.answers?.['custom_goal_title'] || goal.primaryGoal || 'my goal';
+    const futureResult = goal.answers?.['future_result'] || '';
+    const dailyEffort = goal.answers?.['daily_effort'] || '';
+    const obstacles = goal.answers?.['obstacles'] || '';
+    const motivation = goal.answers?.['motivation'] || '';
+
+    const startTime = goal.startTime || Date.now();
+    const startDate = new Date(startTime);
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    const endDate = deadlineTimestamp
+      ? new Date(deadlineTimestamp)
+      : new Date(startTime + (totalDays * 24 * 60 * 60 * 1000));
+
+    const startDateStr = startDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const endDateStr = endDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+    let contextSection = '';
+    if (futureResult) contextSection += `\nDesired outcome: ${futureResult}`;
+    if (dailyEffort) contextSection += `\nDaily commitment: ${dailyEffort}`;
+    if (obstacles) contextSection += `\nPotential obstacles to address: ${obstacles}`;
+    if (motivation) contextSection += `\nCore motivation: ${motivation}`;
+
+    const isLongGoal = totalDays > 30;
+    const milestoneCount = isLongGoal ? Math.max(1, Math.ceil(rangeDays / 7)) : rangeDays;
+    const milestoneType = isLongGoal ? 'weekly' : 'daily';
+
+    const prompt = `Create ${milestoneCount} ${milestoneType} milestones for achieving: "${goalTitle}"
+
+TIMELINE: ${startDateStr} to ${endDateStr} (${totalDays} days total)
+FOCUS RANGE: Day ${clampedStart} to Day ${clampedEnd} (${rangeDays} days)
+${contextSection}
+
+REQUIREMENTS:
+1. Return milestones ONLY for day numbers in the range ${clampedStart} to ${clampedEnd}
+2. Generate EXACTLY ${milestoneCount} milestones
+3. Each milestone must be specific, actionable, and measurable
+4. Build progressive momentum and keep effort realistic for this period
+
+IMPORTANT: Return ONLY a valid JSON array. Each object must have:
+- "title": Specific action (keep it concise, under 100 characters)
+- "dayNumber": The day number (${clampedStart} to ${clampedEnd})
+
+Generate the milestones now (JSON array only, no other text):`;
+
+    const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
+    return this.parseMilestonesResponse(response, totalDays, startTime)
+      .filter(m => m.dayNumber >= clampedStart && m.dayNumber <= clampedEnd);
+  }
+
   async generateMilestones() {
     const goal = this.goal();
     if (!goal) {
@@ -2031,63 +2103,58 @@ Example format:
 Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
 
       const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
-
-      // Parse the response - try to extract JSON array
-      let milestones: any[] = [];
-
-      // Try to find JSON array in response
-      const jsonMatch = response.match(/\[[\s\S]*?\]/);
-      if (jsonMatch) {
-        try {
-          milestones = JSON.parse(jsonMatch[0]);
-        } catch (parseError) {
-          // Try to fix common JSON issues
-          let cleanedJson = jsonMatch[0]
-            .replace(/,\s*\]/g, ']') // Remove trailing commas
-            .replace(/'/g, '"') // Replace single quotes
-            .replace(/(\w+):/g, '"$1":'); // Add quotes to keys
-          try {
-            milestones = JSON.parse(cleanedJson);
-          } catch {
-            console.error('Failed to parse cleaned JSON:', cleanedJson);
-          }
-        }
-      }
-
-      if (Array.isArray(milestones) && milestones.length > 0) {
-        this.generatedMilestones.set(
-          milestones.map((m: any, index: number) => {
-            // Get day number from response or calculate it
-            let dayNumber = m.dayNumber || m.day || (index + 1);
-            if (typeof dayNumber === 'string') {
-              dayNumber = parseInt(dayNumber, 10) || (index + 1);
-            }
-
-            // Clamp day number to valid range
-            dayNumber = Math.min(Math.max(1, dayNumber), totalDays);
-
-            // Calculate the actual date from day number
-            const milestoneDate = new Date(startTime + ((dayNumber - 1) * 24 * 60 * 60 * 1000));
-            const dateStr = this.formatDateISO(milestoneDate);
-
-            return {
-              title: m.title || m.milestone || '',
-              date: dateStr,
-              dayNumber,
-              selected: true
-            };
-          }).filter((m: any) => m.title.trim())
-        );
-      } else {
-        console.error('Could not parse milestones. Response:', response);
-        throw new Error('Could not parse milestones from AI response. Please try again.');
-      }
+      const parsedMilestones = this.parseMilestonesResponse(response, totalDays, startTime);
+      this.generatedMilestones.set(parsedMilestones.map(m => ({ ...m, selected: true })));
     } catch (error: any) {
       console.error('Error generating milestones:', error);
       this.milestoneGenerationError.set(error?.message || 'Failed to generate milestones. Please try again.');
     } finally {
       this.generatingMilestones.set(false);
     }
+  }
+
+  private parseMilestonesResponse(response: string, totalDays: number, startTime: number): Array<{ title: string; date: string; dayNumber: number }> {
+    let milestones: any[] = [];
+
+    const jsonMatch = response.match(/\[[\s\S]*?\]/);
+    if (jsonMatch) {
+      try {
+        milestones = JSON.parse(jsonMatch[0]);
+      } catch {
+        const cleanedJson = jsonMatch[0]
+          .replace(/,\s*\]/g, ']')
+          .replace(/'/g, '"')
+          .replace(/(\w+):/g, '"$1":');
+        try {
+          milestones = JSON.parse(cleanedJson);
+        } catch {
+          console.error('Failed to parse cleaned JSON:', cleanedJson);
+        }
+      }
+    }
+
+    if (!Array.isArray(milestones) || milestones.length === 0) {
+      console.error('Could not parse milestones. Response:', response);
+      throw new Error('Could not parse milestones from AI response. Please try again.');
+    }
+
+    return milestones.map((m: any, index: number) => {
+      let dayNumber = m.dayNumber || m.day || (index + 1);
+      if (typeof dayNumber === 'string') {
+        dayNumber = parseInt(dayNumber, 10) || (index + 1);
+      }
+
+      dayNumber = Math.min(Math.max(1, dayNumber), totalDays);
+
+      const milestoneDate = new Date(startTime + ((dayNumber - 1) * 24 * 60 * 60 * 1000));
+      const dateStr = this.formatDateISO(milestoneDate);
+
+      return {
+        title: (m.title || m.milestone || '').trim(),
+        date: dateStr,
+        dayNumber
+      };
+    }).filter(m => m.title);
   }
 
   // Helper to format date as ISO string (YYYY-MM-DD)
@@ -2122,6 +2189,57 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
   getFormattedDateFromDayNumber(dayNumber: number): string {
     const date = this.getDateFromDayNumber(dayNumber);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  private isChallengePastDeadline(): boolean {
+    const goal = this.goal();
+    if (!goal) return false;
+    const startTime = goal.startTime || Date.now();
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    const endTime = deadlineTimestamp
+      ? deadlineTimestamp
+      : startTime + (this.getTimeframeDays() * 24 * 60 * 60 * 1000);
+    return Date.now() > endTime;
+  }
+
+  private handleLandingMilestonesFlow(force = false) {
+    if (this.landingFlowHandled && !force) return;
+    const goal = this.goal();
+    if (!goal || !this.isGoalOwner() || goal.status === 'completed') {
+      this.landingFlowHandled = true;
+      return;
+    }
+
+    if (this.isChallengePastDeadline()) {
+      this.selectPrimaryTab('tasks');
+      this.viewAllTasks.set(true);
+      this.showDeadlineOverdueModal.set(true);
+      this.landingFlowHandled = true;
+      return;
+    }
+
+    const currentDay = this.getCurrentMissionDay();
+    const todayItems = this.actionItems().filter(item => item.dayNumber === currentDay);
+
+    if (todayItems.length === 0) {
+      this.selectPrimaryTab('tasks');
+      this.viewAllTasks.set(true);
+      this.showMilestoneLandingModal.set(true);
+      this.landingFlowHandled = true;
+      return;
+    }
+
+    const todayMilestone = this.getFirstIncompleteTodayMilestone(currentDay);
+    if (todayMilestone) {
+      this.selectPrimaryTab('tasks');
+      this.viewAllTasks.set(true);
+      this.scrollTodayMilestoneIntoView(currentDay);
+      this.openEditActionItemModal(todayMilestone, true);
+      this.landingFlowHandled = true;
+      return;
+    }
+
+    this.landingFlowHandled = true;
   }
 
   private scheduleTodayMilestoneScroll() {
@@ -2171,6 +2289,65 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
     if (!this.taskModalEditingItem()) return;
     this.newActionItemCompleted.set(true);
     await this.addNewActionItem();
+  }
+
+  async generateLandingMilestoneToday() {
+    if (this.landingMilestoneAction()) return;
+    this.landingMilestoneAction.set('today');
+    try {
+      const currentDay = this.getCurrentMissionDay();
+      const milestones = await this.generateMilestonesForRange(currentDay, currentDay);
+      await this.addGeneratedMilestones(milestones.map(m => ({ title: m.title, dayNumber: currentDay })));
+      this.showMilestoneLandingModal.set(false);
+      const created = this.getFirstIncompleteTodayMilestone(currentDay);
+      if (created) {
+        this.openEditActionItemModal(created, true);
+      }
+    } catch (error) {
+      console.error('Error generating today milestone:', error);
+    } finally {
+      this.landingMilestoneAction.set(null);
+    }
+  }
+
+  async generateLandingMilestonesRemaining() {
+    if (this.landingMilestoneAction()) return;
+    this.landingMilestoneAction.set('remaining');
+    try {
+      const currentDay = this.getCurrentMissionDay();
+      const totalDays = this.getTimeframeDays();
+      const milestones = await this.generateMilestonesForRange(currentDay, totalDays);
+      await this.addGeneratedMilestones(milestones.map(m => ({ title: m.title, dayNumber: m.dayNumber })));
+      this.showMilestoneLandingModal.set(false);
+      this.scheduleTodayMilestoneScroll();
+    } catch (error) {
+      console.error('Error generating remaining milestones:', error);
+    } finally {
+      this.landingMilestoneAction.set(null);
+    }
+  }
+
+  openLandingAddMilestone() {
+    this.showMilestoneLandingModal.set(false);
+    this.openAddActionItem();
+  }
+
+  async markGoalCompleteFromDeadline() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+    try {
+      await this.rocketGoalsService.updateRocketGoal(goal.id, { status: 'completed' });
+      this.goal.set({ ...goal, status: 'completed' });
+      this.showDeadlineOverdueModal.set(false);
+    } catch (error) {
+      console.error('Error marking goal complete:', error);
+    }
+  }
+
+  startDeadlineUpdateFromModal() {
+    this.showDeadlineOverdueModal.set(false);
+    this.pendingLandingAfterDeadline = true;
+    this.startEditingDeadline();
   }
 
   private triggerCelebration() {
@@ -2255,6 +2432,51 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
       this.milestoneGenerationError.set('Failed to add some milestones. Please try again.');
     } finally {
       this.addingGeneratedMilestones.set(false);
+    }
+  }
+
+  private async addGeneratedMilestones(items: Array<{ title: string; dayNumber: number }>) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const orderByDay = new Map<number, number>();
+
+    for (const milestone of items) {
+      const title = milestone.title.trim();
+      if (!title) continue;
+
+      const existingItems = this.getActionItemsForDay(milestone.dayNumber);
+      const duplicate = existingItems.some(item => item.title.trim().toLowerCase() === title.toLowerCase());
+      if (duplicate) continue;
+
+      const nextOrder = orderByDay.get(milestone.dayNumber)
+        ?? (existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0);
+
+      const itemData: any = {
+        goalId: goal.id,
+        title,
+        dayNumber: milestone.dayNumber,
+        completed: false,
+        order: nextOrder
+      };
+
+      const newId = await this.actionItemsService.createActionItem(itemData);
+      const newItem: ActionItem = {
+        id: newId,
+        goalId: goal.id,
+        title,
+        dayNumber: milestone.dayNumber,
+        completed: false,
+        order: nextOrder,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      this.actionItems.update(items => [...items, newItem]);
+      const milestoneDate = this.getDateFromDayNumber(milestone.dayNumber);
+      await this.createCalendarEventForMilestone(goal.id, title, milestoneDate);
+
+      orderByDay.set(milestone.dayNumber, nextOrder + 1);
     }
   }
 

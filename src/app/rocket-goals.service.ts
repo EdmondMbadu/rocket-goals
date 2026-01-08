@@ -92,7 +92,7 @@ export class RocketGoalsService {
     }
   }
 
-  async updateRocketGoal(goalId: string, updates: Partial<{ primaryGoal: string; answers: Record<string, any>; startTime?: number; visualizationImageUrl?: string }>) {
+  async updateRocketGoal(goalId: string, updates: Partial<{ primaryGoal: string; answers: Record<string, any>; startTime?: number; visualizationImageUrl?: string; status?: string }>) {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId);

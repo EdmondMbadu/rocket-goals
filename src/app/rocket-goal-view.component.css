@@ -2791,6 +2791,191 @@
   color: #1f2937;
 }
 
+/* ===== DEADLINE OVERDUE MODAL ===== */
+.deadline-overdue-modal {
+  background: linear-gradient(145deg, rgba(18, 24, 40, 0.98), rgba(10, 15, 25, 0.98));
+  border: 1px solid rgba(248, 250, 252, 0.15);
+  border-radius: 24px;
+  padding: 34px;
+  max-width: 440px;
+  width: 92%;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+.deadline-overdue-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 18px;
+  background: rgba(239, 68, 68, 0.18);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+}
+
+.deadline-overdue-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 10px;
+}
+
+.deadline-overdue-text {
+  font-size: 14px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+.deadline-overdue-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.deadline-overdue-btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.deadline-overdue-btn.update {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.3);
+}
+
+.deadline-overdue-btn.complete {
+  background: rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.deadline-overdue-btn:hover {
+  transform: translateY(-1px);
+}
+
+.light-mode .deadline-overdue-modal {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.25);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15);
+}
+
+.light-mode .deadline-overdue-title {
+  color: #0f172a;
+}
+
+.light-mode .deadline-overdue-text {
+  color: #475569;
+}
+
+.light-mode .deadline-overdue-btn.complete {
+  color: #334155;
+  background: rgba(148, 163, 184, 0.15);
+}
+
+/* ===== MILESTONE LANDING MODAL ===== */
+.milestone-landing-modal {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.96), rgba(11, 16, 30, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 24px;
+  padding: 34px;
+  max-width: 460px;
+  width: 94%;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+.milestone-landing-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 18px;
+  background: rgba(220, 38, 38, 0.18);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+}
+
+.milestone-landing-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 8px;
+}
+
+.milestone-landing-text {
+  font-size: 14px;
+  color: #cbd5e1;
+  margin-bottom: 24px;
+}
+
+.milestone-landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.milestone-landing-btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.milestone-landing-btn.primary {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(239, 68, 68, 0.3);
+}
+
+.milestone-landing-btn.secondary {
+  background: rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.milestone-landing-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.milestone-landing-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.light-mode .milestone-landing-modal {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
+}
+
+.light-mode .milestone-landing-title {
+  color: #0f172a;
+}
+
+.light-mode .milestone-landing-text {
+  color: #475569;
+}
+
+.light-mode .milestone-landing-btn.secondary {
+  background: rgba(148, 163, 184, 0.15);
+  color: #334155;
+}
+
 /* ===== TASK CARD ===== */
 .task-card {
   background: rgba(30, 41, 59, 0.6);
