@@ -1233,7 +1233,10 @@
                   } @else {
                   <!-- Existing Items -->
                   @for (item of getDisplayedTasks(); track item.id) {
-                  <div class="task-card" [class.completed]="item.completed">
+                  <div class="task-card"
+                    [class.completed]="item.completed"
+                    [class.today]="item.dayNumber === getCurrentMissionDay()"
+                    [attr.data-day]="item.dayNumber">
                     <div class="task-card-main">
                       <!-- Checkbox -->
                       <button (click)="toggleActionItemComplete(item)"
@@ -1279,6 +1282,9 @@
                             @if (viewAllTasks()) {
                             <span class="task-day-badge" [class.current]="item.dayNumber === getCurrentMissionDay()">
                               Day {{ item.dayNumber }}
+                            </span>
+                            <span class="task-day-date">
+                              {{ getFormattedDateFromDayNumber(item.dayNumber) }}
                             </span>
                             }
                           </div>

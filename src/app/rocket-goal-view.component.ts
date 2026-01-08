@@ -1051,6 +1051,9 @@ ${url}`;
 
   selectPrimaryTab(tab: 'fans' | 'tasks' | 'calendar') {
     this.activePrimaryTab.set(tab);
+    if (tab === 'tasks') {
+      this.scheduleTodayMilestoneScroll();
+    }
   }
 
   private applyTabFromQuery(): void {
@@ -1555,6 +1558,7 @@ ${url}`;
     try {
       const items = await this.actionItemsService.getActionItemsByGoalId(goalId);
       this.actionItems.set(items);
+      this.scheduleTodayMilestoneScroll();
     } catch (error) {
       console.error('Error loading action items:', error);
     } finally {
@@ -1849,6 +1853,7 @@ ${url}`;
   // Toggle viewing all tasks vs current day only
   toggleViewAllTasks() {
     this.viewAllTasks.update(v => !v);
+    this.scheduleTodayMilestoneScroll();
   }
 
   // Milestone Generation Methods
@@ -2034,7 +2039,21 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
   // Get formatted date string from day number
   getFormattedDateFromDayNumber(dayNumber: number): string {
     const date = this.getDateFromDayNumber(dayNumber);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  private scheduleTodayMilestoneScroll() {
+    if (!this.viewAllTasks() || this.activePrimaryTab() !== 'tasks') return;
+    const currentDay = this.getCurrentMissionDay();
+    if (!this.actionItems().some(item => item.dayNumber === currentDay)) return;
+    setTimeout(() => this.scrollTodayMilestoneIntoView(currentDay), 150);
+  }
+
+  private scrollTodayMilestoneIntoView(dayNumber: number) {
+    const target = document.querySelector(`.task-card[data-day="${dayNumber}"]`) as HTMLElement | null;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   toggleMilestoneSelection(index: number) {
