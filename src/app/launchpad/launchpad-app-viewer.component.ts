@@ -140,6 +140,24 @@ import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate } from './launchpad.types';
               </div>
             </div>
 
+            <!-- Strategic Co-Pilot Section (Prominent Position) -->
+            <div class="co-pilot-section animate-slide-up">
+              <div class="co-pilot-card">
+                <div class="co-pilot-avatar-wrapper">
+                  <div class="co-pilot-avatar-ring" [style.border-color]="t.accentColor"></div>
+                  <img [src]="t.coPilotAvatar" [alt]="t.coPilotName" class="co-pilot-img" />
+                </div>
+                <div class="co-pilot-info">
+                  <span class="co-pilot-badge" [style.color]="t.accentColor">Strategic Co-Pilot</span>
+                  <h4 class="co-pilot-name">{{ t.coPilotName }}</h4>
+                  <p class="co-pilot-role">{{ t.coPilotRole }}</p>
+                  <p class="co-pilot-quote">
+                    "I'll be your lead strategist for this mission. Our objective is to optimize your {{ t.category.toLowerCase() }} trajectory through focused execution and high-performance protocols."
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Premium Features Matrix -->
             <div class="features-grid max-w-7xl mx-auto my-24">
               @for (feature of t.features; track feature; let i = $index) {
@@ -156,24 +174,6 @@ import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate } from './launchpad.types';
                   </h3>
                 </div>
               }
-            </div>
-
-            <!-- Strategic Co-Pilot Section -->
-            <div class="co-pilot-section animate-slide-up">
-              <div class="co-pilot-card">
-                <div class="co-pilot-avatar-wrapper">
-                  <div class="co-pilot-avatar-ring" [style.border-color]="t.accentColor"></div>
-                  <img [src]="t.coPilotAvatar" [alt]="t.coPilotName" class="co-pilot-img" />
-                </div>
-                <div class="co-pilot-info">
-                  <span class="co-pilot-badge" [style.color]="t.accentColor">Strategic Co-Pilot</span>
-                  <h4 class="co-pilot-name">{{ t.coPilotName }}</h4>
-                  <p class="co-pilot-role">{{ t.coPilotRole }}</p>
-                  <p class="co-pilot-quote">
-                    "I'll be your lead strategist for this mission. Our objective is to optimize your {{ t.category.toLowerCase() }} trajectory through focused execution and high-performance protocols."
-                  </p>
-                </div>
-              </div>
             </div>
 
             <!-- Bottom Back Link -->

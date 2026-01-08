@@ -33,9 +33,9 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     description: 'Build your indie empire with focused execution. Track product launches, customer acquisition, and revenue milestones. Designed for makers who ship fast and iterate faster.',
     icon: '🚀',
     imageUrl: '/assets/app-suite/hustle-orbit.png',
-    coPilotAvatar: '/assets/a-1.jpg',
+    coPilotAvatar: '/assets/ogilvy.jpg',
     coPilotName: 'Marcus Chen',
-    coPilotRole: 'Growth Strategist',
+    coPilotRole: 'Business strategist inspired by David Ogilvy and Alex Hormozi. Guides positioning, offers, and revenue growth.',
     color: 'from-slate-900 via-slate-800 to-slate-900',
     category: 'Business',
     accentColor: '#f97316',
@@ -399,4 +399,3 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     }
   }
 };
-
