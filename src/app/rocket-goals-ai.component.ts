@@ -1,10 +1,10 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
 import { AuthService } from './auth.service';
-import type { RocketGoal } from './models/rocket-goal';
+import type { RocketGoal, RocketGoalCopilot } from './models/rocket-goal';
 
 @Component({
   selector: 'app-rocket-goals-ai',
@@ -38,6 +38,11 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   readonly typewriterMessageId = signal<number | null>(null);
   readonly typewriterDisplayedText = signal<string>('');
   private typewriterInterval: any = null;
+
+  // Copilot avatar - computed from goalContext
+  readonly copilot = computed<RocketGoalCopilot | null>(() => {
+    return this.goalContext?.copilot || null;
+  });
 
   private shouldScrollToBottom = false;
   private scrollInterval: any = null;

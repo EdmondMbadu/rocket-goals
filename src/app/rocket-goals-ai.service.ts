@@ -45,6 +45,11 @@ interface AIRequest {
     primaryGoal: string;
     answers: Record<string, any>;
     status: string;
+    copilot?: {
+      avatar: string;
+      name: string;
+      role: string;
+    };
   };
   calendarEvents?: Array<{
     id: string;
@@ -681,7 +686,9 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           title: this.getGoalTitle(goalContext),
           primaryGoal: goalContext.primaryGoal || '',
           answers: goalContext.answers || {},
-          status: goalContext.status
+          status: goalContext.status,
+          // Include copilot data for app-suite launched goals
+          copilot: goalContext.copilot || undefined
         } : undefined,
         calendarEvents: calendarEvents.length > 0 ? calendarEvents.map(event => ({
           id: event.id,
@@ -825,7 +832,9 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           title: this.getGoalTitle(goalContext),
           primaryGoal: goalContext.primaryGoal || '',
           answers: goalContext.answers || {},
-          status: goalContext.status
+          status: goalContext.status,
+          // Include copilot data for app-suite launched goals
+          copilot: goalContext.copilot || undefined
         } : undefined,
         calendarEvents: calendarEvents.length > 0 ? calendarEvents.map(event => ({
           id: event.id,

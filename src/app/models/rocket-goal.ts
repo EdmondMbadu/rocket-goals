@@ -6,6 +6,12 @@ export interface RocketGoalParticipant {
   email: string;
 }
 
+export interface RocketGoalCopilot {
+  avatar: string;    // Path to copilot avatar image
+  name: string;      // Copilot name (e.g., "Marcus Chen")
+  role: string;      // Copilot role/description for system prompt
+}
+
 export interface RocketGoal {
   id: string;
   userId: string;
@@ -18,6 +24,7 @@ export interface RocketGoal {
   startTime?: number; // Timestamp in milliseconds when the 7-day challenge started
   visualizationImageUrl?: string; // AI-generated visualization of the achieved goal
   visualizationGeneratedAt?: unknown; // Timestamp when visualization was generated
+  copilot?: RocketGoalCopilot; // Custom copilot for app-suite launched goals
 }
 
 export type CreateRocketGoalInput = Omit<RocketGoal, 'id' | 'createdAt'> & {

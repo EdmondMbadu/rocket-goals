@@ -744,11 +744,29 @@ function buildSystemPrompt(goalContext: any, calendarEvents: any[]): string {
         hour12: true
     });
 
-    const baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework. You also help users manage their calendar and schedule for achieving their goals.
+    // Check if there's a custom copilot persona from app-suite
+    const copilot = goalContext?.copilot;
+    let baseIdentity: string;
+
+    if (copilot && copilot.name && copilot.role) {
+        // Custom copilot persona from app-suite launch
+        baseIdentity = `You are ${copilot.name}, ${copilot.role}
+
+You are the user's dedicated strategic co-pilot for this mission. Embody this persona fully - your expertise, communication style, and guidance should reflect your role as ${copilot.name}. Be personable and address the user as if you've been assigned specifically to help them succeed.
+
+Your mission is to guide individuals using the ROCKET Goal framework while bringing your unique expertise and perspective. You also help users manage their calendar and schedule for achieving their goals.
 
 CURRENT DATE AND TIME:
 Today is ${currentDateStr}. The current time is ${currentTimeStr}.
 Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.`;
+    } else {
+        // Default RocketGoals AI persona
+        baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework. You also help users manage their calendar and schedule for achieving their goals.
+
+CURRENT DATE AND TIME:
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.
+Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.`;
+    }
 
     const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES:
 - Be helpful, concise, and action-oriented

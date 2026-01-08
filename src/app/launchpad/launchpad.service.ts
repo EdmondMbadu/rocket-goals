@@ -68,7 +68,13 @@ export class LaunchpadService {
         },
         status: 'active',
         entryPoint: 'launch_challenge',
-        startTime: now
+        startTime: now,
+        // Include copilot data from the template for personalized AI experience
+        copilot: {
+          avatar: template.coPilotAvatar,
+          name: template.coPilotName,
+          role: template.coPilotRole
+        }
       });
 
       // Generate visualization image
