@@ -111,6 +111,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   viewAllTasks = signal(true);
   savingTask = signal(false);
   expandedTimelineTaskId = signal<string | null>(null);
+  private autoOpenedMilestoneId = signal<string | null>(null);
+  taskModalEditingItem = signal<ActionItem | null>(null);
 
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
@@ -1699,6 +1701,7 @@ ${url}`;
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
     this.newActionItemCompleted.set(false);
+    this.taskModalEditingItem.set(null);
     // Set default date to today or current mission day
     const currentDayDate = this.getDateFromDayNumber(this.getCurrentMissionDay());
     this.selectedDateForNewTask.set(this.formatDateISO(currentDayDate));
@@ -1710,6 +1713,7 @@ ${url}`;
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
     this.newActionItemCompleted.set(false);
+    this.taskModalEditingItem.set(null);
     this.selectedDateForNewTask.set('');
   }
 
@@ -1755,10 +1759,36 @@ ${url}`;
     const selectedDay = this.selectedDayForNewTask();
     const notes = this.newActionItemNotes().trim();
     const completed = this.newActionItemCompleted();
+    const editingItem = this.taskModalEditingItem();
     const existingItems = this.getActionItemsForDay(selectedDay);
     const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
 
     try {
+      if (editingItem) {
+        const normalizedNotes = notes || undefined;
+        const updates = {
+          title,
+          dayNumber: selectedDay,
+          completed,
+          notes: normalizedNotes
+        };
+
+        await this.actionItemsService.updateActionItem(goal.id, editingItem.id, updates);
+        this.actionItems.update(items =>
+          items.map(i => i.id === editingItem.id ? { ...i, ...updates } : i)
+        );
+
+        await this.updateCalendarEventForMilestone(goal.id, editingItem, {
+          title,
+          dayNumber: selectedDay,
+          notes: normalizedNotes,
+          completed
+        });
+
+        this.closeTaskModal();
+        return;
+      }
+
       // Build the item data - only include notes if it has content
       const itemData: any = {
         goalId: goal.id,
@@ -1829,6 +1859,32 @@ ${url}`;
     } catch (error) {
       console.error('Error creating calendar event for milestone:', error);
       // Don't throw - milestone was still created successfully
+    }
+  }
+
+  private async updateCalendarEventForMilestone(
+    goalId: string,
+    originalItem: ActionItem,
+    updates: { title: string; dayNumber: number; notes?: string; completed: boolean }
+  ) {
+    try {
+      const originalTitle = `🎯 ${originalItem.title}`;
+      const matchingEvent = this.calendarEvents().find(e => e.title === originalTitle);
+      if (!matchingEvent) return;
+
+      const eventUpdates = {
+        title: `🎯 ${updates.title}`,
+        date: this.getDateFromDayNumber(updates.dayNumber),
+        description: updates.notes,
+        completed: updates.completed
+      };
+
+      await this.calendarEventsService.updateEvent(goalId, matchingEvent.id, eventUpdates);
+      this.calendarEvents.update(events =>
+        events.map(e => e.id === matchingEvent.id ? { ...e, ...eventUpdates } : e)
+      );
+    } catch (error) {
+      console.error('Error updating calendar event for milestone:', error);
     }
   }
 
@@ -2046,10 +2102,19 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
   }
 
   private scheduleTodayMilestoneScroll() {
-    if (!this.viewAllTasks() || this.activePrimaryTab() !== 'tasks') return;
+    if (this.activePrimaryTab() !== 'tasks') return;
     const currentDay = this.getCurrentMissionDay();
-    if (!this.actionItems().some(item => item.dayNumber === currentDay)) return;
-    setTimeout(() => this.scrollTodayMilestoneIntoView(currentDay), 150);
+    const todayItems = this.actionItems().filter(item => item.dayNumber === currentDay);
+    if (todayItems.length === 0) return;
+    const todayMilestone = this.getFirstIncompleteTodayMilestone(currentDay);
+    setTimeout(() => {
+      if (this.viewAllTasks()) {
+        this.scrollTodayMilestoneIntoView(currentDay);
+      }
+      if (todayMilestone && this.autoOpenedMilestoneId() !== todayMilestone.id && !this.showTaskModal()) {
+        this.openEditActionItemModal(todayMilestone, true);
+      }
+    }, 150);
   }
 
   private scrollTodayMilestoneIntoView(dayNumber: number) {
@@ -2057,6 +2122,32 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  }
+
+  private getFirstIncompleteTodayMilestone(dayNumber: number): ActionItem | null {
+    const items = this.actionItems()
+      .filter(item => item.dayNumber === dayNumber && !item.completed)
+      .sort((a, b) => a.order - b.order);
+    return items[0] ?? null;
+  }
+
+  openEditActionItemModal(item: ActionItem, autoOpened = false) {
+    this.taskModalEditingItem.set(item);
+    this.showTaskModal.set(true);
+    this.newActionItemTitle.set(item.title);
+    this.newActionItemNotes.set(item.notes || '');
+    this.newActionItemCompleted.set(item.completed);
+    this.selectedDayForNewTask.set(item.dayNumber);
+    this.selectedDateForNewTask.set(this.formatDateISO(this.getDateFromDayNumber(item.dayNumber)));
+    if (autoOpened) {
+      this.autoOpenedMilestoneId.set(item.id);
+    }
+  }
+
+  async markTaskModalComplete() {
+    if (!this.taskModalEditingItem()) return;
+    this.newActionItemCompleted.set(true);
+    await this.addNewActionItem();
   }
 
   toggleMilestoneSelection(index: number) {
@@ -2186,6 +2277,8 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
     this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
+    this.newActionItemCompleted.set(false);
+    this.taskModalEditingItem.set(null);
   }
 
   // Get tasks positioned between timeline markers

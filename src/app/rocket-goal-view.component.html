@@ -1439,8 +1439,12 @@
         </svg>
       </div>
       <div>
-        <h2 class="task-modal-title">Add New Milestone</h2>
-        <p class="task-modal-subtitle">Plan your mission milestone</p>
+        <h2 class="task-modal-title">
+          {{ taskModalEditingItem() ? 'Milestone Details' : 'Add New Milestone' }}
+        </h2>
+        <p class="task-modal-subtitle">
+          {{ taskModalEditingItem() ? "Review or update today's milestone" : 'Plan your mission milestone' }}
+        </p>
       </div>
       <button (click)="closeTaskModal()" class="task-modal-close">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1531,6 +1535,21 @@
       <button (click)="closeTaskModal()" class="task-modal-btn cancel">
         Cancel
       </button>
+      @if (taskModalEditingItem() && !newActionItemCompleted()) {
+      <button (click)="markTaskModalComplete()"
+        class="task-modal-btn complete"
+        [disabled]="savingTask()">
+        @if (savingTask()) {
+          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          Updating...
+        } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Mark Done
+        }
+      </button>
+      }
       <button (click)="addNewActionItem()"
         class="task-modal-btn save"
         [disabled]="!newActionItemTitle().trim() || savingTask()">
@@ -1541,7 +1560,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          Add Milestone
+          {{ taskModalEditingItem() ? 'Save Changes' : 'Add Milestone' }}
         }
       </button>
     </div>

@@ -3458,29 +3458,31 @@
   gap: 12px;
   padding: 12px 16px;
   border-radius: 14px;
-  border: 2px solid rgba(100, 116, 139, 0.3);
-  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.08);
   color: #e2e8f0;
   font-family: 'Exo 2', sans-serif;
   font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .task-modal-checkbox input {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   accent-color: #dc2626;
 }
 
 .task-modal-checkbox:hover {
-  border-color: rgba(220, 38, 38, 0.5);
+  border-color: rgba(220, 38, 38, 0.6);
+  background: rgba(220, 38, 38, 0.12);
 }
 
 .light-mode.task-modal-overlay .task-modal-checkbox,
 .light-mode .task-modal-checkbox {
-  background: rgba(248, 250, 252, 0.9);
-  border-color: rgba(203, 213, 225, 0.8);
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
   color: #0f172a;
 }
 
@@ -3669,6 +3671,26 @@
 
 .task-modal-btn.save:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.task-modal-btn.complete {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.35);
+  font-size: 16px;
+  padding: 16px 32px;
+  min-width: 180px;
+}
+
+.task-modal-btn.complete:hover:not(:disabled) {
+  background: linear-gradient(135deg, #34d399 0%, #22c55e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(34, 197, 94, 0.45);
+}
+
+.task-modal-btn.complete:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
