@@ -69,7 +69,7 @@ export class EventModalComponent implements OnChanges {
       this.duration.set(this.event.duration || 60);
       this.color.set(this.event.color || '#dc2626');
       this.completed.set(this.event.completed || false);
-      this.description.set((this.event as any).description || '');
+      this.description.set(this.event.description || '');
     } else if (this.defaultDate) {
       // New event
       this.isOpen.set(true);
@@ -156,4 +156,3 @@ export class EventModalComponent implements OnChanges {
     }
   }
 }
-

@@ -902,6 +902,121 @@ ${url}`;
     this.selectedEvent.set(null);
   }
 
+  connectGoogleCalendar() {
+    const calendarName = this.getGoalTitleDisplay() || 'Rocket Goals';
+    const events = this.calendarEvents();
+    if (events.length === 0) {
+      alert('No calendar events to sync yet. Add a milestone or event first.');
+      return;
+    }
+    this.downloadCalendarIcs(calendarName);
+    window.open('https://calendar.google.com/calendar/u/0/r/settings/import', '_blank', 'noopener');
+  }
+
+  connectAppleCalendar() {
+    const calendarName = this.getGoalTitleDisplay() || 'Rocket Goals';
+    const events = this.calendarEvents();
+    if (events.length === 0) {
+      alert('No calendar events to sync yet. Add a milestone or event first.');
+      return;
+    }
+    this.downloadCalendarIcs(calendarName);
+  }
+
+  private downloadCalendarIcs(calendarName: string) {
+    const goalId = this.goal()?.id || 'rocket-goals';
+    const fileName = `${this.sanitizeFileName(calendarName)}.ics`;
+    const icsContent = this.buildCalendarIcs(this.calendarEvents(), calendarName, goalId);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }
+
+  private buildCalendarIcs(events: CalendarEvent[], calendarName: string, goalId: string): string {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'CALSCALE:GREGORIAN',
+      'PRODID:-//RocketGoals//Mission Calendar//EN',
+      `X-WR-CALNAME:${this.escapeIcsText(calendarName)}`
+    ];
+    if (timeZone) {
+      lines.push(`X-WR-TIMEZONE:${this.escapeIcsText(timeZone)}`);
+    }
+
+    const dtStamp = this.formatIcsDateTime(new Date());
+    events.forEach(event => {
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:rg-${goalId}-${event.id}@rocketgoals`);
+      lines.push(`DTSTAMP:${dtStamp}`);
+      lines.push(`SUMMARY:${this.escapeIcsText(event.title)}`);
+      if (event.description) {
+        lines.push(`DESCRIPTION:${this.escapeIcsText(event.description)}`);
+      }
+
+      if (event.time) {
+        const start = event.date;
+        const durationMinutes = event.duration ?? 60;
+        const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+        lines.push(`DTSTART:${this.formatIcsDateTime(start)}`);
+        lines.push(`DTEND:${this.formatIcsDateTime(end)}`);
+      } else {
+        const startDate = this.formatIcsDate(event.date);
+        const endDate = this.formatIcsDate(this.addDays(event.date, 1));
+        lines.push(`DTSTART;VALUE=DATE:${startDate}`);
+        lines.push(`DTEND;VALUE=DATE:${endDate}`);
+      }
+
+      lines.push('END:VEVENT');
+    });
+
+    lines.push('END:VCALENDAR');
+    return lines.join('\r\n');
+  }
+
+  private formatIcsDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+  }
+
+  private formatIcsDateTime(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+  }
+
+  private addDays(date: Date, days: number): Date {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  }
+
+  private escapeIcsText(value: string): string {
+    return value
+      .replace(/\\/g, '\\\\')
+      .replace(/\n/g, '\\n')
+      .replace(/,/g, '\\,')
+      .replace(/;/g, '\\;');
+  }
+
+  private sanitizeFileName(value: string): string {
+    return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'rocket-goals-calendar';
+  }
+
   async onAICalendarAction() {
     // Refresh calendar events when AI performs an action
     console.log('Refreshing calendar after AI action...');
@@ -1706,7 +1821,8 @@ ${url}`;
         title: eventData.title,
         date,
         color: eventData.color,
-        completed: false
+        completed: false,
+        description: eventData.description
       };
       this.calendarEvents.update(events => [...events, newEvent]);
     } catch (error) {

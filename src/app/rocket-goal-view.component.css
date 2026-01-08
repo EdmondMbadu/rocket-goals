@@ -4539,6 +4539,86 @@
   border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
+.calendar-connect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.4);
+  margin-bottom: 1rem;
+}
+
+.light-mode .calendar-connect {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.calendar-connect-text h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.light-mode .calendar-connect-text h4 {
+  color: #0f172a;
+}
+
+.calendar-connect-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.light-mode .calendar-connect-text p {
+  color: rgba(71, 85, 105, 0.85);
+}
+
+.calendar-connect-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.calendar-connect-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.calendar-connect-btn.google {
+  background: linear-gradient(135deg, #4285f4, #34a853);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(52, 168, 83, 0.2);
+}
+
+.calendar-connect-btn.apple {
+  background: linear-gradient(135deg, #111827, #374151);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25);
+}
+
+.calendar-connect-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.25);
+}
+
+.calendar-connect-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 /* ===== VISUALIZATION CARD & MODAL ===== */
 .visualization-card {
   background: linear-gradient(135deg,

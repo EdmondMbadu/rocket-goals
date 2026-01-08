@@ -133,8 +133,8 @@ export class CalendarEventsService {
       time: eventData.time,
       duration: eventData.duration,
       color: eventData.color || '#dc2626',
-      completed: eventData.completed || false
+      completed: eventData.completed || false,
+      description: eventData.description
     };
   }
 }
-

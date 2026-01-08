@@ -11,6 +11,7 @@ export interface CalendarEvent {
   duration?: number; // in minutes
   color?: string;
   completed?: boolean;
+  description?: string;
 }
 
 @Component({
@@ -312,4 +313,3 @@ export class MissionCalendarComponent {
     return color || '#dc2626';
   }
 }
-
