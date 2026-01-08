@@ -1765,13 +1765,14 @@ ${url}`;
 
     try {
       if (editingItem) {
-        const normalizedNotes = notes || undefined;
-        const updates = {
+        const updates: { title: string; dayNumber: number; completed: boolean; notes?: string } = {
           title,
           dayNumber: selectedDay,
-          completed,
-          notes: normalizedNotes
+          completed
         };
+        if (notes) {
+          updates.notes = notes;
+        }
 
         await this.actionItemsService.updateActionItem(goal.id, editingItem.id, updates);
         this.actionItems.update(items =>
@@ -1781,7 +1782,7 @@ ${url}`;
         await this.updateCalendarEventForMilestone(goal.id, editingItem, {
           title,
           dayNumber: selectedDay,
-          notes: normalizedNotes,
+          notes: notes || undefined,
           completed
         });
 
