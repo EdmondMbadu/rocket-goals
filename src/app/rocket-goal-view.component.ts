@@ -2035,76 +2035,10 @@ Generate the milestones now (JSON array only, no other text):`;
     this.milestoneGenerationError.set(null);
 
     try {
-      const goalTitle = goal.answers?.['goal_title_label'] || goal.answers?.['custom_goal_title'] || goal.primaryGoal || 'my goal';
-
-      // Get additional context from goal answers
-      const futureResult = goal.answers?.['future_result'] || '';
-      const dailyEffort = goal.answers?.['daily_effort'] || '';
-      const obstacles = goal.answers?.['obstacles'] || '';
-      const motivation = goal.answers?.['motivation'] || '';
-
-      // Get actual start and end dates
-      const startTime = goal.startTime || Date.now();
-      const startDate = new Date(startTime);
-      const deadlineTimestamp = this.getDeadlineTimestamp();
+      const currentDay = this.getCurrentMissionDay();
       const totalDays = this.getTimeframeDays();
-
-      // Calculate end date based on deadline or timeframe
-      let endDate: Date;
-      if (deadlineTimestamp) {
-        endDate = new Date(deadlineTimestamp);
-      } else {
-        // No specific deadline - calculate from timeframe
-        endDate = new Date(startTime + (totalDays * 24 * 60 * 60 * 1000));
-      }
-
-      const startDateStr = startDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      const endDateStr = endDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-
-      // Build context section
-      let contextSection = '';
-      if (futureResult) contextSection += `\nDesired outcome: ${futureResult}`;
-      if (dailyEffort) contextSection += `\nDaily commitment: ${dailyEffort}`;
-      if (obstacles) contextSection += `\nPotential obstacles to address: ${obstacles}`;
-      if (motivation) contextSection += `\nCore motivation: ${motivation}`;
-
-      // For longer goals (>30 days), generate weekly milestones instead of daily
-      const isLongGoal = totalDays > 30;
-      const milestoneCount = isLongGoal ? Math.min(Math.ceil(totalDays / 7), 52) : totalDays;
-      const milestoneType = isLongGoal ? 'weekly' : 'daily';
-
-      const prompt = `Create a ${milestoneType} milestone plan for achieving: "${goalTitle}"
-
-TIMELINE: ${startDateStr} to ${endDateStr} (${totalDays} days total)
-${contextSection}
-
-${isLongGoal
-  ? `Generate ${milestoneCount} WEEKLY milestones spread across the ${totalDays}-day journey. Each milestone represents a week's focus.`
-  : `Generate ${milestoneCount} DAILY milestones - one for each day of the ${totalDays}-day journey.`
-}
-
-REQUIREMENTS:
-1. Generate EXACTLY ${milestoneCount} milestones
-2. Each milestone must be specific, actionable, and measurable
-3. Build progressive momentum - early period focuses on foundation, later on mastery
-4. Make milestones realistic for ${isLongGoal ? 'a week' : 'a single day'}'s effort
-
-IMPORTANT: Return ONLY a valid JSON array. Each object must have:
-- "title": Specific action (keep it concise, under 100 characters)
-- "dayNumber": The day number (1 to ${totalDays})
-
-Example format:
-[
-  {"title": "Define success criteria and 3 measurable outcomes", "dayNumber": 1},
-  {"title": "Research top 3 strategies from successful people", "dayNumber": ${isLongGoal ? 7 : 2}},
-  {"title": "Create detailed action plan with time blocks", "dayNumber": ${isLongGoal ? 14 : 3}}
-]
-
-Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
-
-      const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
-      const parsedMilestones = this.parseMilestonesResponse(response, totalDays, startTime);
-      this.generatedMilestones.set(parsedMilestones.map(m => ({ ...m, selected: true })));
+      const milestones = await this.generateMilestonesForRange(currentDay, totalDays);
+      this.generatedMilestones.set(milestones.map(m => ({ ...m, selected: true })));
     } catch (error: any) {
       console.error('Error generating milestones:', error);
       this.milestoneGenerationError.set(error?.message || 'Failed to generate milestones. Please try again.');
