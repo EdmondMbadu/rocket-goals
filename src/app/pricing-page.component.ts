@@ -404,11 +404,23 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
             <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
               <div class="flex justify-between items-center text-sm">
                 <span class="text-gray-500 dark:text-slate-400">Duration</span>
-                <span class="font-semibold text-black dark:text-white">{{ successModalData()!.durationMonths }} month{{ successModalData()!.durationMonths !== 1 ? 's' : '' }}</span>
+                <span class="font-semibold text-black dark:text-white">
+                  @if (successModalData()!.lifetimeAccess) {
+                  Lifetime
+                  } @else {
+                  {{ successModalData()!.durationMonths }} month{{ successModalData()!.durationMonths !== 1 ? 's' : '' }}
+                  }
+                </span>
               </div>
               <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-500 dark:text-slate-400">Access Until</span>
-                <span class="font-semibold text-black dark:text-white">{{ formatExpiryDate(successModalData()!.expiresAt) }}</span>
+                <span class="text-gray-500 dark:text-slate-400">{{ successModalData()!.lifetimeAccess ? 'Access' : 'Access Until' }}</span>
+                <span class="font-semibold text-black dark:text-white">
+                  @if (successModalData()!.lifetimeAccess) {
+                  Forever
+                  } @else {
+                  {{ formatExpiryDate(successModalData()!.expiresAt) }}
+                  }
+                </span>
               </div>
             </div>
 
@@ -838,7 +850,8 @@ export class PricingPageComponent implements OnInit {
   protected readonly successModalData = signal<{
     plan: string;
     durationMonths: number;
-    expiresAt: string;
+    expiresAt: string | null;
+    lifetimeAccess: boolean;
   } | null>(null);
 
   // Plan hierarchy for upgrade logic
@@ -1054,7 +1067,7 @@ export class PricingPageComponent implements OnInit {
       const redeemPromoCodeFn = functionsModule.httpsCallable(functions, 'redeemPromoCode');
 
       const result = await redeemPromoCodeFn({ promoCode });
-      const data = result.data as { success: boolean; plan: string; durationMonths: number; expiresAt: string; message: string };
+      const data = result.data as { success: boolean; plan: string; durationMonths: number; expiresAt: string | null; lifetimeAccess?: boolean; message: string };
 
       if (data.success) {
         // Refresh the user profile to get the updated subscription
@@ -1064,7 +1077,8 @@ export class PricingPageComponent implements OnInit {
         this.successModalData.set({
           plan: data.plan,
           durationMonths: data.durationMonths,
-          expiresAt: data.expiresAt
+          expiresAt: data.expiresAt,
+          lifetimeAccess: Boolean(data.lifetimeAccess)
         });
         this.showSuccessModal.set(true);
       }
@@ -1165,7 +1179,8 @@ export class PricingPageComponent implements OnInit {
     return plan.charAt(0).toUpperCase() + plan.slice(1);
   }
 
-  formatExpiryDate(isoDate: string): string {
+  formatExpiryDate(isoDate: string | null): string {
+    if (!isoDate) return 'Lifetime';
     const date = new Date(isoDate);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',

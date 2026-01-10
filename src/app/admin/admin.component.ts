@@ -23,6 +23,7 @@ type PromoCode = {
   usageCount: number;
   createdAt: Date;
   durationMonths: number;
+  lifetimeAccess: boolean;
   usedBy: PromoCodeUser[];
   archived: boolean;
 };
@@ -165,6 +166,9 @@ export class AdminComponent implements OnInit {
   newDurationMoonshot = signal(12);
   newDurationInterplanetary = signal(12);
   newDurationGalactic = signal(12);
+  newLifetimeMoonshot = signal(false);
+  newLifetimeInterplanetary = signal(false);
+  newLifetimeGalactic = signal(false);
   promoCodesLoading = signal(false);
   promoCodesSaving = signal(false);
   promoCodesError = signal<string | null>(null);
@@ -985,14 +989,15 @@ export class AdminComponent implements OnInit {
             code: item.code || '',
             usageCount: item.usageCount || 0,
             createdAt: item.createdAt?.toDate?.() || new Date(item.createdAt) || new Date(),
-            durationMonths: item.durationMonths || 1,
+            durationMonths: typeof item.durationMonths === 'number' ? item.durationMonths : 1,
+            lifetimeAccess: Boolean(item.lifetimeAccess),
             usedBy: parseUsedBy(item.usedBy),
             archived: item.archived || false
           }));
         }
         // Handle legacy single code format
         if (typeof data === 'string' && data) {
-          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }];
+          return [{ code: data, usageCount: 0, createdAt: new Date(), durationMonths: 1, lifetimeAccess: false, usedBy: [], archived: false }];
         }
         return [];
       };
@@ -1004,9 +1009,9 @@ export class AdminComponent implements OnInit {
         this.promoCodesGalactic.set(parseCodesArray(data['galactic']));
       } else {
         // Initialize with default values if document doesn't exist
-        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }]);
-        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }]);
-        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1, usedBy: [], archived: false }]);
+        this.promoCodesMoonshot.set([{ code: 'NY2026MOONSHOT', usageCount: 0, createdAt: new Date(), durationMonths: 1, lifetimeAccess: false, usedBy: [], archived: false }]);
+        this.promoCodesInterplanetary.set([{ code: 'NY2026INTERPLANETARY', usageCount: 0, createdAt: new Date(), durationMonths: 1, lifetimeAccess: false, usedBy: [], archived: false }]);
+        this.promoCodesGalactic.set([{ code: 'NY2026GALACTIC', usageCount: 0, createdAt: new Date(), durationMonths: 1, lifetimeAccess: false, usedBy: [], archived: false }]);
       }
     } catch (err: any) {
       console.error('Failed to load promo codes:', err);
@@ -1019,15 +1024,19 @@ export class AdminComponent implements OnInit {
   async addPromoCode(tier: 'moonshot' | 'interplanetary' | 'galactic') {
     let newCode = '';
     let duration = 1;
+    let lifetimeAccess = false;
     if (tier === 'moonshot') {
       newCode = this.newCodeMoonshot().trim().toUpperCase();
       duration = this.newDurationMoonshot();
+      lifetimeAccess = this.newLifetimeMoonshot();
     } else if (tier === 'interplanetary') {
       newCode = this.newCodeInterplanetary().trim().toUpperCase();
       duration = this.newDurationInterplanetary();
+      lifetimeAccess = this.newLifetimeInterplanetary();
     } else {
       newCode = this.newCodeGalactic().trim().toUpperCase();
       duration = this.newDurationGalactic();
+      lifetimeAccess = this.newLifetimeGalactic();
     }
 
     if (!newCode) {
@@ -1036,8 +1045,8 @@ export class AdminComponent implements OnInit {
       return;
     }
 
-    if (duration < 1 || duration > 12) {
-      this.promoCodesError.set('Duration must be between 1 and 12 months.');
+    if (!lifetimeAccess && (duration < 1 || duration > 12)) {
+      this.promoCodesError.set('Duration must be between 1 and 12 months or set to lifetime.');
       setTimeout(() => this.promoCodesError.set(null), 5000);
       return;
     }
@@ -1063,14 +1072,15 @@ export class AdminComponent implements OnInit {
       const firestoreModule = await import('firebase/firestore');
       const docRef = firestoreModule.doc(firestore, 'adminSettings', 'promoCodes');
 
-      const newPromoCode: PromoCode = {
-        code: newCode,
-        usageCount: 0,
-        createdAt: new Date(),
-        durationMonths: duration,
-        usedBy: [],
-        archived: false
-      };
+    const newPromoCode: PromoCode = {
+      code: newCode,
+      usageCount: 0,
+      createdAt: new Date(),
+      durationMonths: lifetimeAccess ? 0 : duration,
+      lifetimeAccess,
+      usedBy: [],
+      archived: false
+    };
 
       // Get current codes for the tier and add the new one
       let currentCodes: PromoCode[];
@@ -1088,6 +1098,7 @@ export class AdminComponent implements OnInit {
         usageCount: c.usageCount,
         createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
         durationMonths: c.durationMonths,
+        lifetimeAccess: c.lifetimeAccess,
         usedBy: c.usedBy.map(u => ({
           userId: u.userId,
           name: u.name,
@@ -1107,14 +1118,17 @@ export class AdminComponent implements OnInit {
         this.promoCodesMoonshot.set(currentCodes);
         this.newCodeMoonshot.set('');
         this.newDurationMoonshot.set(12);
+        this.newLifetimeMoonshot.set(false);
       } else if (tier === 'interplanetary') {
         this.promoCodesInterplanetary.set(currentCodes);
         this.newCodeInterplanetary.set('');
         this.newDurationInterplanetary.set(12);
+        this.newLifetimeInterplanetary.set(false);
       } else {
         this.promoCodesGalactic.set(currentCodes);
         this.newCodeGalactic.set('');
         this.newDurationGalactic.set(12);
+        this.newLifetimeGalactic.set(false);
       }
 
       this.success.set(`Promo code "${newCode}" added successfully!`);
@@ -1157,6 +1171,7 @@ export class AdminComponent implements OnInit {
         usageCount: c.usageCount,
         createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
         durationMonths: c.durationMonths,
+        lifetimeAccess: c.lifetimeAccess,
         usedBy: c.usedBy.map(u => ({
           userId: u.userId,
           name: u.name,
@@ -1225,6 +1240,7 @@ export class AdminComponent implements OnInit {
         usageCount: c.usageCount,
         createdAt: firestoreModule.Timestamp.fromDate(c.createdAt),
         durationMonths: c.durationMonths,
+        lifetimeAccess: c.lifetimeAccess,
         usedBy: c.usedBy.map(u => ({
           userId: u.userId,
           name: u.name,

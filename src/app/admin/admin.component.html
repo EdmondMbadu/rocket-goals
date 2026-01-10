@@ -1289,9 +1289,15 @@
                 <div class="flex items-center gap-3">
                   <div class="flex-1 flex items-center gap-3 flex-wrap">
                     <span class="font-mono text-sm font-semibold" [class]="promo.archived ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-white'">{{ promo.code }}</span>
+                    @if (promo.lifetimeAccess) {
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+                      Lifetime
+                    </span>
+                    } @else {
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                       {{ promo.durationMonths }} month{{ promo.durationMonths !== 1 ? 's' : '' }}
                     </span>
+                    }
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
                     </span>
@@ -1372,10 +1378,16 @@
               <div class="flex items-center gap-1">
                 <input type="number" [value]="newDurationMoonshot()"
                   (input)="newDurationMoonshot.set(+$any($event.target).value)"
-                  min="1" max="12"
-                  class="w-16 px-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white" />
+                  min="1" max="12" [disabled]="newLifetimeMoonshot()"
+                  class="w-16 px-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-white/10 dark:text-white" />
                 <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">mo</span>
               </div>
+              <label class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                <input type="checkbox" [checked]="newLifetimeMoonshot()"
+                  (change)="newLifetimeMoonshot.set($any($event.target).checked)"
+                  class="h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-400" />
+                Lifetime
+              </label>
               <button (click)="addPromoCode('moonshot')" [disabled]="promoCodesSaving() || !newCodeMoonshot()"
                 class="px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Add
@@ -1396,9 +1408,15 @@
                 <div class="flex items-center gap-3">
                   <div class="flex-1 flex items-center gap-3 flex-wrap">
                     <span class="font-mono text-sm font-semibold" [class]="promo.archived ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-white'">{{ promo.code }}</span>
+                    @if (promo.lifetimeAccess) {
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+                      Lifetime
+                    </span>
+                    } @else {
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                       {{ promo.durationMonths }} month{{ promo.durationMonths !== 1 ? 's' : '' }}
                     </span>
+                    }
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
                     </span>
@@ -1477,10 +1495,16 @@
               <div class="flex items-center gap-1">
                 <input type="number" [value]="newDurationInterplanetary()"
                   (input)="newDurationInterplanetary.set(+$any($event.target).value)"
-                  min="1" max="12"
-                  class="w-16 px-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white" />
+                  min="1" max="12" [disabled]="newLifetimeInterplanetary()"
+                  class="w-16 px-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-white/10 dark:text-white" />
                 <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">mo</span>
               </div>
+              <label class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                <input type="checkbox" [checked]="newLifetimeInterplanetary()"
+                  (change)="newLifetimeInterplanetary.set($any($event.target).checked)"
+                  class="h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-400" />
+                Lifetime
+              </label>
               <button (click)="addPromoCode('interplanetary')" [disabled]="promoCodesSaving() || !newCodeInterplanetary()"
                 class="px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Add
@@ -1501,9 +1525,15 @@
                 <div class="flex items-center gap-3">
                   <div class="flex-1 flex items-center gap-3 flex-wrap">
                     <span class="font-mono text-sm font-semibold" [class]="promo.archived ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-white'">{{ promo.code }}</span>
+                    @if (promo.lifetimeAccess) {
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+                      Lifetime
+                    </span>
+                    } @else {
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                       {{ promo.durationMonths }} month{{ promo.durationMonths !== 1 ? 's' : '' }}
                     </span>
+                    }
                     <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       Used {{ promo.usageCount }} time{{ promo.usageCount !== 1 ? 's' : '' }}
                     </span>
@@ -1582,10 +1612,16 @@
               <div class="flex items-center gap-1">
                 <input type="number" [value]="newDurationGalactic()"
                   (input)="newDurationGalactic.set(+$any($event.target).value)"
-                  min="1" max="12"
-                  class="w-16 px-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all dark:bg-slate-800 dark:border-white/10 dark:text-white" />
+                  min="1" max="12" [disabled]="newLifetimeGalactic()"
+                  class="w-16 px-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-white/10 dark:text-white" />
                 <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">mo</span>
               </div>
+              <label class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                <input type="checkbox" [checked]="newLifetimeGalactic()"
+                  (change)="newLifetimeGalactic.set($any($event.target).checked)"
+                  class="h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-400" />
+                Lifetime
+              </label>
               <button (click)="addPromoCode('galactic')" [disabled]="promoCodesSaving() || !newCodeGalactic()"
                 class="px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Add
@@ -1611,7 +1647,7 @@
               </svg>
               <div class="text-sm text-slate-600 dark:text-slate-300">
                 <p class="font-semibold text-slate-700 mb-1 dark:text-slate-200">How this works</p>
-                <p>Add multiple promo codes per tier. Set the duration (1-12 months) for how long users will benefit from each code. Each code shows its duration and usage count. Codes are automatically converted to uppercase and must be unique across all tiers.</p>
+                <p>Add multiple promo codes per tier. Set a duration (1-12 months) or mark as lifetime access. Each code shows its duration and usage count. Codes are automatically converted to uppercase and must be unique across all tiers.</p>
               </div>
             </div>
           </div>

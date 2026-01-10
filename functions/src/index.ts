@@ -2701,6 +2701,7 @@ The final image should make the viewer think:
 type PromoCodeInfo = {
     tier: string;
     durationMonths: number;
+    lifetimeAccess: boolean;
 };
 
 /**
@@ -2723,12 +2724,14 @@ async function getPromoCodeInfoMap(): Promise<Record<string, PromoCodeInfo>> {
             const extractCodes = (tierData: unknown, tierName: string) => {
                 if (Array.isArray(tierData)) {
                     // New array format: [{code: 'CODE1', usageCount: 0, durationMonths: 1, archived: false}, ...]
-                    tierData.forEach((item: { code?: string; durationMonths?: number; archived?: boolean }) => {
+                    tierData.forEach((item: { code?: string; durationMonths?: number; archived?: boolean; lifetimeAccess?: boolean }) => {
                         // Skip archived codes
                         if (item.code && !item.archived) {
+                            const lifetimeAccess = Boolean(item.lifetimeAccess);
                             result[item.code.toUpperCase()] = {
                                 tier: tierName,
-                                durationMonths: item.durationMonths || 1
+                                durationMonths: typeof item.durationMonths === 'number' ? item.durationMonths : 1,
+                                lifetimeAccess
                             };
                         }
                     });
@@ -2736,7 +2739,8 @@ async function getPromoCodeInfoMap(): Promise<Record<string, PromoCodeInfo>> {
                     // Legacy single code format - default to 1 month
                     result[tierData.toUpperCase()] = {
                         tier: tierName,
-                        durationMonths: 1
+                        durationMonths: 1,
+                        lifetimeAccess: false
                     };
                 }
             };
@@ -2748,9 +2752,9 @@ async function getPromoCodeInfoMap(): Promise<Record<string, PromoCodeInfo>> {
             // If no codes found, return defaults
             if (Object.keys(result).length === 0) {
                 return {
-                    'NY2026MOONSHOT': { tier: 'moonshot', durationMonths: 1 },
-                    'NY2026INTERPLANETARY': { tier: 'interplanetary', durationMonths: 1 },
-                    'NY2026GALACTIC': { tier: 'galactic', durationMonths: 1 }
+                    'NY2026MOONSHOT': { tier: 'moonshot', durationMonths: 1, lifetimeAccess: false },
+                    'NY2026INTERPLANETARY': { tier: 'interplanetary', durationMonths: 1, lifetimeAccess: false },
+                    'NY2026GALACTIC': { tier: 'galactic', durationMonths: 1, lifetimeAccess: false }
                 };
             }
 
@@ -2762,9 +2766,9 @@ async function getPromoCodeInfoMap(): Promise<Record<string, PromoCodeInfo>> {
 
     // Return defaults if Firestore read fails
     return {
-        'NY2026MOONSHOT': { tier: 'moonshot', durationMonths: 1 },
-        'NY2026INTERPLANETARY': { tier: 'interplanetary', durationMonths: 1 },
-        'NY2026GALACTIC': { tier: 'galactic', durationMonths: 1 }
+        'NY2026MOONSHOT': { tier: 'moonshot', durationMonths: 1, lifetimeAccess: false },
+        'NY2026INTERPLANETARY': { tier: 'interplanetary', durationMonths: 1, lifetimeAccess: false },
+        'NY2026GALACTIC': { tier: 'galactic', durationMonths: 1, lifetimeAccess: false }
     };
 }
 
@@ -3259,6 +3263,7 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
 
     const plan = codeInfo.tier as 'moonshot' | 'interplanetary' | 'galactic';
     const durationMonths = codeInfo.durationMonths;
+    const lifetimeAccess = codeInfo.lifetimeAccess;
 
     const userId = context.auth.uid;
     const userDocRef = admin.firestore().collection('userProfiles').doc(userId);
@@ -3282,20 +3287,27 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
         );
     }
 
-    // Calculate expiration date based on the code's duration
-    const now = new Date();
-    const expiresAt = new Date(now);
-    expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
-
-    // Update user profile with the new subscription
-    await userDocRef.update({
+    const updateData: Record<string, any> = {
         subscriptionStatus: 'active',
         subscriptionPlan: plan,
         subscriptionPaidAt: admin.firestore.Timestamp.now(),
-        subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
         usedPromoCodes: admin.firestore.FieldValue.arrayUnion(promoCode),
         promoSubscription: true // Flag to indicate this is a promo subscription (no Stripe)
-    });
+    };
+
+    let expiresAt: Date | null = null;
+    if (lifetimeAccess) {
+        updateData.subscriptionExpiresAt = admin.firestore.FieldValue.delete();
+    } else {
+        // Calculate expiration date based on the code's duration
+        const now = new Date();
+        expiresAt = new Date(now);
+        expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+        updateData.subscriptionExpiresAt = admin.firestore.Timestamp.fromDate(expiresAt);
+    }
+
+    // Update user profile with the new subscription
+    await userDocRef.update(updateData);
 
     // Get user name and email for tracking
     const userName = `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Unknown';
@@ -3304,14 +3316,18 @@ export const redeemPromoCode = functions.https.onCall(async (data: { promoCode: 
     // Increment usage count for the promo code and track the user
     await incrementPromoCodeUsage(promoCode, plan, userId, userName, userEmail);
 
-    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} (${userName}) - Plan: ${plan}, Duration: ${durationMonths} months, Expires: ${expiresAt.toISOString()}`);
+    const logExpires = expiresAt ? expiresAt.toISOString() : 'lifetime';
+    console.log(`✅ Promo code ${promoCode} redeemed for user ${userId} (${userName}) - Plan: ${plan}, Duration: ${lifetimeAccess ? 'lifetime' : `${durationMonths} months`}, Expires: ${logExpires}`);
 
     return {
         success: true,
         plan,
         durationMonths,
-        expiresAt: expiresAt.toISOString(),
-        message: `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription is now active for ${durationMonths} month${durationMonths !== 1 ? 's' : ''}!`
+        lifetimeAccess,
+        expiresAt: expiresAt ? expiresAt.toISOString() : null,
+        message: lifetimeAccess
+            ? `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription is now active for lifetime access!`
+            : `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription is now active for ${durationMonths} month${durationMonths !== 1 ? 's' : ''}!`
     };
 });
 

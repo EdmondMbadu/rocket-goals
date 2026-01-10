@@ -671,7 +671,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   getSubscriptionExpiresAt(): string {
     const profile = this.profile();
-    if (!profile?.subscriptionExpiresAt) return '';
+    if (!profile?.subscriptionExpiresAt) {
+      if (profile?.promoSubscription && profile?.subscriptionPlan) {
+        return 'Lifetime';
+      }
+      return '';
+    }
     try {
       const date = profile.subscriptionExpiresAt as any;
       if (date && typeof date.toDate === 'function') {
