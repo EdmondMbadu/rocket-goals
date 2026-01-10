@@ -140,6 +140,11 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
               <p class="text-xs text-gray-500 mt-2 dark:text-slate-400">
                 Promo codes are plan-specific and apply to your first month only.
               </p>
+              @if (shouldPromptPhoneForPromoCode()) {
+                <p class="text-xs text-amber-700 mt-2 font-semibold dark:text-amber-300">
+                  Interplanetary+ promos require a phone number to activate Reminder OS. We will ask after you redeem.
+                </p>
+              }
               @if (promoNotice()) {
                 <p class="text-xs text-green-600 mt-2 font-semibold dark:text-green-400">
                   {{ promoNotice() }}
@@ -424,6 +429,45 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
               </div>
             </div>
 
+            @if (shouldRequestPhoneInSuccessModal() && !promoPhoneDeclined()) {
+            <div class="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-400/30 rounded-xl p-4 text-left space-y-3">
+              <div>
+                <p class="text-sm font-bold text-amber-900 dark:text-amber-200">Add your phone number to activate Reminder OS</p>
+                <p class="text-xs text-amber-800/80 dark:text-amber-200/80">
+                  This is important so we can keep you focused on your goals with SMS nudges. You can skip now and add it later in Profile.
+                </p>
+              </div>
+              <input
+                type="tel"
+                class="w-full px-3 py-2 rounded-lg border border-amber-200 text-sm bg-white text-black placeholder:text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-slate-900 dark:border-amber-400/30 dark:text-white"
+                placeholder="415-555-1234 or +1 415-555-1234"
+                [value]="promoPhoneNumber()"
+                (input)="updatePromoPhoneNumber($any($event.target).value)"
+              />
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button type="button"
+                  class="btn-accent sm:flex-1"
+                  (click)="savePromoPhoneNumber()"
+                  [disabled]="promoPhoneSaving()">
+                  {{ promoPhoneSaving() ? 'Saving...' : 'Save & Continue' }}
+                </button>
+                <button type="button"
+                  class="btn-outline sm:flex-1"
+                  (click)="declinePromoPhoneNumber()">
+                  Skip for now
+                </button>
+              </div>
+              @if (promoPhoneNotice()) {
+                <p class="text-xs text-amber-700 dark:text-amber-200">{{ promoPhoneNotice() }}</p>
+              }
+            </div>
+            }
+            @if (promoPhoneDeclined()) {
+              <p class="text-xs text-amber-700 dark:text-amber-200">
+                No worries. You can add your phone number later from your Profile page.
+              </p>
+            }
+
             <!-- Features You Now Have Access To -->
             <div class="text-left">
               <p class="text-sm font-bold text-gray-700 dark:text-slate-200 mb-3">You now have access to:</p>
@@ -440,12 +484,17 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
             </div>
 
             <!-- Action Button -->
-            <button (click)="startExploring()" class="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all duration-200 flex items-center justify-center gap-2">
+            <button (click)="startExploring()"
+              [disabled]="!canProceedFromSuccessModal()"
+              class="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
               <span>Start Exploring</span>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
+            @if (shouldRequestPhoneInSuccessModal() && !canProceedFromSuccessModal()) {
+              <p class="text-xs text-gray-500 dark:text-slate-400">Add a phone number or choose "Skip for now" to continue.</p>
+            }
 
             <p class="text-xs text-gray-400 dark:text-slate-500">
               You can manage your subscription anytime from your profile
@@ -843,6 +892,10 @@ export class PricingPageComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   readonly promoCode = signal('');
   readonly promoNotice = signal<string | null>(null);
+  readonly promoPhoneNumber = signal('');
+  readonly promoPhoneSaving = signal(false);
+  readonly promoPhoneDeclined = signal(false);
+  readonly promoPhoneNotice = signal<string | null>(null);
   protected readonly stripePrices = stripePrices;
 
   // Success modal state
@@ -942,6 +995,7 @@ export class PricingPageComponent implements OnInit {
     const normalized = value.toUpperCase().replace(/\s+/g, '');
     this.promoCode.set(normalized);
     this.promoNotice.set(null);
+    this.promoPhoneNotice.set(null);
     if (this.error()) {
       this.error.set(null);
     }
@@ -950,6 +1004,7 @@ export class PricingPageComponent implements OnInit {
   clearPromoCode() {
     this.promoCode.set('');
     this.promoNotice.set(null);
+    this.promoPhoneNotice.set(null);
     if (this.error()) {
       this.error.set(null);
     }
@@ -1025,6 +1080,82 @@ export class PricingPageComponent implements OnInit {
     return names[planKey] || planKey;
   }
 
+  requiresPhoneForPlan(planKey: string): boolean {
+    return planKey === 'interplanetary' || planKey === 'galactic';
+  }
+
+  shouldPromptPhoneForPromoCode(): boolean {
+    const promoCode = this.promoCode().trim().toUpperCase();
+    const promoPlan = this.promoCodePlanMap()[promoCode];
+    if (!promoPlan || !this.requiresPhoneForPlan(promoPlan)) {
+      return false;
+    }
+    const profile = this.authService.profile();
+    return !profile?.phoneNumber;
+  }
+
+  shouldRequestPhoneInSuccessModal(): boolean {
+    const data = this.successModalData();
+    if (!data || !this.requiresPhoneForPlan(data.plan)) return false;
+    const profile = this.authService.profile();
+    return !profile?.phoneNumber;
+  }
+
+  canProceedFromSuccessModal(): boolean {
+    if (!this.shouldRequestPhoneInSuccessModal()) return true;
+    const profile = this.authService.profile();
+    return Boolean(profile?.phoneNumber) || this.promoPhoneDeclined();
+  }
+
+  updatePromoPhoneNumber(value: string) {
+    this.promoPhoneNumber.set(value);
+    if (this.promoPhoneNotice()) {
+      this.promoPhoneNotice.set(null);
+    }
+  }
+
+  private normalizeUsPhoneNumber(rawValue: string): string | null {
+    const digits = rawValue.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `+1${digits}`;
+    }
+    if (digits.length === 11 && digits.startsWith('1')) {
+      return `+1${digits.slice(1)}`;
+    }
+    return null;
+  }
+
+  async savePromoPhoneNumber() {
+    if (this.promoPhoneSaving()) return;
+    const trimmed = this.promoPhoneNumber().trim();
+    if (!trimmed) {
+      this.promoPhoneNotice.set('Please add a phone number or choose "Skip for now".');
+      return;
+    }
+    const normalized = this.normalizeUsPhoneNumber(trimmed);
+    if (!normalized) {
+      this.promoPhoneNotice.set('Please enter a valid 10-digit phone number (you can include +1).');
+      return;
+    }
+    this.promoPhoneSaving.set(true);
+    try {
+      const updatedProfile = await this.authService.updateUserProfile({ phoneNumber: normalized || undefined });
+      this.promoPhoneNumber.set(updatedProfile.phoneNumber || '');
+      this.promoPhoneDeclined.set(false);
+      this.promoPhoneNotice.set('Thanks! Your phone number is saved.');
+    } catch (err: any) {
+      console.error('Error saving phone number from promo flow:', err);
+      this.promoPhoneNotice.set('Unable to save your phone number. Please try again.');
+    } finally {
+      this.promoPhoneSaving.set(false);
+    }
+  }
+
+  declinePromoPhoneNumber() {
+    this.promoPhoneDeclined.set(true);
+    this.promoPhoneNotice.set(null);
+  }
+
   getPlanBadgeClass(): string {
     const plan = this.getCurrentPlan();
     switch (plan) {
@@ -1071,8 +1202,11 @@ export class PricingPageComponent implements OnInit {
 
       if (data.success) {
         // Refresh the user profile to get the updated subscription
-        await this.authService.refreshProfile();
+        const updatedProfile = await this.authService.refreshProfile();
         this.promoCode.set('');
+        this.promoPhoneNumber.set(updatedProfile?.phoneNumber || '');
+        this.promoPhoneDeclined.set(false);
+        this.promoPhoneNotice.set(null);
         // Show success modal instead of navigating
         this.successModalData.set({
           plan: data.plan,
@@ -1168,6 +1302,8 @@ export class PricingPageComponent implements OnInit {
   closeSuccessModal() {
     this.showSuccessModal.set(false);
     this.successModalData.set(null);
+    this.promoPhoneNotice.set(null);
+    this.promoPhoneDeclined.set(false);
   }
 
   startExploring() {

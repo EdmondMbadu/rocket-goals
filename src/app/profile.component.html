@@ -115,6 +115,17 @@
 
     @if (success()) { <div class="alert success">{{ success() }}</div> }
     @if (error()) { <div class="alert error">{{ error() }}</div> }
+    @if (phoneSavedModalVisible()) {
+      <div class="phone-modal">
+        <div class="phone-modal-card">
+          <div class="phone-modal-icon">✅</div>
+          <div>
+            <p class="phone-modal-title">Phone number saved</p>
+            <p class="phone-modal-subtitle">Reminder OS can now reach you.</p>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (profileImageFile && !uploading()) {
     <div class="card glass">
@@ -327,6 +338,30 @@
           </div>
         </div>
         }
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-head">
+        <h3>Contact</h3>
+      </div>
+      <div class="settings">
+        <div class="setting-row">
+          <div>
+            <p class="name">Phone number</p>
+            <p class="muted tiny">Used for Reminder OS nudges. Add it now or leave blank if you prefer.</p>
+          </div>
+          <div class="phone-input">
+            <input type="tel"
+              [value]="phoneNumberDraft()"
+              (input)="updatePhoneNumberDraft($any($event.target).value)"
+              [disabled]="phoneNumberSaving()"
+              placeholder="415-555-1234 or +1 415-555-1234" />
+            <button class="solid xs" (click)="savePhoneNumber()" [disabled]="phoneNumberSaving()">
+              {{ phoneNumberSaving() ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

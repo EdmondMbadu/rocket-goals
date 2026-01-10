@@ -49,6 +49,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   // Subscription management
   subscriptionLoading = signal(false);
   subscriptionError = signal<string | null>(null);
+  phoneNumberDraft = signal('');
+  phoneNumberSaving = signal(false);
+  phoneNumberDirty = signal(false);
+  phoneSavedModalVisible = signal(false);
 
   async ngOnInit() {
     // Wait a bit for auth to initialize
@@ -65,6 +69,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
     
     this.profile.set(profile);
+    this.phoneNumberDraft.set(profile.phoneNumber || '');
     
     // Set profile image - check both preview and profile
     const profileImageUrl = profile.profilePictureUrl;
@@ -89,6 +94,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       const currentProfile = this.authService.profile();
       if (currentProfile && currentProfile.userId === profile.userId) {
         this.profile.set(currentProfile);
+        if (!this.phoneNumberDirty()) {
+          this.phoneNumberDraft.set(currentProfile.phoneNumber || '');
+        }
         // Only override the preview with the stored image when we don't have a local
         // selection in progress. This lets the user actually see the file they just picked.
         if (!this.profileImageFile && currentProfile.profilePictureUrl && currentProfile.profilePictureUrl !== this.profileImagePreview()) {
@@ -517,6 +525,51 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   getGoalTitle(goal: RocketGoal): string {
     return goal.answers?.['goal_title_label'] || goal.answers?.['custom_goal_title'] || goal.primaryGoal || 'Untitled Goal';
+  }
+
+  updatePhoneNumberDraft(value: string) {
+    this.phoneNumberDraft.set(value);
+    this.phoneNumberDirty.set(true);
+  }
+
+  private normalizeUsPhoneNumber(rawValue: string): string | null {
+    const digits = rawValue.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `+1${digits}`;
+    }
+    if (digits.length === 11 && digits.startsWith('1')) {
+      return `+1${digits.slice(1)}`;
+    }
+    return null;
+  }
+
+  async savePhoneNumber() {
+    if (this.phoneNumberSaving()) return;
+    const trimmed = this.phoneNumberDraft().trim();
+    const normalized = trimmed ? this.normalizeUsPhoneNumber(trimmed) : '';
+    if (trimmed && !normalized) {
+      this.error.set('Please enter a valid 10-digit phone number (you can include +1).');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+    this.phoneNumberSaving.set(true);
+    try {
+      const updatedProfile = await this.updateProfile({ phoneNumber: normalized || undefined });
+      this.phoneNumberDraft.set(updatedProfile.phoneNumber || '');
+      this.phoneNumberDirty.set(false);
+      this.success.set(trimmed ? 'Phone number saved.' : 'Phone number removed.');
+      setTimeout(() => this.success.set(null), 5000);
+      if (trimmed) {
+        this.phoneSavedModalVisible.set(true);
+        setTimeout(() => this.phoneSavedModalVisible.set(false), 2500);
+      }
+    } catch (error: any) {
+      console.error('Error saving phone number', error);
+      this.error.set('Failed to save phone number. Please try again.');
+      setTimeout(() => this.error.set(null), 5000);
+    } finally {
+      this.phoneNumberSaving.set(false);
+    }
   }
 
   getGoalTheme(goal: RocketGoal): string {

@@ -31,4 +31,5 @@ export interface UserProfile {
   lastSignIn?: unknown;
   usedPromoCodes?: string[];
   promoSubscription?: boolean;
+  phoneNumber?: string;
 }
