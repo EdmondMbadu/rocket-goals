@@ -5,6 +5,7 @@ import { RocketGoalsService } from '../rocket-goals.service';
 import { VisualizationService } from '../visualization.service';
 import { ActionItemsService } from '../action-items.service';
 import { RocketGoalsAIService } from '../rocket-goals-ai.service';
+import { CalendarEventsService } from '../calendar-events.service';
 import { LaunchpadTemplate, LAUNCHPAD_TEMPLATES, MissionOnboardingData } from './launchpad.types';
 
 @Injectable({
@@ -17,6 +18,7 @@ export class LaunchpadService {
   private readonly visualizationService = inject(VisualizationService);
   private readonly actionItemsService = inject(ActionItemsService);
   private readonly rocketGoalsAIService = inject(RocketGoalsAIService);
+  private readonly calendarEventsService = inject(CalendarEventsService);
 
   getTemplate(id: string): LaunchpadTemplate | undefined {
     return LAUNCHPAD_TEMPLATES[id];
@@ -235,8 +237,9 @@ export class LaunchpadService {
       // Parse the response
       const milestones = this.parseMilestonesResponse(response, totalDays, startTime);
 
-      // Create action items from milestones
+      // Create action items and calendar events from milestones
       for (const milestone of milestones) {
+        // Create action item
         await this.actionItemsService.createActionItem({
           goalId,
           title: milestone.title,
@@ -244,9 +247,13 @@ export class LaunchpadService {
           completed: false,
           order: milestone.dayNumber
         });
+
+        // Create corresponding calendar event
+        const milestoneDate = new Date(milestone.date);
+        await this.createCalendarEventForMilestone(goalId, milestone.title, milestoneDate);
       }
 
-      console.log(`Generated ${milestones.length} milestones for goal ${goalId}`);
+      console.log(`Generated ${milestones.length} milestones with calendar events for goal ${goalId}`);
     } catch (error) {
       console.error('Error generating milestones:', error);
       // Don't throw - milestone generation failure shouldn't block goal creation
@@ -390,6 +397,23 @@ Generate the milestones now (JSON array only, no other text):`;
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Create a calendar event for a milestone
+   */
+  private async createCalendarEventForMilestone(goalId: string, title: string, date: Date): Promise<void> {
+    try {
+      await this.calendarEventsService.createEvent(goalId, {
+        title: `🎯 ${title}`,
+        date,
+        color: '#9333ea', // Purple for milestones
+        completed: false
+      });
+    } catch (error) {
+      console.error('Error creating calendar event for milestone:', error);
+      // Don't throw - milestone was still created successfully
+    }
   }
 
   /**
