@@ -378,11 +378,11 @@
                 </div>
                 <div class="one-thing-target-value">
                   @if (goal()!.answers['onboarding_one_thing_unit'] === '$') {
-                    <span class="one-thing-unit-prefix">$</span>{{ goal()!.answers['onboarding_one_thing_metric'] }}
+                    <span class="one-thing-unit-prefix">$</span>{{ formatNumberWithCommas(goal()!.answers['onboarding_one_thing_metric']) }}
                   } @else if (goal()!.answers['onboarding_one_thing_unit']) {
-                    {{ goal()!.answers['onboarding_one_thing_metric'] }} <span class="one-thing-unit-suffix">{{ goal()!.answers['onboarding_one_thing_unit'] }}</span>
+                    {{ formatNumberWithCommas(goal()!.answers['onboarding_one_thing_metric']) }} <span class="one-thing-unit-suffix">{{ goal()!.answers['onboarding_one_thing_unit'] }}</span>
                   } @else {
-                    {{ goal()!.answers['onboarding_one_thing_metric'] }}
+                    {{ formatNumberWithCommas(goal()!.answers['onboarding_one_thing_metric']) }}
                   }
                 </div>
               </div>

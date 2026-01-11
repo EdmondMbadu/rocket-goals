@@ -606,6 +606,13 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return goal.answers['goal_support_label'] || 'Self';
   }
 
+  formatNumberWithCommas(value: any): string {
+    if (value == null) return '';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    if (isNaN(num)) return String(value);
+    return num.toLocaleString('en-US');
+  }
+
   getUserFirstName(): string {
     const goal = this.goal();
     if (!goal) return 'Commander';
