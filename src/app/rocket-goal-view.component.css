@@ -798,6 +798,123 @@
   border-color: rgba(148, 163, 184, 0.4);
 }
 
+/* ===== PROMINENT DEADLINE STYLES ===== */
+.deadline-prominent {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.12) 0%, rgba(239, 68, 68, 0.08) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.deadline-prominent .deadline-meta {
+  gap: 4px;
+}
+
+.deadline-prominent .deadline-label {
+  font-size: 9px;
+  color: rgba(248, 113, 113, 0.8);
+}
+
+.deadline-date-pop {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  color: #f87171 !important;
+  text-shadow: 0 0 20px rgba(248, 113, 113, 0.4);
+  letter-spacing: 0.02em;
+}
+
+.light-mode .deadline-prominent {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.light-mode .deadline-date-pop {
+  color: #dc2626 !important;
+  text-shadow: none;
+}
+
+/* ===== ONE THING TARGET CARD STYLES ===== */
+.one-thing-target-card {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.one-thing-target-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.6), transparent);
+}
+
+.one-thing-target-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.one-thing-target-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.5));
+}
+
+.one-thing-target-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(34, 197, 94, 0.9);
+}
+
+.one-thing-target-value {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: #22c55e;
+  text-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.one-thing-unit-prefix {
+  font-size: 20px;
+  font-weight: 700;
+  opacity: 0.85;
+  margin-right: 2px;
+}
+
+.one-thing-unit-suffix {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-left: 4px;
+  text-transform: lowercase;
+}
+
+/* Light mode adjustments */
+.light-mode .one-thing-target-card {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+.light-mode .one-thing-target-label {
+  color: rgba(22, 163, 74, 0.95);
+}
+
+.light-mode .one-thing-target-value {
+  color: #16a34a;
+  text-shadow: none;
+}
+
 .light-mode .deadline-set-btn {
   background: rgba(248, 113, 113, 0.1);
 }

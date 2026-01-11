@@ -369,6 +369,25 @@
                 {{ getGoalThemeDisplay() }}
               </p>
 
+              <!-- ONE Thing Success Target (if from launchpad onboarding) -->
+              @if (goal()!.answers['onboarding_one_thing_metric']) {
+              <div class="one-thing-target-card mb-4">
+                <div class="one-thing-target-header">
+                  <span class="one-thing-target-icon">🎯</span>
+                  <span class="one-thing-target-label">{{ goal()!.answers['onboarding_one_thing_label'] || 'SUCCESS TARGET' }}</span>
+                </div>
+                <div class="one-thing-target-value">
+                  @if (goal()!.answers['onboarding_one_thing_unit'] === '$') {
+                    <span class="one-thing-unit-prefix">$</span>{{ goal()!.answers['onboarding_one_thing_metric'] }}
+                  } @else if (goal()!.answers['onboarding_one_thing_unit']) {
+                    {{ goal()!.answers['onboarding_one_thing_metric'] }} <span class="one-thing-unit-suffix">{{ goal()!.answers['onboarding_one_thing_unit'] }}</span>
+                  } @else {
+                    {{ goal()!.answers['onboarding_one_thing_metric'] }}
+                  }
+                </div>
+              </div>
+              }
+
               <!-- Compact Stats -->
               <div class="flex gap-3 relative z-10">
                 <div class="stat-box-compact rounded-lg flex-1">
@@ -638,10 +657,10 @@
               </div>
               } @else {
               @if (hasCustomDeadline()) {
-              <div class="deadline-display">
+              <div class="deadline-display deadline-prominent">
                 <div class="deadline-meta">
                   <span class="deadline-label">Target date</span>
-                  <span class="deadline-date">{{ getDeadlineDateDisplay() }}</span>
+                  <span class="deadline-date deadline-date-pop">{{ getDeadlineDateDisplay() }}</span>
                 </div>
                 <button type="button" class="deadline-edit-link" (click)="startEditingDeadline()">Edit</button>
               </div>
@@ -654,10 +673,10 @@
             </div>
             } @else if (hasCustomDeadline()) {
             <div class="deadline-row">
-              <div class="deadline-display readonly">
+              <div class="deadline-display readonly deadline-prominent">
                 <div class="deadline-meta">
                   <span class="deadline-label">Target date</span>
-                  <span class="deadline-date">{{ getDeadlineDateDisplay() }}</span>
+                  <span class="deadline-date deadline-date-pop">{{ getDeadlineDateDisplay() }}</span>
                 </div>
               </div>
             </div>
