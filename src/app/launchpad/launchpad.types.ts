@@ -1,5 +1,31 @@
 // Shared types for launchpad components
 
+/**
+ * Experience level options for mission onboarding
+ */
+export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
+
+/**
+ * Configuration for the ONE Thing success metric - app-specific
+ */
+export interface OneThingMetricConfig {
+  label: string;           // Display label (e.g., "Target Finish Time")
+  placeholder: string;     // Input placeholder (e.g., "e.g., 4:30:00")
+  type: 'text' | 'number' | 'time' | 'weight' | 'currency' | 'percentage';
+  unit?: string;           // Optional unit (e.g., "lbs", "miles", "$")
+  helpText?: string;       // Optional helper text below input
+}
+
+/**
+ * Data collected from mission onboarding modal
+ */
+export interface MissionOnboardingData {
+  startDate: string;       // ISO date string (YYYY-MM-DD)
+  endDate: string;         // ISO date string (YYYY-MM-DD)
+  experienceLevel: ExperienceLevel;
+  oneThingMetric: string;  // User's ONE Thing success metric value
+}
+
 export interface LaunchpadTemplate {
   id: string;
   name: string;
@@ -23,6 +49,8 @@ export interface LaunchpadTemplate {
     dailyEffort: string;
     objectives: string[];
   };
+  // NEW: Mission onboarding configuration
+  oneThingMetric: OneThingMetricConfig;
 }
 
 export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
@@ -55,6 +83,13 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'career',
       dailyEffort: '1hour',
       objectives: ['Ship features', 'Grow audience', 'Generate revenue']
+    },
+    oneThingMetric: {
+      label: 'Target Monthly Revenue',
+      placeholder: 'e.g., 5000',
+      type: 'currency',
+      unit: '$',
+      helpText: 'What monthly revenue goal will mark your success?'
     }
   },
   'opti-human': {
@@ -86,6 +121,13 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'health',
       dailyEffort: '30min',
       objectives: ['Sleep optimization', 'Nutrition tracking', 'Energy management']
+    },
+    oneThingMetric: {
+      label: 'Performance Score Target',
+      placeholder: 'e.g., 85',
+      type: 'number',
+      unit: '%',
+      helpText: 'What overall health/performance score are you aiming for?'
     }
   },
   'marketing-maven': {
@@ -117,6 +159,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'career',
       dailyEffort: '1hour',
       objectives: ['Run experiments', 'Improve conversion', 'Scale channels']
+    },
+    oneThingMetric: {
+      label: 'Target New Customers',
+      placeholder: 'e.g., 100',
+      type: 'number',
+      helpText: 'How many new customers do you want to acquire?'
     }
   },
   'pipeline-pilot': {
@@ -148,6 +196,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'finance',
       dailyEffort: '2hours',
       objectives: ['Lead generation', 'Follow-up cadence', 'Deal closing']
+    },
+    oneThingMetric: {
+      label: 'Target Deals Closed',
+      placeholder: 'e.g., 10',
+      type: 'number',
+      helpText: 'How many deals do you want to close in this period?'
     }
   },
   'apex-ascend': {
@@ -179,6 +233,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'career',
       dailyEffort: '30min',
       objectives: ['Visibility projects', 'Networking', 'Skill development']
+    },
+    oneThingMetric: {
+      label: 'Career Milestone',
+      placeholder: 'e.g., Promotion to Senior Manager',
+      type: 'text',
+      helpText: 'What specific career milestone are you targeting?'
     }
   },
   'creator-craft': {
@@ -210,6 +270,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'career',
       dailyEffort: '2hours',
       objectives: ['Client deliverables', 'Portfolio pieces', 'Skill growth']
+    },
+    oneThingMetric: {
+      label: 'Projects to Complete',
+      placeholder: 'e.g., 5',
+      type: 'number',
+      helpText: 'How many creative projects do you want to finish?'
     }
   },
   'neuro-nexus': {
@@ -241,6 +307,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'learning',
       dailyEffort: '1hour',
       objectives: ['AI tool mastery', 'Project experiments', 'Knowledge sharing']
+    },
+    oneThingMetric: {
+      label: 'AI Tools to Master',
+      placeholder: 'e.g., 3',
+      type: 'number',
+      helpText: 'How many AI tools/skills do you want to master?'
     }
   },
   'boss-beam': {
@@ -272,6 +344,13 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'career',
       dailyEffort: '2hours',
       objectives: ['Team growth', 'Revenue milestones', 'Vision execution']
+    },
+    oneThingMetric: {
+      label: 'Funding/Revenue Target',
+      placeholder: 'e.g., 500000',
+      type: 'currency',
+      unit: '$',
+      helpText: 'What funding or revenue milestone are you targeting?'
     }
   },
   'my-sugar-shift': {
@@ -303,6 +382,13 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'health',
       dailyEffort: '20min',
       objectives: ['Meal tracking', 'Energy patterns', 'Healthy habits']
+    },
+    oneThingMetric: {
+      label: 'Target Weight',
+      placeholder: 'e.g., 150',
+      type: 'weight',
+      unit: 'lbs',
+      helpText: 'What is your target weight goal?'
     }
   },
   'my-rocket-ride': {
@@ -334,6 +420,13 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'health',
       dailyEffort: '1hour',
       objectives: ['Weekly mileage', 'Route completion', 'Performance gains']
+    },
+    oneThingMetric: {
+      label: 'Target Distance',
+      placeholder: 'e.g., 100',
+      type: 'number',
+      unit: 'miles',
+      helpText: 'What total distance do you want to ride?'
     }
   },
   'marathon-mover': {
@@ -365,6 +458,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'health',
       dailyEffort: '1hour',
       objectives: ['Weekly mileage', 'Pace improvement', 'Race readiness']
+    },
+    oneThingMetric: {
+      label: 'Target Finish Time',
+      placeholder: 'e.g., 4:30:00',
+      type: 'time',
+      helpText: 'What is your target marathon finish time? (HH:MM:SS)'
     }
   },
   'career-quest': {
@@ -396,6 +495,12 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       theme: 'career',
       dailyEffort: '2hours',
       objectives: ['Applications sent', 'Interviews completed', 'Network growth']
+    },
+    oneThingMetric: {
+      label: 'Job Offers Target',
+      placeholder: 'e.g., 3',
+      type: 'number',
+      helpText: 'How many job offers do you want to receive?'
     }
   }
 };

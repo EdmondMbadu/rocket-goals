@@ -3,7 +3,9 @@ import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { RocketGoalsService } from '../rocket-goals.service';
 import { VisualizationService } from '../visualization.service';
-import { LaunchpadTemplate, LAUNCHPAD_TEMPLATES } from './launchpad.types';
+import { ActionItemsService } from '../action-items.service';
+import { RocketGoalsAIService } from '../rocket-goals-ai.service';
+import { LaunchpadTemplate, LAUNCHPAD_TEMPLATES, MissionOnboardingData } from './launchpad.types';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +15,8 @@ export class LaunchpadService {
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);
   private readonly visualizationService = inject(VisualizationService);
+  private readonly actionItemsService = inject(ActionItemsService);
+  private readonly rocketGoalsAIService = inject(RocketGoalsAIService);
 
   getTemplate(id: string): LaunchpadTemplate | undefined {
     return LAUNCHPAD_TEMPLATES[id];
@@ -112,6 +116,314 @@ export class LaunchpadService {
     }
   }
 
+  /**
+   * Launch mission with onboarding data (start date, end date, experience level, ONE Thing metric)
+   * This generates AI-powered milestones based on the user's input
+   */
+  async launchMissionWithOnboarding(template: LaunchpadTemplate, onboardingData: MissionOnboardingData): Promise<string | null> {
+    const profile = this.authService.profile();
+
+    if (!profile?.userId) {
+      // Store template and onboarding data, redirect to signup
+      sessionStorage.setItem('pendingLaunchpad', JSON.stringify({
+        templateId: template.id,
+        onboardingData
+      }));
+      this.router.navigate(['/signup'], {
+        queryParams: { redirectTo: `/launchpad/${template.id}`, createLaunchpad: 'true' }
+      });
+      return null;
+    }
+
+    // Calculate timeline
+    const startDate = new Date(onboardingData.startDate);
+    const endDate = new Date(onboardingData.endDate);
+    const startTime = startDate.getTime();
+    const totalDays = Math.ceil((endDate.getTime() - startTime) / (1000 * 60 * 60 * 24));
+
+    // Determine timeframe label
+    let timeframe: 'week' | 'month' | '3months' | '6months' = 'month';
+    if (totalDays <= 7) timeframe = 'week';
+    else if (totalDays <= 30) timeframe = 'month';
+    else if (totalDays <= 90) timeframe = '3months';
+    else timeframe = '6months';
+
+    try {
+      // Create the goal with onboarding data
+      const goalId = await this.goalsService.createRocketGoal({
+        userId: profile.userId,
+        primaryGoal: template.defaultGoals.primaryGoal,
+        answers: {
+          goal_title_label: `${template.name} Mission`,
+          goal_theme: template.defaultGoals.theme,
+          goal_theme_label: template.category,
+          daily_effort: template.defaultGoals.dailyEffort,
+          source: 'launchpad_template',
+          launchpad_template_id: template.id,
+          launchpad_template_name: template.name,
+          launchpad_tagline: template.tagline,
+          objectives: template.defaultGoals.objectives,
+          custom_goal_title: `${template.name} Mission`,
+          goalDescription: template.description,
+          timeframe,
+          timeframe_days: totalDays,
+          deadlineDate: endDate.getTime(),
+          // NEW: Onboarding data
+          onboarding_start_date: onboardingData.startDate,
+          onboarding_end_date: onboardingData.endDate,
+          onboarding_experience_level: onboardingData.experienceLevel,
+          onboarding_one_thing_metric: onboardingData.oneThingMetric,
+          onboarding_one_thing_label: template.oneThingMetric.label,
+          onboarding_one_thing_unit: template.oneThingMetric.unit || ''
+        },
+        participant: {
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          email: profile.email || ''
+        },
+        status: 'active',
+        entryPoint: 'launch_challenge',
+        startTime,
+        copilot: {
+          avatar: template.coPilotAvatar,
+          name: template.coPilotName,
+          role: template.coPilotRole
+        }
+      });
+
+      // Generate visualization image (async, don't wait)
+      this.generateVisualizationAsync(goalId, template, profile);
+
+      // Generate AI-powered milestones based on onboarding data
+      await this.generateMilestonesFromOnboarding(goalId, template, onboardingData, totalDays, startTime);
+
+      return goalId;
+    } catch (error) {
+      console.error('Error creating launchpad goal with onboarding:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate AI-powered milestones based on onboarding data
+   */
+  private async generateMilestonesFromOnboarding(
+    goalId: string,
+    template: LaunchpadTemplate,
+    onboardingData: MissionOnboardingData,
+    totalDays: number,
+    startTime: number
+  ): Promise<void> {
+    try {
+      // Determine milestone count based on duration
+      const isLongGoal = totalDays > 30;
+      const milestoneCount = isLongGoal
+        ? Math.max(4, Math.ceil(totalDays / 7))  // Weekly milestones for long goals
+        : Math.min(totalDays, 7);                 // Daily milestones for short goals (max 7)
+
+      const milestoneType = isLongGoal ? 'weekly' : 'daily';
+
+      // Build the AI prompt
+      const prompt = this.buildMilestonePrompt(template, onboardingData, totalDays, milestoneCount, milestoneType);
+
+      // Get the goal for context
+      const goal = await this.goalsService.getRocketGoalById(goalId);
+
+      // Call AI to generate milestones
+      const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
+
+      // Parse the response
+      const milestones = this.parseMilestonesResponse(response, totalDays, startTime);
+
+      // Create action items from milestones
+      for (const milestone of milestones) {
+        await this.actionItemsService.createActionItem({
+          goalId,
+          title: milestone.title,
+          dayNumber: milestone.dayNumber,
+          completed: false,
+          order: milestone.dayNumber
+        });
+      }
+
+      console.log(`Generated ${milestones.length} milestones for goal ${goalId}`);
+    } catch (error) {
+      console.error('Error generating milestones:', error);
+      // Don't throw - milestone generation failure shouldn't block goal creation
+    }
+  }
+
+  /**
+   * Build the prompt for milestone generation
+   */
+  private buildMilestonePrompt(
+    template: LaunchpadTemplate,
+    onboardingData: MissionOnboardingData,
+    totalDays: number,
+    milestoneCount: number,
+    milestoneType: string
+  ): string {
+    const experienceDescriptions: Record<string, string> = {
+      beginner: 'beginner (needs foundational steps and more guidance)',
+      intermediate: 'intermediate (ready for moderate challenges)',
+      advanced: 'advanced (ready for aggressive, challenging milestones)'
+    };
+
+    const experienceDesc = experienceDescriptions[onboardingData.experienceLevel] || 'intermediate';
+
+    const metricDisplay = template.oneThingMetric.unit
+      ? `${onboardingData.oneThingMetric} ${template.oneThingMetric.unit}`
+      : onboardingData.oneThingMetric;
+
+    return `Create ${milestoneCount} ${milestoneType} milestones for a ${template.name} mission.
+
+MISSION DETAILS:
+- Goal: ${template.defaultGoals.primaryGoal}
+- Category: ${template.category}
+- Description: ${template.description}
+
+USER PROFILE:
+- Experience Level: ${experienceDesc}
+- Timeline: ${onboardingData.startDate} to ${onboardingData.endDate} (${totalDays} days total)
+- ONE Thing Success Metric: ${template.oneThingMetric.label} = ${metricDisplay}
+
+REQUIREMENTS:
+1. Generate EXACTLY ${milestoneCount} milestones
+2. Each milestone should be specific, actionable, and measurable
+3. Build progressive momentum - start easier and increase difficulty
+4. Tailor difficulty to the user's experience level (${onboardingData.experienceLevel})
+5. Milestones should logically build toward achieving: ${metricDisplay}
+6. Space milestones appropriately across the ${totalDays} day period
+
+IMPORTANT: Return ONLY a valid JSON array. Each object must have:
+- "title": Specific action (keep it concise, under 100 characters)
+- "dayNumber": The day number (1 to ${totalDays})
+
+Example format:
+[
+  {"title": "Complete initial assessment and set baseline", "dayNumber": 1},
+  {"title": "Achieve first mini-milestone", "dayNumber": 7}
+]
+
+Generate the milestones now (JSON array only, no other text):`;
+  }
+
+  /**
+   * Parse milestones from AI response
+   */
+  private parseMilestonesResponse(response: string, totalDays: number, startTime: number): Array<{ title: string; date: string; dayNumber: number }> {
+    let milestones: any[] = [];
+
+    // Extract JSON array from response
+    const jsonMatch = response.match(/\[[\s\S]*/);
+    if (jsonMatch) {
+      let jsonStr = jsonMatch[0];
+
+      try {
+        milestones = JSON.parse(jsonStr);
+      } catch {
+        // Try to recover from truncated JSON by extracting complete objects
+        milestones = this.extractCompleteMilestones(jsonStr);
+
+        if (milestones.length === 0) {
+          const cleanedJson = jsonStr
+            .replace(/,\s*\]/g, ']')
+            .replace(/'/g, '"')
+            .replace(/(\w+):/g, '"$1":');
+          try {
+            milestones = JSON.parse(cleanedJson);
+          } catch {
+            milestones = this.extractCompleteMilestones(cleanedJson);
+          }
+        }
+      }
+    }
+
+    if (!Array.isArray(milestones) || milestones.length === 0) {
+      console.error('Could not parse milestones. Response:', response);
+      return [];
+    }
+
+    return milestones.map((m: any, index: number) => {
+      let dayNumber = m.dayNumber || m.day || (index + 1);
+      if (typeof dayNumber === 'string') {
+        dayNumber = parseInt(dayNumber, 10) || (index + 1);
+      }
+      dayNumber = Math.min(Math.max(1, dayNumber), totalDays);
+
+      const milestoneDate = new Date(startTime + ((dayNumber - 1) * 24 * 60 * 60 * 1000));
+      const dateStr = this.formatDateISO(milestoneDate);
+
+      return {
+        title: (m.title || m.milestone || '').trim(),
+        date: dateStr,
+        dayNumber
+      };
+    }).filter(m => m.title);
+  }
+
+  /**
+   * Extract complete milestone objects from potentially truncated JSON
+   */
+  private extractCompleteMilestones(jsonStr: string): any[] {
+    const milestones: any[] = [];
+    const objectPattern = /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"dayNumber"\s*:\s*(\d+)\s*\}|\{\s*"dayNumber"\s*:\s*(\d+)\s*,\s*"title"\s*:\s*"([^"]+)"\s*\}/g;
+
+    let match;
+    while ((match = objectPattern.exec(jsonStr)) !== null) {
+      const title = match[1] || match[4];
+      const dayNumber = parseInt(match[2] || match[3], 10);
+
+      if (title && !isNaN(dayNumber)) {
+        milestones.push({ title, dayNumber });
+      }
+    }
+
+    return milestones;
+  }
+
+  /**
+   * Format date as ISO string (YYYY-MM-DD)
+   */
+  private formatDateISO(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Generate visualization asynchronously
+   */
+  private async generateVisualizationAsync(goalId: string, template: LaunchpadTemplate, profile: any): Promise<void> {
+    try {
+      let userPhotoBase64: string | null = null;
+      if (profile.rocketGoalPhotoUrl) {
+        try {
+          userPhotoBase64 = await this.imageUrlToBase64(profile.rocketGoalPhotoUrl);
+        } catch (error) {
+          console.warn('Failed to convert profile photo to base64:', error);
+        }
+      }
+
+      const visualizationResult = await this.visualizationService.generateVisualization({
+        goalId,
+        goalDescription: `${template.name}: ${template.description}. Goal: ${template.defaultGoals.primaryGoal}`,
+        timeframe: 'month',
+        hasAccountabilitySupport: 'yes',
+        userPhotoBase64
+      });
+
+      if (visualizationResult.success && visualizationResult.imageUrl) {
+        await this.goalsService.updateRocketGoal(goalId, {
+          visualizationImageUrl: visualizationResult.imageUrl
+        });
+      }
+    } catch (visualizationError) {
+      console.warn('Error generating visualization:', visualizationError);
+    }
+  }
+
   async checkPendingLaunchpad(): Promise<boolean> {
     const pending = sessionStorage.getItem('pendingLaunchpad');
     if (pending && this.isLoggedIn()) {
@@ -120,7 +432,15 @@ export class LaunchpadService {
         const template = this.getTemplate(data.templateId);
         if (template) {
           sessionStorage.removeItem('pendingLaunchpad');
-          const goalId = await this.launchMission(template);
+
+          // Check if onboarding data was stored (new flow)
+          let goalId: string | null;
+          if (data.onboardingData) {
+            goalId = await this.launchMissionWithOnboarding(template, data.onboardingData);
+          } else {
+            goalId = await this.launchMission(template);
+          }
+
           if (goalId) {
             this.router.navigate(['/rocketgoal', goalId]);
             return true;

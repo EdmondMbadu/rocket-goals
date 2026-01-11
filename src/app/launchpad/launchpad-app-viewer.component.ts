@@ -4,12 +4,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ThemeService } from '../theme.service';
 import { AvatarDropdownComponent } from '../avatar-dropdown.component';
 import { LaunchpadService } from './launchpad.service';
-import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate } from './launchpad.types';
+import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate, MissionOnboardingData } from './launchpad.types';
+import { MissionOnboardingModalComponent } from './mission-onboarding-modal.component';
 
 @Component({
   selector: 'app-launchpad-app-viewer',
   standalone: true,
-  imports: [CommonModule, RouterLink, AvatarDropdownComponent],
+  imports: [CommonModule, RouterLink, AvatarDropdownComponent, MissionOnboardingModalComponent],
   template: `
     <!-- Full-Screen Launch Loading Overlay -->
     @if (isLaunching()) {
@@ -239,6 +240,15 @@ import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate } from './launchpad.types';
         </p>
       </footer>
     </div>
+
+    <!-- Mission Onboarding Modal -->
+    @if (showOnboardingModal() && template()) {
+      <app-mission-onboarding-modal
+        [template]="template()!"
+        (onClose)="closeOnboardingModal()"
+        (onSubmit)="handleOnboardingSubmit($event)"
+      />
+    }
   `,
   styleUrls: ['./launchpad-base.css']
 })
@@ -250,6 +260,7 @@ export class LaunchpadAppViewerComponent implements OnInit {
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLaunching = signal(false);
+  protected readonly showOnboardingModal = signal(false);
   protected readonly currentYear = new Date().getFullYear();
 
   // Reactive template selection based on route ID
@@ -281,14 +292,27 @@ export class LaunchpadAppViewerComponent implements OnInit {
     this.theme.toggleDarkMode();
   }
 
-  async launchMission() {
+  launchMission() {
     const t = this.template();
     if (!t) return;
 
+    // Show onboarding modal instead of immediately launching
+    this.showOnboardingModal.set(true);
+  }
+
+  closeOnboardingModal() {
+    this.showOnboardingModal.set(false);
+  }
+
+  async handleOnboardingSubmit(onboardingData: MissionOnboardingData) {
+    const t = this.template();
+    if (!t) return;
+
+    this.showOnboardingModal.set(false);
     this.isLaunching.set(true);
 
     try {
-      const goalId = await this.launchpadService.launchMission(t);
+      const goalId = await this.launchpadService.launchMissionWithOnboarding(t, onboardingData);
       if (goalId) {
         this.router.navigate(['/rocketgoal', goalId]);
       }
