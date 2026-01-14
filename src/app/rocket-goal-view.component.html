@@ -895,6 +895,43 @@
                   </div>
                 </div>
 
+                <!-- Intro Video Card (if welcome video exists) -->
+                @if (goal()?.welcomeVideoUrl) {
+                  <div class="fans-card intro-video-card" (click)="openIntroVideo()">
+                    <div class="intro-video-content">
+                      <div class="intro-video-thumbnail">
+                        @if (goal()?.welcomeVideoThumbnail) {
+                          <img [src]="goal()?.welcomeVideoThumbnail" alt="Intro Video" class="thumbnail-img" />
+                        } @else {
+                          <div class="thumbnail-placeholder">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        }
+                        <div class="play-overlay">
+                          <div class="play-button">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="intro-video-info">
+                        <h3 class="intro-video-title">Welcome Message</h3>
+                        <p class="intro-video-subtitle">Your AI coach's personalized intro</p>
+                        <span class="intro-video-badge">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          </svg>
+                          Watch Intro
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                }
+
                 <div class="fans-card invite-card">
                   <div class="card-header">
                     <div>
@@ -1975,6 +2012,39 @@
         You'll be asked to sign in to complete joining
       </p>
       }
+    </div>
+  </div>
+</div>
+}
+
+<!-- Intro Video Modal -->
+@if (showIntroVideoModal() && goal()?.welcomeVideoUrl) {
+<div class="intro-video-modal-backdrop" (click)="closeIntroVideo()">
+  <div class="intro-video-modal" (click)="$event.stopPropagation()">
+    <button class="intro-video-close" (click)="closeIntroVideo()">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+    <div class="intro-video-header">
+      @if (goal()?.copilot?.avatar) {
+        <img [src]="goal()?.copilot?.avatar" alt="AI Coach" class="intro-video-avatar" />
+      }
+      <div>
+        <h3 class="intro-video-modal-title">Welcome Message</h3>
+        @if (goal()?.copilot?.name) {
+          <p class="intro-video-modal-subtitle">From {{ goal()?.copilot?.name }}</p>
+        }
+      </div>
+    </div>
+    <div class="intro-video-player-container">
+      <video
+        [src]="goal()?.welcomeVideoUrl"
+        class="intro-video-player"
+        controls
+        autoplay
+        playsinline
+      ></video>
     </div>
   </div>
 </div>

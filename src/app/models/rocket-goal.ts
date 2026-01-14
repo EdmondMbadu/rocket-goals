@@ -25,6 +25,9 @@ export interface RocketGoal {
   visualizationImageUrl?: string; // AI-generated visualization of the achieved goal
   visualizationGeneratedAt?: unknown; // Timestamp when visualization was generated
   copilot?: RocketGoalCopilot; // Custom copilot for app-suite launched goals
+  welcomeVideoUrl?: string; // HeyGen AI coach welcome video URL
+  welcomeVideoThumbnail?: string; // Thumbnail for the welcome video
+  welcomeVideoGeneratedAt?: unknown; // Timestamp when welcome video was generated
 }
 
 export type CreateRocketGoalInput = Omit<RocketGoal, 'id' | 'createdAt'> & {

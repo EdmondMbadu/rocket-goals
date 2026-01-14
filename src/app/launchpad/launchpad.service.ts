@@ -217,16 +217,11 @@ export class LaunchpadService {
     startTime: number
   ): Promise<void> {
     try {
-      // Determine milestone count based on duration
-      const isLongGoal = totalDays > 30;
-      const milestoneCount = isLongGoal
-        ? Math.max(4, Math.ceil(totalDays / 7))  // Weekly milestones for long goals
-        : Math.min(totalDays, 7);                 // Daily milestones for short goals (max 7)
-
-      const milestoneType = isLongGoal ? 'weekly' : 'daily';
+      // Generate milestones for EVERY day from start to finish
+      const milestoneCount = totalDays;
 
       // Build the AI prompt
-      const prompt = this.buildMilestonePrompt(template, onboardingData, totalDays, milestoneCount, milestoneType);
+      const prompt = this.buildMilestonePrompt(template, onboardingData, totalDays, milestoneCount);
 
       // Get the goal for context
       const goal = await this.goalsService.getRocketGoalById(goalId);
@@ -267,8 +262,7 @@ export class LaunchpadService {
     template: LaunchpadTemplate,
     onboardingData: MissionOnboardingData,
     totalDays: number,
-    milestoneCount: number,
-    milestoneType: string
+    milestoneCount: number
   ): string {
     const experienceDescriptions: Record<string, string> = {
       beginner: 'beginner (needs foundational steps and more guidance)',
@@ -282,7 +276,7 @@ export class LaunchpadService {
       ? `${onboardingData.oneThingMetric} ${template.oneThingMetric.unit}`
       : onboardingData.oneThingMetric;
 
-    return `Create ${milestoneCount} ${milestoneType} milestones for a ${template.name} mission.
+    return `Create EXACTLY ${milestoneCount} daily milestones for a ${template.name} mission - ONE milestone for EACH day from Day 1 to Day ${totalDays}.
 
 MISSION DETAILS:
 - Goal: ${template.defaultGoals.primaryGoal}
@@ -295,24 +289,27 @@ USER PROFILE:
 - ONE Thing Success Metric: ${template.oneThingMetric.label} = ${metricDisplay}
 
 REQUIREMENTS:
-1. Generate EXACTLY ${milestoneCount} milestones
+1. Generate EXACTLY ${milestoneCount} milestones - ONE for EACH day (Day 1, Day 2, Day 3, ... Day ${totalDays})
 2. Each milestone should be specific, actionable, and measurable
-3. Build progressive momentum - start easier and increase difficulty
+3. Build progressive momentum - start easier and increase difficulty gradually
 4. Tailor difficulty to the user's experience level (${onboardingData.experienceLevel})
 5. Milestones should logically build toward achieving: ${metricDisplay}
-6. Space milestones appropriately across the ${totalDays} day period
+6. CRITICAL: You MUST include a milestone for EVERY single day from 1 to ${totalDays}, no skipping days
 
 IMPORTANT: Return ONLY a valid JSON array. Each object must have:
 - "title": Specific action (keep it concise, under 100 characters)
-- "dayNumber": The day number (1 to ${totalDays})
+- "dayNumber": The day number (1 to ${totalDays}) - EVERY day must be included
 
-Example format:
+Example format for a 5-day goal:
 [
   {"title": "Complete initial assessment and set baseline", "dayNumber": 1},
-  {"title": "Achieve first mini-milestone", "dayNumber": 7}
+  {"title": "Research best practices and create plan", "dayNumber": 2},
+  {"title": "Begin first training session", "dayNumber": 3},
+  {"title": "Review progress and adjust approach", "dayNumber": 4},
+  {"title": "Complete final milestone and celebrate", "dayNumber": 5}
 ]
 
-Generate the milestones now (JSON array only, no other text):`;
+Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
   }
 
   /**

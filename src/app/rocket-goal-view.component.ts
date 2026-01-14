@@ -93,6 +93,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   deadlineError = signal<string | null>(null);
   savingDeadline = signal(false);
 
+  // Intro video modal
+  showIntroVideoModal = signal(false);
+
   // Action Items (Milestones) state
   actionItems = signal<ActionItem[]>([]);
   loadingActionItems = signal(false);
@@ -639,6 +642,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   closeShareDropdown() {
     this.showShareDropdown.set(false);
+  }
+
+  openIntroVideo() {
+    this.showIntroVideoModal.set(true);
+  }
+
+  closeIntroVideo() {
+    this.showIntroVideoModal.set(false);
   }
 
   async copyLink() {
