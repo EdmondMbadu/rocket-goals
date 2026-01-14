@@ -17,6 +17,49 @@ export interface OneThingMetricConfig {
 }
 
 /**
+ * Configuration for a single metric in the dashboard
+ */
+export interface DashboardMetricConfig {
+  key: string;             // Metric key (e.g., 'applications', 'interviews')
+  label: string;           // Display label (e.g., "Applications")
+  icon: string;            // Emoji icon (e.g., "📝")
+  color: string;           // Color for the metric card (e.g., "#3b82f6")
+  description?: string;    // Optional description for tooltips
+}
+
+/**
+ * Configuration for pipeline stages (for CareerQuest)
+ */
+export interface PipelineStageConfig {
+  key: string;             // Stage key (e.g., 'applications', 'responses')
+  label: string;           // Display label (e.g., "Applied")
+  icon: string;            // Emoji icon
+  color: string;           // Color for the stage
+}
+
+/**
+ * Configuration for milestone outcomes
+ */
+export interface MilestoneOutcomeConfig {
+  key: string;             // Outcome key (e.g., 'success', 'partial')
+  label: string;           // Display label
+  icon: string;            // Emoji icon
+  color: string;           // Color for the outcome
+  description: string;     // Description of what this outcome means
+}
+
+/**
+ * Dashboard configuration for templates that support it
+ */
+export interface DashboardConfig {
+  enabled: boolean;                           // Whether dashboard is enabled for this template
+  metrics: DashboardMetricConfig[];           // Metrics to display on dashboard
+  pipelineStages?: PipelineStageConfig[];     // Pipeline stages (for job search, sales, etc.)
+  milestoneOutcomes: MilestoneOutcomeConfig[]; // Outcome options for milestone completion
+  trackMetricsOnCompletion: boolean;          // Whether to prompt for metrics when completing milestones
+}
+
+/**
  * Data collected from mission onboarding modal
  */
 export interface MissionOnboardingData {
@@ -54,6 +97,8 @@ export interface LaunchpadTemplate {
   // Optional HeyGen configuration for AI coach videos
   heygenAvatarId?: string;
   heygenVoiceId?: string;
+  // Optional dashboard configuration for templates that support it
+  dashboardConfig?: DashboardConfig;
 }
 
 export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
@@ -504,6 +549,30 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       placeholder: 'e.g., 3',
       type: 'number',
       helpText: 'How many job offers do you want to receive?'
+    },
+    dashboardConfig: {
+      enabled: true,
+      trackMetricsOnCompletion: true,
+      metrics: [
+        { key: 'applications', label: 'Applications', icon: '📝', color: '#3b82f6', description: 'Total job applications submitted' },
+        { key: 'responses', label: 'Responses', icon: '📬', color: '#8b5cf6', description: 'Responses received from companies' },
+        { key: 'interviews', label: 'Interviews', icon: '🎤', color: '#f59e0b', description: 'Interviews scheduled or completed' },
+        { key: 'offers', label: 'Offers', icon: '🎉', color: '#22c55e', description: 'Job offers received' },
+        { key: 'networkingContacts', label: 'Networking', icon: '🤝', color: '#06b6d4', description: 'New networking contacts made' },
+        { key: 'followUps', label: 'Follow-ups', icon: '📞', color: '#ec4899', description: 'Follow-up actions completed' }
+      ],
+      pipelineStages: [
+        { key: 'applications', label: 'Applied', icon: '📝', color: '#3b82f6' },
+        { key: 'responses', label: 'Responded', icon: '📬', color: '#8b5cf6' },
+        { key: 'interviews', label: 'Interviewing', icon: '🎤', color: '#f59e0b' },
+        { key: 'offers', label: 'Offers', icon: '🎉', color: '#22c55e' }
+      ],
+      milestoneOutcomes: [
+        { key: 'success', label: 'Success', icon: '✅', color: '#22c55e', description: 'Milestone completed successfully' },
+        { key: 'partial', label: 'Partial', icon: '🔶', color: '#f59e0b', description: 'Partially completed or in progress' },
+        { key: 'needs_improvement', label: 'Needs Work', icon: '🔄', color: '#ef4444', description: 'Did not go as planned, needs improvement' },
+        { key: 'skipped', label: 'Skipped', icon: '⏭️', color: '#6b7280', description: 'Skipped or not applicable' }
+      ]
     }
   }
 };

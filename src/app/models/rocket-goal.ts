@@ -12,6 +12,22 @@ export interface RocketGoalCopilot {
   role: string;      // Copilot role/description for system prompt
 }
 
+// Dashboard metrics for CareerQuest and other templates
+export interface CareerQuestMetrics {
+  applications: number;
+  responses: number;
+  interviews: number;
+  offers: number;
+  networkingContacts: number;
+  followUps: number;
+}
+
+// Generic dashboard metrics that can be extended per template
+export interface DashboardMetrics {
+  careerQuest?: CareerQuestMetrics;
+  // Future templates can add their own metrics here
+}
+
 export interface RocketGoal {
   id: string;
   userId: string;
@@ -28,6 +44,7 @@ export interface RocketGoal {
   welcomeVideoUrl?: string; // HeyGen AI coach welcome video URL
   welcomeVideoThumbnail?: string; // Thumbnail for the welcome video
   welcomeVideoGeneratedAt?: unknown; // Timestamp when welcome video was generated
+  dashboardMetrics?: DashboardMetrics; // Template-specific dashboard metrics
 }
 
 export type CreateRocketGoalInput = Omit<RocketGoal, 'id' | 'createdAt'> & {

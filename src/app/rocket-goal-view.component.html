@@ -805,17 +805,17 @@
             </p>
           </div>
 
-          <!-- TABS: FANS, TASKS, CALENDAR -->
+          <!-- TABS: DASHBOARD (if enabled), MILESTONES, CALENDAR, FANS -->
           <div class="mission-collab" id="fan-mission-panel">
             <div class="collab-tabs">
-              <button class="collab-tab"
-                [class.active]="activePrimaryTab() === 'fans'"
-                (click)="selectPrimaryTab('fans')">
-                <span>Fans &amp; Supporters</span>
-                @if (fans().length) {
-                  <span class="tab-pill">{{ fans().length }}</span>
-                }
-              </button>
+              @if (hasDashboard()) {
+                <button class="collab-tab"
+                  [class.active]="activePrimaryTab() === 'dashboard'"
+                  (click)="selectPrimaryTab('dashboard')">
+                  <span>Dashboard</span>
+                  <span class="tab-pill tab-pill-accent">Pro</span>
+                </button>
+              }
               <button class="collab-tab"
                 [class.active]="activePrimaryTab() === 'tasks'"
                 (click)="selectPrimaryTab('tasks')">
@@ -830,10 +830,218 @@
                 <span>Calendar</span>
                 <span class="tab-pill tab-pill-muted">View</span>
               </button>
+              <button class="collab-tab"
+                [class.active]="activePrimaryTab() === 'fans'"
+                (click)="selectPrimaryTab('fans')">
+                <span>Fans</span>
+                @if (fans().length) {
+                  <span class="tab-pill">{{ fans().length }}</span>
+                }
+              </button>
             </div>
 
             <div class="collab-panel">
-              @if (activePrimaryTab() === 'fans') {
+              <!-- DASHBOARD TAB (CareerQuest) - Professional Stats Dashboard -->
+              @if (activePrimaryTab() === 'dashboard' && hasDashboard()) {
+              <div class="stats-dashboard">
+
+                <!-- Top Stats Row - Key Performance Indicators -->
+                <div class="stats-kpi-row">
+                  <!-- Success Score Card -->
+                  <div class="stats-card stats-score-card">
+                    <div class="stats-card-header">
+                      <span class="stats-card-icon">🎯</span>
+                      <span class="stats-card-title">Success Score</span>
+                    </div>
+                    <div class="stats-score-display">
+                      <span class="stats-score-value">{{ getSuccessScore() }}</span>
+                      <span class="stats-score-max">/ 1000</span>
+                    </div>
+                    <div class="stats-score-bar">
+                      <div class="stats-score-fill" [style.width.%]="(getSuccessScore() / 1000) * 100"></div>
+                    </div>
+                    <span class="stats-score-label">Based on your pipeline progress</span>
+                  </div>
+
+                  <!-- Total Activities Card -->
+                  <div class="stats-card stats-total-card">
+                    <div class="stats-card-header">
+                      <span class="stats-card-icon">📊</span>
+                      <span class="stats-card-title">Total Activities</span>
+                    </div>
+                    <div class="stats-big-number">{{ getTotalActivities() }}</div>
+                    <div class="stats-mini-breakdown">
+                      <span>{{ getMetricValue('applications') }} apps</span>
+                      <span class="stats-dot">•</span>
+                      <span>{{ getMetricValue('interviews') }} interviews</span>
+                      <span class="stats-dot">•</span>
+                      <span>{{ getMetricValue('networkingContacts') }} contacts</span>
+                    </div>
+                  </div>
+
+                  <!-- Milestone Progress Card -->
+                  <div class="stats-card stats-milestone-card">
+                    <div class="stats-card-header">
+                      <span class="stats-card-icon">✅</span>
+                      <span class="stats-card-title">Milestones</span>
+                    </div>
+                    <div class="stats-milestone-display">
+                      <span class="stats-milestone-completed">{{ getCompletedItemsCount() }}</span>
+                      <span class="stats-milestone-divider">/</span>
+                      <span class="stats-milestone-total">{{ getTotalItemsCount() }}</span>
+                    </div>
+                    <div class="stats-milestone-bar">
+                      <div class="stats-milestone-fill" [style.width.%]="getTotalItemsCount() > 0 ? (getCompletedItemsCount() / getTotalItemsCount()) * 100 : 0"></div>
+                    </div>
+                    <span class="stats-milestone-label">{{ getTotalItemsCount() > 0 ? ((getCompletedItemsCount() / getTotalItemsCount()) * 100 | number:'1.0-0') : 0 }}% Complete</span>
+                  </div>
+                </div>
+
+                <!-- Main Stats Grid -->
+                <div class="stats-main-grid">
+
+                  <!-- Left Column: Funnel Chart -->
+                  <div class="stats-card stats-funnel-card">
+                    <div class="stats-card-header">
+                      <span class="stats-card-icon">📈</span>
+                      <span class="stats-card-title">Application Funnel</span>
+                    </div>
+                    <div class="stats-funnel-chart">
+                      @for (stage of getFunnelData(); track stage.label) {
+                        <div class="funnel-stage" [style.--funnel-color]="stage.color">
+                          <div class="funnel-bar-container">
+                            <div class="funnel-bar" [style.width.%]="stage.percentage || 5"></div>
+                            <span class="funnel-value">{{ stage.value }}</span>
+                          </div>
+                          <span class="funnel-label">{{ stage.label }}</span>
+                        </div>
+                      }
+                    </div>
+                    <!-- Conversion Metrics -->
+                    <div class="stats-conversions">
+                      <div class="conversion-metric">
+                        <div class="conversion-circle" [style.--progress]="getResponseRate()">
+                          <span class="conversion-percent">{{ getResponseRate() }}%</span>
+                        </div>
+                        <span class="conversion-name">Response Rate</span>
+                      </div>
+                      <div class="conversion-metric">
+                        <div class="conversion-circle" [style.--progress]="getInterviewRate()">
+                          <span class="conversion-percent">{{ getInterviewRate() }}%</span>
+                        </div>
+                        <span class="conversion-name">Interview Rate</span>
+                      </div>
+                      <div class="conversion-metric">
+                        <div class="conversion-circle" [style.--progress]="getOfferRate()">
+                          <span class="conversion-percent">{{ getOfferRate() }}%</span>
+                        </div>
+                        <span class="conversion-name">Offer Rate</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Right Column: Metrics Controls -->
+                  <div class="stats-card stats-metrics-card">
+                    <div class="stats-card-header">
+                      <span class="stats-card-icon">🎛️</span>
+                      <span class="stats-card-title">Track Your Progress</span>
+                    </div>
+                    <div class="stats-metrics-list">
+                      @for (metric of getDashboardConfig()?.metrics || []; track metric.key) {
+                        <div class="stats-metric-row" [style.--metric-color]="metric.color">
+                          <div class="stats-metric-info">
+                            <span class="stats-metric-icon">{{ metric.icon }}</span>
+                            <div class="stats-metric-details">
+                              <span class="stats-metric-name">{{ metric.label }}</span>
+                              <span class="stats-metric-desc">{{ metric.description }}</span>
+                            </div>
+                          </div>
+                          <div class="stats-metric-controls">
+                            <button class="stats-metric-btn minus" (click)="decrementMetric(metric.key)" [disabled]="getMetricValue(metric.key) === 0" title="Remove 1">
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                              </svg>
+                            </button>
+                            <span class="stats-metric-value">{{ getMetricValue(metric.key) }}</span>
+                            <button class="stats-metric-btn plus" (click)="incrementMetric(metric.key)" title="Add 1">
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bottom Row: Outcome Analysis -->
+                <div class="stats-card stats-outcomes-card">
+                  <div class="stats-card-header">
+                    <span class="stats-card-icon">📋</span>
+                    <span class="stats-card-title">Milestone Outcome Analysis</span>
+                  </div>
+                  <div class="stats-outcomes-content">
+                    <!-- Donut Chart Visualization -->
+                    <div class="stats-donut-container">
+                      <div class="stats-donut">
+                        <svg viewBox="0 0 36 36" class="stats-donut-svg">
+                          <!-- Background circle -->
+                          <circle cx="18" cy="18" r="15.915" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
+                          <!-- Success segment -->
+                          @if (getMilestoneOutcomeStats().total > 0) {
+                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#22c55e" stroke-width="3"
+                              [attr.stroke-dasharray]="((getMilestoneOutcomeStats().success / getMilestoneOutcomeStats().total) * 100) + ' ' + (100 - (getMilestoneOutcomeStats().success / getMilestoneOutcomeStats().total) * 100)"
+                              stroke-dashoffset="25" class="donut-segment"/>
+                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f59e0b" stroke-width="3"
+                              [attr.stroke-dasharray]="((getMilestoneOutcomeStats().partial / getMilestoneOutcomeStats().total) * 100) + ' ' + (100 - (getMilestoneOutcomeStats().partial / getMilestoneOutcomeStats().total) * 100)"
+                              [attr.stroke-dashoffset]="25 - (getMilestoneOutcomeStats().success / getMilestoneOutcomeStats().total) * 100" class="donut-segment"/>
+                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#ef4444" stroke-width="3"
+                              [attr.stroke-dasharray]="((getMilestoneOutcomeStats().needsImprovement / getMilestoneOutcomeStats().total) * 100) + ' ' + (100 - (getMilestoneOutcomeStats().needsImprovement / getMilestoneOutcomeStats().total) * 100)"
+                              [attr.stroke-dashoffset]="25 - ((getMilestoneOutcomeStats().success + getMilestoneOutcomeStats().partial) / getMilestoneOutcomeStats().total) * 100" class="donut-segment"/>
+                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#6b7280" stroke-width="3"
+                              [attr.stroke-dasharray]="((getMilestoneOutcomeStats().skipped / getMilestoneOutcomeStats().total) * 100) + ' ' + (100 - (getMilestoneOutcomeStats().skipped / getMilestoneOutcomeStats().total) * 100)"
+                              [attr.stroke-dashoffset]="25 - ((getMilestoneOutcomeStats().success + getMilestoneOutcomeStats().partial + getMilestoneOutcomeStats().needsImprovement) / getMilestoneOutcomeStats().total) * 100" class="donut-segment"/>
+                          }
+                        </svg>
+                        <div class="stats-donut-center">
+                          <span class="donut-center-value">{{ getMilestoneOutcomeStats().total }}</span>
+                          <span class="donut-center-label">Completed</span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Outcome Legend -->
+                    <div class="stats-outcomes-legend">
+                      <div class="outcome-legend-item">
+                        <span class="outcome-dot success"></span>
+                        <span class="outcome-legend-label">Success</span>
+                        <span class="outcome-legend-value">{{ getMilestoneOutcomeStats().success }}</span>
+                        <span class="outcome-legend-percent">{{ getMilestoneOutcomeStats().total > 0 ? ((getMilestoneOutcomeStats().success / getMilestoneOutcomeStats().total) * 100 | number:'1.0-0') : 0 }}%</span>
+                      </div>
+                      <div class="outcome-legend-item">
+                        <span class="outcome-dot partial"></span>
+                        <span class="outcome-legend-label">Partial</span>
+                        <span class="outcome-legend-value">{{ getMilestoneOutcomeStats().partial }}</span>
+                        <span class="outcome-legend-percent">{{ getMilestoneOutcomeStats().total > 0 ? ((getMilestoneOutcomeStats().partial / getMilestoneOutcomeStats().total) * 100 | number:'1.0-0') : 0 }}%</span>
+                      </div>
+                      <div class="outcome-legend-item">
+                        <span class="outcome-dot needs-work"></span>
+                        <span class="outcome-legend-label">Needs Work</span>
+                        <span class="outcome-legend-value">{{ getMilestoneOutcomeStats().needsImprovement }}</span>
+                        <span class="outcome-legend-percent">{{ getMilestoneOutcomeStats().total > 0 ? ((getMilestoneOutcomeStats().needsImprovement / getMilestoneOutcomeStats().total) * 100 | number:'1.0-0') : 0 }}%</span>
+                      </div>
+                      <div class="outcome-legend-item">
+                        <span class="outcome-dot skipped"></span>
+                        <span class="outcome-legend-label">Skipped</span>
+                        <span class="outcome-legend-value">{{ getMilestoneOutcomeStats().skipped }}</span>
+                        <span class="outcome-legend-percent">{{ getMilestoneOutcomeStats().total > 0 ? ((getMilestoneOutcomeStats().skipped / getMilestoneOutcomeStats().total) * 100 | number:'1.0-0') : 0 }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              } @else if (activePrimaryTab() === 'fans') {
               <div class="fans-grid">
                 <!-- PROMINENT SHARE SECTION -->
                 <div class="fans-card share-goal-card">
@@ -2048,5 +2256,16 @@
     </div>
   </div>
 </div>
+}
+
+<!-- Milestone Completion Modal (for CareerQuest Dashboard) -->
+@if (showMilestoneCompleteModal() && milestoneToComplete() && getDashboardConfig()) {
+  <app-milestone-complete-modal
+    [milestone]="milestoneToComplete()!"
+    [dashboardConfig]="getDashboardConfig()!"
+    (onClose)="closeMilestoneCompleteModal()"
+    (onComplete)="handleMilestoneComplete($event)"
+    (onSkip)="handleMilestoneSkipComplete()"
+  />
 }
 }

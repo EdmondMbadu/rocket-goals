@@ -10,18 +10,20 @@ import { MissionCalendarComponent } from './mission-calendar.component';
 import { EventModalComponent } from './event-modal.component';
 import { CalendarEventsService } from './calendar-events.service';
 import { ActionItemsService, ActionItem } from './action-items.service';
-import type { RocketGoal } from './models/rocket-goal';
+import type { RocketGoal, CareerQuestMetrics } from './models/rocket-goal';
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
 import { FansService, Fan, FanComment, FAN_AVATAR_IDS } from './fans.service';
 import { VisualizationService } from './visualization.service';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
+import { MilestoneCompleteModalComponent, MilestoneCompletionData } from './milestone-complete-modal.component';
+import { LAUNCHPAD_TEMPLATES, DashboardConfig } from './launchpad/launchpad.types';
 
 @Component({
   selector: 'app-rocket-goal-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent, EventModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent, EventModalComponent, MilestoneCompleteModalComponent],
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
@@ -68,7 +70,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private storage: any = null;
   visualizationImageFile: File | null = null;
   uploadingVisualization = signal(false);
-  activePrimaryTab = signal<'fans' | 'tasks' | 'calendar'>('fans');
+  activePrimaryTab = signal<'dashboard' | 'fans' | 'tasks' | 'calendar'>('tasks');
   currentFanInviteEmail = signal('');
   currentFanInviteName = signal('');
   fanInviteSuggestions = signal<{ email: string; name: string }[]>([]);
@@ -140,6 +142,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   milestoneGenerationError = signal<string | null>(null);
   addingGeneratedMilestones = signal(false);
 
+  // Milestone Completion Modal state (for CareerQuest dashboard)
+  showMilestoneCompleteModal = signal(false);
+  milestoneToComplete = signal<ActionItem | null>(null);
+
   // Add Milestone modal - date selection
   selectedDateForNewTask = signal<string>(''); // ISO date string YYYY-MM-DD
 
@@ -174,6 +180,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     const goalId = this.route.snapshot.paramMap.get('id');
     if (goalId) {
       await this.loadGoal(goalId);
+
+      // Set default tab based on dashboard availability (if no query param override)
+      this.setDefaultTab();
       this.applyTabFromQuery();
 
       // Check for pending fan join from sessionStorage (after login redirect)
@@ -184,6 +193,18 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     } else {
       this.error.set('Goal ID not found');
       this.loading.set(false);
+    }
+  }
+
+  /**
+   * Set the default tab based on goal configuration
+   */
+  private setDefaultTab() {
+    // If goal has dashboard enabled, default to dashboard tab
+    if (this.hasDashboard()) {
+      this.activePrimaryTab.set('dashboard');
+    } else {
+      this.activePrimaryTab.set('tasks');
     }
   }
 
@@ -1095,7 +1116,7 @@ ${url}`;
     return null;
   }
 
-  selectPrimaryTab(tab: 'fans' | 'tasks' | 'calendar') {
+  selectPrimaryTab(tab: 'dashboard' | 'fans' | 'tasks' | 'calendar') {
     this.activePrimaryTab.set(tab);
     if (tab === 'tasks') {
       this.scheduleTodayMilestoneScroll();
@@ -1630,6 +1651,15 @@ ${url}`;
     if (!goal?.id) return;
 
     const wasCompleted = item.completed;
+
+    // If completing (not uncompleting) and this goal has dashboard config, show completion modal
+    const dashboardConfig = this.getDashboardConfig();
+    if (!wasCompleted && dashboardConfig?.enabled && dashboardConfig?.trackMetricsOnCompletion) {
+      this.milestoneToComplete.set(item);
+      this.showMilestoneCompleteModal.set(true);
+      return;
+    }
+
     try {
       await this.actionItemsService.toggleActionItemComplete(goal.id, item.id, !item.completed);
       // Update local state
@@ -2889,5 +2919,296 @@ Generate the milestones now (JSON array only, no other text):`;
     } finally {
       this.uploadingVisualization.set(false);
     }
+  }
+
+  // ============================================
+  // Dashboard & Milestone Completion Methods
+  // ============================================
+
+  /**
+   * Get the dashboard configuration for the current goal's template
+   */
+  getDashboardConfig(): DashboardConfig | null {
+    const goal = this.goal();
+    if (!goal) return null;
+
+    // Check if this goal was created from a launchpad template
+    const templateId = goal.answers?.['launchpad_template_id'];
+    if (!templateId) return null;
+
+    const template = LAUNCHPAD_TEMPLATES[templateId];
+    return template?.dashboardConfig || null;
+  }
+
+  /**
+   * Check if the current goal has dashboard enabled
+   */
+  hasDashboard(): boolean {
+    const config = this.getDashboardConfig();
+    return config?.enabled === true;
+  }
+
+  /**
+   * Get CareerQuest metrics from the goal
+   */
+  getCareerQuestMetrics(): CareerQuestMetrics {
+    const goal = this.goal();
+    const defaults: CareerQuestMetrics = {
+      applications: 0,
+      responses: 0,
+      interviews: 0,
+      offers: 0,
+      networkingContacts: 0,
+      followUps: 0
+    };
+
+    if (!goal?.dashboardMetrics?.careerQuest) {
+      return defaults;
+    }
+
+    return { ...defaults, ...goal.dashboardMetrics.careerQuest };
+  }
+
+  /**
+   * Get a specific metric value by key (for template use)
+   */
+  getMetricValue(metricKey: string): number {
+    const metrics = this.getCareerQuestMetrics();
+    return (metrics as unknown as Record<string, number>)[metricKey] || 0;
+  }
+
+  /**
+   * Calculate response rate percentage
+   */
+  getResponseRate(): number {
+    const metrics = this.getCareerQuestMetrics();
+    if (metrics.applications === 0) return 0;
+    return Math.round((metrics.responses / metrics.applications) * 100);
+  }
+
+  /**
+   * Calculate interview rate (interviews from responses)
+   */
+  getInterviewRate(): number {
+    const metrics = this.getCareerQuestMetrics();
+    if (metrics.responses === 0) return 0;
+    return Math.round((metrics.interviews / metrics.responses) * 100);
+  }
+
+  /**
+   * Calculate offer rate (offers from interviews)
+   */
+  getOfferRate(): number {
+    const metrics = this.getCareerQuestMetrics();
+    if (metrics.interviews === 0) return 0;
+    return Math.round((metrics.offers / metrics.interviews) * 100);
+  }
+
+  /**
+   * Get pipeline data for visualization
+   */
+  getPipelineData(): Array<{ stage: string; count: number; percentage: number; color: string; icon: string }> {
+    const config = this.getDashboardConfig();
+    if (!config?.pipelineStages) return [];
+
+    const metrics = this.getCareerQuestMetrics();
+    const maxValue = Math.max(
+      metrics.applications,
+      metrics.responses,
+      metrics.interviews,
+      metrics.offers,
+      1
+    );
+
+    return config.pipelineStages.map(stage => {
+      const count = (metrics as unknown as Record<string, number>)[stage.key] || 0;
+      return {
+        stage: stage.label,
+        count,
+        percentage: Math.round((count / maxValue) * 100),
+        color: stage.color,
+        icon: stage.icon
+      };
+    });
+  }
+
+  /**
+   * Close the milestone completion modal
+   */
+  closeMilestoneCompleteModal() {
+    this.showMilestoneCompleteModal.set(false);
+    this.milestoneToComplete.set(null);
+  }
+
+  /**
+   * Handle milestone completion with outcome data
+   */
+  async handleMilestoneComplete(data: MilestoneCompletionData) {
+    const goal = this.goal();
+    const item = this.milestoneToComplete();
+    if (!goal?.id || !item) return;
+
+    try {
+      // Update the action item with outcome data
+      await this.actionItemsService.updateActionItem(goal.id, item.id, {
+        completed: true,
+        outcome: data.outcome,
+        outcomeNotes: data.outcomeNotes || undefined,
+        metricType: data.metricType,
+        metricValue: data.metricValue
+      });
+
+      // Update local state
+      this.actionItems.update(items =>
+        items.map(i => i.id === item.id ? {
+          ...i,
+          completed: true,
+          outcome: data.outcome,
+          outcomeNotes: data.outcomeNotes || undefined,
+          metricType: data.metricType,
+          metricValue: data.metricValue
+        } : i)
+      );
+
+      // Update dashboard metrics if a metric was tracked
+      if (data.metricType && data.metricValue) {
+        await this.updateDashboardMetric(data.metricType, data.metricValue);
+      }
+
+      this.triggerCelebration();
+      this.closeMilestoneCompleteModal();
+    } catch (error) {
+      console.error('Error completing milestone with outcome:', error);
+    }
+  }
+
+  /**
+   * Handle skip and complete (no outcome tracking)
+   */
+  async handleMilestoneSkipComplete() {
+    const goal = this.goal();
+    const item = this.milestoneToComplete();
+    if (!goal?.id || !item) return;
+
+    try {
+      await this.actionItemsService.toggleActionItemComplete(goal.id, item.id, true);
+      this.actionItems.update(items =>
+        items.map(i => i.id === item.id ? { ...i, completed: true } : i)
+      );
+      this.triggerCelebration();
+      this.closeMilestoneCompleteModal();
+    } catch (error) {
+      console.error('Error skipping milestone completion:', error);
+    }
+  }
+
+  /**
+   * Update a specific dashboard metric
+   */
+  async updateDashboardMetric(metricKey: string, incrementValue: number) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const currentMetrics = this.getCareerQuestMetrics();
+    const currentValue = (currentMetrics as unknown as Record<string, number>)[metricKey] || 0;
+    const newMetrics: CareerQuestMetrics = {
+      ...currentMetrics,
+      [metricKey]: currentValue + incrementValue
+    };
+
+    try {
+      await this.rocketGoalsService.updateRocketGoal(goal.id, {
+        dashboardMetrics: {
+          careerQuest: newMetrics
+        }
+      });
+
+      // Update local goal state
+      this.goal.update(g => g ? {
+        ...g,
+        dashboardMetrics: {
+          ...g.dashboardMetrics,
+          careerQuest: newMetrics
+        }
+      } : g);
+    } catch (error) {
+      console.error('Error updating dashboard metric:', error);
+    }
+  }
+
+  /**
+   * Manually increment a metric from the dashboard
+   */
+  async incrementMetric(metricKey: string) {
+    await this.updateDashboardMetric(metricKey, 1);
+  }
+
+  /**
+   * Manually decrement a metric from the dashboard (minimum 0)
+   */
+  async decrementMetric(metricKey: string) {
+    const currentValue = this.getMetricValue(metricKey);
+    if (currentValue > 0) {
+      await this.updateDashboardMetric(metricKey, -1);
+    }
+  }
+
+  /**
+   * Get the total activities count
+   */
+  getTotalActivities(): number {
+    const metrics = this.getCareerQuestMetrics();
+    return metrics.applications + metrics.interviews + metrics.networkingContacts + metrics.followUps;
+  }
+
+  /**
+   * Get success score (weighted calculation)
+   */
+  getSuccessScore(): number {
+    const metrics = this.getCareerQuestMetrics();
+    // Weighted score: offers are worth most, then interviews, then responses
+    const score = (metrics.offers * 100) + (metrics.interviews * 25) + (metrics.responses * 10) + (metrics.applications * 2);
+    return Math.min(score, 1000); // Cap at 1000
+  }
+
+  /**
+   * Get funnel conversion data for visualization
+   */
+  getFunnelData(): Array<{ label: string; value: number; percentage: number; color: string }> {
+    const metrics = this.getCareerQuestMetrics();
+    const stages = [
+      { label: 'Applications', value: metrics.applications, color: '#3b82f6' },
+      { label: 'Responses', value: metrics.responses, color: '#8b5cf6' },
+      { label: 'Interviews', value: metrics.interviews, color: '#f59e0b' },
+      { label: 'Offers', value: metrics.offers, color: '#22c55e' }
+    ];
+
+    const maxValue = Math.max(...stages.map(s => s.value), 1);
+    return stages.map(stage => ({
+      ...stage,
+      percentage: Math.round((stage.value / maxValue) * 100)
+    }));
+  }
+
+  /**
+   * Get milestone outcome statistics
+   */
+  getMilestoneOutcomeStats(): { total: number; success: number; partial: number; needsImprovement: number; skipped: number; noOutcome: number } {
+    const items = this.actionItems().filter(i => i.completed);
+    return {
+      total: items.length,
+      success: items.filter(i => i.outcome === 'success').length,
+      partial: items.filter(i => i.outcome === 'partial').length,
+      needsImprovement: items.filter(i => i.outcome === 'needs_improvement').length,
+      skipped: items.filter(i => i.outcome === 'skipped').length,
+      noOutcome: items.filter(i => !i.outcome).length
+    };
+  }
+
+  /**
+   * Get the default tab based on whether dashboard is available
+   */
+  getDefaultTab(): 'dashboard' | 'tasks' {
+    return this.hasDashboard() ? 'dashboard' : 'tasks';
   }
 }

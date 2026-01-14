@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import type { Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 
+export type MilestoneOutcome = 'success' | 'partial' | 'needs_improvement' | 'skipped' | null;
+
 export interface ActionItem {
   id: string;
   goalId: string;
@@ -10,6 +12,10 @@ export interface ActionItem {
   notes?: string; // User notes/comments on the task
   dayNumber: number; // Which day of the mission this is for (1-based)
   completed: boolean;
+  outcome?: MilestoneOutcome; // How well the milestone was completed
+  outcomeNotes?: string; // Notes about the outcome
+  metricType?: string; // Type of metric tracked (e.g., 'applications', 'interviews')
+  metricValue?: number; // Value for the metric (e.g., 5 applications)
   order: number; // For sorting within a day
   createdAt: unknown;
   updatedAt: unknown;
