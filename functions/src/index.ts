@@ -11,6 +11,9 @@ import { getToolRegistry, type AgentResponse, type SideEffect } from "./tools";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import * as crypto from "crypto";
 
+// Re-export HeyGen functions
+export { initiateHeyGenVideo, checkHeyGenVideoStatus } from "./heygen.functions";
+
 // Initialize Firebase Admin
 admin.initializeApp();
 

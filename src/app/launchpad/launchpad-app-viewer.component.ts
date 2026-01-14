@@ -6,11 +6,12 @@ import { AvatarDropdownComponent } from '../avatar-dropdown.component';
 import { LaunchpadService } from './launchpad.service';
 import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate, MissionOnboardingData } from './launchpad.types';
 import { MissionOnboardingModalComponent } from './mission-onboarding-modal.component';
+import { WelcomeVideoModalComponent } from './welcome-video-modal.component';
 
 @Component({
   selector: 'app-launchpad-app-viewer',
   standalone: true,
-  imports: [CommonModule, RouterLink, AvatarDropdownComponent, MissionOnboardingModalComponent],
+  imports: [CommonModule, RouterLink, AvatarDropdownComponent, MissionOnboardingModalComponent, WelcomeVideoModalComponent],
   template: `
     <!-- Full-Screen Launch Loading Overlay -->
     @if (isLaunching()) {
@@ -249,6 +250,20 @@ import { MissionOnboardingModalComponent } from './mission-onboarding-modal.comp
         (onSubmit)="handleOnboardingSubmit($event)"
       />
     }
+
+    <!-- Welcome Video Modal -->
+    @if (showWelcomeVideoModal() && template() && welcomeVideoGoalId()) {
+      <app-welcome-video-modal
+        [template]="template()!"
+        [goalId]="welcomeVideoGoalId()!"
+        [firstName]="userFirstName()"
+        [oneThingMetric]="welcomeVideoMetric()"
+        [oneThingLabel]="welcomeVideoLabel()"
+        [totalDays]="welcomeVideoTotalDays()"
+        (onContinue)="handleWelcomeVideoContinue()"
+        (onSkip)="handleWelcomeVideoSkip()"
+      />
+    }
   `,
   styleUrls: ['./launchpad-base.css']
 })
@@ -261,7 +276,15 @@ export class LaunchpadAppViewerComponent implements OnInit {
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLaunching = signal(false);
   protected readonly showOnboardingModal = signal(false);
+  protected readonly showWelcomeVideoModal = signal(false);
   protected readonly currentYear = new Date().getFullYear();
+
+  // Welcome video modal data
+  protected readonly welcomeVideoGoalId = signal<string | null>(null);
+  protected readonly userFirstName = signal<string>('');
+  protected readonly welcomeVideoMetric = signal<string>('');
+  protected readonly welcomeVideoLabel = signal<string>('');
+  protected readonly welcomeVideoTotalDays = signal<number>(30);
 
   // Reactive template selection based on route ID
   protected readonly template = computed(() => {
@@ -314,12 +337,45 @@ export class LaunchpadAppViewerComponent implements OnInit {
     try {
       const goalId = await this.launchpadService.launchMissionWithOnboarding(t, onboardingData);
       if (goalId) {
-        this.router.navigate(['/rocketgoal', goalId]);
+        // Calculate total days for the welcome video
+        const startDate = new Date(onboardingData.startDate);
+        const endDate = new Date(onboardingData.endDate);
+        const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        // Get user first name from profile
+        const profile = this.launchpadService.getUserProfile();
+        const firstName = profile?.firstName || 'there';
+
+        // Set welcome video modal data
+        this.welcomeVideoGoalId.set(goalId);
+        this.userFirstName.set(firstName);
+        this.welcomeVideoMetric.set(onboardingData.oneThingMetric);
+        this.welcomeVideoLabel.set(t.oneThingMetric.label);
+        this.welcomeVideoTotalDays.set(totalDays);
+
+        // Hide launching overlay and show welcome video modal
+        this.isLaunching.set(false);
+        this.showWelcomeVideoModal.set(true);
       }
     } catch (error) {
       console.error('Failed to launch mission:', error);
-    } finally {
       this.isLaunching.set(false);
+    }
+  }
+
+  handleWelcomeVideoContinue() {
+    const goalId = this.welcomeVideoGoalId();
+    this.showWelcomeVideoModal.set(false);
+    if (goalId) {
+      this.router.navigate(['/rocketgoal', goalId]);
+    }
+  }
+
+  handleWelcomeVideoSkip() {
+    const goalId = this.welcomeVideoGoalId();
+    this.showWelcomeVideoModal.set(false);
+    if (goalId) {
+      this.router.navigate(['/rocketgoal', goalId]);
     }
   }
 }

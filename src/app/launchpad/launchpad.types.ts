@@ -49,8 +49,11 @@ export interface LaunchpadTemplate {
     dailyEffort: string;
     objectives: string[];
   };
-  // NEW: Mission onboarding configuration
+  // Mission onboarding configuration
   oneThingMetric: OneThingMetricConfig;
+  // Optional HeyGen configuration for AI coach videos
+  heygenAvatarId?: string;
+  heygenVoiceId?: string;
 }
 
 export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
