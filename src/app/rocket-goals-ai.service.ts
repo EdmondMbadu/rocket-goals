@@ -180,9 +180,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       // This runs BEFORE ngOnInit, so we need to check URL directly
       const hasExternalPrompt = this.hasExternalPromptInUrl();
 
+      // Check if we're on a goal view page - if so, don't auto-select
+      // The component will call loadConversationForGoal with the specific goalId
+      const isOnGoalPage = this.isOnGoalViewPage();
+
       if (hasExternalPrompt) {
         // Don't auto-select any session - a fresh prompt will be processed
         this.preventAutoSelect = true;
+        void this.loadSessionsForCurrentUser(false);
+      } else if (isOnGoalPage) {
+        // On goal page - don't auto-select global sessions
+        // The component will call loadConversationForGoal with the specific goalId
         void this.loadSessionsForCurrentUser(false);
       } else if (!this.preventAutoSelect) {
         // Normal flow - load and select most recent session
@@ -208,6 +216,17 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     const hasPrompt = urlParams.has('prompt') && !!urlParams.get('prompt')?.trim();
 
     return hasAutoLaunch || hasPrompt;
+  }
+
+  /**
+   * Check if we're on a goal view page (URL contains /goal/)
+   * This prevents auto-selecting global sessions when the component will load goal-specific ones
+   */
+  private isOnGoalViewPage(): boolean {
+    if (!isPlatformBrowser(this.platformId)) {
+      return false;
+    }
+    return window.location.pathname.includes('/goal/');
   }
 
   private resetClientState(): void {
