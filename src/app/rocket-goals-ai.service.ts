@@ -740,6 +740,43 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
   }
 
+  /**
+   * Call AI silently without adding to chat history or persisting to Firestore.
+   * Use this for background operations like milestone generation that shouldn't
+   * appear in the user's chat history.
+   */
+  async callAISilent(prompt: string, goalContext?: RocketGoal | null): Promise<string> {
+    if (!prompt.trim()) {
+      throw new Error('Prompt cannot be empty');
+    }
+
+    try {
+      // Call the Cloud Function directly without any chat history operations
+      const callable = httpsCallable<AIRequest, AIResponse>(
+        this.functions,
+        'rocketGoalsAI'
+      );
+
+      const result = await callable({
+        message: prompt.trim(),
+        conversationHistory: [], // No history for silent calls
+        goalContext: goalContext ? {
+          id: goalContext.id,
+          title: this.getGoalTitle(goalContext),
+          primaryGoal: goalContext.primaryGoal || '',
+          answers: goalContext.answers || {},
+          status: goalContext.status,
+          copilot: goalContext.copilot || undefined
+        } : undefined
+      });
+
+      return result.data.response;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get AI response';
+      throw new Error(errorMessage);
+    }
+  }
+
   // Send message but don't add the AI response (let component handle with typewriter)
   async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string | { response: string; sideEffects?: SideEffect[] }> {
     if (!userMessage.trim()) {

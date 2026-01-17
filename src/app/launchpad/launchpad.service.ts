@@ -226,8 +226,8 @@ export class LaunchpadService {
       // Get the goal for context
       const goal = await this.goalsService.getRocketGoalById(goalId);
 
-      // Call AI to generate milestones
-      const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
+      // Call AI to generate milestones (silent - doesn't add to chat history)
+      const response = await this.rocketGoalsAIService.callAISilent(prompt, goal);
 
       // Parse the response
       const milestones = this.parseMilestonesResponse(response, totalDays, startTime);

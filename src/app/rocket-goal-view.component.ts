@@ -2067,7 +2067,8 @@ IMPORTANT: Return ONLY a valid JSON array. Each object must have:
 
 Generate the milestones now (JSON array only, no other text):`;
 
-    const response = await this.rocketGoalsAIService.sendMessage(prompt, goal);
+    // Call AI silently - milestone generation shouldn't appear in chat history
+    const response = await this.rocketGoalsAIService.callAISilent(prompt, goal);
     return this.parseMilestonesResponse(response, totalDays, startTime)
       .filter(m => m.dayNumber >= clampedStart && m.dayNumber <= clampedEnd);
   }
