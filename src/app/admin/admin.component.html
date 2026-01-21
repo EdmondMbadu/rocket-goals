@@ -1039,10 +1039,15 @@
             </div>
 
             <!-- Add New Reminder -->
-            <div class="flex gap-3 mb-6">
+            <div class="flex flex-col md:flex-row gap-3 mb-6">
               <input type="time" [value]="newReminderTime()"
                 (input)="newReminderTime.set($any($event.target).value)"
                 class="px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+              <select [value]="newReminderType()" (change)="newReminderType.set($any($event.target).value)"
+                class="px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all">
+                <option value="ignition">Daily Ignition (Morning)</option>
+                <option value="mission_log">Mission Log (Evening)</option>
+              </select>
               <button (click)="addScheduledReminder()" [disabled]="scheduledRemindersLoading()"
                 class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 @if (scheduledRemindersLoading()) {
@@ -1086,7 +1091,7 @@
                   <!-- Time Display -->
                   <div>
                     <p class="text-lg font-bold text-slate-900">{{ formatTime(reminder.time) }}</p>
-                    <p class="text-xs text-slate-500">{{ reminder.time }} ET</p>
+                    <p class="text-xs text-slate-500">{{ reminder.time }} ET · {{ formatReminderType(reminder.reminderType) }}</p>
                   </div>
 
                   <!-- Status Badge -->
@@ -1142,8 +1147,24 @@
                   <!-- Template Variables Info -->
                   <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
                     <p class="font-semibold mb-1">Available template variables:</p>
-                    <code class="text-xs">{{'{{goalTitle}}'}}</code> - The goal title,
-                    <code class="text-xs">{{'{{participantName}}'}}</code> - The participant's name
+                    <div class="space-y-1 text-xs">
+                      <div><code>{{'{{goalTitle}}'}}</code> - Goal title</div>
+                      <div><code>{{'{{participantName}}'}}</code> - Participant name</div>
+                      <div><code>{{'{{goalUrl}}'}}</code> - Link to check-in page</div>
+                      <div><code>{{'{{activeMilestone}}'}}</code> - Current active milestone</div>
+                      <div><code>{{'{{oneThing}}'}}</code> - Suggested ONE Thing</div>
+                      <div><code>{{'{{lastMissionLogSummary}}'}}</code> - Latest Mission Log summary</div>
+                    </div>
+                  </div>
+
+                  <!-- Reminder Type -->
+                  <div class="space-y-2">
+                    <label class="block text-slate-700 font-semibold text-sm">Reminder Type</label>
+                    <select [value]="editingReminderType()" (change)="editingReminderType.set($any($event.target).value)"
+                      class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all">
+                      <option value="ignition">Daily Ignition (Morning)</option>
+                      <option value="mission_log">Mission Log (Evening)</option>
+                    </select>
                   </div>
 
                   <!-- Subject -->

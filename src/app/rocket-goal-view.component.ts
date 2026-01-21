@@ -10,7 +10,21 @@ import { MissionCalendarComponent } from './mission-calendar.component';
 import { EventModalComponent } from './event-modal.component';
 import { CalendarEventsService } from './calendar-events.service';
 import { ActionItemsService, ActionItem } from './action-items.service';
+import { CheckInsService } from './check-ins.service';
 import type { RocketGoal, CareerQuestMetrics } from './models/rocket-goal';
+import type {
+  DailyIgnition,
+  IgnitionConfidence,
+  IgnitionOneThingChoice,
+  IgnitionTimeOfDay,
+  MissionActionTaken,
+  MissionChallengeLevel,
+  MissionFeeling,
+  MissionFocusLevel,
+  MissionLog,
+  MissionLogCoaching,
+  MissionTeamConnection
+} from './models/check-ins';
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
@@ -33,6 +47,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private rocketGoalsService = inject(RocketGoalsService);
   private calendarEventsService = inject(CalendarEventsService);
   private actionItemsService = inject(ActionItemsService);
+  private checkInsService = inject(CheckInsService);
   private fansService = inject(FansService);
   private visualizationService = inject(VisualizationService);
   private rocketGoalsAIService = inject(RocketGoalsAIService);
@@ -70,7 +85,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private storage: any = null;
   visualizationImageFile: File | null = null;
   uploadingVisualization = signal(false);
-  activePrimaryTab = signal<'dashboard' | 'fans' | 'tasks' | 'calendar'>('tasks');
+  activePrimaryTab = signal<'dashboard' | 'fans' | 'tasks' | 'calendar' | 'checkins'>('tasks');
   currentFanInviteEmail = signal('');
   currentFanInviteName = signal('');
   fanInviteSuggestions = signal<{ email: string; name: string }[]>([]);
@@ -134,6 +149,30 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   showDeadlineOverdueModal = signal(false);
   private landingFlowHandled = false;
   private pendingLandingAfterDeadline = false;
+
+  // Check-ins state
+  activeCheckinTab = signal<'ignition' | 'mission_log'>('ignition');
+  checkinsLoading = signal(false);
+  checkinsError = signal<string | null>(null);
+  checkinsNotice = signal<string | null>(null);
+  latestDailyIgnition = signal<DailyIgnition | null>(null);
+  latestMissionLog = signal<MissionLog | null>(null);
+
+  ignitionOneThingChoice = signal<IgnitionOneThingChoice>('suggested');
+  ignitionOneThingText = signal('');
+  ignitionTimeOfDay = signal<IgnitionTimeOfDay>('morning');
+  ignitionConfidence = signal<IgnitionConfidence>('medium');
+  savingIgnition = signal(false);
+
+  missionActionTaken = signal<MissionActionTaken>('yes');
+  missionFocusLevel = signal<MissionFocusLevel>('full_focus');
+  missionChallengeLevel = signal<MissionChallengeLevel>('average');
+  missionFeeling = signal<MissionFeeling>('positive');
+  missionTeamConnection = signal<MissionTeamConnection>('yes');
+  missionNote = signal('');
+  missionIntendedOneThing = signal('');
+  missionCoaching = signal<MissionLogCoaching | null>(null);
+  savingMissionLog = signal(false);
 
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
@@ -532,6 +571,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       if (currentGoal?.id) {
         await this.loadCalendarEvents(currentGoal.id);
         await this.loadActionItems(currentGoal.id);
+        await this.loadCheckIns(currentGoal.id);
         this.handleLandingMilestonesFlow();
         await this.loadFans(currentGoal.id);
         await this.loadFanComments(currentGoal.id);
@@ -1116,7 +1156,7 @@ ${url}`;
     return null;
   }
 
-  selectPrimaryTab(tab: 'dashboard' | 'fans' | 'tasks' | 'calendar') {
+  selectPrimaryTab(tab: 'dashboard' | 'fans' | 'tasks' | 'calendar' | 'checkins') {
     this.activePrimaryTab.set(tab);
     if (tab === 'tasks') {
       this.scheduleTodayMilestoneScroll();
@@ -1125,8 +1165,16 @@ ${url}`;
 
   private applyTabFromQuery(): void {
     const tabParam = this.route.snapshot.queryParamMap.get('tab') || this.route.snapshot.queryParamMap.get('section');
+    const checkinParam = this.route.snapshot.queryParamMap.get('checkin');
     if (tabParam === 'milestones' || tabParam === 'tasks' || tabParam === 'milestone') {
       this.activePrimaryTab.set('tasks');
+      return;
+    }
+    if (tabParam === 'checkins' || checkinParam) {
+      this.activePrimaryTab.set('checkins');
+      if (checkinParam === 'ignition' || checkinParam === 'mission_log') {
+        this.activeCheckinTab.set(checkinParam);
+      }
     }
   }
 
@@ -1630,6 +1678,203 @@ ${url}`;
       console.error('Error loading action items:', error);
     } finally {
       this.loadingActionItems.set(false);
+    }
+  }
+
+  async loadCheckIns(goalId: string) {
+    this.checkinsLoading.set(true);
+    this.checkinsError.set(null);
+    try {
+      const [ignition, missionLog] = await Promise.all([
+        this.checkInsService.getLatestDailyIgnition(goalId),
+        this.checkInsService.getLatestMissionLog(goalId)
+      ]);
+      this.latestDailyIgnition.set(ignition);
+      this.latestMissionLog.set(missionLog);
+      this.missionCoaching.set(missionLog?.aiCoaching ?? null);
+    } catch (error: any) {
+      console.error('Error loading check-ins:', error);
+      this.checkinsError.set(error?.message || 'Failed to load check-ins');
+    } finally {
+      this.checkinsLoading.set(false);
+    }
+  }
+
+  selectCheckinTab(tab: 'ignition' | 'mission_log') {
+    this.activeCheckinTab.set(tab);
+  }
+
+  getActiveMilestoneTitle(): string {
+    const items = this.actionItems().filter(item => !item.completed);
+    if (!items.length) return 'No active milestones yet';
+    const sorted = [...items].sort((a, b) => {
+      if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber;
+      return a.order - b.order;
+    });
+    return sorted[0]?.title || 'Untitled milestone';
+  }
+
+  getSuggestedOneThing(): string {
+    const latest = this.latestDailyIgnition();
+    if (latest?.oneThingText) return latest.oneThingText;
+    return this.getActiveMilestoneTitle();
+  }
+
+  getLastMissionLogSummary(): string {
+    const log = this.latestMissionLog();
+    if (!log) return 'No mission log yet.';
+    const parts: string[] = [];
+    if (log.actionTaken) parts.push(`Action: ${this.formatMissionValue(log.actionTaken)}`);
+    if (log.focusLevel) parts.push(`Focus: ${this.formatMissionValue(log.focusLevel)}`);
+    if (log.feeling) parts.push(`Feeling: ${this.formatMissionValue(log.feeling)}`);
+    return parts.join(' • ') || 'No mission log yet.';
+  }
+
+  private formatMissionValue(value: string): string {
+    const map: Record<string, string> = {
+      yes: 'Yes',
+      barely: 'Barely',
+      no: 'No',
+      full_focus: 'Full Focus',
+      distracted: 'Distracted',
+      low_energy: 'Low Energy',
+      tough_day: 'Tough Day',
+      average: 'Average',
+      easy: 'Easy',
+      positive: 'Positive',
+      neutral: 'Neutral',
+      frustrated: 'Frustrated',
+      solo: 'Solo Effort'
+    };
+    return map[value] || value;
+  }
+
+  private getDateFromValue(value: unknown): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value === 'object' && value !== null && 'seconds' in value) {
+      const ts = value as { seconds: number };
+      return new Date(ts.seconds * 1000);
+    }
+    if (typeof value === 'number' || typeof value === 'string') {
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+    return null;
+  }
+
+  private isToday(value: unknown): boolean {
+    const date = this.getDateFromValue(value);
+    if (!date) return false;
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear()
+      && date.getMonth() === today.getMonth()
+      && date.getDate() === today.getDate();
+  }
+
+  shouldAskIntendedOneThing(): boolean {
+    const ignition = this.latestDailyIgnition();
+    return !ignition || !this.isToday(ignition.createdAt);
+  }
+
+  getIgnitionCue(): string {
+    const confidence = this.ignitionConfidence();
+    if (confidence === 'high') return 'Lock it in. One move today builds momentum.';
+    if (confidence === 'low') return 'Start small, stay steady. Momentum beats perfection.';
+    return 'Focus on one move today. Progress compounds fast.';
+  }
+
+  getIgnitionTimeBlock(): string {
+    const timeOfDay = this.ignitionTimeOfDay();
+    if (timeOfDay === 'morning') return 'Time-block: 1 focused sprint before noon.';
+    if (timeOfDay === 'evening') return 'Time-block: protect a quiet evening block.';
+    return 'Time-block: claim a focused afternoon window.';
+  }
+
+  private buildMissionLogCoaching(): MissionLogCoaching {
+    const actionTaken = this.missionActionTaken();
+    const focus = this.missionFocusLevel();
+    const reinstruction = actionTaken === 'no'
+      ? 'Reset to the smallest next action for tomorrow. Make it unmistakably doable.'
+      : 'Protect the ONE Thing first. Everything else gets scheduled around it.';
+    const demonstration = focus === 'distracted'
+      ? 'Block 25 minutes, silence notifications, and start with a 2-minute warmup.'
+      : 'Pick the first concrete step and finish it before anything else.';
+    const hustle = actionTaken === 'barely'
+      ? 'You showed up. Tomorrow, raise the bar by one notch.'
+      : 'Keep the streak alive. Your future self is counting on today’s reps.';
+    return { reinstruction, demonstration, hustle };
+  }
+
+  async submitDailyIgnition() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+    const choice = this.ignitionOneThingChoice();
+    let oneThingText = this.ignitionOneThingText().trim();
+
+    if (choice === 'suggested') {
+      oneThingText = this.getSuggestedOneThing();
+    }
+
+    if (choice === 'other' && !oneThingText) {
+      this.checkinsError.set('Enter your ONE Thing or choose the suggested option.');
+      return;
+    }
+
+    this.savingIgnition.set(true);
+    this.checkinsError.set(null);
+    this.checkinsNotice.set(null);
+    try {
+      await this.checkInsService.upsertDailyIgnition({
+        goalId: goal.id,
+        oneThingChoice: choice,
+        oneThingText: oneThingText || undefined,
+        timeOfDay: this.ignitionTimeOfDay(),
+        confidence: this.ignitionConfidence()
+      });
+      await this.loadCheckIns(goal.id);
+      this.checkinsNotice.set('Daily Ignition saved.');
+    } catch (error: any) {
+      console.error('Error saving daily ignition:', error);
+      this.checkinsError.set(error?.message || 'Failed to save Daily Ignition.');
+    } finally {
+      this.savingIgnition.set(false);
+    }
+  }
+
+  async submitMissionLog() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+    const intendedOneThing = this.missionIntendedOneThing().trim();
+    if (this.shouldAskIntendedOneThing() && !intendedOneThing) {
+      this.checkinsError.set('Add the ONE Thing you intended to complete today.');
+      return;
+    }
+
+    this.savingMissionLog.set(true);
+    this.checkinsError.set(null);
+    this.checkinsNotice.set(null);
+    const coaching = this.buildMissionLogCoaching();
+    try {
+      await this.checkInsService.upsertMissionLog({
+        goalId: goal.id,
+        actionTaken: this.missionActionTaken(),
+        focusLevel: this.missionFocusLevel(),
+        challengeLevel: this.missionChallengeLevel(),
+        feeling: this.missionFeeling(),
+        teamConnection: this.missionTeamConnection(),
+        note: this.missionNote().trim() || undefined,
+        intendedOneThing: intendedOneThing || undefined,
+        aiCoaching: coaching
+      });
+      this.missionCoaching.set(coaching);
+      await this.loadCheckIns(goal.id);
+      this.checkinsNotice.set('Mission Log submitted.');
+    } catch (error: any) {
+      console.error('Error saving mission log:', error);
+      this.checkinsError.set(error?.message || 'Failed to submit Mission Log.');
+    } finally {
+      this.savingMissionLog.set(false);
     }
   }
 

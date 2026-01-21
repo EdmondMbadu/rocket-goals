@@ -1702,6 +1702,84 @@ async function getUpcomingMilestones(goalId: string, goalData: FirebaseFirestore
         }));
 }
 
+async function getActiveMilestoneLabel(goalId: string, goalData: FirebaseFirestore.DocumentData): Promise<string> {
+    const startTimeMs = getTimestampMs(goalData.startTime) ?? getTimestampMs(goalData.createdAt);
+    const currentDay = getCurrentMissionDay(startTimeMs);
+    const snapshot = await admin.firestore()
+        .collection('rocketGoals')
+        .doc(goalId)
+        .collection('actionItems')
+        .get();
+
+    if (snapshot.empty) return 'No active milestones yet';
+
+    const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as { title?: string; dayNumber?: number; completed?: boolean; order?: number })
+    }));
+
+    const incomplete = items.filter(item => !item.completed);
+    if (!incomplete.length) return 'All milestones completed';
+
+    const upcoming = incomplete.filter(item => typeof item.dayNumber === 'number' && item.dayNumber >= currentDay);
+    const sorted = (upcoming.length ? upcoming : incomplete).sort((a, b) => {
+        const dayDiff = (a.dayNumber || 0) - (b.dayNumber || 0);
+        if (dayDiff !== 0) return dayDiff;
+        return (a.order || 0) - (b.order || 0);
+    });
+
+    return sorted[0]?.title || 'Untitled milestone';
+}
+
+type DailyIgnitionRecord = {
+    oneThingText?: string;
+    createdAt?: admin.firestore.Timestamp;
+};
+
+type MissionLogRecord = {
+    actionTaken?: string;
+    focusLevel?: string;
+    challengeLevel?: string;
+    feeling?: string;
+    teamConnection?: string;
+    createdAt?: admin.firestore.Timestamp;
+};
+
+async function getLatestDailyIgnition(goalId: string): Promise<DailyIgnitionRecord | null> {
+    const snapshot = await admin.firestore()
+        .collection('rocketGoals')
+        .doc(goalId)
+        .collection('dailyIgnitions')
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0].data() as DailyIgnitionRecord;
+}
+
+async function getLatestMissionLog(goalId: string): Promise<MissionLogRecord | null> {
+    const snapshot = await admin.firestore()
+        .collection('rocketGoals')
+        .doc(goalId)
+        .collection('missionLogs')
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0].data() as MissionLogRecord;
+}
+
+function summarizeMissionLog(log: MissionLogRecord | null): string {
+    if (!log) return '';
+    const parts: string[] = [];
+    if (log.actionTaken) parts.push(`Action: ${log.actionTaken}`);
+    if (log.focusLevel) parts.push(`Focus: ${log.focusLevel}`);
+    if (log.feeling) parts.push(`Feeling: ${log.feeling}`);
+    if (log.challengeLevel) parts.push(`Challenge: ${log.challengeLevel}`);
+    if (log.teamConnection) parts.push(`Team: ${log.teamConnection}`);
+    return parts.join(' • ');
+}
+
 /**
  * Cloud Function to preview goal reminder email
  * Only accessible by admin users
@@ -3669,10 +3747,13 @@ ${expectations}`;
 /**
  * Interface for scheduled reminder documents
  */
+type ReminderType = 'ignition' | 'mission_log';
+
 interface ScheduledReminder {
     id?: string;
     time: string; // 24-hour format HH:MM
     enabled: boolean;
+    reminderType?: ReminderType;
     emailSubject: string;
     emailBodyText: string;
     emailBodyHtml: string;
@@ -3685,55 +3766,139 @@ interface ScheduledReminder {
 /**
  * Default email template for scheduled reminders
  */
-function getDefaultReminderEmailTemplate() {
-    const subject = '🚀 Time to update your progress on: {{goalTitle}}';
+function getDefaultReminderEmailTemplate(reminderType: ReminderType = 'mission_log') {
+    if (reminderType === 'ignition') {
+        const subject = '🔥 Daily Ignition — Set today’s trajectory';
+        const text = `Hi {{participantName}},
 
+🔥 DAILY IGNITION
+Set today’s trajectory.
+
+Your Current Goal: {{goalTitle}}
+Active Milestone: {{activeMilestone}}
+Suggested ONE Thing: {{oneThing}}
+
+What is your ONE Thing today?
+- Use suggested ONE Thing
+- Choose another ONE Thing
+- I’m not sure yet
+
+When will you do it? Morning / Afternoon / Evening
+How confident do you feel? High / Medium / Low
+
+Lock it in. One move today builds momentum.
+
+Start here: {{goalUrl}}
+
+- The Rocket Goals Team`;
+
+        const html = `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+                <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+                </div>
+                <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 0 0 8px 0;">Daily Ignition</p>
+                    <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Set today’s trajectory.</h2>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi {{participantName}},
+                    </p>
+                    <div style="background: #f9fafb; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 10px;">
+                        <p style="margin: 0; color: #111827; font-weight: 700;">🎯 Your Current Goal</p>
+                        <p style="margin: 6px 0 0; color: #111827; font-size: 16px;">{{goalTitle}}</p>
+                        <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🧩 Active Milestone</p>
+                        <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{activeMilestone}}</p>
+                        <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🛠️ Suggested ONE Thing</p>
+                        <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{oneThing}}</p>
+                    </div>
+                    <div style="margin: 18px 0;">
+                        <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">What is your ONE Thing today?</p>
+                        <ul style="margin: 0; padding-left: 18px; color: #374151; line-height: 1.6;">
+                            <li>Use suggested ONE Thing</li>
+                            <li>Choose another ONE Thing</li>
+                            <li>I’m not sure yet</li>
+                        </ul>
+                    </div>
+                    <p style="margin: 0 0 12px 0; color: #374151;">When will you do it? Morning / Afternoon / Evening</p>
+                    <p style="margin: 0 0 20px 0; color: #374151;">How confident do you feel? High / Medium / Low</p>
+                    <p style="margin: 0 0 24px 0; color: #111827; font-weight: 600;">Lock it in. One move today builds momentum.</p>
+                    <div style="text-align: center; margin: 24px 0;">
+                        <a href="{{goalUrl}}"
+                           style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px;">
+                            🔥 IGNITE DAY
+                        </a>
+                    </div>
+                    <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
+                        - The Rocket Goals Team
+                    </p>
+                </div>
+            </div>
+        `;
+
+        return { subject, text, html };
+    }
+
+    const subject = '📘 Mission Log — Review the day';
     const text = `Hi {{participantName}},
 
-It's time to check in on your Rocket Goal!
+📘 MISSION LOG
+Review the day. Course-correct fast.
 
-Goal: {{goalTitle}}
+Your Current Goal: {{goalTitle}}
+Active Milestone: {{activeMilestone}}
+Your ONE Thing Today: {{oneThing}}
+Last Mission Log Summary: {{lastMissionLogSummary}}
 
-{{milestonesText}}Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
+Did you take action toward your ONE Thing today? Yes / Barely / No
+How focused was your effort? Full Focus / Distracted / Low Energy
+How challenging was today? Tough Day / Average / Easy
+How did you feel while working? Positive / Neutral / Frustrated
+Did you connect with your team today? Yes / No / Solo Effort
 
-Visit: {{goalUrl}}
-
-Keep pushing forward! 🚀
+Submit your Mission Log: {{goalUrl}}
 
 - The Rocket Goals Team`;
 
     const html = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); padding: 30px; border-radius: 16px 16px 0 0;">
                 <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
             </div>
             <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
-                <h2 style="color: #111827; margin: 0 0 20px 0; font-size: 22px;">Time to update your progress!</h2>
+                <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 0 0 8px 0;">Mission Log</p>
+                <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Review the day. Course-correct fast.</h2>
                 <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                     Hi {{participantName}},
                 </p>
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    It's time to check in on your Rocket Goal:
-                </p>
-                <div style="background: #f9fafb; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 8px;">
-                    <p style="color: #111827; font-size: 18px; font-weight: 600; margin: 0;">
-                        {{goalTitle}}
-                    </p>
+                <div style="background: #f9fafb; border-left: 4px solid #111827; padding: 16px; margin: 20px 0; border-radius: 10px;">
+                    <p style="margin: 0; color: #111827; font-weight: 700;">🎯 Your Current Goal</p>
+                    <p style="margin: 6px 0 0; color: #111827; font-size: 16px;">{{goalTitle}}</p>
+                    <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🧩 Active Milestone</p>
+                    <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{activeMilestone}}</p>
+                    <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🛠️ Your ONE Thing Today</p>
+                    <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{oneThing}}</p>
+                    <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🔄 Last Mission Log Summary</p>
+                    <p style="margin: 6px 0 0; color: #6b7280; font-size: 14px;">{{lastMissionLogSummary}}</p>
                 </div>
-                {{milestonesHtml}}
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                    Go to Rocket Goals to mark what you've accomplished and keep your momentum going.
-                </p>
-                <div style="text-align: center; margin: 30px 0;">
+                <div style="margin: 18px 0;">
+                    <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">Did you take action toward your ONE Thing today?</p>
+                    <p style="margin: 0 0 12px 0; color: #374151;">Yes / Barely / No</p>
+                    <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">How focused was your effort?</p>
+                    <p style="margin: 0 0 12px 0; color: #374151;">Full Focus / Distracted / Low Energy</p>
+                    <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">How challenging was today?</p>
+                    <p style="margin: 0 0 12px 0; color: #374151;">Tough Day / Average / Easy</p>
+                    <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">How did you feel while working?</p>
+                    <p style="margin: 0 0 12px 0; color: #374151;">Positive / Neutral / Frustrated</p>
+                    <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">Did you connect with your team today?</p>
+                    <p style="margin: 0; color: #374151;">Yes / No / Solo Effort</p>
+                </div>
+                <div style="text-align: center; margin: 24px 0;">
                     <a href="{{goalUrl}}"
-                       style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                        Update your progress
+                       style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px;">
+                        SUBMIT MISSION LOG
                     </a>
                 </div>
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
-                    Keep pushing forward! 🚀
-                </p>
-                <p style="color: #9ca3af; font-size: 14px; margin: 30px 0 0 0;">
+                <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
                     - The Rocket Goals Team
                 </p>
             </div>
@@ -3752,7 +3917,10 @@ function applyEmailTemplate(
     participantName: string,
     goalUrl: string,
     milestonesText = '',
-    milestonesHtml = ''
+    milestonesHtml = '',
+    activeMilestone = '',
+    oneThing = '',
+    lastMissionLogSummary = ''
 ): string {
     return template
         .replace(/\{\{goalTitle\}\}/g, goalTitle)
@@ -3760,6 +3928,9 @@ function applyEmailTemplate(
         .replace(/\{\{goalUrl\}\}/g, goalUrl)
         .replace(/\{\{milestonesText\}\}/g, milestonesText)
         .replace(/\{\{milestonesHtml\}\}/g, milestonesHtml)
+        .replace(/\{\{activeMilestone\}\}/g, activeMilestone)
+        .replace(/\{\{oneThing\}\}/g, oneThing)
+        .replace(/\{\{lastMissionLogSummary\}\}/g, lastMissionLogSummary)
         // Replace old hardcoded URLs with the specific goal URL (for existing templates in Firestore)
         .replace(/https:\/\/rocket-goals\.web\.app\/goals/g, goalUrl)
         .replace(/https:\/\/www\.rocketgoals\.com\/goals/g, goalUrl);
@@ -3800,13 +3971,21 @@ export const getScheduledReminders = functions.runWith({
     }
 });
 
+function inferReminderTypeFromTime(time: string): ReminderType {
+    const [hours] = time.split(':').map(Number);
+    if (Number.isNaN(hours)) {
+        return 'mission_log';
+    }
+    return hours < 12 ? 'ignition' : 'mission_log';
+}
+
 /**
  * Cloud Function to add a new scheduled reminder
  * Only accessible by admin users
  */
 export const addScheduledReminder = functions.runWith({
     secrets: []
-}).https.onCall(async (data: { time: string; emailSubject?: string; emailBodyText?: string; emailBodyHtml?: string }, context: functions.https.CallableContext) => {
+}).https.onCall(async (data: { time: string; reminderType?: ReminderType; emailSubject?: string; emailBodyText?: string; emailBodyHtml?: string }, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
     }
@@ -3817,7 +3996,7 @@ export const addScheduledReminder = functions.runWith({
         throw new functions.https.HttpsError('permission-denied', 'Only administrators can add scheduled reminders.');
     }
 
-    const { time, emailSubject, emailBodyText, emailBodyHtml } = data;
+    const { time, reminderType, emailSubject, emailBodyText, emailBodyHtml } = data;
 
     // Validate time format (HH:MM)
     if (!time || !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
@@ -3825,12 +4004,14 @@ export const addScheduledReminder = functions.runWith({
     }
 
     try {
-        const defaultTemplate = getDefaultReminderEmailTemplate();
+        const resolvedReminderType = reminderType || inferReminderTypeFromTime(time);
+        const defaultTemplate = getDefaultReminderEmailTemplate(resolvedReminderType);
         const now = admin.firestore.Timestamp.now();
 
         const reminder: Omit<ScheduledReminder, 'id'> = {
             time,
             enabled: true,
+            reminderType: resolvedReminderType,
             emailSubject: emailSubject || defaultTemplate.subject,
             emailBodyText: emailBodyText || defaultTemplate.text,
             emailBodyHtml: emailBodyHtml || defaultTemplate.html,
@@ -3854,7 +4035,7 @@ export const addScheduledReminder = functions.runWith({
  */
 export const updateScheduledReminder = functions.runWith({
     secrets: []
-}).https.onCall(async (data: { id: string; time?: string; enabled?: boolean; emailSubject?: string; emailBodyText?: string; emailBodyHtml?: string }, context: functions.https.CallableContext) => {
+}).https.onCall(async (data: { id: string; time?: string; enabled?: boolean; reminderType?: ReminderType; emailSubject?: string; emailBodyText?: string; emailBodyHtml?: string }, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
     }
@@ -3865,7 +4046,7 @@ export const updateScheduledReminder = functions.runWith({
         throw new functions.https.HttpsError('permission-denied', 'Only administrators can update scheduled reminders.');
     }
 
-    const { id, time, enabled, emailSubject, emailBodyText, emailBodyHtml } = data;
+    const { id, time, enabled, reminderType, emailSubject, emailBodyText, emailBodyHtml } = data;
 
     if (!id) {
         throw new functions.https.HttpsError('invalid-argument', 'Reminder ID is required.');
@@ -3890,6 +4071,7 @@ export const updateScheduledReminder = functions.runWith({
 
         if (time !== undefined) updates.time = time;
         if (enabled !== undefined) updates.enabled = enabled;
+    if (reminderType !== undefined) updates.reminderType = reminderType;
         if (emailSubject !== undefined) updates.emailSubject = emailSubject;
         if (emailBodyText !== undefined) updates.emailBodyText = emailBodyText;
         if (emailBodyHtml !== undefined) updates.emailBodyHtml = emailBodyHtml;
@@ -3950,7 +4132,7 @@ export const deleteScheduledReminder = functions.runWith({
  */
 export const getDefaultEmailTemplate = functions.runWith({
     secrets: []
-}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+}).https.onCall(async (data: { reminderType?: ReminderType }, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
     }
@@ -3961,7 +4143,7 @@ export const getDefaultEmailTemplate = functions.runWith({
         throw new functions.https.HttpsError('permission-denied', 'Only administrators can access email templates.');
     }
 
-    const template = getDefaultReminderEmailTemplate();
+    const template = getDefaultReminderEmailTemplate(data?.reminderType ?? 'mission_log');
     return { success: true, template };
 });
 
@@ -4055,42 +4237,54 @@ export const processScheduledReminders = functions.runWith({
                                     ? `${participant.firstName} ${participant.lastName || ''}`.trim()
                                     : participant.email.split('@')[0];
 
-                                // Build the specific goal URL
-                                const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}?tab=milestones`;
-                                const milestones = await getUpcomingMilestones(goalDoc.id, goalData);
+                                const reminderType = reminder.reminderType || inferReminderTypeFromTime(reminder.time);
+                                const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}?tab=checkins&checkin=${reminderType}`;
+
+                                const [milestones, activeMilestone, latestIgnition, latestMissionLog] = await Promise.all([
+                                    getUpcomingMilestones(goalDoc.id, goalData),
+                                    getActiveMilestoneLabel(goalDoc.id, goalData),
+                                    getLatestDailyIgnition(goalDoc.id),
+                                    getLatestMissionLog(goalDoc.id)
+                                ]);
+
                                 const milestoneBlocks = buildMilestoneEmailBlocks(milestones);
+                                const oneThing = (latestIgnition?.oneThingText || activeMilestone || '').trim();
+                                const missionLogSummary = summarizeMissionLog(latestMissionLog);
 
                                 // Apply template
                                 const subject = applyEmailTemplate(
                                     reminder.emailSubject,
                                     goalTitle,
                                     participantName,
-                                    goalUrl
+                                    goalUrl,
+                                    milestoneBlocks.text,
+                                    milestoneBlocks.html,
+                                    activeMilestone,
+                                    oneThing,
+                                    missionLogSummary
                                 );
-                                let text = applyEmailTemplate(
+                                const text = applyEmailTemplate(
                                     reminder.emailBodyText,
                                     goalTitle,
                                     participantName,
                                     goalUrl,
                                     milestoneBlocks.text,
-                                    milestoneBlocks.html
+                                    milestoneBlocks.html,
+                                    activeMilestone,
+                                    oneThing,
+                                    missionLogSummary
                                 );
-                                let html = applyEmailTemplate(
+                                const html = applyEmailTemplate(
                                     reminder.emailBodyHtml,
                                     goalTitle,
                                     participantName,
                                     goalUrl,
                                     milestoneBlocks.text,
-                                    milestoneBlocks.html
+                                    milestoneBlocks.html,
+                                    activeMilestone,
+                                    oneThing,
+                                    missionLogSummary
                                 );
-
-                                if (milestoneBlocks.text && !reminder.emailBodyText.includes('{{milestonesText}}')) {
-                                    text = `${text}\n${milestoneBlocks.text}`.trim();
-                                }
-
-                                if (milestoneBlocks.html && !reminder.emailBodyHtml.includes('{{milestonesHtml}}')) {
-                                    html = `${html}\n${milestoneBlocks.html}`;
-                                }
 
                                 const msg = {
                                     to: participant.email,

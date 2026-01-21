@@ -46,6 +46,7 @@ type ScheduledReminder = {
   id: string;
   time: string;
   enabled: boolean;
+  reminderType?: 'ignition' | 'mission_log';
   emailSubject: string;
   emailBodyText: string;
   emailBodyHtml: string;
@@ -114,10 +115,12 @@ export class AdminComponent implements OnInit {
   scheduledRemindersLoading = signal(false);
   scheduledRemindersError = signal<string | null>(null);
   newReminderTime = signal('09:00');
+  newReminderType = signal<'ignition' | 'mission_log'>('ignition');
   editingReminder = signal<ScheduledReminder | null>(null);
   editingEmailSubject = signal('');
   editingEmailBodyText = signal('');
   editingEmailBodyHtml = signal('');
+  editingReminderType = signal<'ignition' | 'mission_log'>('mission_log');
   showEmailPreview = signal(false);
   savingReminder = signal(false);
 
@@ -540,6 +543,7 @@ export class AdminComponent implements OnInit {
 
   async addScheduledReminder() {
     const time = this.newReminderTime().trim();
+    const reminderType = this.newReminderType();
 
     if (!time) {
       this.error.set('Please select a time for the reminder');
@@ -558,13 +562,14 @@ export class AdminComponent implements OnInit {
       const functions = getFunctions(app);
       const addReminder = httpsCallable(functions, 'addScheduledReminder');
 
-      const result = await addReminder({ time });
+      const result = await addReminder({ time, reminderType });
       const data = result.data as { success: boolean; reminder: ScheduledReminder };
 
       if (data.success) {
         this.success.set(`Scheduled reminder added for ${time} (Eastern Time)`);
         await this.loadScheduledReminders();
         this.newReminderTime.set('09:00');
+        this.newReminderType.set('ignition');
       }
     } catch (err: any) {
       console.error('Error adding scheduled reminder:', err);
@@ -641,6 +646,7 @@ export class AdminComponent implements OnInit {
     this.editingEmailSubject.set(reminder.emailSubject);
     this.editingEmailBodyText.set(reminder.emailBodyText);
     this.editingEmailBodyHtml.set(reminder.emailBodyHtml);
+    this.editingReminderType.set(reminder.reminderType || this.inferReminderTypeFromTime(reminder.time));
     this.showEmailPreview.set(false);
   }
 
@@ -649,6 +655,7 @@ export class AdminComponent implements OnInit {
     this.editingEmailSubject.set('');
     this.editingEmailBodyText.set('');
     this.editingEmailBodyHtml.set('');
+    this.editingReminderType.set('mission_log');
     this.showEmailPreview.set(false);
   }
 
@@ -673,6 +680,7 @@ export class AdminComponent implements OnInit {
 
       await updateReminder({
         id: reminder.id,
+        reminderType: this.editingReminderType(),
         emailSubject: this.editingEmailSubject(),
         emailBodyText: this.editingEmailBodyText(),
         emailBodyHtml: this.editingEmailBodyHtml()
@@ -706,7 +714,7 @@ export class AdminComponent implements OnInit {
       const functions = getFunctions(app);
       const getDefault = httpsCallable(functions, 'getDefaultEmailTemplate');
 
-      const result = await getDefault({});
+      const result = await getDefault({ reminderType: this.editingReminderType() });
       const data = result.data as { success: boolean; template: { subject: string; text: string; html: string } };
 
       if (data.success) {
@@ -730,6 +738,18 @@ export class AdminComponent implements OnInit {
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  }
+
+  inferReminderTypeFromTime(time: string): 'ignition' | 'mission_log' {
+    const hour = Number(time.split(':')[0]);
+    if (Number.isNaN(hour)) return 'mission_log';
+    return hour < 12 ? 'ignition' : 'mission_log';
+  }
+
+  formatReminderType(reminderType?: 'ignition' | 'mission_log'): string {
+    if (reminderType === 'ignition') return 'Daily Ignition';
+    if (reminderType === 'mission_log') return 'Mission Log';
+    return 'Mission Log';
   }
 
   getProfile() {
