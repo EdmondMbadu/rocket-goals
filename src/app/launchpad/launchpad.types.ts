@@ -185,7 +185,7 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     description: 'Plan sharper marketing moves after hours. Track experiments, conversions, and brand momentum with focused time blocks.',
     icon: '🌙',
     imageUrl: '/assets/app-suite/moonlight-maker.png',
-    coPilotAvatar: '/assets/a-3.jpg',
+    coPilotAvatar: '/assets/sarah-jenkins.jpg',
     coPilotName: 'Sarah Jenkins',
     coPilotRole: 'Growth Marketing Coach',
     color: 'from-blue-950 via-indigo-950 to-slate-900',
