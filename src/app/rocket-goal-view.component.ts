@@ -185,6 +185,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   showCheckinModal = signal(false);
   weeklyResets = signal<WeeklyResetSummary[]>([]);
   weeklyResetNotice = signal<string | null>(null);
+  private pendingWeeklyScroll = false;
 
   ignitionOneThingChoice = signal<IgnitionOneThingChoice>('suggested');
   ignitionOneThingText = signal('');
@@ -1204,6 +1205,10 @@ ${url}`;
       this.activePrimaryTab.set('tasks');
       return;
     }
+    if (sectionParam === 'weekly') {
+      this.activePrimaryTab.set('checkins');
+      this.pendingWeeklyScroll = true;
+    }
     if (tabParam === 'checkins' || checkinParam) {
       this.activePrimaryTab.set('checkins');
       if (checkinParam === 'ignition' || checkinParam === 'mission_log') {
@@ -1215,12 +1220,7 @@ ${url}`;
         this.showTaskModal.set(false);
       }
       if (sectionParam === 'weekly') {
-        setTimeout(() => {
-          const section = document.getElementById('weekly-reset-section');
-          if (section) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 300);
+        this.pendingWeeklyScroll = true;
       }
     }
   }
@@ -1745,6 +1745,15 @@ ${url}`;
       this.missionCoaching.set(missionLog?.aiCoaching ?? null);
       this.refreshCheckinDashboard();
       await this.loadWeeklyResets(goalId);
+      if (this.pendingWeeklyScroll) {
+        this.pendingWeeklyScroll = false;
+        setTimeout(() => {
+          const section = document.getElementById('weekly-reset-section');
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 400);
+      }
     } catch (error: any) {
       console.error('Error loading check-ins:', error);
       this.checkinsError.set(error?.message || 'Failed to load check-ins');

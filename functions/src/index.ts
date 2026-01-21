@@ -3928,12 +3928,12 @@ Lock it in. One move today builds momentum.
 
 Start here: {{goalUrl}}
 
-- The Rocket Goals Team`;
+- RocketGoals Team`;
 
         const html = `
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
-                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 RocketGoals</h1>
                 </div>
                 <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
                     <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 0 0 8px 0;">Daily Ignition</p>
@@ -3967,7 +3967,7 @@ Start here: {{goalUrl}}
                         </a>
                     </div>
                     <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
-                        - The Rocket Goals Team
+                        - RocketGoals Team
                     </p>
                 </div>
             </div>
@@ -3995,12 +3995,12 @@ Did you connect with your team today? Yes / No / Solo Effort
 
 Submit your Mission Log: {{goalUrl}}
 
-- The Rocket Goals Team`;
+- RocketGoals Team`;
 
     const html = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); padding: 30px; border-radius: 16px 16px 0 0;">
-                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 RocketGoals</h1>
             </div>
             <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
                 <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 0 0 8px 0;">Mission Log</p>
@@ -4037,7 +4037,7 @@ Submit your Mission Log: {{goalUrl}}
                     </a>
                 </div>
                 <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
-                    - The Rocket Goals Team
+                    - RocketGoals Team
                 </p>
             </div>
         </div>
@@ -4525,7 +4525,8 @@ export const processWeeklyResets = functions.runWith({
 
                 const html = `
                     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                        <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                            <p style="color: rgba(255,255,255,0.75); margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px;">RocketGoals</p>
                             <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 800;">Weekly Reset</h1>
                             <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0;">${weekLabel}</p>
                         </div>
@@ -4542,7 +4543,7 @@ export const processWeeklyResets = functions.runWith({
                     </div>
                 `;
 
-                const text = `Weekly Reset (${weekLabel})\n\n${goalTitle}\nIgnition completion: ${summary.ignitionCompletionRate}%\nMission Log completion: ${summary.missionLogCompletionRate}%\n\nSuggestions:\n${summary.suggestions.map(item => `- ${item}`).join('\n')}\n\nView weekly reset: ${weeklyUrl}`;
+                const text = `RocketGoals Weekly Reset (${weekLabel})\n\n${goalTitle}\nIgnition completion: ${summary.ignitionCompletionRate}%\nMission Log completion: ${summary.missionLogCompletionRate}%\n\nSuggestions:\n${summary.suggestions.map(item => `- ${item}`).join('\n')}\n\nRocketGoals Team\n\nView weekly reset: ${weeklyUrl}`;
 
                 await sgMail.send({
                     to: participant.email,
@@ -4642,6 +4643,7 @@ export const runWeeklyResetTest = functions.runWith({
             const html = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
                     <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                        <p style="color: rgba(255,255,255,0.75); margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px;">RocketGoals</p>
                         <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 800;">Weekly Reset</h1>
                         <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0;">${weekLabel}</p>
                     </div>
@@ -4658,7 +4660,7 @@ export const runWeeklyResetTest = functions.runWith({
                 </div>
             `;
 
-            const text = `Weekly Reset (${weekLabel})\n\n${goalTitle}\nIgnition completion: ${summary.ignitionCompletionRate}%\nMission Log completion: ${summary.missionLogCompletionRate}%\n\nSuggestions:\n${summary.suggestions.map(item => `- ${item}`).join('\n')}\n\nView weekly reset: ${weeklyUrl}`;
+            const text = `RocketGoals Weekly Reset (${weekLabel})\n\n${goalTitle}\nIgnition completion: ${summary.ignitionCompletionRate}%\nMission Log completion: ${summary.missionLogCompletionRate}%\n\nSuggestions:\n${summary.suggestions.map(item => `- ${item}`).join('\n')}\n\nRocketGoals Team\n\nView weekly reset: ${weeklyUrl}`;
 
             await sgMail.send({
                 to: participant.email,
