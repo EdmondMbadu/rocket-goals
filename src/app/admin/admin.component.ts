@@ -124,6 +124,12 @@ export class AdminComponent implements OnInit {
   showEmailPreview = signal(false);
   savingReminder = signal(false);
 
+  // Weekly Reset test state
+  weeklyResetGoalId = signal('');
+  weeklyResetLoading = signal(false);
+  weeklyResetResult = signal<string | null>(null);
+  weeklyResetError = signal<string | null>(null);
+
   // UI state
   loading = signal(false);
   success = signal<string | null>(null);
@@ -511,6 +517,36 @@ export class AdminComponent implements OnInit {
         this.success.set(null);
         this.error.set(null);
       }, 10000);
+    }
+  }
+
+  async runWeeklyResetTest() {
+    this.weeklyResetLoading.set(true);
+    this.weeklyResetResult.set(null);
+    this.weeklyResetError.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const runWeeklyReset = httpsCallable(functions, 'runWeeklyResetTest');
+
+      const goalId = this.weeklyResetGoalId().trim();
+      const result = await runWeeklyReset(goalId ? { goalId } : {});
+      const data = result.data as { success: boolean; message: string };
+
+      if (data.success) {
+        this.weeklyResetResult.set(data.message);
+      } else {
+        this.weeklyResetError.set('Weekly reset test failed.');
+      }
+    } catch (err: any) {
+      console.error('Error running weekly reset test:', err);
+      this.weeklyResetError.set(err.message || 'Failed to run weekly reset test');
+    } finally {
+      this.weeklyResetLoading.set(false);
     }
   }
 

@@ -3763,6 +3763,144 @@ interface ScheduledReminder {
     createdBy: string;
 }
 
+type WeeklyResetSummary = {
+    goalId: string;
+    weekId: string;
+    weekStartMs: number;
+    weekEndMs: number;
+    ignitionCompletionRate: number;
+    missionLogCompletionRate: number;
+    streakDays: number;
+    oneThingCompletionRatio: number;
+    focusDistribution: Record<string, number>;
+    feelingDistribution: Record<string, number>;
+    actionDistribution: Record<string, number>;
+    topOneThing?: string;
+    bestDayLabel?: string;
+    toughestDayLabel?: string;
+    suggestions: string[];
+    createdAt?: admin.firestore.Timestamp;
+    createdAtMs?: number;
+};
+
+function getWeekId(date: Date): string {
+    const firstDay = new Date(date);
+    firstDay.setHours(0, 0, 0, 0);
+    const day = firstDay.getDay();
+    const diff = (day + 6) % 7;
+    firstDay.setDate(firstDay.getDate() - diff);
+    const year = firstDay.getFullYear();
+    const month = `${firstDay.getMonth() + 1}`.padStart(2, '0');
+    const dayOfMonth = `${firstDay.getDate()}`.padStart(2, '0');
+    return `${year}-W${month}${dayOfMonth}`;
+}
+
+function formatWeekLabel(date: Date): string {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getWeekRange(date = new Date()): { start: Date; end: Date } {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const day = start.getDay();
+    const diff = (day + 6) % 7;
+    start.setDate(start.getDate() - diff);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+}
+
+function buildSuggestions(summary: WeeklyResetSummary): string[] {
+    const suggestions: string[] = [];
+    if (summary.missionLogCompletionRate < 60) {
+        suggestions.push('Pick a fixed 10-minute window nightly to lock in your Mission Log.');
+    }
+    if (summary.ignitionCompletionRate < 60) {
+        suggestions.push('Set your Daily Ignition for the same time each morning to create a habit cue.');
+    }
+    if (summary.oneThingCompletionRatio < 60) {
+        suggestions.push('Shrink tomorrow’s ONE Thing to a 25-minute chunk to rebuild momentum.');
+    }
+    if (!suggestions.length) {
+        suggestions.push('Keep your current cadence and add one small stretch goal for next week.');
+    }
+    return suggestions;
+}
+
+function summarizeDistribution(values: string[]): Record<string, number> {
+    return values.reduce<Record<string, number>>((acc, value) => {
+        const key = value || 'Unknown';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+    }, {});
+}
+
+async function getWeeklySummary(goalId: string): Promise<WeeklyResetSummary | null> {
+    const { start, end } = getWeekRange();
+    const weekId = getWeekId(start);
+    const weekStartMs = start.getTime();
+    const weekEndMs = end.getTime();
+
+    const ignitionSnapshot = await admin.firestore()
+        .collection('rocketGoals')
+        .doc(goalId)
+        .collection('dailyIgnitions')
+        .where('createdAtMs', '>=', weekStartMs)
+        .where('createdAtMs', '<=', weekEndMs)
+        .get();
+
+    const missionSnapshot = await admin.firestore()
+        .collection('rocketGoals')
+        .doc(goalId)
+        .collection('missionLogs')
+        .where('createdAtMs', '>=', weekStartMs)
+        .where('createdAtMs', '<=', weekEndMs)
+        .get();
+
+    const ignitionDays = ignitionSnapshot.docs.map(doc => doc.data());
+    const missionLogs = missionSnapshot.docs.map(doc => doc.data());
+
+    const ignitionCompletionRate = Math.round((ignitionDays.length / 7) * 100);
+    const missionLogCompletionRate = Math.round((missionLogs.length / 7) * 100);
+
+    const actionDistribution = summarizeDistribution(missionLogs.map(log => log.actionTaken));
+    const focusDistribution = summarizeDistribution(missionLogs.map(log => log.focusLevel));
+    const feelingDistribution = summarizeDistribution(missionLogs.map(log => log.feeling));
+
+    const actionTotal = missionLogs.length;
+    const actionYes = missionLogs.filter(log => log.actionTaken === 'yes').length;
+    const oneThingCompletionRatio = actionTotal > 0 ? Math.round((actionYes / actionTotal) * 100) : 0;
+
+    const topOneThing = ignitionDays
+        .map(log => log.oneThingText)
+        .filter(Boolean)[0];
+
+    const bestDayLabel = formatWeekLabel(start);
+    const toughestDayLabel = formatWeekLabel(end);
+
+    const summary: WeeklyResetSummary = {
+        goalId,
+        weekId,
+        weekStartMs,
+        weekEndMs,
+        ignitionCompletionRate,
+        missionLogCompletionRate,
+        streakDays: missionLogs.length,
+        oneThingCompletionRatio,
+        focusDistribution,
+        feelingDistribution,
+        actionDistribution,
+        topOneThing,
+        bestDayLabel,
+        toughestDayLabel,
+        suggestions: []
+    };
+
+    summary.suggestions = buildSuggestions(summary);
+    return summary;
+}
+
 /**
  * Default email template for scheduled reminders
  */
@@ -4323,4 +4461,222 @@ export const processScheduledReminders = functions.runWith({
         console.error('❌ Error processing scheduled reminders:', error);
         return null;
     }
+});
+
+/**
+ * Weekly Reset email for each active goal
+ */
+export const processWeeklyResets = functions.runWith({
+    secrets: [sendgridApiKey],
+    timeoutSeconds: 540,
+    memory: '512MB'
+}).pubsub.schedule('0 20 * * 0').timeZone('America/New_York').onRun(async (context) => {
+    console.log('🗓️ Processing weekly resets...');
+
+    try {
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            console.error('SendGrid API key is not set.');
+            return null;
+        }
+        sgMail.setApiKey(apiKey);
+
+        const goalsSnapshot = await admin.firestore()
+            .collection('rocketGoals')
+            .where('status', '==', 'active')
+            .get();
+
+        if (goalsSnapshot.empty) {
+            console.log('No active goals found for weekly reset.');
+            return null;
+        }
+
+        let sent = 0;
+        let failed = 0;
+
+        for (const goalDoc of goalsSnapshot.docs) {
+            try {
+                const goalData = goalDoc.data();
+                const goalTitle = goalData.primaryGoal || goalData.answers?.goal_title_label || 'Your Rocket Goal';
+                const participant = goalData.participant;
+                if (!participant || !participant.email) {
+                    failed++;
+                    continue;
+                }
+
+                const summary = await getWeeklySummary(goalDoc.id);
+                if (!summary) {
+                    failed++;
+                    continue;
+                }
+
+                const weeklyRef = await admin.firestore()
+                    .collection('rocketGoals')
+                    .doc(goalDoc.id)
+                    .collection('weeklyResets')
+                    .add({
+                        ...summary,
+                        createdAt: admin.firestore.Timestamp.now(),
+                        createdAtMs: Date.now()
+                    });
+
+                const weekLabel = `${new Date(summary.weekStartMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(summary.weekEndMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                const weeklyUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}?tab=checkins&section=weekly`;
+
+                const html = `
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+                        <div style="background: linear-gradient(135deg, #0f172a 0%, #111827 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                            <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 800;">Weekly Reset</h1>
+                            <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0;">${weekLabel}</p>
+                        </div>
+                        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                            <p style="color: #111827; font-size: 18px; font-weight: 700; margin: 0 0 12px;">${goalTitle}</p>
+                            <p style="color: #374151; margin: 0 0 20px;">Ignition completion: ${summary.ignitionCompletionRate}% · Mission Log completion: ${summary.missionLogCompletionRate}%</p>
+                            <ul style="color: #374151; line-height: 1.6; padding-left: 18px;">
+                                ${summary.suggestions.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                            <div style="margin-top: 24px; text-align: center;">
+                                <a href="${weeklyUrl}" style="display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;">View Weekly Reset</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const text = `Weekly Reset (${weekLabel})\n\n${goalTitle}\nIgnition completion: ${summary.ignitionCompletionRate}%\nMission Log completion: ${summary.missionLogCompletionRate}%\n\nSuggestions:\n${summary.suggestions.map(item => `- ${item}`).join('\n')}\n\nView weekly reset: ${weeklyUrl}`;
+
+                await sgMail.send({
+                    to: participant.email,
+                    from: 'missioncontrol@rocketgoals.com',
+                    subject: `Weekly Reset — ${goalTitle}`,
+                    html,
+                    text
+                });
+
+                sent++;
+                console.log(`✅ Weekly reset sent to ${participant.email} (${weeklyRef.id})`);
+            } catch (error: any) {
+                failed++;
+                console.error('❌ Weekly reset failed:', error.message);
+            }
+        }
+
+        console.log(`Weekly resets completed. Sent: ${sent}, Failed: ${failed}`);
+        return null;
+    } catch (error: any) {
+        console.error('❌ Weekly reset processing error:', error);
+        return null;
+    }
+});
+
+/**
+ * Admin-only test trigger for Weekly Reset
+ */
+export const runWeeklyResetTest = functions.runWith({
+    secrets: [sendgridApiKey],
+    timeoutSeconds: 540,
+    memory: '512MB'
+}).https.onCall(async (data: { goalId?: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can run weekly resets.');
+    }
+
+    const apiKey = sendgridApiKey.value();
+    if (!apiKey) {
+        throw new functions.https.HttpsError('failed-precondition', 'SendGrid API key is not set.');
+    }
+    sgMail.setApiKey(apiKey);
+
+    const goalId = data?.goalId?.trim();
+    let goalsSnapshot: FirebaseFirestore.QuerySnapshot;
+    if (goalId) {
+        const goalDoc = await admin.firestore().collection('rocketGoals').doc(goalId).get();
+        if (!goalDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Goal not found.');
+        }
+        goalsSnapshot = { docs: [goalDoc] } as FirebaseFirestore.QuerySnapshot;
+    } else {
+        goalsSnapshot = await admin.firestore()
+            .collection('rocketGoals')
+            .where('status', '==', 'active')
+            .get();
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const goalDoc of goalsSnapshot.docs) {
+        try {
+            const goalData = goalDoc.data();
+            const goalTitle = goalData.primaryGoal || goalData.answers?.goal_title_label || 'Your Rocket Goal';
+            const participant = goalData.participant;
+            if (!participant || !participant.email) {
+                failed++;
+                continue;
+            }
+
+            const summary = await getWeeklySummary(goalDoc.id);
+            if (!summary) {
+                failed++;
+                continue;
+            }
+
+            await admin.firestore()
+                .collection('rocketGoals')
+                .doc(goalDoc.id)
+                .collection('weeklyResets')
+                .add({
+                    ...summary,
+                    createdAt: admin.firestore.Timestamp.now(),
+                    createdAtMs: Date.now()
+                });
+
+            const weekLabel = `${new Date(summary.weekStartMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(summary.weekEndMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            const weeklyUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}?tab=checkins&section=weekly`;
+
+            const html = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #0f172a 0%, #111827 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 800;">Weekly Reset</h1>
+                        <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0;">${weekLabel}</p>
+                    </div>
+                    <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                        <p style="color: #111827; font-size: 18px; font-weight: 700; margin: 0 0 12px;">${goalTitle}</p>
+                        <p style="color: #374151; margin: 0 0 20px;">Ignition completion: ${summary.ignitionCompletionRate}% · Mission Log completion: ${summary.missionLogCompletionRate}%</p>
+                        <ul style="color: #374151; line-height: 1.6; padding-left: 18px;">
+                            ${summary.suggestions.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                        <div style="margin-top: 24px; text-align: center;">
+                            <a href="${weeklyUrl}" style="display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;">View Weekly Reset</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const text = `Weekly Reset (${weekLabel})\n\n${goalTitle}\nIgnition completion: ${summary.ignitionCompletionRate}%\nMission Log completion: ${summary.missionLogCompletionRate}%\n\nSuggestions:\n${summary.suggestions.map(item => `- ${item}`).join('\n')}\n\nView weekly reset: ${weeklyUrl}`;
+
+            await sgMail.send({
+                to: participant.email,
+                from: 'missioncontrol@rocketgoals.com',
+                subject: `Weekly Reset — ${goalTitle}`,
+                html,
+                text
+            });
+
+            sent++;
+        } catch (error: any) {
+            failed++;
+            console.error('❌ Weekly reset test failed:', error.message);
+        }
+    }
+
+    return {
+        success: true,
+        message: `Weekly reset run complete. Sent: ${sent}, Failed: ${failed}`
+    };
 });

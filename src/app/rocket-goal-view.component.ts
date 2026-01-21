@@ -23,7 +23,8 @@ import type {
   MissionFocusLevel,
   MissionLog,
   MissionLogCoaching,
-  MissionTeamConnection
+  MissionTeamConnection,
+  WeeklyResetSummary
 } from './models/check-ins';
 
 type CheckinDaySummary = {
@@ -182,6 +183,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   last7DaysCheckins = signal<CheckinDaySummary[]>([]);
   last30DaysCheckins = signal<CheckinDaySummary[]>([]);
   showCheckinModal = signal(false);
+  weeklyResets = signal<WeeklyResetSummary[]>([]);
+  weeklyResetNotice = signal<string | null>(null);
 
   ignitionOneThingChoice = signal<IgnitionOneThingChoice>('suggested');
   ignitionOneThingText = signal('');
@@ -1732,6 +1735,7 @@ ${url}`;
       this.recentMissionLogs.set(recentMissionLogs);
       this.missionCoaching.set(missionLog?.aiCoaching ?? null);
       this.refreshCheckinDashboard();
+      await this.loadWeeklyResets(goalId);
     } catch (error: any) {
       console.error('Error loading check-ins:', error);
       this.checkinsError.set(error?.message || 'Failed to load check-ins');
@@ -1742,6 +1746,22 @@ ${url}`;
 
   selectCheckinTab(tab: 'ignition' | 'mission_log') {
     this.activeCheckinTab.set(tab);
+  }
+
+  async loadWeeklyResets(goalId: string) {
+    try {
+      const resets = await this.checkInsService.getWeeklyResets(goalId, 8);
+      this.weeklyResets.set(resets);
+    } catch (error: any) {
+      console.error('Error loading weekly resets:', error);
+      this.weeklyResetNotice.set(error?.message || 'Weekly resets unavailable.');
+    }
+  }
+
+  formatWeekRange(summary: WeeklyResetSummary): string {
+    const start = new Date(summary.weekStartMs);
+    const end = new Date(summary.weekEndMs);
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   }
 
   openCheckinModal(type: 'ignition' | 'mission_log') {

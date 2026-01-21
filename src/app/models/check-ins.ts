@@ -41,3 +41,24 @@ export type MissionLog = {
   createdAt: unknown;
   createdAtMs?: number;
 };
+
+export type WeeklyResetSummary = {
+  id: string;
+  goalId: string;
+  weekId: string;
+  weekStartMs: number;
+  weekEndMs: number;
+  ignitionCompletionRate: number;
+  missionLogCompletionRate: number;
+  streakDays: number;
+  oneThingCompletionRatio: number;
+  focusDistribution: Record<string, number>;
+  feelingDistribution: Record<string, number>;
+  actionDistribution: Record<string, number>;
+  topOneThing?: string;
+  bestDayLabel?: string;
+  toughestDayLabel?: string;
+  suggestions: string[];
+  createdAt: unknown;
+  createdAtMs?: number;
+};

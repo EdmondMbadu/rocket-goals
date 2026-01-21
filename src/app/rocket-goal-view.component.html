@@ -1621,6 +1621,36 @@
                   </div>
                   }
                 </div>
+
+                <div class="checkin-history-card">
+                  <div class="checkin-chart-header">
+                    <p class="checkin-chart-title">Weekly Reset</p>
+                    <p class="checkin-chart-sub">Latest weekly snapshots</p>
+                  </div>
+                  @if (weeklyResetNotice()) {
+                  <p class="checkin-history-sub">{{ weeklyResetNotice() }}</p>
+                  } @else if (weeklyResets().length === 0) {
+                  <p class="checkin-history-sub">No weekly resets yet. Your first one will appear after Sunday.</p>
+                  } @else {
+                  <div class="checkin-history-list">
+                    @for (summary of weeklyResets(); track summary.id) {
+                    <div class="checkin-history-row">
+                      <div class="checkin-history-title">{{ formatWeekRange(summary) }}</div>
+                      <p class="checkin-history-sub">
+                        Ignition {{ summary.ignitionCompletionRate }}% · Mission Log {{ summary.missionLogCompletionRate }}% · Streak {{ summary.streakDays }} days
+                      </p>
+                      @if (summary.suggestions.length) {
+                      <ul class="checkin-history-list-bullets">
+                        @for (tip of summary.suggestions; track tip) {
+                        <li>{{ tip }}</li>
+                        }
+                      </ul>
+                      }
+                    </div>
+                    }
+                  </div>
+                  }
+                </div>
                 }
               </div>
               } @else if (activePrimaryTab() === 'tasks') {

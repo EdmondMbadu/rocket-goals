@@ -12,7 +12,8 @@ import type {
   MissionFocusLevel,
   MissionLog,
   MissionLogCoaching,
-  MissionTeamConnection
+  MissionTeamConnection,
+  WeeklyResetSummary
 } from './models/check-ins';
 
 export type DailyIgnitionInput = {
@@ -174,5 +175,30 @@ export class CheckInsService {
       id: doc.id,
       ...doc.data()
     } as MissionLog));
+  }
+
+  async saveWeeklyResetSummary(goalId: string, summary: Omit<WeeklyResetSummary, 'id' | 'goalId'>): Promise<string> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'weeklyResets');
+    const docRef = await firestoreModule.addDoc(collectionRef, {
+      ...summary,
+      goalId,
+      createdAt: firestoreModule.serverTimestamp(),
+      createdAtMs: Date.now()
+    });
+    return docRef.id;
+  }
+
+  async getWeeklyResets(goalId: string, limitCount = 8): Promise<WeeklyResetSummary[]> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'weeklyResets');
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('weekStartMs', 'desc'), firestoreModule.limit(limitCount));
+    const snapshot = await firestoreModule.getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as WeeklyResetSummary));
   }
 }

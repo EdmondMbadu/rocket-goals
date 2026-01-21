@@ -8159,6 +8159,18 @@
   color: rgba(226, 232, 240, 0.65);
 }
 
+.checkin-history-list-bullets {
+  margin: 0.6rem 0 0 0;
+  padding-left: 1.1rem;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.checkin-history-list-bullets li + li {
+  margin-top: 0.2rem;
+}
+
 .checkin-modal-overlay {
   position: fixed;
   inset: 0;
@@ -8280,6 +8292,10 @@
 .light-mode .checkin-summary-sub,
 .light-mode .checkin-chart-sub,
 .light-mode .checkin-history-sub {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.light-mode .checkin-history-list-bullets {
   color: rgba(15, 23, 42, 0.6);
 }
 
