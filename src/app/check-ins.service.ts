@@ -78,54 +78,50 @@ export class CheckInsService {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const dateId = this.getTodayId();
-    const docRef = firestoreModule.doc(
+    const collectionRef = firestoreModule.collection(
       firestore,
       'rocketGoals',
       input.goalId,
-      'dailyIgnitions',
-      dateId
+      'dailyIgnitions'
     );
 
-    await firestoreModule.setDoc(
-      docRef,
+    const docRef = await firestoreModule.addDoc(
+      collectionRef,
       this.stripUndefined({
         ...input,
         goalId: input.goalId,
         dateId,
         createdAt: firestoreModule.serverTimestamp(),
         createdAtMs: Date.now()
-      }),
-      { merge: true }
+      })
     );
 
-    return dateId;
+    return docRef.id;
   }
 
   async upsertMissionLog(input: MissionLogInput): Promise<string> {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const dateId = this.getTodayId();
-    const docRef = firestoreModule.doc(
+    const collectionRef = firestoreModule.collection(
       firestore,
       'rocketGoals',
       input.goalId,
-      'missionLogs',
-      dateId
+      'missionLogs'
     );
 
-    await firestoreModule.setDoc(
-      docRef,
+    const docRef = await firestoreModule.addDoc(
+      collectionRef,
       this.stripUndefined({
         ...input,
         goalId: input.goalId,
         dateId,
         createdAt: firestoreModule.serverTimestamp(),
         createdAtMs: Date.now()
-      }),
-      { merge: true }
+      })
     );
 
-    return dateId;
+    return docRef.id;
   }
 
   async getLatestDailyIgnition(goalId: string): Promise<DailyIgnition | null> {
