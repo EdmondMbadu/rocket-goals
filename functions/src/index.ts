@@ -4071,7 +4071,7 @@ export const updateScheduledReminder = functions.runWith({
 
         if (time !== undefined) updates.time = time;
         if (enabled !== undefined) updates.enabled = enabled;
-    if (reminderType !== undefined) updates.reminderType = reminderType;
+        if (reminderType !== undefined) updates.reminderType = reminderType;
         if (emailSubject !== undefined) updates.emailSubject = emailSubject;
         if (emailBodyText !== undefined) updates.emailBodyText = emailBodyText;
         if (emailBodyHtml !== undefined) updates.emailBodyHtml = emailBodyHtml;

@@ -1393,16 +1393,30 @@
               } @else if (activePrimaryTab() === 'checkins') {
               <div class="checkins-panel">
                 <div class="checkins-header">
+                  <div class="checkins-header-row">
+                    <div>
+                      <p class="checkins-title">Check-ins Dashboard</p>
+                      <p class="checkins-subtitle">Daily Ignition + Mission Log insights.</p>
+                    </div>
+                    <div class="checkins-actions">
+                      <button type="button" class="checkins-action ignition" (click)="openCheckinModal('ignition')">
+                        Start Daily Ignition
+                      </button>
+                      <button type="button" class="checkins-action mission" (click)="openCheckinModal('mission_log')">
+                        Submit Mission Log
+                      </button>
+                    </div>
+                  </div>
                   <div class="checkins-tabs">
                     <button type="button" class="checkins-tab"
                       [class.active]="activeCheckinTab() === 'ignition'"
                       (click)="selectCheckinTab('ignition')">
-                      🔥 Daily Ignition
+                      Daily Ignition
                     </button>
                     <button type="button" class="checkins-tab"
                       [class.active]="activeCheckinTab() === 'mission_log'"
                       (click)="selectCheckinTab('mission_log')">
-                      📘 Mission Log
+                      Mission Log
                     </button>
                   </div>
                   @if (checkinsNotice()) {
@@ -1413,300 +1427,142 @@
                   }
                 </div>
 
-                @if (activeCheckinTab() === 'ignition') {
-                <div class="checkins-grid">
-                  <div class="fans-card checkin-card">
-                    <div class="card-header">
-                      <div>
-                        <p class="card-title">🔥 Daily Ignition</p>
-                        <p class="card-subtitle">Set today’s trajectory.</p>
-                      </div>
+                @if (checkinsLoading()) {
+                <div class="checkins-loading">
+                  <span class="loader"></span>
+                  <p>Loading check-ins...</p>
+                </div>
+                } @else if (!checkinDashboardStats()) {
+                <div class="checkins-empty">
+                  <p>No check-ins yet. Start your Daily Ignition or Mission Log to build momentum.</p>
+                </div>
+                } @else {
+                <div class="checkin-summary-grid">
+                  <div class="checkin-summary-card">
+                    <p class="checkin-summary-label">Daily Ignition Completion</p>
+                    <p class="checkin-summary-value">{{ checkinDashboardStats()!.ignitionCompletionRate }}%</p>
+                    <p class="checkin-summary-sub">Last 30 days</p>
+                  </div>
+                  <div class="checkin-summary-card">
+                    <p class="checkin-summary-label">Mission Log Completion</p>
+                    <p class="checkin-summary-value">{{ checkinDashboardStats()!.missionLogCompletionRate }}%</p>
+                    <p class="checkin-summary-sub">Last 30 days</p>
+                  </div>
+                  <div class="checkin-summary-card">
+                    <p class="checkin-summary-label">Mission Log Streak</p>
+                    <p class="checkin-summary-value">{{ checkinDashboardStats()!.streakDays }} days</p>
+                    <p class="checkin-summary-sub">Consecutive days</p>
+                  </div>
+                  <div class="checkin-summary-card">
+                    <p class="checkin-summary-label">ONE Thing Completion</p>
+                    <p class="checkin-summary-value">{{ checkinDashboardStats()!.oneThingCompletionRatio }}%</p>
+                    <p class="checkin-summary-sub">Yes vs total</p>
+                  </div>
+                </div>
+
+                <div class="checkin-chart-grid">
+                  <div class="checkin-chart-card">
+                    <div class="checkin-chart-header">
+                      <p class="checkin-chart-title">Last 7 Days</p>
+                      <p class="checkin-chart-sub">Ignition vs Mission Log</p>
                     </div>
-                    <div class="checkin-snapshot">
-                      <div>
-                        <p class="checkin-label">🎯 Your Current Goal</p>
-                        <p class="checkin-value">{{ goal()?.primaryGoal || goal()?.answers?.['goal_title_label'] || 'Your Rocket Goal' }}</p>
+                    <div class="checkin-bars">
+                      @for (day of last7DaysCheckins(); track day.dateKey) {
+                      <div class="checkin-bar-group">
+                        <div class="checkin-bar ignition"
+                          [style.height.%]="getBarHeight(day.ignitionCount, getMaxCheckinCount(last7DaysCheckins()))"></div>
+                        <div class="checkin-bar mission"
+                          [style.height.%]="getBarHeight(day.missionLogCount, getMaxCheckinCount(last7DaysCheckins()))"></div>
+                        <span class="checkin-bar-label">{{ day.label }}</span>
                       </div>
-                      <div>
-                        <p class="checkin-label">🧩 Active Milestone</p>
-                        <p class="checkin-value">{{ getActiveMilestoneTitle() }}</p>
-                      </div>
-                      <div>
-                        <p class="checkin-label">🛠️ Suggested ONE Thing</p>
-                        <p class="checkin-value">{{ getSuggestedOneThing() }}</p>
-                      </div>
+                      }
                     </div>
-
-                    <div class="checkin-form">
-                      <div class="checkin-field">
-                        <p class="checkin-question">What is your ONE Thing today?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="oneThingChoice"
-                              [checked]="ignitionOneThingChoice() === 'suggested'"
-                              (change)="ignitionOneThingChoice.set('suggested')" />
-                            Use suggested ONE Thing
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="oneThingChoice"
-                              [checked]="ignitionOneThingChoice() === 'other'"
-                              (change)="ignitionOneThingChoice.set('other')" />
-                            Choose another ONE Thing
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="oneThingChoice"
-                              [checked]="ignitionOneThingChoice() === 'unsure'"
-                              (change)="ignitionOneThingChoice.set('unsure')" />
-                            I’m not sure yet
-                          </label>
-                        </div>
-                        @if (ignitionOneThingChoice() === 'other') {
-                        <input class="checkin-input" type="text" placeholder="Enter your ONE Thing"
-                          [value]="ignitionOneThingText()"
-                          (input)="ignitionOneThingText.set($any($event.target).value)" />
-                        }
+                  </div>
+                  <div class="checkin-chart-card">
+                    <div class="checkin-chart-header">
+                      <p class="checkin-chart-title">Last 30 Days</p>
+                      <p class="checkin-chart-sub">Ignition vs Mission Log</p>
+                    </div>
+                    <div class="checkin-bars compact">
+                      @for (day of last30DaysCheckins(); track day.dateKey) {
+                      <div class="checkin-bar-group small">
+                        <div class="checkin-bar ignition"
+                          [style.height.%]="getBarHeight(day.ignitionCount, getMaxCheckinCount(last30DaysCheckins()))"></div>
+                        <div class="checkin-bar mission"
+                          [style.height.%]="getBarHeight(day.missionLogCount, getMaxCheckinCount(last30DaysCheckins()))"></div>
                       </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">When will you do it?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="timeOfDay"
-                              [checked]="ignitionTimeOfDay() === 'morning'"
-                              (change)="ignitionTimeOfDay.set('morning')" />
-                            Morning
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="timeOfDay"
-                              [checked]="ignitionTimeOfDay() === 'afternoon'"
-                              (change)="ignitionTimeOfDay.set('afternoon')" />
-                            Afternoon
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="timeOfDay"
-                              [checked]="ignitionTimeOfDay() === 'evening'"
-                              (change)="ignitionTimeOfDay.set('evening')" />
-                            Evening
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">How confident do you feel?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="confidence"
-                              [checked]="ignitionConfidence() === 'high'"
-                              (change)="ignitionConfidence.set('high')" />
-                            High
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="confidence"
-                              [checked]="ignitionConfidence() === 'medium'"
-                              (change)="ignitionConfidence.set('medium')" />
-                            Medium
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="confidence"
-                              [checked]="ignitionConfidence() === 'low'"
-                              (change)="ignitionConfidence.set('low')" />
-                            Low
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-output">
-                        <p class="checkin-output-title">AI ignition cue</p>
-                        <p class="checkin-output-text">{{ getIgnitionCue() }}</p>
-                        <p class="checkin-output-text">{{ getIgnitionTimeBlock() }}</p>
-                      </div>
-
-                      <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition()">
-                        @if (savingIgnition()) { Saving... } @else { 🔥 IGNITE DAY }
-                      </button>
+                      }
                     </div>
                   </div>
                 </div>
-                } @else {
-                <div class="checkins-grid">
-                  <div class="fans-card checkin-card">
-                    <div class="card-header">
-                      <div>
-                        <p class="card-title">📘 Mission Log</p>
-                        <p class="card-subtitle">Review the day. Course-correct fast.</p>
+
+                <div class="checkin-distribution-grid">
+                  <div class="checkin-distribution-card">
+                    <p class="checkin-chart-title">Action Taken</p>
+                    @for (entry of getDistributionEntries(checkinDashboardStats()!.actionDistribution); track entry.label) {
+                    <div class="checkin-distribution-row">
+                      <span>{{ entry.label }}</span>
+                      <div class="checkin-distribution-bar">
+                        <span [style.width.%]="getBarHeight(entry.value, checkinDashboardStats()!.actionDistribution['Yes'] + checkinDashboardStats()!.actionDistribution['Barely'] + checkinDashboardStats()!.actionDistribution['No'])"></span>
                       </div>
+                      <span>{{ entry.value }}</span>
                     </div>
-                    <div class="checkin-snapshot">
-                      <div>
-                        <p class="checkin-label">🎯 Your Current Goal</p>
-                        <p class="checkin-value">{{ goal()?.primaryGoal || goal()?.answers?.['goal_title_label'] || 'Your Rocket Goal' }}</p>
-                      </div>
-                      <div>
-                        <p class="checkin-label">🧩 Active Milestone</p>
-                        <p class="checkin-value">{{ getActiveMilestoneTitle() }}</p>
-                      </div>
-                      <div>
-                        <p class="checkin-label">🛠️ Your ONE Thing Today</p>
-                        <p class="checkin-value">{{ getSuggestedOneThing() }}</p>
-                      </div>
-                      <div>
-                        <p class="checkin-label">🔄 Last Mission Log Summary</p>
-                        <p class="checkin-value">{{ getLastMissionLogSummary() }}</p>
-                      </div>
-                    </div>
-
-                    <div class="checkin-form">
-                      @if (shouldAskIntendedOneThing()) {
-                      <div class="checkin-field">
-                        <p class="checkin-question">What ONE Thing did you intend to complete today?</p>
-                        <input class="checkin-input" type="text" placeholder="Enter the ONE Thing you intended"
-                          [value]="missionIntendedOneThing()"
-                          (input)="missionIntendedOneThing.set($any($event.target).value)" />
-                      </div>
-                      }
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">Did you take action toward your ONE Thing today?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="actionTaken"
-                              [checked]="missionActionTaken() === 'yes'"
-                              (change)="missionActionTaken.set('yes')" />
-                            Yes
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="actionTaken"
-                              [checked]="missionActionTaken() === 'barely'"
-                              (change)="missionActionTaken.set('barely')" />
-                            Barely
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="actionTaken"
-                              [checked]="missionActionTaken() === 'no'"
-                              (change)="missionActionTaken.set('no')" />
-                            No
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">How focused was your effort?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="focusLevel"
-                              [checked]="missionFocusLevel() === 'full_focus'"
-                              (change)="missionFocusLevel.set('full_focus')" />
-                            Full Focus
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="focusLevel"
-                              [checked]="missionFocusLevel() === 'distracted'"
-                              (change)="missionFocusLevel.set('distracted')" />
-                            Distracted
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="focusLevel"
-                              [checked]="missionFocusLevel() === 'low_energy'"
-                              (change)="missionFocusLevel.set('low_energy')" />
-                            Low Energy
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">How challenging was today?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="challengeLevel"
-                              [checked]="missionChallengeLevel() === 'tough_day'"
-                              (change)="missionChallengeLevel.set('tough_day')" />
-                            Tough Day
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="challengeLevel"
-                              [checked]="missionChallengeLevel() === 'average'"
-                              (change)="missionChallengeLevel.set('average')" />
-                            Average
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="challengeLevel"
-                              [checked]="missionChallengeLevel() === 'easy'"
-                              (change)="missionChallengeLevel.set('easy')" />
-                            Easy
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">How did you feel while working?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="feeling"
-                              [checked]="missionFeeling() === 'positive'"
-                              (change)="missionFeeling.set('positive')" />
-                            Positive
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="feeling"
-                              [checked]="missionFeeling() === 'neutral'"
-                              (change)="missionFeeling.set('neutral')" />
-                            Neutral
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="feeling"
-                              [checked]="missionFeeling() === 'frustrated'"
-                              (change)="missionFeeling.set('frustrated')" />
-                            Frustrated
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">Did you connect with your team today?</p>
-                        <div class="checkin-radio-group">
-                          <label class="checkin-radio">
-                            <input type="radio" name="teamConnection"
-                              [checked]="missionTeamConnection() === 'yes'"
-                              (change)="missionTeamConnection.set('yes')" />
-                            Yes
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="teamConnection"
-                              [checked]="missionTeamConnection() === 'no'"
-                              (change)="missionTeamConnection.set('no')" />
-                            No
-                          </label>
-                          <label class="checkin-radio">
-                            <input type="radio" name="teamConnection"
-                              [checked]="missionTeamConnection() === 'solo'"
-                              (change)="missionTeamConnection.set('solo')" />
-                            Solo Effort
-                          </label>
-                        </div>
-                      </div>
-
-                      <div class="checkin-field">
-                        <p class="checkin-question">Quick note (optional)</p>
-                        <textarea class="checkin-textarea" rows="3"
-                          placeholder="Drop a quick note or reflection..."
-                          [value]="missionNote()"
-                          (input)="missionNote.set($any($event.target).value)"></textarea>
-                      </div>
-
-                      @if (missionCoaching()) {
-                      <div class="checkin-output">
-                        <p class="checkin-output-title">AI coaching output</p>
-                        <p class="checkin-output-text"><strong>Re-instruction:</strong> {{ missionCoaching()!.reinstruction }}</p>
-                        <p class="checkin-output-text"><strong>Demonstration:</strong> {{ missionCoaching()!.demonstration }}</p>
-                        <p class="checkin-output-text"><strong>Hustle:</strong> {{ missionCoaching()!.hustle }}</p>
-                      </div>
-                      }
-
-                      <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog()">
-                        @if (savingMissionLog()) { Saving... } @else { SUBMIT MISSION LOG }
-                      </button>
-                    </div>
+                    }
                   </div>
+                  <div class="checkin-distribution-card">
+                    <p class="checkin-chart-title">Focus Level</p>
+                    @for (entry of getDistributionEntries(checkinDashboardStats()!.focusDistribution); track entry.label) {
+                    <div class="checkin-distribution-row">
+                      <span>{{ entry.label }}</span>
+                      <div class="checkin-distribution-bar">
+                        <span [style.width.%]="getBarHeight(entry.value, checkinDashboardStats()!.focusDistribution['Full Focus'] + checkinDashboardStats()!.focusDistribution['Distracted'] + checkinDashboardStats()!.focusDistribution['Low Energy'])"></span>
+                      </div>
+                      <span>{{ entry.value }}</span>
+                    </div>
+                    }
+                  </div>
+                  <div class="checkin-distribution-card">
+                    <p class="checkin-chart-title">Feeling</p>
+                    @for (entry of getDistributionEntries(checkinDashboardStats()!.feelingDistribution); track entry.label) {
+                    <div class="checkin-distribution-row">
+                      <span>{{ entry.label }}</span>
+                      <div class="checkin-distribution-bar">
+                        <span [style.width.%]="getBarHeight(entry.value, checkinDashboardStats()!.feelingDistribution['Positive'] + checkinDashboardStats()!.feelingDistribution['Neutral'] + checkinDashboardStats()!.feelingDistribution['Frustrated'])"></span>
+                      </div>
+                      <span>{{ entry.value }}</span>
+                    </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="checkin-history-card">
+                  <div class="checkin-chart-header">
+                    <p class="checkin-chart-title">Recent {{ activeCheckinTab() === 'ignition' ? 'Daily Ignitions' : 'Mission Logs' }}</p>
+                    <p class="checkin-chart-sub">Last 10 entries</p>
+                  </div>
+                  @if (activeCheckinTab() === 'ignition') {
+                  <div class="checkin-history-list">
+                    @for (item of getRecentIgnitionHistory(); track item.id) {
+                    <div class="checkin-history-row">
+                      <div>
+                        <p class="checkin-history-title">{{ item.oneThingText || 'Suggested ONE Thing' }}</p>
+                        <p class="checkin-history-sub">{{ formatCheckinDate(item.createdAt) }} · {{ item.timeOfDay }} · {{ item.confidence }} confidence</p>
+                      </div>
+                    </div>
+                    }
+                  </div>
+                  } @else {
+                  <div class="checkin-history-list">
+                    @for (item of getRecentMissionLogHistory(); track item.id) {
+                    <div class="checkin-history-row">
+                      <div>
+                        <p class="checkin-history-title">{{ formatMissionValue(item.actionTaken) }} · {{ formatMissionValue(item.focusLevel) }} · {{ formatMissionValue(item.feeling) }}</p>
+                        <p class="checkin-history-sub">{{ formatCheckinDate(item.createdAt) }} · {{ item.note || 'No note' }}</p>
+                      </div>
+                    </div>
+                    }
+                  </div>
+                  }
                 </div>
                 }
               </div>
@@ -2409,6 +2265,301 @@
   </div>
 </div>
 }
+
+<!-- Check-in Modal -->
+@if (showCheckinModal()) {
+<div class="checkin-modal-overlay" [class.light-mode]="!isDarkMode()" (click)="closeCheckinModal()">
+  <div class="checkin-modal" (click)="$event.stopPropagation()">
+    <div class="checkin-modal-accent"></div>
+    <div class="checkin-modal-header">
+      <div>
+        <p class="checkin-modal-title">
+          @if (checkinModalType() === 'ignition') { 🔥 Daily Ignition } @else { 📘 Mission Log }
+        </p>
+        <p class="checkin-modal-subtitle">
+          @if (checkinModalType() === 'ignition') { Set today’s trajectory. } @else { Review the day. Course-correct fast. }
+        </p>
+      </div>
+      <button type="button" class="checkin-modal-close" (click)="closeCheckinModal()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="checkin-modal-body">
+      <div class="checkin-snapshot">
+        <div>
+          <p class="checkin-label">🎯 Your Current Goal</p>
+          <p class="checkin-value">{{ goal()?.primaryGoal || goal()?.answers?.['goal_title_label'] || 'Your Rocket Goal' }}</p>
+        </div>
+        <div>
+          <p class="checkin-label">🧩 Active Milestone</p>
+          <p class="checkin-value">{{ getActiveMilestoneTitle() }}</p>
+        </div>
+        <div>
+          <p class="checkin-label">🛠️ Suggested ONE Thing</p>
+          <p class="checkin-value">{{ getSuggestedOneThing() }}</p>
+        </div>
+        <div>
+          <p class="checkin-label">🔄 Last Mission Log Summary</p>
+          <p class="checkin-value">{{ getLastMissionLogSummary() }}</p>
+        </div>
+      </div>
+
+      @if (checkinModalType() === 'ignition') {
+        <ng-container [ngTemplateOutlet]="ignitionForm"></ng-container>
+      } @else {
+        <ng-container [ngTemplateOutlet]="missionLogForm"></ng-container>
+      }
+    </div>
+  </div>
+</div>
+}
+
+<ng-template #ignitionForm>
+  <div class="checkin-form">
+    <div class="checkin-field">
+      <p class="checkin-question">What is your ONE Thing today?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="oneThingChoice"
+            [checked]="ignitionOneThingChoice() === 'suggested'"
+            (change)="ignitionOneThingChoice.set('suggested')" />
+          Use suggested ONE Thing
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="oneThingChoice"
+            [checked]="ignitionOneThingChoice() === 'other'"
+            (change)="ignitionOneThingChoice.set('other')" />
+          Choose another ONE Thing
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="oneThingChoice"
+            [checked]="ignitionOneThingChoice() === 'unsure'"
+            (change)="ignitionOneThingChoice.set('unsure')" />
+          I’m not sure yet
+        </label>
+      </div>
+      @if (ignitionOneThingChoice() === 'other') {
+      <input class="checkin-input" type="text" placeholder="Enter your ONE Thing"
+        [value]="ignitionOneThingText()"
+        (input)="ignitionOneThingText.set($any($event.target).value)" />
+      }
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">When will you do it?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="timeOfDay"
+            [checked]="ignitionTimeOfDay() === 'morning'"
+            (change)="ignitionTimeOfDay.set('morning')" />
+          Morning
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="timeOfDay"
+            [checked]="ignitionTimeOfDay() === 'afternoon'"
+            (change)="ignitionTimeOfDay.set('afternoon')" />
+          Afternoon
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="timeOfDay"
+            [checked]="ignitionTimeOfDay() === 'evening'"
+            (change)="ignitionTimeOfDay.set('evening')" />
+          Evening
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">How confident do you feel?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="confidence"
+            [checked]="ignitionConfidence() === 'high'"
+            (change)="ignitionConfidence.set('high')" />
+          High
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="confidence"
+            [checked]="ignitionConfidence() === 'medium'"
+            (change)="ignitionConfidence.set('medium')" />
+          Medium
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="confidence"
+            [checked]="ignitionConfidence() === 'low'"
+            (change)="ignitionConfidence.set('low')" />
+          Low
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-output">
+      <p class="checkin-output-title">AI ignition cue</p>
+      <p class="checkin-output-text">{{ getIgnitionCue() }}</p>
+      <p class="checkin-output-text">{{ getIgnitionTimeBlock() }}</p>
+    </div>
+
+    <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition()">
+      @if (savingIgnition()) { Saving... } @else { 🔥 IGNITE DAY }
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #missionLogForm>
+  <div class="checkin-form">
+    @if (shouldAskIntendedOneThing()) {
+    <div class="checkin-field">
+      <p class="checkin-question">What ONE Thing did you intend to complete today?</p>
+      <input class="checkin-input" type="text" placeholder="Enter the ONE Thing you intended"
+        [value]="missionIntendedOneThing()"
+        (input)="missionIntendedOneThing.set($any($event.target).value)" />
+    </div>
+    }
+
+    <div class="checkin-field">
+      <p class="checkin-question">Did you take action toward your ONE Thing today?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="actionTaken"
+            [checked]="missionActionTaken() === 'yes'"
+            (change)="missionActionTaken.set('yes')" />
+          Yes
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="actionTaken"
+            [checked]="missionActionTaken() === 'barely'"
+            (change)="missionActionTaken.set('barely')" />
+          Barely
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="actionTaken"
+            [checked]="missionActionTaken() === 'no'"
+            (change)="missionActionTaken.set('no')" />
+          No
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">How focused was your effort?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="focusLevel"
+            [checked]="missionFocusLevel() === 'full_focus'"
+            (change)="missionFocusLevel.set('full_focus')" />
+          Full Focus
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="focusLevel"
+            [checked]="missionFocusLevel() === 'distracted'"
+            (change)="missionFocusLevel.set('distracted')" />
+          Distracted
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="focusLevel"
+            [checked]="missionFocusLevel() === 'low_energy'"
+            (change)="missionFocusLevel.set('low_energy')" />
+          Low Energy
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">How challenging was today?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="challengeLevel"
+            [checked]="missionChallengeLevel() === 'tough_day'"
+            (change)="missionChallengeLevel.set('tough_day')" />
+          Tough Day
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="challengeLevel"
+            [checked]="missionChallengeLevel() === 'average'"
+            (change)="missionChallengeLevel.set('average')" />
+          Average
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="challengeLevel"
+            [checked]="missionChallengeLevel() === 'easy'"
+            (change)="missionChallengeLevel.set('easy')" />
+          Easy
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">How did you feel while working?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="feeling"
+            [checked]="missionFeeling() === 'positive'"
+            (change)="missionFeeling.set('positive')" />
+          Positive
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="feeling"
+            [checked]="missionFeeling() === 'neutral'"
+            (change)="missionFeeling.set('neutral')" />
+          Neutral
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="feeling"
+            [checked]="missionFeeling() === 'frustrated'"
+            (change)="missionFeeling.set('frustrated')" />
+          Frustrated
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">Did you connect with your team today?</p>
+      <div class="checkin-radio-group">
+        <label class="checkin-radio">
+          <input type="radio" name="teamConnection"
+            [checked]="missionTeamConnection() === 'yes'"
+            (change)="missionTeamConnection.set('yes')" />
+          Yes
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="teamConnection"
+            [checked]="missionTeamConnection() === 'no'"
+            (change)="missionTeamConnection.set('no')" />
+          No
+        </label>
+        <label class="checkin-radio">
+          <input type="radio" name="teamConnection"
+            [checked]="missionTeamConnection() === 'solo'"
+            (change)="missionTeamConnection.set('solo')" />
+          Solo Effort
+        </label>
+      </div>
+    </div>
+
+    <div class="checkin-field">
+      <p class="checkin-question">Quick note (optional)</p>
+      <textarea class="checkin-textarea" rows="3"
+        placeholder="Drop a quick note or reflection..."
+        [value]="missionNote()"
+        (input)="missionNote.set($any($event.target).value)"></textarea>
+    </div>
+
+    @if (missionCoaching()) {
+    <div class="checkin-output">
+      <p class="checkin-output-title">AI coaching output</p>
+      <p class="checkin-output-text"><strong>Re-instruction:</strong> {{ missionCoaching()!.reinstruction }}</p>
+      <p class="checkin-output-text"><strong>Demonstration:</strong> {{ missionCoaching()!.demonstration }}</p>
+      <p class="checkin-output-text"><strong>Hustle:</strong> {{ missionCoaching()!.hustle }}</p>
+    </div>
+    }
+
+    <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog()">
+      @if (savingMissionLog()) { Saving... } @else { SUBMIT MISSION LOG }
+    </button>
+  </div>
+</ng-template>
 
 <!-- Visualization Modal -->
 @if (showVisualizationModal()) {

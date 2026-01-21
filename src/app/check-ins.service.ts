@@ -143,4 +143,28 @@ export class CheckInsService {
       ...doc.data()
     } as MissionLog;
   }
+
+  async getRecentDailyIgnitions(goalId: string, limitCount = 30): Promise<DailyIgnition[]> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'dailyIgnitions');
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAt', 'desc'), firestoreModule.limit(limitCount));
+    const snapshot = await firestoreModule.getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as DailyIgnition));
+  }
+
+  async getRecentMissionLogs(goalId: string, limitCount = 30): Promise<MissionLog[]> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'missionLogs');
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAt', 'desc'), firestoreModule.limit(limitCount));
+    const snapshot = await firestoreModule.getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as MissionLog));
+  }
 }

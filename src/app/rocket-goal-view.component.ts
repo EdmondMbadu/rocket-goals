@@ -25,6 +25,23 @@ import type {
   MissionLogCoaching,
   MissionTeamConnection
 } from './models/check-ins';
+
+type CheckinDaySummary = {
+  label: string;
+  dateKey: string;
+  ignitionCount: number;
+  missionLogCount: number;
+};
+
+type CheckinDashboardStats = {
+  ignitionCompletionRate: number;
+  missionLogCompletionRate: number;
+  streakDays: number;
+  oneThingCompletionRatio: number;
+  focusDistribution: Record<string, number>;
+  feelingDistribution: Record<string, number>;
+  actionDistribution: Record<string, number>;
+};
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
@@ -152,11 +169,19 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   // Check-ins state
   activeCheckinTab = signal<'ignition' | 'mission_log'>('ignition');
+  checkinModalType = signal<'ignition' | 'mission_log'>('ignition');
+  suppressMilestoneLanding = false;
   checkinsLoading = signal(false);
   checkinsError = signal<string | null>(null);
   checkinsNotice = signal<string | null>(null);
   latestDailyIgnition = signal<DailyIgnition | null>(null);
   latestMissionLog = signal<MissionLog | null>(null);
+  recentIgnitions = signal<DailyIgnition[]>([]);
+  recentMissionLogs = signal<MissionLog[]>([]);
+  checkinDashboardStats = signal<CheckinDashboardStats | null>(null);
+  last7DaysCheckins = signal<CheckinDaySummary[]>([]);
+  last30DaysCheckins = signal<CheckinDaySummary[]>([]);
+  showCheckinModal = signal(false);
 
   ignitionOneThingChoice = signal<IgnitionOneThingChoice>('suggested');
   ignitionOneThingText = signal('');
@@ -214,6 +239,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       this.storage = getStorage(app);
     } catch (error) {
       console.error('Failed to initialize storage', error);
+    }
+
+    const checkinParam = this.route.snapshot.queryParamMap.get('checkin');
+    if (checkinParam === 'ignition' || checkinParam === 'mission_log') {
+      this.suppressMilestoneLanding = true;
     }
 
     const goalId = this.route.snapshot.paramMap.get('id');
@@ -1174,6 +1204,11 @@ ${url}`;
       this.activePrimaryTab.set('checkins');
       if (checkinParam === 'ignition' || checkinParam === 'mission_log') {
         this.activeCheckinTab.set(checkinParam);
+        this.checkinModalType.set(checkinParam);
+        this.showCheckinModal.set(true);
+        this.suppressMilestoneLanding = true;
+        this.showMilestoneLandingModal.set(false);
+        this.showTaskModal.set(false);
       }
     }
   }
@@ -1685,13 +1720,18 @@ ${url}`;
     this.checkinsLoading.set(true);
     this.checkinsError.set(null);
     try {
-      const [ignition, missionLog] = await Promise.all([
+      const [ignition, missionLog, recentIgnitions, recentMissionLogs] = await Promise.all([
         this.checkInsService.getLatestDailyIgnition(goalId),
-        this.checkInsService.getLatestMissionLog(goalId)
+        this.checkInsService.getLatestMissionLog(goalId),
+        this.checkInsService.getRecentDailyIgnitions(goalId, 60),
+        this.checkInsService.getRecentMissionLogs(goalId, 60)
       ]);
       this.latestDailyIgnition.set(ignition);
       this.latestMissionLog.set(missionLog);
+      this.recentIgnitions.set(recentIgnitions);
+      this.recentMissionLogs.set(recentMissionLogs);
       this.missionCoaching.set(missionLog?.aiCoaching ?? null);
+      this.refreshCheckinDashboard();
     } catch (error: any) {
       console.error('Error loading check-ins:', error);
       this.checkinsError.set(error?.message || 'Failed to load check-ins');
@@ -1702,6 +1742,15 @@ ${url}`;
 
   selectCheckinTab(tab: 'ignition' | 'mission_log') {
     this.activeCheckinTab.set(tab);
+  }
+
+  openCheckinModal(type: 'ignition' | 'mission_log') {
+    this.checkinModalType.set(type);
+    this.showCheckinModal.set(true);
+  }
+
+  closeCheckinModal() {
+    this.showCheckinModal.set(false);
   }
 
   getActiveMilestoneTitle(): string {
@@ -1730,7 +1779,7 @@ ${url}`;
     return parts.join(' • ') || 'No mission log yet.';
   }
 
-  private formatMissionValue(value: string): string {
+  formatMissionValue(value: string): string {
     const map: Record<string, string> = {
       yes: 'Yes',
       barely: 'Barely',
@@ -1791,6 +1840,146 @@ ${url}`;
     return 'Time-block: claim a focused afternoon window.';
   }
 
+  private getDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private buildDaySummaries(days: number): CheckinDaySummary[] {
+    const ignitionMap = new Map<string, number>();
+    const missionMap = new Map<string, number>();
+
+    this.recentIgnitions().forEach(item => {
+      const date = this.getDateFromValue(item.createdAt);
+      if (!date) return;
+      const key = this.getDateKey(date);
+      ignitionMap.set(key, (ignitionMap.get(key) || 0) + 1);
+    });
+
+    this.recentMissionLogs().forEach(item => {
+      const date = this.getDateFromValue(item.createdAt);
+      if (!date) return;
+      const key = this.getDateKey(date);
+      missionMap.set(key, (missionMap.get(key) || 0) + 1);
+    });
+
+    const summaries: CheckinDaySummary[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const key = this.getDateKey(date);
+      const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      summaries.push({
+        dateKey: key,
+        label,
+        ignitionCount: ignitionMap.get(key) || 0,
+        missionLogCount: missionMap.get(key) || 0
+      });
+    }
+    return summaries;
+  }
+
+  private calculateStreak(dateKeys: Set<string>): number {
+    let streak = 0;
+    for (let i = 0; i < 365; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const key = this.getDateKey(date);
+      if (dateKeys.has(key)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  private refreshCheckinDashboard() {
+    const last7 = this.buildDaySummaries(7);
+    const last30 = this.buildDaySummaries(30);
+    this.last7DaysCheckins.set(last7);
+    this.last30DaysCheckins.set(last30);
+
+    const ignitionDays = last30.filter(day => day.ignitionCount > 0).length;
+    const missionDays = last30.filter(day => day.missionLogCount > 0).length;
+    const ignitionCompletionRate = Math.round((ignitionDays / last30.length) * 100);
+    const missionLogCompletionRate = Math.round((missionDays / last30.length) * 100);
+
+    const missionLogDateKeys = new Set(
+      this.recentMissionLogs()
+        .map(item => this.getDateFromValue(item.createdAt))
+        .filter((date): date is Date => !!date)
+        .map(date => this.getDateKey(date))
+    );
+    const streakDays = this.calculateStreak(missionLogDateKeys);
+
+    const actionDistribution: Record<string, number> = { Yes: 0, Barely: 0, No: 0 };
+    const focusDistribution: Record<string, number> = { 'Full Focus': 0, Distracted: 0, 'Low Energy': 0 };
+    const feelingDistribution: Record<string, number> = { Positive: 0, Neutral: 0, Frustrated: 0 };
+
+    let actionTotal = 0;
+    let actionYes = 0;
+    this.recentMissionLogs().forEach(log => {
+      if (log.actionTaken) {
+        actionTotal += 1;
+        if (log.actionTaken === 'yes') actionYes += 1;
+        actionDistribution[this.formatMissionValue(log.actionTaken)] =
+          (actionDistribution[this.formatMissionValue(log.actionTaken)] || 0) + 1;
+      }
+      if (log.focusLevel) {
+        focusDistribution[this.formatMissionValue(log.focusLevel)] =
+          (focusDistribution[this.formatMissionValue(log.focusLevel)] || 0) + 1;
+      }
+      if (log.feeling) {
+        feelingDistribution[this.formatMissionValue(log.feeling)] =
+          (feelingDistribution[this.formatMissionValue(log.feeling)] || 0) + 1;
+      }
+    });
+
+    const oneThingCompletionRatio = actionTotal > 0 ? Math.round((actionYes / actionTotal) * 100) : 0;
+
+    this.checkinDashboardStats.set({
+      ignitionCompletionRate,
+      missionLogCompletionRate,
+      streakDays,
+      oneThingCompletionRatio,
+      focusDistribution,
+      feelingDistribution,
+      actionDistribution
+    });
+  }
+
+  getDistributionEntries(distribution: Record<string, number>): Array<{ label: string; value: number }> {
+    return Object.entries(distribution)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  getMaxCheckinCount(rows: CheckinDaySummary[]): number {
+    return rows.reduce((max, row) => Math.max(max, row.ignitionCount, row.missionLogCount), 0);
+  }
+
+  getBarHeight(count: number, max: number): number {
+    if (max <= 0) return 0;
+    return Math.round((count / max) * 100);
+  }
+
+  formatCheckinDate(value: unknown): string {
+    const date = this.getDateFromValue(value);
+    if (!date) return 'Unknown';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  getRecentIgnitionHistory(): DailyIgnition[] {
+    return this.recentIgnitions().slice(0, 10);
+  }
+
+  getRecentMissionLogHistory(): MissionLog[] {
+    return this.recentMissionLogs().slice(0, 10);
+  }
+
   private buildMissionLogCoaching(): MissionLogCoaching {
     const actionTaken = this.missionActionTaken();
     const focus = this.missionFocusLevel();
@@ -1834,6 +2023,9 @@ ${url}`;
       });
       await this.loadCheckIns(goal.id);
       this.checkinsNotice.set('Daily Ignition saved.');
+      if (this.showCheckinModal()) {
+        this.closeCheckinModal();
+      }
     } catch (error: any) {
       console.error('Error saving daily ignition:', error);
       this.checkinsError.set(error?.message || 'Failed to save Daily Ignition.');
@@ -1870,6 +2062,9 @@ ${url}`;
       this.missionCoaching.set(coaching);
       await this.loadCheckIns(goal.id);
       this.checkinsNotice.set('Mission Log submitted.');
+      if (this.showCheckinModal()) {
+        this.closeCheckinModal();
+      }
     } catch (error: any) {
       console.error('Error saving mission log:', error);
       this.checkinsError.set(error?.message || 'Failed to submit Mission Log.');
@@ -2465,6 +2660,10 @@ Generate the milestones now (JSON array only, no other text):`;
 
   private handleLandingMilestonesFlow(force = false) {
     if (this.landingFlowHandled && !force) return;
+    if (this.suppressMilestoneLanding || this.showCheckinModal()) {
+      this.landingFlowHandled = true;
+      return;
+    }
     const goal = this.goal();
     if (!goal || !this.isGoalOwner() || goal.status === 'completed') {
       this.landingFlowHandled = true;
