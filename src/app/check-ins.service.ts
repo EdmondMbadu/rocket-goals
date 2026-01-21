@@ -64,6 +64,16 @@ export class CheckInsService {
     return `${year}-${month}-${day}`;
   }
 
+  private stripUndefined<T extends Record<string, unknown>>(value: T): T {
+    const cleaned = { ...value };
+    Object.keys(cleaned).forEach(key => {
+      if (cleaned[key] === undefined) {
+        delete cleaned[key];
+      }
+    });
+    return cleaned;
+  }
+
   async upsertDailyIgnition(input: DailyIgnitionInput): Promise<string> {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
@@ -78,13 +88,13 @@ export class CheckInsService {
 
     await firestoreModule.setDoc(
       docRef,
-      {
+      this.stripUndefined({
         ...input,
         goalId: input.goalId,
         dateId,
         createdAt: firestoreModule.serverTimestamp(),
         createdAtMs: Date.now()
-      },
+      }),
       { merge: true }
     );
 
@@ -105,13 +115,13 @@ export class CheckInsService {
 
     await firestoreModule.setDoc(
       docRef,
-      {
+      this.stripUndefined({
         ...input,
         goalId: input.goalId,
         dateId,
         createdAt: firestoreModule.serverTimestamp(),
         createdAtMs: Date.now()
-      },
+      }),
       { merge: true }
     );
 
