@@ -420,8 +420,12 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
 
     // Track that we're switching to this goal
-    const previousGoalId = this.currentGoalId;
+    const isSwitchingGoal = this.currentGoalId !== goalId;
     this.currentGoalId = goalId;
+    if (isSwitchingGoal) {
+      // Clear any stale messages so the UI doesn't show another goal's chat
+      this.startNewSession();
+    }
 
     const profile = this.authService.profile();
     if (!profile?.userId) {
@@ -436,20 +440,10 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       
       // If a session exists for this goal, load it
       if (this.sessions().length > 0) {
-        // Clear old messages only if we're switching from a different goal
-        if (previousGoalId && previousGoalId !== goalId) {
-          this.messages.set([]);
-          this.conversationHistory = [];
-        }
         // Load the most recent session for this goal
         await this.loadSession(this.sessions()[0].id);
       } else {
-        // No session found for this goal - clear and start fresh
-        // Only clear if we're switching from a different goal
-        if (previousGoalId && previousGoalId !== goalId) {
-          this.messages.set([]);
-          this.conversationHistory = [];
-        }
+        // No session found for this goal - start fresh
         this.startNewSession();
       }
     } catch (error: any) {
