@@ -8230,6 +8230,20 @@
 .light-mode .checkins-empty {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(148, 163, 184, 0.35);
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.light-mode .checkin-bar-label {
+  color: rgba(51, 65, 85, 0.6);
+}
+
+.light-mode .checkin-distribution-row {
+  color: rgba(51, 65, 85, 0.75);
+}
+
+.light-mode .checkin-history-row {
+  background: rgba(248, 250, 252, 0.95);
+  border-color: rgba(148, 163, 184, 0.35);
 }
 
 .light-mode .checkin-modal {

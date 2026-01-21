@@ -1546,7 +1546,7 @@
                     <div class="checkin-history-row">
                       <div>
                         <p class="checkin-history-title">{{ item.oneThingText || 'Suggested ONE Thing' }}</p>
-                        <p class="checkin-history-sub">{{ formatCheckinDate(item.createdAt) }} · {{ item.timeOfDay }} · {{ item.confidence }} confidence</p>
+                        <p class="checkin-history-sub">{{ formatCheckinDate(item.createdAtMs || item.createdAt) }} · {{ item.timeOfDay }} · {{ item.confidence }} confidence</p>
                       </div>
                     </div>
                     }
@@ -1557,7 +1557,7 @@
                     <div class="checkin-history-row">
                       <div>
                         <p class="checkin-history-title">{{ formatMissionValue(item.actionTaken) }} · {{ formatMissionValue(item.focusLevel) }} · {{ formatMissionValue(item.feeling) }}</p>
-                        <p class="checkin-history-sub">{{ formatCheckinDate(item.createdAt) }} · {{ item.note || 'No note' }}</p>
+                        <p class="checkin-history-sub">{{ formatCheckinDate(item.createdAtMs || item.createdAt) }} · {{ item.note || 'No note' }}</p>
                       </div>
                     </div>
                     }

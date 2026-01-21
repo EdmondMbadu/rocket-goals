@@ -1852,14 +1852,14 @@ ${url}`;
     const missionMap = new Map<string, number>();
 
     this.recentIgnitions().forEach(item => {
-      const date = this.getDateFromValue(item.createdAt);
+      const date = this.getDateFromValue(item.createdAtMs || item.createdAt);
       if (!date) return;
       const key = this.getDateKey(date);
       ignitionMap.set(key, (ignitionMap.get(key) || 0) + 1);
     });
 
     this.recentMissionLogs().forEach(item => {
-      const date = this.getDateFromValue(item.createdAt);
+      const date = this.getDateFromValue(item.createdAtMs || item.createdAt);
       if (!date) return;
       const key = this.getDateKey(date);
       missionMap.set(key, (missionMap.get(key) || 0) + 1);
@@ -1909,7 +1909,7 @@ ${url}`;
 
     const missionLogDateKeys = new Set(
       this.recentMissionLogs()
-        .map(item => this.getDateFromValue(item.createdAt))
+        .map(item => this.getDateFromValue(item.createdAtMs || item.createdAt))
         .filter((date): date is Date => !!date)
         .map(date => this.getDateKey(date))
     );

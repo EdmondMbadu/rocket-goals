@@ -82,7 +82,8 @@ export class CheckInsService {
         ...input,
         goalId: input.goalId,
         dateId,
-        createdAt: firestoreModule.serverTimestamp()
+        createdAt: firestoreModule.serverTimestamp(),
+        createdAtMs: Date.now()
       },
       { merge: true }
     );
@@ -108,7 +109,8 @@ export class CheckInsService {
         ...input,
         goalId: input.goalId,
         dateId,
-        createdAt: firestoreModule.serverTimestamp()
+        createdAt: firestoreModule.serverTimestamp(),
+        createdAtMs: Date.now()
       },
       { merge: true }
     );
@@ -120,7 +122,7 @@ export class CheckInsService {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'dailyIgnitions');
-    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAt', 'desc'), firestoreModule.limit(1));
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAtMs', 'desc'), firestoreModule.limit(1));
     const snapshot = await firestoreModule.getDocs(q);
     if (snapshot.empty) return null;
     const doc = snapshot.docs[0];
@@ -134,7 +136,7 @@ export class CheckInsService {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'missionLogs');
-    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAt', 'desc'), firestoreModule.limit(1));
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAtMs', 'desc'), firestoreModule.limit(1));
     const snapshot = await firestoreModule.getDocs(q);
     if (snapshot.empty) return null;
     const doc = snapshot.docs[0];
@@ -148,7 +150,7 @@ export class CheckInsService {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'dailyIgnitions');
-    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAt', 'desc'), firestoreModule.limit(limitCount));
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAtMs', 'desc'), firestoreModule.limit(limitCount));
     const snapshot = await firestoreModule.getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
@@ -160,7 +162,7 @@ export class CheckInsService {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');
     const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'missionLogs');
-    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAt', 'desc'), firestoreModule.limit(limitCount));
+    const q = firestoreModule.query(collectionRef, firestoreModule.orderBy('createdAtMs', 'desc'), firestoreModule.limit(limitCount));
     const snapshot = await firestoreModule.getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,

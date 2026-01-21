@@ -23,6 +23,7 @@ export type DailyIgnition = {
   timeOfDay: IgnitionTimeOfDay;
   confidence: IgnitionConfidence;
   createdAt: unknown;
+  createdAtMs?: number;
 };
 
 export type MissionLog = {
@@ -38,4 +39,5 @@ export type MissionLog = {
   intendedOneThing?: string;
   aiCoaching?: MissionLogCoaching;
   createdAt: unknown;
+  createdAtMs?: number;
 };
