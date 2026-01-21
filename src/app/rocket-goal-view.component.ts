@@ -1199,6 +1199,7 @@ ${url}`;
   private applyTabFromQuery(): void {
     const tabParam = this.route.snapshot.queryParamMap.get('tab') || this.route.snapshot.queryParamMap.get('section');
     const checkinParam = this.route.snapshot.queryParamMap.get('checkin');
+    const sectionParam = this.route.snapshot.queryParamMap.get('section');
     if (tabParam === 'milestones' || tabParam === 'tasks' || tabParam === 'milestone') {
       this.activePrimaryTab.set('tasks');
       return;
@@ -1212,6 +1213,14 @@ ${url}`;
         this.suppressMilestoneLanding = true;
         this.showMilestoneLandingModal.set(false);
         this.showTaskModal.set(false);
+      }
+      if (sectionParam === 'weekly') {
+        setTimeout(() => {
+          const section = document.getElementById('weekly-reset-section');
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
       }
     }
   }

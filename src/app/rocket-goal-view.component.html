@@ -1622,10 +1622,13 @@
                   }
                 </div>
 
-                <div class="checkin-history-card">
+                <div class="checkin-history-card weekly-reset-card" id="weekly-reset-section">
                   <div class="checkin-chart-header">
-                    <p class="checkin-chart-title">Weekly Reset</p>
-                    <p class="checkin-chart-sub">Latest weekly snapshots</p>
+                    <div>
+                      <p class="checkin-chart-title">Weekly Reset</p>
+                      <p class="checkin-chart-sub">Your weekly recap with momentum tips.</p>
+                    </div>
+                    <span class="weekly-reset-badge">Weekly</span>
                   </div>
                   @if (weeklyResetNotice()) {
                   <p class="checkin-history-sub">{{ weeklyResetNotice() }}</p>

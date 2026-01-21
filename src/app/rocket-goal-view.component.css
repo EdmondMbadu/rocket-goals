@@ -8171,6 +8171,55 @@
   margin-top: 0.2rem;
 }
 
+.weekly-reset-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.7));
+}
+
+.weekly-reset-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+}
+
+.weekly-reset-badge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.weekly-reset-card .checkin-history-row {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.light-mode .weekly-reset-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(255, 255, 255, 0.95));
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.light-mode .weekly-reset-badge {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.light-mode .weekly-reset-card .checkin-history-row {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
 .checkin-modal-overlay {
   position: fixed;
   inset: 0;

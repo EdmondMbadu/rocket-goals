@@ -4525,7 +4525,7 @@ export const processWeeklyResets = functions.runWith({
 
                 const html = `
                     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
-                        <div style="background: linear-gradient(135deg, #0f172a 0%, #111827 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
                             <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 800;">Weekly Reset</h1>
                             <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0;">${weekLabel}</p>
                         </div>
@@ -4641,7 +4641,7 @@ export const runWeeklyResetTest = functions.runWith({
 
             const html = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
-                    <div style="background: linear-gradient(135deg, #0f172a 0%, #111827 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
                         <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 800;">Weekly Reset</h1>
                         <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0;">${weekLabel}</p>
                     </div>
