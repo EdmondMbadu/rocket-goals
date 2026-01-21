@@ -1957,6 +1957,15 @@ ${url}`;
       .sort((a, b) => b.value - a.value);
   }
 
+  getDistributionTotal(distribution: Record<string, number>): number {
+    return Object.values(distribution).reduce((sum, value) => sum + value, 0);
+  }
+
+  getDistributionPercent(value: number, total: number): number {
+    if (!total) return 0;
+    return Math.round((value / total) * 100);
+  }
+
   getMaxCheckinCount(rows: CheckinDaySummary[]): number {
     return rows.reduce((max, row) => Math.max(max, row.ignitionCount, row.missionLogCount), 0);
   }

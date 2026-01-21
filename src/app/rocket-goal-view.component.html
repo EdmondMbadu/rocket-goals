@@ -1499,39 +1499,63 @@
                 <div class="checkin-distribution-grid">
                   <div class="checkin-distribution-card">
                     <p class="checkin-chart-title">Action Taken</p>
-                    @for (entry of getDistributionEntries(checkinDashboardStats()!.actionDistribution); track entry.label) {
-                    <div class="checkin-distribution-row">
-                      <span>{{ entry.label }}</span>
-                      <div class="checkin-distribution-bar">
-                        <span [style.width.%]="getBarHeight(entry.value, checkinDashboardStats()!.actionDistribution['Yes'] + checkinDashboardStats()!.actionDistribution['Barely'] + checkinDashboardStats()!.actionDistribution['No'])"></span>
+                    <div class="checkin-circle-grid">
+                      @for (entry of getDistributionEntries(checkinDashboardStats()!.actionDistribution); track entry.label) {
+                      <div class="checkin-circle-card">
+                        <div class="checkin-circle"
+                          [style.--percent]="getDistributionPercent(entry.value, getDistributionTotal(checkinDashboardStats()!.actionDistribution))"
+                          [style.--accent]="entry.label === 'Yes' ? '#22c55e' : (entry.label === 'Barely' ? '#f59e0b' : '#ef4444')">
+                          <div class="checkin-circle-center">
+                            <span>{{ getDistributionPercent(entry.value, getDistributionTotal(checkinDashboardStats()!.actionDistribution)) }}%</span>
+                          </div>
+                        </div>
+                        <div class="checkin-circle-label">
+                          <span>{{ entry.label }}</span>
+                          <small>{{ entry.value }}</small>
+                        </div>
                       </div>
-                      <span>{{ entry.value }}</span>
+                      }
                     </div>
-                    }
                   </div>
                   <div class="checkin-distribution-card">
                     <p class="checkin-chart-title">Focus Level</p>
-                    @for (entry of getDistributionEntries(checkinDashboardStats()!.focusDistribution); track entry.label) {
-                    <div class="checkin-distribution-row">
-                      <span>{{ entry.label }}</span>
-                      <div class="checkin-distribution-bar">
-                        <span [style.width.%]="getBarHeight(entry.value, checkinDashboardStats()!.focusDistribution['Full Focus'] + checkinDashboardStats()!.focusDistribution['Distracted'] + checkinDashboardStats()!.focusDistribution['Low Energy'])"></span>
+                    <div class="checkin-circle-grid">
+                      @for (entry of getDistributionEntries(checkinDashboardStats()!.focusDistribution); track entry.label) {
+                      <div class="checkin-circle-card">
+                        <div class="checkin-circle"
+                          [style.--percent]="getDistributionPercent(entry.value, getDistributionTotal(checkinDashboardStats()!.focusDistribution))"
+                          [style.--accent]="entry.label === 'Full Focus' ? '#38bdf8' : (entry.label === 'Distracted' ? '#f97316' : '#a855f7')">
+                          <div class="checkin-circle-center">
+                            <span>{{ getDistributionPercent(entry.value, getDistributionTotal(checkinDashboardStats()!.focusDistribution)) }}%</span>
+                          </div>
+                        </div>
+                        <div class="checkin-circle-label">
+                          <span>{{ entry.label }}</span>
+                          <small>{{ entry.value }}</small>
+                        </div>
                       </div>
-                      <span>{{ entry.value }}</span>
+                      }
                     </div>
-                    }
                   </div>
                   <div class="checkin-distribution-card">
                     <p class="checkin-chart-title">Feeling</p>
-                    @for (entry of getDistributionEntries(checkinDashboardStats()!.feelingDistribution); track entry.label) {
-                    <div class="checkin-distribution-row">
-                      <span>{{ entry.label }}</span>
-                      <div class="checkin-distribution-bar">
-                        <span [style.width.%]="getBarHeight(entry.value, checkinDashboardStats()!.feelingDistribution['Positive'] + checkinDashboardStats()!.feelingDistribution['Neutral'] + checkinDashboardStats()!.feelingDistribution['Frustrated'])"></span>
+                    <div class="checkin-circle-grid">
+                      @for (entry of getDistributionEntries(checkinDashboardStats()!.feelingDistribution); track entry.label) {
+                      <div class="checkin-circle-card">
+                        <div class="checkin-circle"
+                          [style.--percent]="getDistributionPercent(entry.value, getDistributionTotal(checkinDashboardStats()!.feelingDistribution))"
+                          [style.--accent]="entry.label === 'Positive' ? '#22c55e' : (entry.label === 'Neutral' ? '#94a3b8' : '#ef4444')">
+                          <div class="checkin-circle-center">
+                            <span>{{ getDistributionPercent(entry.value, getDistributionTotal(checkinDashboardStats()!.feelingDistribution)) }}%</span>
+                          </div>
+                        </div>
+                        <div class="checkin-circle-label">
+                          <span>{{ entry.label }}</span>
+                          <small>{{ entry.value }}</small>
+                        </div>
                       </div>
-                      <span>{{ entry.value }}</span>
+                      }
                     </div>
-                    }
                   </div>
                 </div>
 
