@@ -8129,6 +8129,12 @@
   border-radius: 999px;
 }
 
+.checkin-distribution-list {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
 .checkin-history-list {
   display: grid;
   gap: 0.75rem;
