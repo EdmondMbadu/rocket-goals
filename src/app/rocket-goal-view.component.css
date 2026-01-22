@@ -8922,6 +8922,186 @@
   color: #fff;
 }
 
+/* Cheer Squad Boosts Section */
+.cheer-squad-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(249, 115, 22, 0.08));
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 20px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.cheer-squad-header {
+  margin-bottom: 1rem;
+}
+
+.cheer-squad-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cheer-squad-icon {
+  font-size: 1.5rem;
+}
+
+.cheer-squad-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.cheer-squad-subtitle {
+  margin: 0.15rem 0 0 0;
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.cheer-squad-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cheer-reaction-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+}
+
+.cheer-reaction-emoji {
+  font-size: 1.1rem;
+}
+
+.cheer-reaction-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.9);
+}
+
+.cheer-squad-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cheer-message {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.cheer-message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.3), rgba(249, 115, 22, 0.2));
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+  flex-shrink: 0;
+}
+
+.cheer-message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cheer-message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.cheer-message-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.cheer-message-emoji {
+  font-size: 0.9rem;
+}
+
+.cheer-message-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.85);
+  line-height: 1.4;
+}
+
+.cheer-more-link {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.8rem;
+  color: #f97316;
+  cursor: pointer;
+  text-align: center;
+}
+
+.cheer-more-link:hover {
+  text-decoration: underline;
+}
+
+/* Light mode Cheer Squad */
+.light-mode .cheer-squad-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(249, 115, 22, 0.05));
+  border-color: rgba(234, 88, 12, 0.25);
+}
+
+.light-mode .cheer-squad-title {
+  color: #0f172a;
+}
+
+.light-mode .cheer-squad-subtitle {
+  color: rgba(71, 85, 105, 0.7);
+}
+
+.light-mode .cheer-reaction-pill {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.light-mode .cheer-reaction-count {
+  color: #334155;
+}
+
+.light-mode .cheer-message {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.light-mode .cheer-message-avatar {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.2), rgba(239, 68, 68, 0.15));
+  border-color: rgba(234, 88, 12, 0.35);
+  color: #0f172a;
+}
+
+.light-mode .cheer-message-name {
+  color: #0f172a;
+}
+
+.light-mode .cheer-message-text {
+  color: #334155;
+}
+
+.light-mode .cheer-more-link {
+  color: #ea580c;
+}
+
 /* KPI Row - Top Stats */
 .stats-kpi-row {
   display: grid;

@@ -1633,6 +1633,55 @@
                   </div>
                 </div>
 
+                @if (fanReactions().length > 0 || fanComments().length > 0) {
+                <div class="cheer-squad-card">
+                  <div class="cheer-squad-header">
+                    <div class="cheer-squad-title-row">
+                      <span class="cheer-squad-icon">📣</span>
+                      <div>
+                        <p class="cheer-squad-title">Cheer Squad Boosts</p>
+                        <p class="cheer-squad-subtitle">Your crew is rooting for you!</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (fanReactions().length > 0) {
+                  <div class="cheer-squad-reactions">
+                    @for (reaction of fanReactions(); track reaction.emoji) {
+                    <div class="cheer-reaction-pill">
+                      <span class="cheer-reaction-emoji">{{ reaction.emoji }}</span>
+                      <span class="cheer-reaction-count">{{ reaction.count }}</span>
+                    </div>
+                    }
+                  </div>
+                  }
+
+                  @if (fanComments().length > 0) {
+                  <div class="cheer-squad-messages">
+                    @for (comment of fanComments().slice(0, 3); track comment.id) {
+                    <div class="cheer-message">
+                      <div class="cheer-message-avatar">
+                        {{ getFanInitials(comment.fanName, comment.fanEmail) }}
+                      </div>
+                      <div class="cheer-message-content">
+                        <div class="cheer-message-header">
+                          <span class="cheer-message-name">{{ getFanDisplayName(comment.fanName, comment.fanEmail) }}</span>
+                          @if (comment.emoji) {
+                          <span class="cheer-message-emoji">{{ comment.emoji }}</span>
+                          }
+                        </div>
+                        <p class="cheer-message-text">{{ comment.content }}</p>
+                      </div>
+                    </div>
+                    }
+                    @if (fanComments().length > 3) {
+                    <p class="cheer-more-link" (click)="activePrimaryTab.set('fans')">View all {{ fanComments().length }} messages</p>
+                    }
+                  </div>
+                  }
+                </div>
+                }
+
                 <div class="checkin-history-card">
                   <div class="checkin-chart-header">
                     <p class="checkin-chart-title">Recent {{ activeCheckinTab() === 'ignition' ? 'Daily Ignitions' : 'Mission Logs' }}</p>
