@@ -1223,6 +1223,9 @@ ${url}`;
     if (tabParam === 'checkins' || checkinParam) {
       this.activePrimaryTab.set('checkins');
       if (checkinParam === 'ignition' || checkinParam === 'mission_log') {
+        if (!this.ensureCheckinLogin(checkinParam, this.router.url)) {
+          return;
+        }
         this.activeCheckinTab.set(checkinParam);
         this.checkinModalType.set(checkinParam);
         this.showCheckinModal.set(true);
@@ -1779,6 +1782,19 @@ ${url}`;
     this.activeCheckinTab.set(tab);
   }
 
+  private ensureCheckinLogin(type: 'ignition' | 'mission_log', redirectUrl?: string): boolean {
+    const profile = this.authService.profile();
+    if (profile?.userId) {
+      return true;
+    }
+    const goal = this.goal();
+    const fallbackUrl = goal?.id
+      ? `/rocketgoal/${goal.id}?tab=checkins&checkin=${type}`
+      : this.router.url;
+    this.router.navigate(['/login'], { queryParams: { redirectTo: redirectUrl || fallbackUrl } });
+    return false;
+  }
+
   async loadWeeklyResets(goalId: string) {
     try {
       const resets = await this.checkInsService.getWeeklyResets(goalId, 8);
@@ -1796,6 +1812,9 @@ ${url}`;
   }
 
   openCheckinModal(type: 'ignition' | 'mission_log') {
+    if (!this.ensureCheckinLogin(type)) {
+      return;
+    }
     this.checkinModalType.set(type);
     this.showCheckinModal.set(true);
   }
@@ -2063,6 +2082,9 @@ ${url}`;
   async submitDailyIgnition() {
     const goal = this.goal();
     if (!goal?.id) return;
+    if (!this.ensureCheckinLogin('ignition')) {
+      return;
+    }
     const choice = this.ignitionOneThingChoice();
     let oneThingText = this.ignitionOneThingText().trim();
 
@@ -2106,6 +2128,9 @@ ${url}`;
   async submitMissionLog() {
     const goal = this.goal();
     if (!goal?.id) return;
+    if (!this.ensureCheckinLogin('mission_log')) {
+      return;
+    }
     const intendedOneThing = this.missionIntendedOneThing().trim();
     if (this.shouldAskIntendedOneThing() && !intendedOneThing) {
       this.checkinsError.set('Add the ONE Thing you intended to complete today.');
