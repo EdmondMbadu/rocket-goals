@@ -1418,6 +1418,11 @@
                       (click)="selectCheckinTab('mission_log')">
                       Mission Log
                     </button>
+                    <button type="button" class="checkins-tab"
+                      [class.active]="activeCheckinTab() === 'photo_journey'"
+                      (click)="selectCheckinTab('photo_journey')">
+                      Photo Journey
+                    </button>
                   </div>
                   @if (checkinsNotice()) {
                   <div class="checkins-notice success">{{ checkinsNotice() }}</div>
@@ -1592,6 +1597,43 @@
                   </div>
                 </div>
 
+                @if (activeCheckinTab() === 'photo_journey') {
+                <div class="journey-timeline-card">
+                  <div class="checkin-chart-header">
+                    <p class="checkin-chart-title">Your Photo Journey</p>
+                    <p class="checkin-chart-sub">A visual timeline of your progress</p>
+                  </div>
+                  @if (journeyPhotos().length === 0) {
+                  <div class="journey-empty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <path d="M21 15l-5-5L5 21" />
+                    </svg>
+                    <p>No photos yet. Add photos during your Daily Ignition or Mission Log to document your journey.</p>
+                  </div>
+                  } @else {
+                  <div class="journey-timeline">
+                    @for (group of getJourneyPhotosByDate(); track group.dateId) {
+                    <div class="journey-date-group">
+                      <div class="journey-date-label">{{ group.dateLabel }}</div>
+                      <div class="journey-photos-grid">
+                        @for (photo of group.photos; track photo.id) {
+                        <div class="journey-photo-card">
+                          <img [src]="photo.imageUrl" [alt]="photo.caption || 'Journey photo'" class="journey-photo-img" />
+                          @if (photo.caption) {
+                          <p class="journey-photo-caption-display">{{ photo.caption }}</p>
+                          }
+                          <span class="journey-photo-source">{{ photo.source === 'ignition' ? 'Ignition' : photo.source === 'mission_log' ? 'Mission Log' : 'Photo' }}</span>
+                        </div>
+                        }
+                      </div>
+                    </div>
+                    }
+                  </div>
+                  }
+                </div>
+                } @else {
                 <div class="checkin-history-card">
                   <div class="checkin-chart-header">
                     <p class="checkin-chart-title">Recent {{ activeCheckinTab() === 'ignition' ? 'Daily Ignitions' : 'Mission Logs' }}</p>
@@ -1621,6 +1663,7 @@
                   </div>
                   }
                 </div>
+                }
 
                 <div class="checkin-history-card weekly-reset-card" id="weekly-reset-section">
                   <div class="checkin-chart-header">
@@ -2516,8 +2559,43 @@
     </div>
     </div>
 
-    <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition()">
-      @if (savingIgnition()) { Saving... } @else { 🔥 IGNITE DAY }
+    <div class="checkin-section-card journey-photo-section">
+      <div class="checkin-section-header">
+        <p class="checkin-section-title">Capture the Moment</p>
+        <p class="checkin-section-subtitle">Document your journey with a photo (optional).</p>
+      </div>
+      <div class="journey-photo-upload">
+        @if (journeyPhotoPreview()) {
+        <div class="journey-photo-preview-container">
+          <img [src]="journeyPhotoPreview()" alt="Journey photo preview" class="journey-photo-preview" />
+          <button type="button" class="journey-photo-remove" (click)="clearJourneyPhoto()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <input type="text" class="checkin-input journey-photo-caption"
+          placeholder="Add a caption (optional)"
+          [value]="journeyPhotoCaption()"
+          (input)="journeyPhotoCaption.set($any($event.target).value)" />
+        } @else {
+        <label class="journey-photo-picker">
+          <input type="file" accept="image/*" capture="environment" (change)="onJourneyPhotoSelected($event)" />
+          <div class="journey-photo-picker-content">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span>Add a photo</span>
+          </div>
+        </label>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition() || uploadingJourneyPhoto()">
+      @if (savingIgnition() || uploadingJourneyPhoto()) { Saving... } @else { 🔥 IGNITE DAY }
     </button>
   </div>
 </ng-template>
@@ -2693,8 +2771,43 @@
     </div>
     }
 
-    <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog()">
-      @if (savingMissionLog()) { Saving... } @else { SUBMIT MISSION LOG }
+    <div class="checkin-section-card journey-photo-section">
+      <div class="checkin-section-header">
+        <p class="checkin-section-title">Capture the Moment</p>
+        <p class="checkin-section-subtitle">Document your journey with a photo (optional).</p>
+      </div>
+      <div class="journey-photo-upload">
+        @if (journeyPhotoPreview()) {
+        <div class="journey-photo-preview-container">
+          <img [src]="journeyPhotoPreview()" alt="Journey photo preview" class="journey-photo-preview" />
+          <button type="button" class="journey-photo-remove" (click)="clearJourneyPhoto()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <input type="text" class="checkin-input journey-photo-caption"
+          placeholder="Add a caption (optional)"
+          [value]="journeyPhotoCaption()"
+          (input)="journeyPhotoCaption.set($any($event.target).value)" />
+        } @else {
+        <label class="journey-photo-picker">
+          <input type="file" accept="image/*" capture="environment" (change)="onJourneyPhotoSelected($event)" />
+          <div class="journey-photo-picker-content">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span>Add a photo</span>
+          </div>
+        </label>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog() || uploadingJourneyPhoto()">
+      @if (savingMissionLog() || uploadingJourneyPhoto()) { Saving... } @else { SUBMIT MISSION LOG }
     </button>
   </div>
 </ng-template>

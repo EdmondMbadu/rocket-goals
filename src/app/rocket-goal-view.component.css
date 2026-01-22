@@ -8444,6 +8444,235 @@
   background: radial-gradient(circle at top, rgba(226, 232, 240, 0.9), rgba(148, 163, 184, 0.6));
 }
 
+/* Journey Photo Upload in Modals */
+.journey-photo-section {
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+.journey-photo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.journey-photo-picker {
+  display: block;
+  cursor: pointer;
+}
+
+.journey-photo-picker input[type="file"] {
+  display: none;
+}
+
+.journey-photo-picker-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border: 2px dashed rgba(148, 163, 184, 0.35);
+  border-radius: 12px;
+  color: rgba(148, 163, 184, 0.8);
+  transition: all 0.2s ease;
+}
+
+.journey-photo-picker-content:hover {
+  border-color: #f97316;
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.journey-photo-picker-content span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.journey-photo-preview-container {
+  position: relative;
+  display: inline-block;
+}
+
+.journey-photo-preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.journey-photo-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border: none;
+  color: #f8fafc;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.journey-photo-remove:hover {
+  background: #ef4444;
+}
+
+.journey-photo-caption {
+  margin-top: 0.5rem;
+}
+
+/* Journey Timeline in Check-ins */
+.journey-timeline-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  padding: 1rem 1.25rem;
+}
+
+.journey-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  color: rgba(148, 163, 184, 0.7);
+  text-align: center;
+}
+
+.journey-empty svg {
+  opacity: 0.5;
+}
+
+.journey-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 280px;
+}
+
+.journey-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.journey-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.journey-date-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f97316;
+  padding-left: 0.25rem;
+  border-left: 3px solid #f97316;
+  padding-left: 0.75rem;
+}
+
+.journey-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.journey-photo-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.journey-photo-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.journey-photo-caption-display {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.9);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.journey-photo-source {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #f97316;
+}
+
+/* Light mode journey styles */
+.light-mode .journey-photo-section {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.light-mode .journey-photo-picker-content {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: rgba(71, 85, 105, 0.8);
+}
+
+.light-mode .journey-photo-picker-content:hover {
+  border-color: #ea580c;
+  color: #ea580c;
+  background: rgba(234, 88, 12, 0.05);
+}
+
+.light-mode .journey-photo-remove {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+}
+
+.light-mode .journey-photo-remove:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.light-mode .journey-timeline-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.light-mode .journey-empty {
+  color: rgba(71, 85, 105, 0.7);
+}
+
+.light-mode .journey-date-label {
+  color: #ea580c;
+  border-color: #ea580c;
+}
+
+.light-mode .journey-photo-card {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.light-mode .journey-photo-caption-display {
+  color: #334155;
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.light-mode .journey-photo-source {
+  background: rgba(255, 255, 255, 0.9);
+  color: #ea580c;
+}
+
 /* KPI Row - Top Stats */
 .stats-kpi-row {
   display: grid;

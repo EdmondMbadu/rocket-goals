@@ -22,6 +22,8 @@ import type {
   MissionFeeling,
   MissionFocusLevel,
   MissionLog,
+  JourneyPhoto,
+  JourneyPhotoSource,
   MissionLogCoaching,
   MissionTeamConnection,
   WeeklyResetSummary
@@ -169,7 +171,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private pendingLandingAfterDeadline = false;
 
   // Check-ins state
-  activeCheckinTab = signal<'ignition' | 'mission_log'>('ignition');
+  activeCheckinTab = signal<'ignition' | 'mission_log' | 'photo_journey'>('ignition');
   checkinModalType = signal<'ignition' | 'mission_log'>('ignition');
   suppressMilestoneLanding = false;
   checkinsLoading = signal(false);
@@ -179,6 +181,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   latestMissionLog = signal<MissionLog | null>(null);
   recentIgnitions = signal<DailyIgnition[]>([]);
   recentMissionLogs = signal<MissionLog[]>([]);
+  journeyPhotos = signal<JourneyPhoto[]>([]);
   checkinDashboardStats = signal<CheckinDashboardStats | null>(null);
   last7DaysCheckins = signal<CheckinDaySummary[]>([]);
   last30DaysCheckins = signal<CheckinDaySummary[]>([]);
@@ -202,6 +205,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   missionIntendedOneThing = signal('');
   missionCoaching = signal<MissionLogCoaching | null>(null);
   savingMissionLog = signal(false);
+
+  // Journey photo state
+  journeyPhotoFile = signal<File | null>(null);
+  journeyPhotoPreview = signal<string | null>(null);
+  journeyPhotoCaption = signal('');
+  uploadingJourneyPhoto = signal(false);
 
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
@@ -1732,16 +1741,18 @@ ${url}`;
     this.checkinsLoading.set(true);
     this.checkinsError.set(null);
     try {
-      const [ignition, missionLog, recentIgnitions, recentMissionLogs] = await Promise.all([
+      const [ignition, missionLog, recentIgnitions, recentMissionLogs, journeyPhotos] = await Promise.all([
         this.checkInsService.getLatestDailyIgnition(goalId),
         this.checkInsService.getLatestMissionLog(goalId),
         this.checkInsService.getRecentDailyIgnitions(goalId, 60),
-        this.checkInsService.getRecentMissionLogs(goalId, 60)
+        this.checkInsService.getRecentMissionLogs(goalId, 60),
+        this.checkInsService.getJourneyPhotos(goalId, 50)
       ]);
       this.latestDailyIgnition.set(ignition);
       this.latestMissionLog.set(missionLog);
       this.recentIgnitions.set(recentIgnitions);
       this.recentMissionLogs.set(recentMissionLogs);
+      this.journeyPhotos.set(journeyPhotos);
       this.missionCoaching.set(missionLog?.aiCoaching ?? null);
       this.refreshCheckinDashboard();
       await this.loadWeeklyResets(goalId);
@@ -1762,7 +1773,7 @@ ${url}`;
     }
   }
 
-  selectCheckinTab(tab: 'ignition' | 'mission_log') {
+  selectCheckinTab(tab: 'ignition' | 'mission_log' | 'photo_journey') {
     this.activeCheckinTab.set(tab);
   }
 
@@ -2073,6 +2084,9 @@ ${url}`;
         timeOfDay: this.ignitionTimeOfDay(),
         confidence: this.ignitionConfidence()
       });
+      if (this.journeyPhotoFile()) {
+        await this.uploadJourneyPhoto('ignition');
+      }
       await this.loadCheckIns(goal.id);
       this.checkinsNotice.set('Daily Ignition saved.');
       if (this.showCheckinModal()) {
@@ -2112,6 +2126,9 @@ ${url}`;
         intendedOneThing: intendedOneThing || undefined,
         aiCoaching: coaching
       });
+      if (this.journeyPhotoFile()) {
+        await this.uploadJourneyPhoto('mission_log');
+      }
       this.missionCoaching.set(coaching);
       await this.loadCheckIns(goal.id);
       this.checkinsNotice.set('Mission Log submitted.');
@@ -2125,6 +2142,82 @@ ${url}`;
     } finally {
       this.savingMissionLog.set(false);
     }
+  }
+
+  onJourneyPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.checkinsError.set('Please select an image file.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.checkinsError.set('Image must be under 5MB.');
+      return;
+    }
+
+    this.journeyPhotoFile.set(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.journeyPhotoPreview.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    input.value = '';
+  }
+
+  clearJourneyPhoto() {
+    this.journeyPhotoFile.set(null);
+    this.journeyPhotoPreview.set(null);
+    this.journeyPhotoCaption.set('');
+  }
+
+  async uploadJourneyPhoto(source: JourneyPhotoSource) {
+    const goal = this.goal();
+    const file = this.journeyPhotoFile();
+    if (!goal?.id || !file) return;
+
+    this.uploadingJourneyPhoto.set(true);
+    try {
+      await this.checkInsService.uploadJourneyPhoto(
+        goal.id,
+        file,
+        source,
+        this.journeyPhotoCaption().trim() || undefined
+      );
+      this.clearJourneyPhoto();
+      const photos = await this.checkInsService.getJourneyPhotos(goal.id, 50);
+      this.journeyPhotos.set(photos);
+    } catch (error: any) {
+      console.error('Error uploading journey photo:', error);
+      this.checkinsError.set(error?.message || 'Failed to upload photo.');
+    } finally {
+      this.uploadingJourneyPhoto.set(false);
+    }
+  }
+
+  getJourneyPhotosByDate(): { dateId: string; dateLabel: string; photos: JourneyPhoto[] }[] {
+    const photos = this.journeyPhotos();
+    const grouped = new Map<string, JourneyPhoto[]>();
+
+    photos.forEach(photo => {
+      const existing = grouped.get(photo.dateId) || [];
+      existing.push(photo);
+      grouped.set(photo.dateId, existing);
+    });
+
+    const result: { dateId: string; dateLabel: string; photos: JourneyPhoto[] }[] = [];
+    grouped.forEach((photos, dateId) => {
+      const date = new Date(dateId + 'T12:00:00');
+      const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      result.push({ dateId, dateLabel, photos });
+    });
+
+    return result.sort((a, b) => b.dateId.localeCompare(a.dateId));
   }
 
   getActionItemsForCurrentDay(): ActionItem[] {

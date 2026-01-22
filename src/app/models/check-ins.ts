@@ -62,3 +62,16 @@ export type WeeklyResetSummary = {
   createdAt: unknown;
   createdAtMs?: number;
 };
+
+export type JourneyPhotoSource = 'ignition' | 'mission_log' | 'manual';
+
+export type JourneyPhoto = {
+  id: string;
+  goalId: string;
+  dateId: string;
+  imageUrl: string;
+  caption?: string;
+  source: JourneyPhotoSource;
+  createdAt: unknown;
+  createdAtMs: number;
+};

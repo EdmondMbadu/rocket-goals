@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
 import type { Firestore } from 'firebase/firestore';
+import type { FirebaseStorage } from 'firebase/storage';
 import { firebaseConfig } from '../../environments/environment';
 import type {
   DailyIgnition,
   IgnitionConfidence,
   IgnitionOneThingChoice,
   IgnitionTimeOfDay,
+  JourneyPhoto,
+  JourneyPhotoSource,
   MissionActionTaken,
   MissionChallengeLevel,
   MissionFeeling,
@@ -200,5 +203,100 @@ export class CheckInsService {
       id: doc.id,
       ...doc.data()
     } as WeeklyResetSummary));
+  }
+
+  private async getStorage(): Promise<FirebaseStorage> {
+    const appModule = await import('firebase/app');
+    const storageModule = await import('firebase/storage');
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+    return storageModule.getStorage(app);
+  }
+
+  async uploadJourneyPhoto(
+    goalId: string,
+    file: File,
+    source: JourneyPhotoSource,
+    caption?: string
+  ): Promise<JourneyPhoto> {
+    const storage = await this.getStorage();
+    const storageModule = await import('firebase/storage');
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+
+    const dateId = this.getTodayId();
+    const timestamp = Date.now();
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const fileName = `journey-${dateId}-${timestamp}.${fileExtension}`;
+    const storagePath = `journey-photos/${goalId}/${fileName}`;
+
+    const storageRef = storageModule.ref(storage, storagePath);
+    await storageModule.uploadBytes(storageRef, file);
+    const imageUrl = await storageModule.getDownloadURL(storageRef);
+
+    const collectionRef = firestoreModule.collection(
+      firestore,
+      'rocketGoals',
+      goalId,
+      'journeyPhotos'
+    );
+
+    const docData = this.stripUndefined({
+      goalId,
+      dateId,
+      imageUrl,
+      caption,
+      source,
+      createdAt: firestoreModule.serverTimestamp(),
+      createdAtMs: timestamp
+    });
+
+    const docRef = await firestoreModule.addDoc(collectionRef, docData);
+
+    return {
+      id: docRef.id,
+      goalId,
+      dateId,
+      imageUrl,
+      caption,
+      source,
+      createdAt: null,
+      createdAtMs: timestamp
+    };
+  }
+
+  async getJourneyPhotos(goalId: string, limitCount = 50): Promise<JourneyPhoto[]> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const collectionRef = firestoreModule.collection(firestore, 'rocketGoals', goalId, 'journeyPhotos');
+    const q = firestoreModule.query(
+      collectionRef,
+      firestoreModule.orderBy('createdAtMs', 'desc'),
+      firestoreModule.limit(limitCount)
+    );
+    const snapshot = await firestoreModule.getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as JourneyPhoto));
+  }
+
+  async deleteJourneyPhoto(goalId: string, photoId: string, imageUrl: string): Promise<void> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const storage = await this.getStorage();
+    const storageModule = await import('firebase/storage');
+
+    const docRef = firestoreModule.doc(firestore, 'rocketGoals', goalId, 'journeyPhotos', photoId);
+    await firestoreModule.deleteDoc(docRef);
+
+    try {
+      const storageRef = storageModule.ref(storage, imageUrl);
+      await storageModule.deleteObject(storageRef);
+    } catch {
+      // Image may already be deleted or URL format different
+    }
   }
 }
