@@ -171,7 +171,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private pendingLandingAfterDeadline = false;
 
   // Check-ins state
-  activeCheckinTab = signal<'ignition' | 'mission_log' | 'photo_journey'>('ignition');
+  activeCheckinTab = signal<'ignition' | 'mission_log'>('ignition');
   checkinModalType = signal<'ignition' | 'mission_log'>('ignition');
   suppressMilestoneLanding = false;
   checkinsLoading = signal(false);
@@ -1773,7 +1773,7 @@ ${url}`;
     }
   }
 
-  selectCheckinTab(tab: 'ignition' | 'mission_log' | 'photo_journey') {
+  selectCheckinTab(tab: 'ignition' | 'mission_log') {
     this.activeCheckinTab.set(tab);
   }
 
@@ -2218,6 +2218,22 @@ ${url}`;
     });
 
     return result.sort((a, b) => b.dateId.localeCompare(a.dateId));
+  }
+
+  async deleteJourneyPhoto(photo: JourneyPhoto) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    if (!confirm('Delete this photo from your journey?')) return;
+
+    try {
+      await this.checkInsService.deleteJourneyPhoto(goal.id, photo.id, photo.imageUrl);
+      this.journeyPhotos.update(photos => photos.filter(p => p.id !== photo.id));
+      this.checkinsNotice.set('Photo deleted.');
+    } catch (error: any) {
+      console.error('Error deleting journey photo:', error);
+      this.checkinsError.set(error?.message || 'Failed to delete photo.');
+    }
   }
 
   getActionItemsForCurrentDay(): ActionItem[] {
