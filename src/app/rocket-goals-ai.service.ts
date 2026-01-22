@@ -173,6 +173,18 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
 
   private handleAuthChange(userId: string | null): void {
     this.currentUserId = userId;
+
+    // CRITICAL: If preventAutoSelect is set (fresh prompt being processed), do NOT reset client state
+    // This prevents race conditions where the auth effect clears messages during auto-launch
+    // The URL params may already be cleared by the time this effect runs, so we rely on the flag
+    if (this.preventAutoSelect) {
+      // A fresh prompt is being processed - only load sessions for sidebar, don't touch messages
+      if (userId) {
+        void this.loadSessionsForCurrentUser(false);
+      }
+      return;
+    }
+
     this.resetClientState();
 
     if (userId) {
