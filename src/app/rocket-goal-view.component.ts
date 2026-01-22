@@ -1795,6 +1795,25 @@ ${url}`;
     return false;
   }
 
+  private ensureMilestoneLogin(redirectUrl?: string, silent = false): boolean {
+    const profile = this.authService.profile();
+    if (profile?.userId && this.isGoalOwner()) {
+      return true;
+    }
+    if (profile?.userId && !this.isGoalOwner()) {
+      return false;
+    }
+    if (silent) {
+      return false;
+    }
+    const goal = this.goal();
+    const fallbackUrl = goal?.id
+      ? `/rocketgoal/${goal.id}?tab=tasks`
+      : this.router.url;
+    this.router.navigate(['/login'], { queryParams: { redirectTo: redirectUrl || fallbackUrl } });
+    return false;
+  }
+
   async loadWeeklyResets(goalId: string) {
     try {
       const resets = await this.checkInsService.getWeeklyResets(goalId, 8);
@@ -2295,6 +2314,9 @@ ${url}`;
     // If completing (not uncompleting) and this goal has dashboard config, show completion modal
     const dashboardConfig = this.getDashboardConfig();
     if (!wasCompleted && dashboardConfig?.enabled && dashboardConfig?.trackMetricsOnCompletion) {
+      if (!this.ensureMilestoneLogin()) {
+        return;
+      }
       this.milestoneToComplete.set(item);
       this.showMilestoneCompleteModal.set(true);
       return;
@@ -2412,6 +2434,9 @@ ${url}`;
   }
 
   openAddActionItem() {
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
     this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
@@ -2640,6 +2665,9 @@ ${url}`;
 
   // Milestone Generation Methods
   openGenerateMilestonesModal() {
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
     this.showGenerateMilestonesModal.set(true);
     this.generatedMilestones.set([]);
     this.milestoneGenerationError.set(null);
@@ -2933,6 +2961,9 @@ Generate the milestones now (JSON array only, no other text):`;
   }
 
   openEditActionItemModal(item: ActionItem, autoOpened = false) {
+    if (!this.ensureMilestoneLogin(undefined, autoOpened)) {
+      return;
+    }
     this.taskModalEditingItem.set(item);
     this.showTaskModal.set(true);
     this.newActionItemTitle.set(item.title);
@@ -2952,6 +2983,9 @@ Generate the milestones now (JSON array only, no other text):`;
   }
 
   async generateLandingMilestoneToday() {
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
     if (this.landingMilestoneAction()) return;
     this.landingMilestoneAction.set('today');
     try {
@@ -2971,6 +3005,9 @@ Generate the milestones now (JSON array only, no other text):`;
   }
 
   async generateLandingMilestonesRemaining() {
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
     if (this.landingMilestoneAction()) return;
     this.landingMilestoneAction.set('remaining');
     try {
@@ -2988,6 +3025,9 @@ Generate the milestones now (JSON array only, no other text):`;
   }
 
   openLandingAddMilestone() {
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
     this.showMilestoneLandingModal.set(false);
     this.openAddActionItem();
   }
@@ -3188,6 +3228,9 @@ Generate the milestones now (JSON array only, no other text):`;
 
   // Add task directly to a timeline day (when clicking on timeline)
   addTaskToDay(day: number) {
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
     this.selectedDayForNewTask.set(day);
     this.showTaskModal.set(true);
     this.newActionItemTitle.set('');
