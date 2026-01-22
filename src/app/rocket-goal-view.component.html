@@ -1459,12 +1459,12 @@
                       <div class="journey-hero-photos">
                         @for (photo of group.photos; track photo.id) {
                         <div class="journey-hero-photo-card">
-                          <img [src]="photo.imageUrl" [alt]="photo.caption || 'Journey photo'" class="journey-hero-photo-img" />
+                          <img [src]="photo.imageUrl" [alt]="photo.caption || 'Journey photo'" class="journey-hero-photo-img" (click)="openJourneyPhotoViewer(photo)" />
                           @if (photo.caption) {
                           <p class="journey-hero-caption">{{ photo.caption }}</p>
                           }
                           <span class="journey-hero-source">{{ photo.source === 'ignition' ? 'Ignition' : photo.source === 'mission_log' ? 'Mission Log' : 'Photo' }}</span>
-                          <button type="button" class="journey-hero-delete" (click)="deleteJourneyPhoto(photo)" title="Delete photo">
+                          <button type="button" class="journey-hero-delete" (click)="deleteJourneyPhoto(photo); $event.stopPropagation()" title="Delete photo">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                               <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                             </svg>
@@ -2884,6 +2884,30 @@
       <p class="text-gray-300 text-sm">This AI-generated image visualizes you achieving your goal: "{{ getGoalTitleDisplay() }}"</p>
       <p class="text-red-400 text-xs mt-3 italic">"This is achievable. This is me — soon."</p>
     </div>
+  </div>
+</div>
+}
+
+<!-- Journey Photo Viewer Modal -->
+@if (journeyPhotoViewerOpen() && journeyPhotoViewerPhoto()) {
+<div class="journey-viewer-overlay" [class.light-mode]="!isDarkMode()" (click)="closeJourneyPhotoViewer()">
+  <div class="journey-viewer-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="journey-viewer-close" (click)="closeJourneyPhotoViewer()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="journey-viewer-content">
+      <img [src]="journeyPhotoViewerPhoto()!.imageUrl" [alt]="journeyPhotoViewerPhoto()!.caption || 'Journey photo'" class="journey-viewer-image" />
+    </div>
+    @if (journeyPhotoViewerPhoto()!.caption || journeyPhotoViewerPhoto()!.dateId) {
+    <div class="journey-viewer-caption">
+      <p class="journey-viewer-date">{{ journeyPhotoViewerPhoto()!.dateId }}</p>
+      @if (journeyPhotoViewerPhoto()!.caption) {
+      <p class="journey-viewer-text">{{ journeyPhotoViewerPhoto()!.caption }}</p>
+      }
+    </div>
+    }
   </div>
 </div>
 }

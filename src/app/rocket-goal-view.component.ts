@@ -211,6 +211,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   journeyPhotoPreview = signal<string | null>(null);
   journeyPhotoCaption = signal('');
   uploadingJourneyPhoto = signal(false);
+  journeyPhotoViewerOpen = signal(false);
+  journeyPhotoViewerPhoto = signal<JourneyPhoto | null>(null);
 
   // Milestone Generation state
   showGenerateMilestonesModal = signal(false);
@@ -2234,6 +2236,16 @@ ${url}`;
       console.error('Error deleting journey photo:', error);
       this.checkinsError.set(error?.message || 'Failed to delete photo.');
     }
+  }
+
+  openJourneyPhotoViewer(photo: JourneyPhoto) {
+    this.journeyPhotoViewerPhoto.set(photo);
+    this.journeyPhotoViewerOpen.set(true);
+  }
+
+  closeJourneyPhotoViewer() {
+    this.journeyPhotoViewerOpen.set(false);
+    this.journeyPhotoViewerPhoto.set(null);
   }
 
   getActionItemsForCurrentDay(): ActionItem[] {
