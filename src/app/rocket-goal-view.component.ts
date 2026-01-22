@@ -2019,6 +2019,11 @@ ${url}`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  getTodayFormatted(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+
   getRecentIgnitionHistory(): DailyIgnition[] {
     return this.recentIgnitions().slice(0, 10);
   }
@@ -2073,6 +2078,7 @@ ${url}`;
       if (this.showCheckinModal()) {
         this.closeCheckinModal();
       }
+      this.scrollToCheckinsSection();
     } catch (error: any) {
       console.error('Error saving daily ignition:', error);
       this.checkinsError.set(error?.message || 'Failed to save Daily Ignition.');
@@ -2112,6 +2118,7 @@ ${url}`;
       if (this.showCheckinModal()) {
         this.closeCheckinModal();
       }
+      this.scrollToCheckinsSection();
     } catch (error: any) {
       console.error('Error saving mission log:', error);
       this.checkinsError.set(error?.message || 'Failed to submit Mission Log.');
@@ -3206,6 +3213,18 @@ Generate the milestones now (JSON array only, no other text):`;
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
+
+  private scrollToCheckinsSection() {
+    // Switch to checkins tab first
+    this.activePrimaryTab.set('checkins');
+    // Wait for DOM update then scroll
+    setTimeout(() => {
+      const section = document.getElementById('checkins-dashboard-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   // Visualization methods

@@ -8259,6 +8259,15 @@
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
 }
 
+.checkin-modal-date {
+  margin: 0 0 0.35rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f97316;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
 .checkin-modal-title {
   margin: 0;
   font-size: 1.2rem;
@@ -8401,6 +8410,10 @@
 
 .light-mode .checkin-modal-subtitle {
   color: rgba(51, 65, 85, 0.7);
+}
+
+.light-mode .checkin-modal-date {
+  color: #ea580c;
 }
 
 .light-mode .checkin-modal-close {

@@ -1391,7 +1391,7 @@
                 </div>
               </div>
               } @else if (activePrimaryTab() === 'checkins') {
-              <div class="checkins-panel">
+              <div class="checkins-panel" id="checkins-dashboard-section">
                 <div class="checkins-header">
                   <div class="checkins-header-row">
                     <div>
@@ -2363,11 +2363,12 @@
     <div class="checkin-modal-accent"></div>
     <div class="checkin-modal-header">
       <div>
+        <p class="checkin-modal-date">{{ getTodayFormatted() }}</p>
         <p class="checkin-modal-title">
           @if (checkinModalType() === 'ignition') { 🔥 Daily Ignition } @else { 📘 Mission Log }
         </p>
         <p class="checkin-modal-subtitle">
-          @if (checkinModalType() === 'ignition') { Set today’s trajectory. } @else { Review the day. Course-correct fast. }
+          @if (checkinModalType() === 'ignition') { Set today's trajectory. } @else { Review the day. Course-correct fast. }
         </p>
       </div>
       <button type="button" class="checkin-modal-close" (click)="closeCheckinModal()">
