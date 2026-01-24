@@ -9,7 +9,7 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 
-type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests';
+type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
 
 type PromoCodeUser = {
   userId: string;
@@ -40,6 +40,16 @@ type DemoRequest = {
   displayTime: string;
   meetingLink: string;
   createdAt: Date;
+};
+
+type BookDownload = {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  bookTitle: string;
+  downloadedAt: Date;
 };
 
 type ScheduledReminder = {
@@ -147,13 +157,19 @@ export class AdminComponent implements OnInit {
     quickActions: true,
     aiAnalytics: false,
     promoCodes: false,
-    demoRequests: false
+    demoRequests: false,
+    bookDownloads: false
   });
 
   // Demo requests state
   demoRequests = signal<DemoRequest[]>([]);
   demoRequestsLoading = signal(false);
   demoRequestsError = signal<string | null>(null);
+
+  // Book downloads state
+  bookDownloads = signal<BookDownload[]>([]);
+  bookDownloadsLoading = signal(false);
+  bookDownloadsError = signal<string | null>(null);
   totalUsers = signal<number | null>(null);
   totalGoals = signal<number | null>(null);
   statsLoading = signal(false);
@@ -223,6 +239,7 @@ export class AdminComponent implements OnInit {
     this.loadPromoCodes();
     this.loadDemoRequests();
     this.loadScheduledReminders();
+    this.loadBookDownloads();
   }
 
   async sendTestEmail() {
@@ -1408,5 +1425,49 @@ export class AdminComponent implements OnInit {
       this.error.set('Failed to delete demo request. Please try again.');
       setTimeout(() => this.error.set(null), 5000);
     }
+  }
+
+  async loadBookDownloads() {
+    this.bookDownloadsLoading.set(true);
+    this.bookDownloadsError.set(null);
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const bookDownloadsRef = firestoreModule.collection(firestore, 'bookDownloads');
+      const q = firestoreModule.query(bookDownloadsRef, firestoreModule.orderBy('downloadedAt', 'desc'));
+      const snapshot = await firestoreModule.getDocs(q);
+
+      const downloads: BookDownload[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        downloads.push({
+          id: doc.id,
+          userId: data['userId'] || '',
+          firstName: data['firstName'] || '',
+          lastName: data['lastName'] || '',
+          email: data['email'] || '',
+          bookTitle: data['bookTitle'] || 'Surge: 42 High-Velocity Prompts',
+          downloadedAt: data['downloadedAt']?.toDate?.() || new Date(data['downloadedAt'])
+        });
+      });
+
+      this.bookDownloads.set(downloads);
+    } catch (err: any) {
+      console.error('Failed to load book downloads:', err);
+      this.bookDownloadsError.set('Unable to load book downloads.');
+    } finally {
+      this.bookDownloadsLoading.set(false);
+    }
+  }
+
+  formatDownloadDateTime(date: Date): string {
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   }
 }

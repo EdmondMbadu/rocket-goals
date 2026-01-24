@@ -291,6 +291,99 @@
         }
       </section>
 
+      <!-- Book Downloads Section -->
+      <section
+        class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900/80 dark:border-white/10">
+        <div class="flex items-start justify-between px-6 py-5">
+          <div class="space-y-1">
+            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Downloads</p>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Surge Book Downloads</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-300">Track who downloaded the Surge eBook</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-semibold rounded-full dark:bg-emerald-500/15 dark:text-emerald-200">
+              {{ bookDownloads().length }} downloads
+            </span>
+            <button type="button" (click)="toggleSection('bookDownloads')"
+              class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors dark:text-slate-300 dark:hover:text-white">
+              <span>@if (sectionOpen('bookDownloads')) { Collapse } @else { Expand }</span>
+              @if (sectionOpen('bookDownloads')) {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+              </svg>
+              } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+              }
+            </button>
+          </div>
+        </div>
+        @if (sectionOpen('bookDownloads')) {
+        <div class="border-t border-slate-200 dark:border-white/10">
+          @if (bookDownloadsLoading()) {
+          <div class="flex items-center justify-center gap-3 py-12 text-slate-600 dark:text-slate-300">
+            <div class="w-5 h-5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+            <span>Loading book downloads...</span>
+          </div>
+          } @else if (bookDownloadsError()) {
+          <div class="p-6 text-center">
+            <p class="text-rose-600 dark:text-rose-400">{{ bookDownloadsError() }}</p>
+            <button (click)="loadBookDownloads()" class="mt-3 text-sm text-emerald-600 hover:underline dark:text-emerald-400">
+              Try again
+            </button>
+          </div>
+          } @else if (bookDownloads().length === 0) {
+          <div class="p-12 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center dark:bg-slate-800">
+              <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <p class="text-slate-500 dark:text-slate-400">No book downloads yet</p>
+            <p class="text-sm text-slate-400 mt-1 dark:text-slate-500">Downloads will appear here when users download the Surge eBook</p>
+          </div>
+          } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">User</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Book</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Downloaded At</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-white/10">
+                @for (download of bookDownloads(); track download.id) {
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                  <td class="px-6 py-4">
+                    <span class="font-semibold text-slate-900 dark:text-white">{{ download.firstName }} {{ download.lastName }}</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <a href="mailto:{{ download.email }}" class="text-sm text-emerald-600 hover:underline dark:text-emerald-400">{{ download.email }}</a>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full dark:bg-emerald-500/15 dark:text-emerald-200">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      {{ download.bookTitle }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="text-sm text-slate-600 dark:text-slate-300">{{ formatDownloadDateTime(download.downloadedAt) }}</span>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+        }
+      </section>
+
       <!-- AI Page Analytics -->
       <section
         class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900/80 dark:border-white/10 dark:shadow-[0_30px_70px_rgba(2,6,23,0.7)]">

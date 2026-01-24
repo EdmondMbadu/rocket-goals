@@ -486,11 +486,38 @@ export class SurgeBookPageComponent implements OnInit {
     this.theme.toggleDarkMode();
   }
 
-  handleDownload(): void {
+  async handleDownload(): Promise<void> {
     if (!this.authService.user()) {
       this.router.navigate(['/login'], { queryParams: { redirectTo: '/surge-book' } });
       return;
     }
+
+    // Record the download to Firestore
+    try {
+      const profile = this.authService.profile();
+      if (profile) {
+        const { initializeApp, getApps, getApp } = await import('firebase/app');
+        const { getFirestore, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+        const { firebaseConfig } = await import('../../environments/environment');
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+        const firestore = getFirestore(app);
+
+        await addDoc(collection(firestore, 'bookDownloads'), {
+          userId: profile.userId || profile.id,
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          email: profile.email || '',
+          bookTitle: 'Surge: 42 High-Velocity Prompts',
+          downloadedAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.error('Failed to record book download:', err);
+      // Don't block the download if recording fails
+    }
+
+    // Open the PDF
     window.open(this.bookPdfUrl, '_blank');
   }
 }
