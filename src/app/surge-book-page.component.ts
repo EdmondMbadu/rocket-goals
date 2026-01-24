@@ -286,114 +286,155 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
           </div>
         </section>
 
-        <!-- Seven Categories Section -->
-        <section class="py-16 md:py-24 bg-gray-50 dark:bg-slate-900/50">
-          <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto">
-              <div class="text-center mb-16">
+        <!-- Seven Categories Section - Premium Timeline -->
+        <section class="py-20 md:py-32 bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-black text-black dark:text-white relative overflow-hidden">
+          <!-- Background Effects -->
+          <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gradient-to-b from-transparent via-red-600/30 dark:via-red-600/50 to-transparent"></div>
+            <div class="absolute top-[-300px] left-[-200px] w-[600px] h-[600px] bg-red-600/5 dark:bg-red-600/10 rounded-full blur-[150px]"></div>
+            <div class="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-red-600/3 dark:bg-red-600/5 rounded-full blur-[120px]"></div>
+          </div>
+
+          <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-5xl mx-auto">
+              <!-- Section Header -->
+              <div class="text-center mb-20">
                 <div
-                  class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-slate-200 mb-4">
-                  <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                  <span class="text-xs font-bold tracking-wider uppercase">The Categories</span>
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 mb-6">
+                  <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  <span class="text-xs font-bold text-gray-600 dark:text-white/80 tracking-wider uppercase">The Categories</span>
                 </div>
-                <h2 class="text-3xl md:text-5xl font-black tracking-tight text-black dark:text-white mb-4">
-                  Seven Categories of <span class="text-red-600">Propulsion</span>
+                <h2 class="text-4xl md:text-6xl font-black tracking-tight mb-6 text-black dark:text-white">
+                  Seven Categories of <span class="text-red-500">Propulsion</span>
                 </h2>
-                <p class="text-lg text-black/60 dark:text-slate-300 max-w-2xl mx-auto">
-                  Through seven specialized categories, you will learn to overcome the barriers holding you back and
-                  launch your goals faster than ever.
+                <p class="text-xl text-black/60 dark:text-white/60 max-w-2xl mx-auto">
+                  Your complete flight sequence from launch to orbit. Master each category to achieve maximum velocity.
                 </p>
               </div>
 
-              <div class="space-y-4">
+              <!-- Timeline -->
+              <div class="relative">
+                <!-- Vertical Line -->
+                <div class="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-red-600 via-red-500 to-red-600/30 md:-translate-x-px"></div>
+
                 <!-- Category I -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">I</span>
+                <div class="relative flex items-center mb-12 md:mb-16 group">
+                  <div class="flex-1 md:pr-16 md:text-right order-2 md:order-1 pl-20 md:pl-0">
+                    <div class="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-white/10 hover:border-red-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">Ignition & Escape Velocity</h3>
+                      <p class="text-black/60 dark:text-white/60 leading-relaxed">
+                        Overcome the "limbic friction" and freeze-response that kills big Moonshot ideas. Light the fuse and break free from gravity.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">Ignition & Escape Velocity</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Overcome the "limbic friction" and freeze-response that kills big Moonshot ideas.
-                    </p>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)] dark:shadow-[0_0_30px_rgba(239,68,68,0.5)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-xl">I</span>
                   </div>
+                  <div class="flex-1 md:pl-16 hidden md:block order-3"></div>
                 </div>
 
                 <!-- Category II -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">II</span>
+                <div class="relative flex items-center mb-12 md:mb-16 group">
+                  <div class="flex-1 md:pr-16 hidden md:block order-1"></div>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)] dark:shadow-[0_0_30px_rgba(239,68,68,0.5)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-xl">II</span>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">Visual Narrowing & Target Lock</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Cut through the "blurry vision" of a Maze project to find your next aligned step forward.
-                    </p>
+                  <div class="flex-1 md:pl-16 order-2 md:order-3 pl-20 md:pl-16">
+                    <div class="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-white/10 hover:border-red-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">Visual Narrowing & Target Lock</h3>
+                      <p class="text-black/60 dark:text-white/60 leading-relaxed">
+                        Cut through the "blurry vision" of a Maze project to find your next aligned step forward. Lock onto your target with precision.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Category III -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">III</span>
+                <div class="relative flex items-center mb-12 md:mb-16 group">
+                  <div class="flex-1 md:pr-16 md:text-right order-2 md:order-1 pl-20 md:pl-0">
+                    <div class="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-white/10 hover:border-red-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">The Aerodynamics of Friction</h3>
+                      <p class="text-black/60 dark:text-white/60 leading-relaxed">
+                        Strip away the bureaucratic friction and busy work that stalls your Metro progress. Streamline for maximum efficiency.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">The Aerodynamics of Friction</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Strip away the bureaucratic friction and busy work that stalls your Metro progress.
-                    </p>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)] dark:shadow-[0_0_30px_rgba(239,68,68,0.5)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-xl">III</span>
                   </div>
+                  <div class="flex-1 md:pl-16 hidden md:block order-3"></div>
                 </div>
 
                 <!-- Category IV -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">IV</span>
+                <div class="relative flex items-center mb-12 md:mb-16 group">
+                  <div class="flex-1 md:pr-16 hidden md:block order-1"></div>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)] dark:shadow-[0_0_30px_rgba(239,68,68,0.5)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-xl">IV</span>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">Time Compression & Warp Speed</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Accelerate timelines and compress the distance between where you are and where you need to be.
-                    </p>
+                  <div class="flex-1 md:pl-16 order-2 md:order-3 pl-20 md:pl-16">
+                    <div class="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-white/10 hover:border-red-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">Time Compression & Warp Speed</h3>
+                      <p class="text-black/60 dark:text-white/60 leading-relaxed">
+                        Accelerate timelines and compress the distance between where you are and where you need to be. Bend time to your will.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Category V -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">V</span>
+                <div class="relative flex items-center mb-12 md:mb-16 group">
+                  <div class="flex-1 md:pr-16 md:text-right order-2 md:order-1 pl-20 md:pl-0">
+                    <div class="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-white/10 hover:border-red-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">Volume & Velocity</h3>
+                      <p class="text-black/60 dark:text-white/60 leading-relaxed">
+                        Increase output and speed simultaneously without burning out or sacrificing quality. Master the art of sustainable acceleration.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">Volume & Velocity</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Increase output and speed simultaneously without burning out or sacrificing quality.
-                    </p>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)] dark:shadow-[0_0_30px_rgba(239,68,68,0.5)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-xl">V</span>
                   </div>
+                  <div class="flex-1 md:pl-16 hidden md:block order-3"></div>
                 </div>
 
                 <!-- Category VI -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">VI</span>
+                <div class="relative flex items-center mb-12 md:mb-16 group">
+                  <div class="flex-1 md:pr-16 hidden md:block order-1"></div>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)] dark:shadow-[0_0_30px_rgba(239,68,68,0.5)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-xl">VI</span>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">Peak State Propulsion</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Access your optimal mental and emotional state to perform at your highest level.
-                    </p>
+                  <div class="flex-1 md:pl-16 order-2 md:order-3 pl-20 md:pl-16">
+                    <div class="bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-white/10 hover:border-red-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">Peak State Propulsion</h3>
+                      <p class="text-black/60 dark:text-white/60 leading-relaxed">
+                        Access your optimal mental and emotional state to perform at your highest level. Harness the power of flow state.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Category VII -->
-                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-black text-lg">VII</span>
+                <!-- Category VII - Final -->
+                <div class="relative flex items-center group">
+                  <div class="flex-1 md:pr-16 md:text-right order-2 md:order-1 pl-20 md:pl-0">
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-600/20 dark:to-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-500/30 rounded-2xl p-6 md:p-8 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-red-600/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.15)] dark:group-hover:shadow-[0_0_60px_rgba(239,68,68,0.3)]">
+                      <h3 class="text-2xl md:text-3xl font-black text-black dark:text-white mb-3">The Afterburner Effect</h3>
+                      <p class="text-black/70 dark:text-white/70 leading-relaxed">
+                        Leverage the power of AI to cross the finish line with maximum force. Ignite your afterburners and achieve escape velocity.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="text-xl font-bold text-black dark:text-white">The Afterburner Effect</h3>
-                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
-                      Leverage the power of AI to cross the finish line with maximum force.
-                    </p>
+                  <div class="absolute left-8 md:left-1/2 md:-translate-x-1/2 w-20 h-20 bg-gradient-to-br from-red-500 via-red-600 to-orange-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.4)] dark:shadow-[0_0_50px_rgba(239,68,68,0.6)] z-10 group-hover:scale-110 transition-transform duration-300 order-1 md:order-2">
+                    <span class="text-white font-black text-2xl">VII</span>
+                  </div>
+                  <div class="flex-1 md:pl-16 hidden md:block order-3"></div>
+                </div>
+
+                <!-- Rocket at the end -->
+                <div class="flex justify-center mt-16">
+                  <div class="w-12 h-12 text-red-500 animate-bounce">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.5 2.75a.75.75 0 00-1 0l-9 8.25a.75.75 0 00.5 1.25h1.5v8a.75.75 0 00.75.75h3.5a.75.75 0 00.75-.75v-5.5h3v5.5a.75.75 0 00.75.75h3.5a.75.75 0 00.75-.75v-8h1.5a.75.75 0 00.5-1.25l-9-8.25z"/>
+                    </svg>
                   </div>
                 </div>
               </div>
