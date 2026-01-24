@@ -1,66 +1,116 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from './auth.service';
+import { ThemeService } from './theme.service';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 
 @Component({
   selector: 'app-surge-book-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AvatarDropdownComponent],
   template: `
     <div class="min-h-screen bg-white text-black dark:bg-slate-950 dark:text-slate-100 flex flex-col transition-colors duration-300">
-      <!-- Header -->
-      <header class="border-b border-black/5 dark:border-white/10">
-        <div class="container mx-auto px-6 py-5 flex items-center justify-between">
-          <a routerLink="/" class="flex items-center gap-3 group">
-            <div class="relative w-12 h-12">
-              <div
-                class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition">
+      <!-- Navigation -->
+      <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-300"
+        [class]="isDarkMode() ? 'bg-slate-950/80 border-white/10' : 'bg-white/80 border-slate-200'">
+        <div class="container mx-auto px-6 py-4">
+          <div class="flex items-center justify-between max-w-7xl mx-auto w-full gap-6">
+            <!-- Logo -->
+            <a routerLink="/" class="flex items-center gap-3 group flex-none">
+              <div class="relative">
+                <div
+                  class="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-500 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-500">
+                </div>
+                <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="relative w-12 h-12 object-contain" />
               </div>
-              <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="relative w-12 h-12 object-contain" />
-            </div>
-            <span class="text-xl font-black tracking-tighter">
-              ROCKET<span class="text-red-600">GOALS</span>
-            </span>
-          </a>
+              <span class="text-xl font-black tracking-tight hidden sm:block"
+                [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
+                ROCKET<span class="text-red-500">GOALS</span>
+              </span>
+            </a>
 
-          @if (authService.user()) {
-            <!-- Logged in navigation -->
-            <nav class="hidden md:flex items-center gap-1">
-              <a routerLink="/"
-                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+            <!-- Center Navigation Links -->
+            @if (isLoggedIn()) {
+            <div class="flex-1 hidden md:flex items-center justify-center gap-6">
+              <a routerLink="/goals"
+                class="pb-1 text-sm font-bold transition-colors uppercase tracking-wide inline-flex items-center gap-2"
+                [class]="isDarkMode() ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
                 Home
               </a>
               <a routerLink="/ai"
-                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+                class="pb-1 text-sm font-bold transition-colors uppercase tracking-wide inline-flex items-center gap-2"
+                [class]="isDarkMode() ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 AI
               </a>
+              <a routerLink="/profile"
+                class="pb-1 text-sm font-bold transition-colors uppercase tracking-wide inline-flex items-center gap-2"
+                [class]="isDarkMode() ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Profile
+              </a>
               <a routerLink="/app-suite"
-                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+                class="pb-1 text-sm font-bold transition-colors uppercase tracking-wide inline-flex items-center gap-2"
+                [class]="isDarkMode() ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
                 App Suite
               </a>
-              <a routerLink="/goals"
-                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
-                My Goals
-              </a>
-            </nav>
-            <div class="flex items-center gap-3">
-              <a routerLink="/goals"
-                class="px-4 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition shadow-lg dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
-                Dashboard
-              </a>
             </div>
-          } @else {
-            <!-- Logged out navigation -->
-            <div class="flex items-center gap-3">
-              <a routerLink="/login"
-                class="px-4 py-2 text-sm font-bold rounded-full border border-black/10 hover:border-black transition dark:border-white/20 dark:hover:border-white">Log in</a>
+            }
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3 flex-none">
+              <button type="button" (click)="toggleTheme()" class="p-2 rounded-full border transition-colors"
+                [class]="isDarkMode() ? 'border-white/20 text-white/70 hover:text-white hover:bg-white/10' : 'border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100'"
+                title="Toggle theme">
+                @if (isDarkMode()) {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.021 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                </svg>
+                }
+              </button>
+
+              @if (isLoggedIn()) {
+              <app-avatar-dropdown />
+              } @else {
+              <a routerLink="/login" class="px-5 py-2 text-sm font-bold border rounded-full transition-colors"
+                [class]="isDarkMode() ? 'text-white/80 border-white/20 hover:bg-white/10' : 'text-slate-700 border-slate-300 hover:bg-slate-100'">
+                Log in
+              </a>
               <a routerLink="/signup"
-                class="px-4 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition shadow-lg dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">Start Free</a>
+                class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30">
+                Start Free
+              </a>
+              }
             </div>
-          }
+          </div>
         </div>
-      </header>
+      </nav>
+
+      <!-- Spacer for fixed nav -->
+      <div class="h-20"></div>
 
       <main class="flex-1">
         <!-- Hero Section -->
@@ -420,12 +470,20 @@ import { AuthService } from './auth.service';
 export class SurgeBookPageComponent implements OnInit {
   protected authService = inject(AuthService);
   private router = inject(Router);
+  private theme = inject(ThemeService);
+
+  protected readonly isDarkMode = this.theme.isDarkMode;
+  protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
 
   readonly bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042%20High%20Velocity_%20FULL%20eBOOK_Final.pdf?alt=media&token=a0ddc6ca-4c99-4532-9342-b214e9f90a72';
   readonly bookImageUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fsurge-book.png?alt=media&token=1fa8febd-bf3e-4bce-aa9f-13ed5cb03462';
 
   ngOnInit(): void {
     window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  toggleTheme(): void {
+    this.theme.toggleDarkMode();
   }
 
   handleDownload(): void {
