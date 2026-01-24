@@ -153,9 +153,8 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
                 </h1>
 
                 <p class="text-xl text-black/70 leading-relaxed dark:text-slate-300">
-                  Your tactical manual for shattering the "Velocity Barriers" that are holding you back. This isn't just
-                  a book of theory; it's a high-octane engine of 42 high-intensity AI prompts designed to override your
-                  default thinking and propel you into immediate action.
+                  Your acceleration playbook for dismantling "Velocity Barriers." Skip the theory: these 42 high-velocity
+                  AI prompts are designed to override your default programming and force an immediate surge in momentum.
                 </p>
 
                 <p class="text-lg text-black/60 dark:text-slate-400 italic">
@@ -182,90 +181,21 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
           </div>
         </section>
 
-        <!-- What You'll Learn Section -->
-        <section class="py-16 md:py-24 bg-gray-50 dark:bg-slate-900/50">
+        <!-- What You'll Learn Header -->
+        <section class="py-16 md:py-20 bg-gray-50 dark:bg-slate-900/50">
           <div class="container mx-auto px-6">
-            <div class="max-w-6xl mx-auto">
-              <div class="text-center mb-16">
-                <div
-                  class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-slate-200 mb-4">
-                  <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                  <span class="text-xs font-bold tracking-wider uppercase">What You'll Learn</span>
-                </div>
-                <h2 class="text-3xl md:text-5xl font-black tracking-tight text-black dark:text-white mb-4">
-                  Seven Categories of <span class="text-red-600">Propulsion</span>
-                </h2>
-                <p class="text-lg text-black/60 dark:text-slate-300 max-w-2xl mx-auto">
-                  Through seven specialized categories, you will learn to overcome the barriers holding you back and
-                  launch your goals faster than ever.
-                </p>
+            <div class="max-w-4xl mx-auto text-center">
+              <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-slate-200 mb-4">
+                <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                <span class="text-xs font-bold tracking-wider uppercase">What You'll Learn</span>
               </div>
-
-              <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card 1 -->
-                <div
-                  class="bg-white border border-black/5 rounded-3xl p-6 space-y-4 hover:shadow-xl transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600/10 rounded-2xl flex items-center justify-center">
-                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-black dark:text-white">Ignite Escape Velocity</h3>
-                  <p class="text-black/60 dark:text-slate-300 text-sm">
-                    Overcome the "limbic friction" and freeze-response that kills big Moonshot ideas.
-                  </p>
-                </div>
-
-                <!-- Card 2 -->
-                <div
-                  class="bg-white border border-black/5 rounded-3xl p-6 space-y-4 hover:shadow-xl transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600/10 rounded-2xl flex items-center justify-center">
-                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-black dark:text-white">Narrow Your Focus</h3>
-                  <p class="text-black/60 dark:text-slate-300 text-sm">
-                    Cut through the "blurry vision" of a Maze project to find your next aligned step forward.
-                  </p>
-                </div>
-
-                <!-- Card 3 -->
-                <div
-                  class="bg-white border border-black/5 rounded-3xl p-6 space-y-4 hover:shadow-xl transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600/10 rounded-2xl flex items-center justify-center">
-                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-black dark:text-white">Eliminate Drag</h3>
-                  <p class="text-black/60 dark:text-slate-300 text-sm">
-                    Strip away the bureaucratic friction and busy work that stalls your Metro progress.
-                  </p>
-                </div>
-
-                <!-- Card 4 -->
-                <div
-                  class="bg-white border border-black/5 rounded-3xl p-6 space-y-4 hover:shadow-xl transition-shadow dark:bg-slate-900/70 dark:border-white/10">
-                  <div class="w-14 h-14 bg-red-600/10 rounded-2xl flex items-center justify-center">
-                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-black dark:text-white">Activate Afterburner</h3>
-                  <p class="text-black/60 dark:text-slate-300 text-sm">
-                    Leverage the power of AI to cross the finish line with maximum force.
-                  </p>
-                </div>
-              </div>
+              <h2 class="text-3xl md:text-5xl font-black tracking-tight text-black dark:text-white mb-4">
+                Your Complete <span class="text-red-600">Launch System</span>
+              </h2>
+              <p class="text-lg text-black/60 dark:text-slate-300 max-w-2xl mx-auto">
+                Master the framework, categories, and prompts that will propel your goals into orbit.
+              </p>
             </div>
           </div>
         </section>
@@ -356,6 +286,150 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
           </div>
         </section>
 
+        <!-- Seven Categories Section -->
+        <section class="py-16 md:py-24 bg-gray-50 dark:bg-slate-900/50">
+          <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+              <div class="text-center mb-16">
+                <div
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-slate-200 mb-4">
+                  <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                  <span class="text-xs font-bold tracking-wider uppercase">The Categories</span>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black tracking-tight text-black dark:text-white mb-4">
+                  Seven Categories of <span class="text-red-600">Propulsion</span>
+                </h2>
+                <p class="text-lg text-black/60 dark:text-slate-300 max-w-2xl mx-auto">
+                  Through seven specialized categories, you will learn to overcome the barriers holding you back and
+                  launch your goals faster than ever.
+                </p>
+              </div>
+
+              <div class="space-y-4">
+                <!-- Category I -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">I</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">Ignition & Escape Velocity</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Overcome the "limbic friction" and freeze-response that kills big Moonshot ideas.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Category II -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">II</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">Visual Narrowing & Target Lock</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Cut through the "blurry vision" of a Maze project to find your next aligned step forward.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Category III -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">III</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">The Aerodynamics of Friction</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Strip away the bureaucratic friction and busy work that stalls your Metro progress.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Category IV -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">IV</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">Time Compression & Warp Speed</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Accelerate timelines and compress the distance between where you are and where you need to be.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Category V -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">V</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">Volume & Velocity</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Increase output and speed simultaneously without burning out or sacrificing quality.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Category VI -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">VI</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">Peak State Propulsion</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Access your optimal mental and emotional state to perform at your highest level.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Category VII -->
+                <div class="bg-white border border-black/5 rounded-2xl p-6 flex items-center gap-6 hover:shadow-lg transition-shadow dark:bg-slate-900/70 dark:border-white/10">
+                  <div class="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-black text-lg">VII</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-black dark:text-white">The Afterburner Effect</h3>
+                    <p class="text-black/60 dark:text-slate-300 text-sm mt-1">
+                      Leverage the power of AI to cross the finish line with maximum force.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 42 High-Velocity Prompts Section -->
+        <section class="py-16 md:py-24">
+          <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+              <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-100 border border-red-200 dark:bg-red-500/15 dark:border-red-500/30 mb-4">
+                <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                <span class="text-xs font-bold text-red-700 tracking-wider uppercase dark:text-red-200">The Arsenal</span>
+              </div>
+              <h2 class="text-3xl md:text-5xl font-black tracking-tight text-black dark:text-white mb-6">
+                42 High-Velocity <span class="text-red-600">Prompts</span>
+              </h2>
+              <p class="text-xl text-black/70 dark:text-slate-300 leading-relaxed max-w-3xl mx-auto mb-8">
+                These 42 powerful AI prompts are tailored for each step in your goal setting journey and will ensure
+                that your project continues with maximum momentum and the least amount of drag. Also, to make sure you
+                launch into action, each prompt is linked to a powerful "One Click" launch code that instantly runs the
+                prompt in your favorite AI engine.
+              </p>
+              <div class="inline-flex items-center gap-4 px-8 py-4 bg-black/5 dark:bg-white/5 rounded-2xl">
+                <div class="text-5xl font-black text-red-600">42</div>
+                <div class="text-left">
+                  <div class="text-lg font-bold text-black dark:text-white">Ready-to-Use Prompts</div>
+                  <div class="text-sm text-black/60 dark:text-slate-400">Across all 7 propulsion categories</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Author Section -->
         <section class="py-16 md:py-24 bg-gray-50 dark:bg-slate-900/50">
           <div class="container mx-auto px-6">
@@ -374,9 +448,9 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
 
                 <p class="text-lg text-black/70 dark:text-slate-300 leading-relaxed">
                   With decades of project management and goal setting experience, Jim Walker has consulted with
-                  organizations like the Project Management Institute and helped countless teams navigate complex
-                  projects. By combining his deep expertise with cutting-edge AI prompts, he's created a unique system
-                  to help you move from hesitation to hyperdrive.
+                  organizations like AstraZeneca, Genentech, IBM, NewWorld Game, and the Project Management Institute,
+                  helping countless teams navigate complex projects. By combining his deep expertise with cutting-edge
+                  AI prompts, he's created a unique system to help you move from hesitation to hyperdrive.
                 </p>
 
                 <p class="text-lg text-black/70 dark:text-slate-300 leading-relaxed italic">
