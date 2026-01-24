@@ -23,17 +23,42 @@ import { AuthService } from './auth.service';
               ROCKET<span class="text-red-600">GOALS</span>
             </span>
           </a>
-          <div class="flex items-center gap-3">
-            @if (authService.user()) {
+
+          @if (authService.user()) {
+            <!-- Logged in navigation -->
+            <nav class="hidden md:flex items-center gap-1">
+              <a routerLink="/"
+                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+                Home
+              </a>
+              <a routerLink="/ai"
+                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+                AI
+              </a>
+              <a routerLink="/app-suite"
+                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+                App Suite
+              </a>
               <a routerLink="/goals"
-                class="px-4 py-2 text-sm font-bold rounded-full border border-black/10 hover:border-black transition dark:border-white/20 dark:hover:border-white">My Goals</a>
-            } @else {
+                class="px-4 py-2 text-sm font-bold rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition">
+                My Goals
+              </a>
+            </nav>
+            <div class="flex items-center gap-3">
+              <a routerLink="/goals"
+                class="px-4 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition shadow-lg dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
+                Dashboard
+              </a>
+            </div>
+          } @else {
+            <!-- Logged out navigation -->
+            <div class="flex items-center gap-3">
               <a routerLink="/login"
                 class="px-4 py-2 text-sm font-bold rounded-full border border-black/10 hover:border-black transition dark:border-white/20 dark:hover:border-white">Log in</a>
               <a routerLink="/signup"
                 class="px-4 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition shadow-lg dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">Start Free</a>
-            }
-          </div>
+            </div>
+          }
         </div>
       </header>
 
