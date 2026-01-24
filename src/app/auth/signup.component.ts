@@ -1,7 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { ThemeService } from '../theme.service';
 
@@ -12,10 +12,11 @@ import { ThemeService } from '../theme.service';
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.css'
 })
-export class SignupComponent {
+export class SignupComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   protected theme = inject(ThemeService);
 
   readonly signupForm = this.fb.nonNullable.group({
@@ -24,6 +25,20 @@ export class SignupComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]]
   });
+
+  ngOnInit(): void {
+    // Pre-fill form from query parameters (e.g., from book download)
+    const params = this.route.snapshot.queryParams;
+    if (params['firstName']) {
+      this.signupForm.patchValue({ firstName: params['firstName'] });
+    }
+    if (params['lastName']) {
+      this.signupForm.patchValue({ lastName: params['lastName'] });
+    }
+    if (params['email']) {
+      this.signupForm.patchValue({ email: params['email'] });
+    }
+  }
 
   readonly submitting = computed(() => this.authService.authLoading());
   readonly serverError = signal<string | null>(null);

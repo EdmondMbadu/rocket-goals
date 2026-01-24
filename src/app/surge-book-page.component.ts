@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
@@ -8,7 +9,7 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
 @Component({
   selector: 'app-surge-book-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, AvatarDropdownComponent],
+  imports: [CommonModule, RouterModule, FormsModule, AvatarDropdownComponent],
   template: `
     <div class="min-h-screen bg-white text-black dark:bg-slate-950 dark:text-slate-100 flex flex-col transition-colors duration-300">
       <!-- Navigation -->
@@ -171,11 +172,6 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
                   </svg>
                 </button>
 
-                @if (!authService.user()) {
-                  <p class="text-sm text-black/50 dark:text-slate-400">
-                    * Login required to download
-                  </p>
-                }
               </div>
             </div>
           </div>
@@ -525,12 +521,6 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
                 </svg>
               </button>
 
-              @if (!authService.user()) {
-                <p class="text-sm text-white/40">
-                  * You'll need to log in to download the book
-                </p>
-              }
-
               <div class="pt-8">
                 <a routerLink="/"
                   class="text-white/60 hover:text-white transition-colors inline-flex items-center gap-2">
@@ -545,6 +535,100 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
           </div>
         </section>
       </main>
+
+      <!-- Download Modal -->
+      @if (showDownloadModal()) {
+      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="closeModal()"></div>
+
+        <!-- Modal Content -->
+        <div class="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in fade-in zoom-in duration-200">
+          <!-- Close Button -->
+          <button (click)="closeModal()"
+            class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <!-- Header -->
+          <div class="text-center space-y-2">
+            <div class="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-black text-black dark:text-white">Get Your Free Book</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Enter your details to download Surge: 42 High-Velocity Prompts</p>
+          </div>
+
+          <!-- Form -->
+          <form (ngSubmit)="submitDownloadForm()" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                <input type="text" [(ngModel)]="downloadForm.firstName" name="firstName" required
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  placeholder="John" />
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                <input type="text" [(ngModel)]="downloadForm.lastName" name="lastName" required
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  placeholder="Doe" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+              <input type="email" [(ngModel)]="downloadForm.email" name="email" required
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                placeholder="john@example.com" />
+            </div>
+
+            <!-- Signup Checkbox -->
+            <label class="flex items-start gap-3 cursor-pointer group">
+              <div class="relative mt-0.5 flex-shrink-0">
+                <input type="checkbox" [(ngModel)]="downloadForm.createAccount" name="createAccount"
+                  class="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-red-600 focus:ring-red-500 focus:ring-2 cursor-pointer accent-red-600" />
+              </div>
+              <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors">
+                Also sign up for a free RocketGoals membership!
+              </span>
+            </label>
+
+            @if (formError()) {
+            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30">
+              <p class="text-sm text-red-600 dark:text-red-400">{{ formError() }}</p>
+            </div>
+            }
+
+            <!-- Submit Button -->
+            <button type="submit" [disabled]="formSubmitting()"
+              class="w-full py-4 bg-red-600 text-white font-bold text-lg rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2">
+              @if (formSubmitting()) {
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Free eBook
+              }
+            </button>
+          </form>
+
+          <p class="text-xs text-center text-gray-500 dark:text-gray-500">
+            We respect your privacy. No spam, ever.
+          </p>
+        </div>
+      </div>
+      }
     </div>
   `,
   styles: [`
@@ -593,6 +677,19 @@ export class SurgeBookPageComponent implements OnInit {
   readonly bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042%20High%20Velocity_%20FULL%20eBOOK_Final.pdf?alt=media&token=a0ddc6ca-4c99-4532-9342-b214e9f90a72';
   readonly bookImageUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fsurge-book.png?alt=media&token=1fa8febd-bf3e-4bce-aa9f-13ed5cb03462';
 
+  // Modal state
+  showDownloadModal = signal(false);
+  formSubmitting = signal(false);
+  formError = signal<string | null>(null);
+
+  // Form data
+  downloadForm = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    createAccount: true // Pre-checked by default
+  };
+
   ngOnInit(): void {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -601,38 +698,121 @@ export class SurgeBookPageComponent implements OnInit {
     this.theme.toggleDarkMode();
   }
 
-  async handleDownload(): Promise<void> {
-    if (!this.authService.user()) {
-      this.router.navigate(['/login'], { queryParams: { redirectTo: '/surge-book' } });
+  handleDownload(): void {
+    // If already logged in, directly download
+    if (this.authService.user()) {
+      this.downloadForLoggedInUser();
+      return;
+    }
+    // Otherwise show the modal
+    this.showDownloadModal.set(true);
+  }
+
+  closeModal(): void {
+    this.showDownloadModal.set(false);
+    this.formError.set(null);
+  }
+
+  async submitDownloadForm(): Promise<void> {
+    // Validate form
+    if (!this.downloadForm.firstName.trim() || !this.downloadForm.lastName.trim() || !this.downloadForm.email.trim()) {
+      this.formError.set('Please fill in all fields.');
       return;
     }
 
-    // Record the download to Firestore
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.downloadForm.email)) {
+      this.formError.set('Please enter a valid email address.');
+      return;
+    }
+
+    this.formSubmitting.set(true);
+    this.formError.set(null);
+
+    const firstName = this.downloadForm.firstName.trim();
+    const lastName = this.downloadForm.lastName.trim();
+    const email = this.downloadForm.email.trim();
+    const wantsAccount = this.downloadForm.createAccount;
+
+    try {
+      // Record the download
+      await this.recordDownload(firstName, lastName, email, wantsAccount);
+
+      // Close modal and open PDF
+      this.closeModal();
+      window.open(this.bookPdfUrl, '_blank');
+
+      // If they want to create an account, redirect to signup with pre-filled info
+      if (wantsAccount) {
+        this.router.navigate(['/signup'], {
+          queryParams: {
+            firstName,
+            lastName,
+            email
+          }
+        });
+      }
+
+      // Reset form
+      this.downloadForm = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        createAccount: true
+      };
+    } catch (err: any) {
+      console.error('Download form error:', err);
+      this.formError.set(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      this.formSubmitting.set(false);
+    }
+  }
+
+  private async downloadForLoggedInUser(): Promise<void> {
+    // Record the download for logged-in user
     try {
       const profile = this.authService.profile();
       if (profile) {
-        const { initializeApp, getApps, getApp } = await import('firebase/app');
-        const { getFirestore, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-        const { firebaseConfig } = await import('../../environments/environment');
-
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        const firestore = getFirestore(app);
-
-        await addDoc(collection(firestore, 'bookDownloads'), {
-          userId: profile.userId || profile.id,
-          firstName: profile.firstName || '',
-          lastName: profile.lastName || '',
-          email: profile.email || '',
-          bookTitle: 'Surge: 42 High-Velocity Prompts',
-          downloadedAt: serverTimestamp()
-        });
+        await this.recordDownload(
+          profile.firstName || '',
+          profile.lastName || '',
+          profile.email || '',
+          true,
+          profile.userId || profile.id
+        );
       }
     } catch (err) {
       console.error('Failed to record book download:', err);
-      // Don't block the download if recording fails
     }
 
     // Open the PDF
     window.open(this.bookPdfUrl, '_blank');
   }
+
+  private async recordDownload(
+    firstName: string,
+    lastName: string,
+    email: string,
+    hasAccount: boolean,
+    userId?: string
+  ): Promise<void> {
+    const { initializeApp, getApps, getApp } = await import('firebase/app');
+    const { getFirestore, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+    const { firebaseConfig } = await import('../../environments/environment');
+
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    const firestore = getFirestore(app);
+
+    await addDoc(collection(firestore, 'bookDownloads'), {
+      userId: userId || null,
+      firstName,
+      lastName,
+      email,
+      hasAccount,
+      bookTitle: 'Surge: 42 High-Velocity Prompts',
+      downloadedAt: serverTimestamp()
+    });
+  }
+
 }
