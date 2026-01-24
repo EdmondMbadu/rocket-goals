@@ -304,6 +304,15 @@
             <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-semibold rounded-full dark:bg-emerald-500/15 dark:text-emerald-200">
               {{ bookDownloads().length }} downloads
             </span>
+            @if (bookDownloads().length > 0) {
+            <button type="button" (click)="exportBookDownloadsCsv()"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
+            </button>
+            }
             <button type="button" (click)="toggleSection('bookDownloads')"
               class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors dark:text-slate-300 dark:hover:text-white">
               <span>@if (sectionOpen('bookDownloads')) { Collapse } @else { Expand }</span>
@@ -352,6 +361,7 @@
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email</th>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Book</th>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Downloaded At</th>
+                  <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-200 dark:divide-white/10">
@@ -373,6 +383,16 @@
                   </td>
                   <td class="px-6 py-4">
                     <span class="text-sm text-slate-600 dark:text-slate-300">{{ formatDownloadDateTime(download.downloadedAt) }}</span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <button type="button" (click)="deleteBookDownload(download.id)"
+                      class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/10"
+                      title="Delete this download record">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
                   </td>
                 </tr>
                 }

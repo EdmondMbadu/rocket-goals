@@ -1470,4 +1470,77 @@ export class AdminComponent implements OnInit {
       hour12: true
     });
   }
+
+  exportBookDownloadsCsv() {
+    const downloads = this.bookDownloads();
+    if (downloads.length === 0) {
+      this.error.set('No book downloads to export.');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    // CSV headers
+    const headers = ['First Name', 'Last Name', 'Email', 'Book Title', 'Downloaded At', 'User ID'];
+
+    // CSV rows
+    const rows = downloads.map(d => [
+      this.escapeCsvField(d.firstName),
+      this.escapeCsvField(d.lastName),
+      this.escapeCsvField(d.email),
+      this.escapeCsvField(d.bookTitle),
+      this.escapeCsvField(this.formatDownloadDateTime(d.downloadedAt)),
+      this.escapeCsvField(d.userId || 'N/A')
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `surge-book-downloads-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    this.success.set(`Exported ${downloads.length} book downloads to CSV`);
+    setTimeout(() => this.success.set(null), 5000);
+  }
+
+  private escapeCsvField(field: string): string {
+    if (!field) return '';
+    // If field contains comma, newline, or quotes, wrap in quotes and escape internal quotes
+    if (field.includes(',') || field.includes('\n') || field.includes('"')) {
+      return `"${field.replace(/"/g, '""')}"`;
+    }
+    return field;
+  }
+
+  async deleteBookDownload(downloadId: string) {
+    if (!confirm('Are you sure you want to delete this book download record? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const firestore = await this.ensureFirestore();
+      const firestoreModule = await import('firebase/firestore');
+      const docRef = firestoreModule.doc(firestore, 'bookDownloads', downloadId);
+      await firestoreModule.deleteDoc(docRef);
+
+      // Update local state to remove the deleted download
+      this.bookDownloads.update(downloads => downloads.filter(d => d.id !== downloadId));
+      this.success.set('Book download record deleted successfully');
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to delete book download:', err);
+      this.error.set('Failed to delete book download. Please try again.');
+      setTimeout(() => this.error.set(null), 5000);
+    }
+  }
 }
