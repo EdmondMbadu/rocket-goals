@@ -216,60 +216,63 @@ import { AuthService } from './auth.service';
               <div class="grid md:grid-cols-3 gap-8">
                 <!-- Metro -->
                 <div
-                  class="relative bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-3xl p-8 space-y-4 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-500/30">
+                  class="relative bg-white border border-black/10 rounded-3xl p-8 space-y-4 hover:shadow-2xl hover:border-red-600/30 transition-all duration-300 dark:bg-slate-900/70 dark:border-white/10 dark:hover:border-red-500/50 group">
+                  <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 to-red-400 rounded-t-3xl"></div>
                   <div
-                    class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-lg group-hover:bg-red-600 transition-colors duration-300 dark:bg-white">
+                    <svg class="w-8 h-8 text-white dark:text-black group-hover:text-white dark:group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
                   </div>
-                  <h3 class="text-2xl font-black text-blue-900 dark:text-blue-200">The Metro</h3>
-                  <p class="text-blue-800/80 dark:text-blue-100/70">
+                  <h3 class="text-2xl font-black text-black dark:text-white">The Metro</h3>
+                  <p class="text-black/70 dark:text-slate-300">
                     Clear path from A to B. The trip has been made before. Barring some unexpected act of nature, the
                     Metro project generally arrives on time and on budget.
                   </p>
-                  <p class="text-sm text-blue-700/60 dark:text-blue-200/50 italic">
+                  <p class="text-sm text-black/50 dark:text-slate-400 italic border-t border-black/5 dark:border-white/10 pt-4 mt-4">
                     Examples: Certifications, marathons, product updates, sales playbooks
                   </p>
                 </div>
 
                 <!-- Maze -->
                 <div
-                  class="relative bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-3xl p-8 space-y-4 dark:from-amber-900/20 dark:to-amber-800/20 dark:border-amber-500/30">
+                  class="relative bg-white border border-black/10 rounded-3xl p-8 space-y-4 hover:shadow-2xl hover:border-red-600/30 transition-all duration-300 dark:bg-slate-900/70 dark:border-white/10 dark:hover:border-red-500/50 group">
+                  <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600 rounded-t-3xl"></div>
                   <div
-                    class="w-16 h-16 bg-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-600/30">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-lg group-hover:bg-red-600 transition-colors duration-300 dark:bg-white">
+                    <svg class="w-8 h-8 text-white dark:text-black group-hover:text-white dark:group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                     </svg>
                   </div>
-                  <h3 class="text-2xl font-black text-amber-900 dark:text-amber-200">The Maze</h3>
-                  <p class="text-amber-800/80 dark:text-amber-100/70">
+                  <h3 class="text-2xl font-black text-black dark:text-white">The Maze</h3>
+                  <p class="text-black/70 dark:text-slate-300">
                     Wicked twists and turns. You know the destination, but the path keeps shifting. Requires constant
                     recalibration and flexibility.
                   </p>
-                  <p class="text-sm text-amber-700/60 dark:text-amber-200/50 italic">
+                  <p class="text-sm text-black/50 dark:text-slate-400 italic border-t border-black/5 dark:border-white/10 pt-4 mt-4">
                     Examples: Complex integrations, organizational change, market pivots
                   </p>
                 </div>
 
                 <!-- Moonshot -->
                 <div
-                  class="relative bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-3xl p-8 space-y-4 dark:from-purple-900/20 dark:to-purple-800/20 dark:border-purple-500/30">
+                  class="relative bg-white border border-black/10 rounded-3xl p-8 space-y-4 hover:shadow-2xl hover:border-red-600/30 transition-all duration-300 dark:bg-slate-900/70 dark:border-white/10 dark:hover:border-red-500/50 group">
+                  <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 to-red-600 rounded-t-3xl"></div>
                   <div
-                    class="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-600/30">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-lg group-hover:bg-red-600 transition-colors duration-300 dark:bg-white">
+                    <svg class="w-8 h-8 text-white dark:text-black group-hover:text-white dark:group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
                   </div>
-                  <h3 class="text-2xl font-black text-purple-900 dark:text-purple-200">The Moonshot</h3>
-                  <p class="text-purple-800/80 dark:text-purple-100/70">
+                  <h3 class="text-2xl font-black text-black dark:text-white">The Moonshot</h3>
+                  <p class="text-black/70 dark:text-slate-300">
                     Wild, audacious goals. The destination might not even exist yet. High risk, high reward ventures
                     that require courage and vision.
                   </p>
-                  <p class="text-sm text-purple-700/60 dark:text-purple-200/50 italic">
+                  <p class="text-sm text-black/50 dark:text-slate-400 italic border-t border-black/5 dark:border-white/10 pt-4 mt-4">
                     Examples: Startups, breakthrough innovations, transformational goals
                   </p>
                 </div>
