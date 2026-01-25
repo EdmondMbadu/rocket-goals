@@ -582,7 +582,7 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     description: 'Master your physical potential with elite-level transformation protocols. Track every metric of your body composition, optimize nutrition, and execute high-performance workouts with AI-driven precision.',
     icon: '⚖️',
     imageUrl: '/assets/app-suite/lean-launch.png',
-    coPilotAvatar: '/assets/a-9.jpg',
+    coPilotAvatar: '/assets/jordan-blake.jpg',
     coPilotName: 'Coach Jordan Blake',
     coPilotRole: 'Weight Loss & Fitness Coach',
     color: 'from-emerald-950 via-slate-900 to-black',
