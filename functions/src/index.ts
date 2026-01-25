@@ -2201,6 +2201,136 @@ export const sendVerificationEmail = functions.runWith({
 });
 
 /**
+ * Cloud Function to send welcome email to new users with Surge book
+ * Called after user signs up successfully
+ */
+export const sendWelcomeEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to receive a welcome email.'
+        );
+    }
+
+    try {
+        const user = await admin.auth().getUser(context.auth.uid);
+        const email = user.email;
+        if (!email) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                'No email found for this account.'
+            );
+        }
+
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set.');
+        }
+        sgMail.setApiKey(apiKey);
+
+        const displayName = user.displayName?.trim() || 'Rocketeer';
+        const bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042_High_Velocity_Prompts_PDF_Final.pdf?alt=media&token=c2a60c20-e51b-49ea-bcae-1800545ce047';
+        const bookImageUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fsurge-book.png?alt=media&token=1fa8febd-bf3e-4bce-aa9f-13ed5cb03462';
+
+        const msg = {
+            to: email,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: 'Welcome to Rocket Goals - Your Free Surge Book Inside!',
+            text: `Hi ${displayName},\n\nWelcome to Rocket Goals! We're thrilled to have you on board.\n\nRocket Goals is your AI-powered mission control for achieving your goals. Here's what you can do:\n\n• Set and track goals with AI assistance\n• Get personalized strategies and action plans\n• Monitor your progress with visual dashboards\n• Receive smart reminders to stay on track\n\nAs a welcome gift, we're giving you our free book "Surge: 42 High-Velocity Prompts" - your acceleration playbook for dismantling velocity barriers and achieving breakthrough results.\n\nDownload your free copy: ${bookPdfUrl}\n\nReady to launch? Head to your dashboard and create your first goal!\n\nTo your success,\nThe Rocket Goals Team`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 36px 30px; border-radius: 18px 18px 0 0; text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">🚀</div>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">Welcome to Rocket Goals!</h1>
+                        <p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
+                            Your Mission Control Awaits
+                        </p>
+                    </div>
+
+                    <div style="background: #ffffff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none;">
+                        <p style="color: #111827; font-size: 16px; line-height: 1.6; margin: 0 0 18px;">
+                            Hi <strong>${displayName}</strong>,
+                        </p>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                            We're thrilled to have you on board! Rocket Goals is your AI-powered mission control for achieving your goals faster and smarter.
+                        </p>
+
+                        <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 0 0 24px;">
+                            <h3 style="color: #111827; font-size: 16px; font-weight: 700; margin: 0 0 12px;">Here's what you can do:</h3>
+                            <ul style="color: #374151; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                <li>Set and track goals with AI assistance</li>
+                                <li>Get personalized strategies and action plans</li>
+                                <li>Monitor your progress with visual dashboards</li>
+                                <li>Receive smart reminders to stay on track</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 24px; margin: 0 0 24px; text-align: center;">
+                            <p style="color: #92400e; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 8px;">🎁 YOUR FREE WELCOME GIFT</p>
+                            <h3 style="color: #111827; font-size: 18px; font-weight: 800; margin: 0 0 12px;">Surge: 42 High-Velocity Prompts</h3>
+                            <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
+                                Your acceleration playbook for dismantling "Velocity Barriers" and achieving breakthrough results.
+                            </p>
+                            <img src="${bookImageUrl}" alt="Surge Book Cover" style="max-width: 150px; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 16px;" />
+                            <div>
+                                <a href="${bookPdfUrl}"
+                                   style="background: #111827; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block;">
+                                    Download Your Free Book
+                                </a>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin: 24px 0;">
+                            <a href="https://www.rocketgoals.com/goals"
+                               style="background: #dc2626; color: #ffffff; text-decoration: none; padding: 14px 26px; border-radius: 12px; font-weight: 700; display: inline-block;">
+                                Launch Your Dashboard 🚀
+                            </a>
+                        </div>
+
+                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 24px 0 0; text-align: center;">
+                            Ready to achieve something great? We're here to help you every step of the way.
+                        </p>
+                    </div>
+
+                    <div style="background: #f9fafb; padding: 20px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 13px; margin: 0;">
+                            To your success,<br />
+                            <strong style="color: #6b7280;">The Rocket Goals Team</strong>
+                        </p>
+                    </div>
+                </div>
+            `,
+        };
+
+        await sgMail.send(msg);
+
+        console.log(`✅ Welcome email sent successfully to ${email}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error('❌ Error sending welcome email:', error);
+
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send welcome email: ${error.message}`
+        );
+    }
+});
+
+/**
  * Cloud Function to send email notification when a goal is created from AI chat
  * Accessible by authenticated users only
  */

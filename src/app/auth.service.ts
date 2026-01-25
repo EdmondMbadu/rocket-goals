@@ -77,18 +77,20 @@ export class AuthService {
     }
   }
 
-  async signInWithGoogle() {
+  async signInWithGoogle(): Promise<{ profile: UserProfile | null; isNewUser: boolean }> {
     this.authLoading.set(true);
     this.authError.set(null);
     try {
-      const credential = await this.executeWithAuth(async (authModule, auth) => {
-        const { GoogleAuthProvider, signInWithPopup } = authModule;
+      const { credential, isNewUser } = await this.executeWithAuth(async (authModule, auth) => {
+        const { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } = authModule;
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        return await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        const additionalInfo = getAdditionalUserInfo(result);
+        return { credential: result, isNewUser: additionalInfo?.isNewUser ?? false };
       });
       await this.handleProfileAfterAuth(credential);
-      return this.profile();
+      return { profile: this.profile(), isNewUser };
     } catch (error: any) {
       this.authError.set(this.mapFirebaseError(error));
       throw error;
@@ -129,6 +131,17 @@ export class AuthService {
     const functions = functionsModule.getFunctions(app, 'us-central1');
     const sendVerification = functionsModule.httpsCallable(functions, 'sendVerificationEmail');
     await sendVerification({});
+  }
+
+  async sendWelcomeEmail() {
+    const { auth, app } = await this.ensureFirebase();
+    if (!auth.currentUser) {
+      throw new Error('No authenticated user to send welcome email.');
+    }
+    const functionsModule = await import('firebase/functions');
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const sendWelcome = functionsModule.httpsCallable(functions, 'sendWelcomeEmail');
+    await sendWelcome({});
   }
 
   async getCurrentUser(): Promise<User | null> {

@@ -58,6 +58,8 @@ export class SignupComponent implements OnInit {
       const { firstName, lastName, email, password } = this.signupForm.getRawValue();
       await this.authService.signUpWithEmail({ firstName, lastName, email, password });
       await this.authService.sendEmailVerification();
+      // Send welcome email with Surge book (fire and forget - don't block signup)
+      this.authService.sendWelcomeEmail().catch(() => {});
       this.verificationEmail.set(email);
       this.verificationSent.set(true);
       this.verificationNotice.set('Verification email sent. Check your inbox and confirm to continue.');
@@ -70,7 +72,11 @@ export class SignupComponent implements OnInit {
     if (this.submitting()) return;
     this.serverError.set(null);
     try {
-      await this.authService.signInWithGoogle();
+      const { isNewUser } = await this.authService.signInWithGoogle();
+      if (isNewUser) {
+        // Send welcome email with Surge book for new users (fire and forget)
+        this.authService.sendWelcomeEmail().catch(() => {});
+      }
       await this.router.navigateByUrl('/ai');
     } catch {
       this.serverError.set(this.authService.authError());
