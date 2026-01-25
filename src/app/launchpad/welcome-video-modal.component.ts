@@ -529,14 +529,16 @@ export class WelcomeVideoModalComponent implements OnInit, OnDestroy {
 
   private async startVideoGeneration(): Promise<void> {
     try {
-      // Build the video config
+      // Build the video config with HeyGen avatar/voice from template
       const config: WelcomeVideoConfig = {
         firstName: this.firstName,
         coPilotName: this.template.coPilotName,
         templateName: this.template.name,
         oneThingMetric: this.oneThingMetric,
         oneThingLabel: this.oneThingLabel,
-        totalDays: this.totalDays
+        totalDays: this.totalDays,
+        avatarId: this.template.heygenAvatarId,
+        voiceId: this.template.heygenVoiceId
       };
 
       // Start generating

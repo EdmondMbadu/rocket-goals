@@ -290,4 +290,42 @@ export class HeyGenService {
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+
+  /**
+   * List all available HeyGen avatars
+   * Use this to find the best avatar for each app suite
+   */
+  async listAvatars(): Promise<{
+    success: boolean;
+    avatars?: Array<{
+      id: string;
+      name: string;
+      gender: string;
+      previewImage?: string;
+      previewVideo?: string;
+      premium: boolean;
+    }>;
+    summary?: {
+      total: number;
+      male: number;
+      female: number;
+    };
+    error?: string;
+  }> {
+    try {
+      const listHeyGenAvatars = httpsCallable<void, any>(
+        this.functions,
+        'listHeyGenAvatars'
+      );
+
+      const result = await listHeyGenAvatars();
+      return result.data;
+    } catch (error: any) {
+      console.error('Error listing HeyGen avatars:', error);
+      return {
+        success: false,
+        error: error?.message || 'Failed to list avatars'
+      };
+    }
+  }
 }

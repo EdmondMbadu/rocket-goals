@@ -16,6 +16,7 @@ export const heygenApiKey = defineSecret("HEYGEN_API_KEY");
 const HEYGEN_API_BASE = "https://api.heygen.com";
 const HEYGEN_VIDEO_GENERATE = `${HEYGEN_API_BASE}/v2/video/generate`;
 const HEYGEN_VIDEO_STATUS = `${HEYGEN_API_BASE}/v1/video_status.get`;
+const HEYGEN_LIST_AVATARS = `${HEYGEN_API_BASE}/v2/avatars`;
 
 // CORS configuration matching other functions
 const CORS_ORIGINS = [
@@ -55,6 +56,22 @@ interface HeyGenStatusResponse {
     thumbnail_url?: string;
     duration?: number;
     error?: string;
+  };
+}
+
+interface HeyGenAvatarInfo {
+  avatar_id: string;
+  avatar_name: string;
+  gender: string;
+  preview_image_url?: string;
+  preview_video_url?: string;
+  premium?: boolean;
+}
+
+interface HeyGenListAvatarsResponse {
+  error: {message?: string} | null;
+  data: {
+    avatars: HeyGenAvatarInfo[];
   };
 }
 
@@ -122,15 +139,16 @@ export const initiateHeyGenVideo = onCall({
             type: "text",
             input_text: data.script,
             voice_id: voiceId,
+            speed: 1.0,
           },
           background: {
             type: "color",
-            value: "#1a1a2e",
+            value: "#0f172a",
           },
         }],
         dimension: {
-          width: 720,
-          height: 1280,
+          width: 1080,
+          height: 1920,
         },
         aspect_ratio: "9:16",
       }),
@@ -138,8 +156,28 @@ export const initiateHeyGenVideo = onCall({
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("HeyGen API error:", errorText);
-      throw new HttpsError("internal", `HeyGen API error: ${response.status}`);
+      console.error("HeyGen API error response:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        avatarIdUsed: avatarId,
+        voiceIdUsed: voiceId,
+      });
+      // Parse error for more details
+      let errorMessage = `HeyGen API error: ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error?.message) {
+          errorMessage = `HeyGen: ${errorJson.error.message}`;
+        } else if (errorJson.error?.code) {
+          errorMessage = `HeyGen error code: ${errorJson.error.code}`;
+        }
+      } catch {
+        // Use raw text if not JSON
+        const truncated = errorText.substring(0, 100);
+        errorMessage = `HeyGen API error: ${response.status} - ${truncated}`;
+      }
+      throw new HttpsError("internal", errorMessage);
     }
 
     const result = await response.json() as HeyGenVideoResponse;
@@ -309,5 +347,98 @@ export const checkHeyGenVideoStatus = onCall({
       "internal",
       errMsg || "Failed to check video status",
     );
+  }
+});
+
+/**
+ * List available HeyGen avatars
+ *
+ * This function retrieves all available avatars from HeyGen API
+ * to help select the best avatar for each app suite.
+ */
+export const listHeyGenAvatars = onCall({
+  region: "us-central1",
+  secrets: [heygenApiKey],
+  timeoutSeconds: 30,
+  cors: CORS_ORIGINS,
+}, async (request) => {
+  // Validate authentication - admin only
+  if (!request.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "You must be logged in to list avatars.",
+    );
+  }
+
+  // Get API key
+  const apiKey = heygenApiKey.value();
+  if (!apiKey) {
+    throw new HttpsError(
+      "failed-precondition",
+      "HeyGen API key is not configured.",
+    );
+  }
+
+  try {
+    const response = await fetch(HEYGEN_LIST_AVATARS, {
+      method: "GET",
+      headers: {
+        "X-Api-Key": apiKey,
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("HeyGen list avatars error:", errorText);
+      throw new HttpsError("internal", `HeyGen API error: ${response.status}`);
+    }
+
+    const result = await response.json() as HeyGenListAvatarsResponse;
+
+    if (result.error) {
+      throw new HttpsError(
+        "internal",
+        `HeyGen error: ${result.error.message || "Unknown error"}`,
+      );
+    }
+
+    // Filter and format avatars for easier viewing
+    const avatars = result.data?.avatars || [];
+
+    // Categorize avatars by gender and name patterns
+    const categorized = {
+      male: avatars.filter((a) => a.gender === "male"),
+      female: avatars.filter((a) => a.gender === "female"),
+      total: avatars.length,
+    };
+
+    console.log(`Listed ${avatars.length} HeyGen avatars`);
+
+    return {
+      success: true,
+      avatars: avatars.map((a) => ({
+        id: a.avatar_id,
+        name: a.avatar_name,
+        gender: a.gender,
+        previewImage: a.preview_image_url,
+        previewVideo: a.preview_video_url,
+        premium: a.premium || false,
+      })),
+      summary: {
+        total: categorized.total,
+        male: categorized.male.length,
+        female: categorized.female.length,
+      },
+    };
+  } catch (error: unknown) {
+    console.error("Error listing HeyGen avatars:", error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    throw new HttpsError("internal", errMsg || "Failed to list avatars");
   }
 });

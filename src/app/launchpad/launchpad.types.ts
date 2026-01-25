@@ -612,5 +612,7 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       unit: 'lbs',
       helpText: 'What is your goal weight?'
     }
+    // Note: heygenAvatarId and heygenVoiceId not set - will use account defaults
+    // To customize, first call listHeyGenAvatars() to get available avatars in your account
   }
 };
