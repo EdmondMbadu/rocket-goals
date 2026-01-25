@@ -236,6 +236,22 @@ export class AppSuiteComponent implements OnInit {
         dailyEffort: '2hours',
         objectives: ['Applications sent', 'Interviews completed', 'Network growth']
       }
+    },
+    {
+      id: 'lean-launch',
+      name: 'LeanLaunch',
+      tagline: 'Weight loss transformation & body composition.',
+      description: 'Transform your body with sustainable habits. Track nutrition, workouts, and progress toward your ideal weight.',
+      icon: '⚖️',
+      imageUrl: '/assets/app-suite/opti-human.png', // Reusing opti-human for health/fitness vibe
+      color: 'from-green-950 via-emerald-900 to-teal-950',
+      category: 'Health',
+      defaultGoals: {
+        primaryGoal: 'Achieve my ideal weight and body composition',
+        theme: 'health',
+        dailyEffort: '30min',
+        objectives: ['Track calories', 'Daily movement', 'Weekly weigh-ins']
+      }
     }
   ];
 

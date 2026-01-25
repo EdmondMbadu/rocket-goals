@@ -574,5 +574,43 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
         { key: 'skipped', label: 'Skipped', icon: '⏭️', color: '#6b7280', description: 'Skipped or not applicable' }
       ]
     }
+  },
+  'lean-launch': {
+    id: 'lean-launch',
+    name: 'LeanLaunch',
+    tagline: 'Weight loss transformation & body composition.',
+    description: 'Transform your body with sustainable habits. Track nutrition, workouts, and progress toward your ideal weight with personalized coaching.',
+    icon: '⚖️',
+    imageUrl: '/assets/app-suite/opti-human.png',
+    coPilotAvatar: '/assets/a-9.jpg',
+    coPilotName: 'Coach Jordan Blake',
+    coPilotRole: 'Weight Loss & Fitness Coach',
+    color: 'from-green-950 via-emerald-900 to-teal-950',
+    category: 'Health',
+    accentColor: '#10b981',
+    gradientFrom: '#022c22',
+    gradientVia: '#064e3b',
+    gradientTo: '#134e4a',
+    features: [
+      'Calorie & macro tracking',
+      'Weekly weigh-in reminders',
+      'Workout plan integration',
+      'Progress photo timeline',
+      'Habit streak tracking',
+      'Motivation & mindset coaching'
+    ],
+    defaultGoals: {
+      primaryGoal: 'Achieve my ideal weight and body composition',
+      theme: 'health',
+      dailyEffort: '30min',
+      objectives: ['Track calories', 'Daily movement', 'Weekly weigh-ins']
+    },
+    oneThingMetric: {
+      label: 'Target Weight',
+      placeholder: 'e.g., 165',
+      type: 'weight',
+      unit: 'lbs',
+      helpText: 'What is your goal weight?'
+    }
   }
 };
