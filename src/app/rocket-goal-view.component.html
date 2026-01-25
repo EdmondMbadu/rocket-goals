@@ -724,20 +724,26 @@
                   <p class="timeline-task-popup-notes">{{ taskData.item.notes }}</p>
                   }
                   <div class="timeline-task-popup-footer">
-                    <span class="timeline-task-popup-day">Day {{ taskData.item.dayNumber }}</span>
+                    <div class="timeline-task-popup-meta">
+                      <span class="timeline-task-popup-day">Day {{ taskData.item.dayNumber }}</span>
+                      <span class="timeline-task-popup-status" [class.completed]="taskData.item.completed">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        {{ taskData.item.completed ? 'Completed' : 'Incomplete' }}
+                      </span>
+                    </div>
                     <button (click)="toggleActionItemComplete(taskData.item); $event.stopPropagation()"
                             class="timeline-task-popup-toggle"
                             [class.completed]="taskData.item.completed">
                       @if (taskData.item.completed) {
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Complete
-                      } @else {
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Incomplete
+                        Mark as incomplete
+                      } @else {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Mark as complete
                       }
                     </button>
                   </div>
