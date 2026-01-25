@@ -2231,73 +2231,97 @@ export const sendWelcomeEmail = functions.runWith({
         sgMail.setApiKey(apiKey);
 
         const displayName = user.displayName?.trim() || 'Rocketeer';
-        const bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042_High_Velocity_Prompts_PDF_Final.pdf?alt=media&token=c2a60c20-e51b-49ea-bcae-1800545ce047';
+        // Use the surge book page URL instead of direct Firebase Storage link to avoid SendGrid URL tracking issues
+        const bookPageUrl = 'https://www.rocketgoals.com/surge-book';
         const bookImageUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fsurge-book.png?alt=media&token=1fa8febd-bf3e-4bce-aa9f-13ed5cb03462';
 
         const msg = {
             to: email,
             from: 'missioncontrol@rocketgoals.com',
-            subject: 'Welcome to Rocket Goals - Your Free Surge Book Inside!',
-            text: `Hi ${displayName},\n\nWelcome to Rocket Goals! We're thrilled to have you on board.\n\nRocket Goals is your AI-powered mission control for achieving your goals. Here's what you can do:\n\n• Set and track goals with AI assistance\n• Get personalized strategies and action plans\n• Monitor your progress with visual dashboards\n• Receive smart reminders to stay on track\n\nAs a welcome gift, we're giving you our free book "Surge: 42 High-Velocity Prompts" - your acceleration playbook for dismantling velocity barriers and achieving breakthrough results.\n\nDownload your free copy: ${bookPdfUrl}\n\nReady to launch? Head to your dashboard and create your first goal!\n\nTo your success,\nThe Rocket Goals Team`,
+            subject: 'Welcome to Rocket Goals — Your Complimentary Book Awaits',
+            text: `Hi ${displayName},\n\nThank you for joining Rocket Goals.\n\nYou now have access to an AI-powered platform designed to help you set, track, and achieve meaningful goals with precision and clarity.\n\nWith Rocket Goals, you can:\n\n• Define goals with AI-guided clarity\n• Build strategic action plans tailored to your objectives\n• Track progress through intuitive dashboards\n• Stay accountable with intelligent reminders\n\nAs a welcome gift, we've prepared a complimentary copy of "Surge: 42 High-Velocity Prompts" — a curated collection of prompts designed to accelerate your progress and eliminate common barriers.\n\nAccess your book: ${bookPageUrl}\n\nWe look forward to supporting your journey.\n\nWarm regards,\nThe Rocket Goals Team`,
             html: `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 0;">
-                    <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 36px 30px; border-radius: 18px 18px 0 0; text-align: center;">
-                        <div style="font-size: 40px; margin-bottom: 8px;">🚀</div>
-                        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800;">Welcome to Rocket Goals!</h1>
-                        <p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
-                            Your Mission Control Awaits
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background: #ffffff;">
+                    <!-- Header -->
+                    <div style="background: #000000; padding: 48px 40px; text-align: center;">
+                        <img src="https://www.rocketgoals.com/assets/rocket-goals.png" alt="Rocket Goals" style="width: 64px; height: 64px; margin-bottom: 16px;" />
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">Welcome to Rocket Goals</h1>
+                        <p style="color: rgba(255,255,255,0.6); margin: 12px 0 0; font-size: 14px; font-weight: 400;">
+                            Your journey to achievement starts here
                         </p>
                     </div>
 
-                    <div style="background: #ffffff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none;">
-                        <p style="color: #111827; font-size: 16px; line-height: 1.6; margin: 0 0 18px;">
-                            Hi <strong>${displayName}</strong>,
+                    <!-- Main Content -->
+                    <div style="padding: 40px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
+                        <p style="color: #111827; font-size: 16px; line-height: 1.7; margin: 0 0 20px;">
+                            Dear ${displayName},
                         </p>
-                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-                            We're thrilled to have you on board! Rocket Goals is your AI-powered mission control for achieving your goals faster and smarter.
+                        <p style="color: #374151; font-size: 16px; line-height: 1.7; margin: 0 0 28px;">
+                            Thank you for joining Rocket Goals. You now have access to an AI-powered platform designed to help you set, track, and achieve meaningful goals with precision and clarity.
                         </p>
 
-                        <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 0 0 24px;">
-                            <h3 style="color: #111827; font-size: 16px; font-weight: 700; margin: 0 0 12px;">Here's what you can do:</h3>
-                            <ul style="color: #374151; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                                <li>Set and track goals with AI assistance</li>
-                                <li>Get personalized strategies and action plans</li>
-                                <li>Monitor your progress with visual dashboards</li>
-                                <li>Receive smart reminders to stay on track</li>
-                            </ul>
+                        <!-- Features -->
+                        <div style="background: #fafafa; border-radius: 8px; padding: 24px; margin: 0 0 32px; border: 1px solid #f0f0f0;">
+                            <p style="color: #111827; font-size: 14px; font-weight: 600; margin: 0 0 16px; text-transform: uppercase; letter-spacing: 0.5px;">What You Can Do</p>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0; color: #374151; font-size: 15px; line-height: 1.5;">
+                                        <span style="color: #dc2626; margin-right: 10px;">&#10003;</span> Define goals with AI-guided clarity
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #374151; font-size: 15px; line-height: 1.5;">
+                                        <span style="color: #dc2626; margin-right: 10px;">&#10003;</span> Build strategic action plans tailored to your objectives
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #374151; font-size: 15px; line-height: 1.5;">
+                                        <span style="color: #dc2626; margin-right: 10px;">&#10003;</span> Track progress through intuitive dashboards
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #374151; font-size: 15px; line-height: 1.5;">
+                                        <span style="color: #dc2626; margin-right: 10px;">&#10003;</span> Stay accountable with intelligent reminders
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
 
-                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 24px; margin: 0 0 24px; text-align: center;">
-                            <p style="color: #92400e; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 8px;">🎁 YOUR FREE WELCOME GIFT</p>
-                            <h3 style="color: #111827; font-size: 18px; font-weight: 800; margin: 0 0 12px;">Surge: 42 High-Velocity Prompts</h3>
-                            <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
-                                Your acceleration playbook for dismantling "Velocity Barriers" and achieving breakthrough results.
-                            </p>
-                            <img src="${bookImageUrl}" alt="Surge Book Cover" style="max-width: 150px; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 16px;" />
-                            <div>
-                                <a href="${bookPdfUrl}"
-                                   style="background: #111827; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block;">
-                                    Download Your Free Book
+                        <!-- Book Section -->
+                        <div style="border: 2px solid #111827; border-radius: 12px; overflow: hidden; margin: 0 0 32px;">
+                            <div style="background: #111827; padding: 16px 24px;">
+                                <p style="color: #ffffff; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                                    Complimentary Welcome Gift
+                                </p>
+                            </div>
+                            <div style="background: #ffffff; padding: 32px; text-align: center;">
+                                <img src="${bookImageUrl}" alt="Surge: 42 High-Velocity Prompts" style="width: 140px; height: auto; border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); margin-bottom: 24px;" />
+                                <h3 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0 0 8px;">Surge: 42 High-Velocity Prompts</h3>
+                                <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 24px; max-width: 380px; margin-left: auto; margin-right: auto;">
+                                    A curated collection of prompts designed to accelerate your progress and eliminate common barriers to achievement.
+                                </p>
+                                <a href="${bookPageUrl}"
+                                   style="background: #dc2626; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block; letter-spacing: 0.3px;">
+                                    Download Your Free Copy
                                 </a>
                             </div>
                         </div>
 
-                        <div style="text-align: center; margin: 24px 0;">
+                        <!-- CTA -->
+                        <div style="text-align: center; padding: 24px 0; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px;">Ready to begin?</p>
                             <a href="https://www.rocketgoals.com/goals"
-                               style="background: #dc2626; color: #ffffff; text-decoration: none; padding: 14px 26px; border-radius: 12px; font-weight: 700; display: inline-block;">
-                                Launch Your Dashboard 🚀
+                               style="background: #111827; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;">
+                                Go to Your Dashboard
                             </a>
                         </div>
-
-                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 24px 0 0; text-align: center;">
-                            Ready to achieve something great? We're here to help you every step of the way.
-                        </p>
                     </div>
 
-                    <div style="background: #f9fafb; padding: 20px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px; text-align: center;">
-                        <p style="color: #9ca3af; font-size: 13px; margin: 0;">
-                            To your success,<br />
-                            <strong style="color: #6b7280;">The Rocket Goals Team</strong>
+                    <!-- Footer -->
+                    <div style="background: #fafafa; padding: 24px 40px; border: 1px solid #e5e7eb; border-top: none; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 13px; line-height: 1.6; margin: 0;">
+                            Warm regards,<br />
+                            <span style="color: #6b7280; font-weight: 500;">The Rocket Goals Team</span>
                         </p>
                     </div>
                 </div>
