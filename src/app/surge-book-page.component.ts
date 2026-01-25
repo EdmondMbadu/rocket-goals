@@ -674,7 +674,7 @@ export class SurgeBookPageComponent implements OnInit {
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
 
-  readonly bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042%20High%20Velocity_%20FULL%20eBOOK_Final.pdf?alt=media&token=a0ddc6ca-4c99-4532-9342-b214e9f90a72';
+  readonly bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042_High_Velocity_Prompts_PDF_Final.pdf?alt=media&token=c2a60c20-e51b-49ea-bcae-1800545ce047';
   readonly bookImageUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fsurge-book.png?alt=media&token=1fa8febd-bf3e-4bce-aa9f-13ed5cb03462';
 
   // Modal state
