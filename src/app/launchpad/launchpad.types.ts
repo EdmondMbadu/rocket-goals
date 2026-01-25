@@ -138,7 +138,8 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       type: 'currency',
       unit: '$',
       helpText: 'What monthly revenue goal will mark your success?'
-    }
+    },
+    heygenAvatarId: '1b6efce904774b4099552421ebb69fcd'
   },
   'opti-human': {
     id: 'opti-human',
@@ -573,7 +574,8 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
         { key: 'needs_improvement', label: 'Needs Work', icon: '🔄', color: '#ef4444', description: 'Did not go as planned, needs improvement' },
         { key: 'skipped', label: 'Skipped', icon: '⏭️', color: '#6b7280', description: 'Skipped or not applicable' }
       ]
-    }
+    },
+    heygenAvatarId: 'Piper_sitting_businesssofa_side'
   },
   'lean-launch': {
     id: 'lean-launch',
@@ -611,8 +613,7 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
       type: 'weight',
       unit: 'lbs',
       helpText: 'What is your goal weight?'
-    }
-    // Note: heygenAvatarId and heygenVoiceId not set - will use account defaults
-    // To customize, first call listHeyGenAvatars() to get available avatars in your account
+    },
+    heygenAvatarId: 'e7e916fca2c0447a897fa53a5c804bfe'
   }
 };

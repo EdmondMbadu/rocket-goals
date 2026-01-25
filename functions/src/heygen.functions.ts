@@ -117,7 +117,7 @@ export const initiateHeyGenVideo = onCall({
 
   // Use default avatar and voice if not specified
   // These should be configured based on your HeyGen account
-  const avatarId = data.avatarId || "Daisy-inskirt-20220818";
+  const avatarId = data.avatarId || "Georgia_sitting_office_front";
   const voiceId = data.voiceId || "1bd001e7e50f421d891986aad5158bc8";
 
   try {
