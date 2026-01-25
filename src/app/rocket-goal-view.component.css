@@ -3,9 +3,6 @@
    Premium Space-Themed Experience
    ============================================ */
 
-/* Import Space-Age Typography - Minimal weights for performance */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Exo+2:wght@700&display=swap');
-
 /* ===== CORE DASHBOARD THEME ===== */
 .mission-control-dashboard {
   min-height: 100vh;
