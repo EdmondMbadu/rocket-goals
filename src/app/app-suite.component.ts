@@ -240,11 +240,11 @@ export class AppSuiteComponent implements OnInit {
     {
       id: 'lean-launch',
       name: 'LeanLaunch',
-      tagline: 'Weight loss transformation & body composition.',
+      tagline: 'Elite body transformation & composition mastery.',
       description: 'Transform your body with sustainable habits. Track nutrition, workouts, and progress toward your ideal weight.',
       icon: '⚖️',
-      imageUrl: '/assets/app-suite/opti-human.png', // Reusing opti-human for health/fitness vibe
-      color: 'from-green-950 via-emerald-900 to-teal-950',
+      imageUrl: '/assets/app-suite/lean-launch.png',
+      color: 'from-emerald-950 via-slate-900 to-black',
       category: 'Health',
       defaultGoals: {
         primaryGoal: 'Achieve my ideal weight and body composition',
