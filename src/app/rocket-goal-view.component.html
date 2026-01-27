@@ -502,9 +502,19 @@
             
             <!-- Header with view toggle buttons -->
             <div class="flex items-center justify-between mb-8">
-              <h3 class="daily-progression-title text-xl font-black" style="font-family: 'Exo 2', sans-serif;">
-                <span class="title-icon">📊</span> Daily Progress
-              </h3>
+              <div class="daily-progress-header-left flex items-center gap-4">
+                <h3 class="daily-progression-title text-xl font-black" style="font-family: 'Exo 2', sans-serif;">
+                  <span class="title-icon">📊</span> Daily Progress
+                </h3>
+                <!-- Deadline Badge -->
+                <div class="deadline-badge flex items-center gap-2">
+                  <span class="deadline-icon">🎯</span>
+                  <div class="deadline-info">
+                    <span class="deadline-label-text">DEADLINE</span>
+                    <span class="deadline-date-text">{{ getDeadlineDateDisplay() || getFormattedDateFromDayNumber(getTimeframeDays()) }}</span>
+                  </div>
+                </div>
+              </div>
               <div class="timeline-view-controls flex items-center gap-2">
                 <!-- View Toggle Buttons -->
                 <div class="view-toggle-group flex rounded-lg overflow-hidden">

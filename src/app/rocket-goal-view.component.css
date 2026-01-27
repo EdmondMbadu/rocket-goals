@@ -5964,6 +5964,85 @@
   text-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
 }
 
+/* Deadline Badge */
+.deadline-badge {
+  padding: 8px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dark-mode .deadline-badge {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
+}
+
+.light-mode .deadline-badge {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  box-shadow: 0 2px 10px rgba(251, 191, 36, 0.15);
+}
+
+.deadline-icon {
+  font-size: 1.3em;
+}
+
+.deadline-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.deadline-label-text {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.dark-mode .deadline-label-text {
+  color: #fbbf24;
+}
+
+.light-mode .deadline-label-text {
+  color: #d97706;
+}
+
+.deadline-date-text {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dark-mode .deadline-date-text {
+  color: #fef3c7;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+.light-mode .deadline-date-text {
+  color: #92400e;
+}
+
+/* Responsive for deadline badge */
+@media (max-width: 640px) {
+  .daily-progress-header-left {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  
+  .deadline-badge {
+    padding: 6px 10px;
+  }
+  
+  .deadline-date-text {
+    font-size: 12px;
+  }
+}
+
 /* View Toggle Controls */
 .timeline-view-controls {
   display: flex;
