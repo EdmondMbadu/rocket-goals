@@ -5643,6 +5643,13 @@
   letter-spacing: 0.05em;
 }
 
+.owner-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .owner-goal-title {
   font-family: 'Exo 2', sans-serif;
   font-weight: 700;

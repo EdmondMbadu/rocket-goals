@@ -913,6 +913,21 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return 'RG';
   }
 
+  getGoalOwnerAvatarUrl(): string | null {
+    // If the current user is the goal owner, use their profile picture
+    if (this.isGoalOwner()) {
+      const profile = this.authService.profile();
+      return profile?.profilePictureUrl || null;
+    }
+    // For fans viewing, we don't have the owner's photo readily available
+    // Could be extended to fetch from userProfiles collection if needed
+    return null;
+  }
+
+  hasOwnerAvatar(): boolean {
+    return !!this.getGoalOwnerAvatarUrl();
+  }
+
   toggleShareDropdown() {
     this.showShareDropdown.set(!this.showShareDropdown());
   }

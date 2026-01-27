@@ -311,7 +311,14 @@
               <!-- Owner Profile Header -->
               <div class="owner-profile-header flex items-center gap-3 mb-3">
                 <div class="owner-avatar">
-                  <span class="owner-initials">{{ getGoalOwnerInitials() }}</span>
+                  @if (hasOwnerAvatar()) {
+                    <img [src]="getGoalOwnerAvatarUrl()" 
+                         alt="Profile" 
+                         class="owner-avatar-img"
+                         (error)="$any($event.target).style.display='none'">
+                  } @else {
+                    <span class="owner-initials">{{ getGoalOwnerInitials() }}</span>
+                  }
                 </div>
                 <span class="owner-goal-title">{{ getGoalOwnerDisplayTitle() }}</span>
               </div>
