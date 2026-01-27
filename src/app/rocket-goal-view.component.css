@@ -6134,6 +6134,13 @@
   gap: 16px;
   overflow: visible !important;
   position: relative;
+  width: 100%;
+}
+
+/* Ensure arrows don't shrink or get pushed off */
+.timeline-nav-arrow {
+  flex-shrink: 0 !important;
+  z-index: 15;
 }
 
 /* Navigation Arrows */
@@ -6183,6 +6190,7 @@
   overflow: visible !important;
   position: relative;
   z-index: 10;
+  min-width: 0; /* Prevent flex item from overflowing */
 }
 
 /* Timeline Day Column */

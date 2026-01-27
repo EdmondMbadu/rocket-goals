@@ -558,7 +558,7 @@
               </button>
 
               <!-- Timeline Days -->
-              <div class="timeline-days-container flex-1 flex items-start justify-between gap-3 overflow-hidden py-4">
+              <div class="timeline-days-container flex-1 flex items-start justify-between gap-3 py-4">
                 @for (dayInfo of getVisibleTimelineDays(); track dayInfo.day) {
                 <div class="timeline-day-column flex flex-col items-center cursor-pointer group"
                      (click)="onTimelineDayClick(dayInfo.day)"
