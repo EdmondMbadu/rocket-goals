@@ -5603,7 +5603,7 @@
 .vision-board-card {
   border-radius: 20px;
   overflow: hidden;
-  min-height: 400px;
+  min-height: 320px;
   position: relative;
 }
 
@@ -5671,7 +5671,7 @@
 .mission-stats-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* ===== REALITY CHECK CARD ===== */
@@ -5927,6 +5927,12 @@
 
 .daily-progression-card {
   border-radius: 20px;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+.daily-progression-card > * {
   overflow: visible;
 }
 
@@ -6126,6 +6132,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  overflow: visible !important;
+  position: relative;
 }
 
 /* Navigation Arrows */
@@ -6172,6 +6180,9 @@
   justify-content: space-between;
   gap: 8px;
   padding: 0 8px;
+  overflow: visible !important;
+  position: relative;
+  z-index: 10;
 }
 
 /* Timeline Day Column */
@@ -6310,6 +6321,13 @@
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  z-index: 20;
+}
+
+.timeline-day-indicator {
+  position: relative;
+  z-index: 20;
+  overflow: visible !important;
 }
 
 .milestone-rocket-indicator .rocket-icon {

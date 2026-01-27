@@ -401,7 +401,7 @@
             <div class="mission-stats-panel flex flex-col gap-4">
               
               <!-- REALITY CHECK CARD -->
-              <div class="reality-check-card hud-card shimmer p-5 relative">
+              <div class="reality-check-card hud-card shimmer p-4 relative">
                 <div class="scanline"></div>
                 <div class="flex items-start justify-between gap-4">
                   <div class="flex-1">
@@ -417,10 +417,10 @@
                 </div>
               </div>
 
-              <!-- TIME TO DESTINATION -->
-              <div class="time-destination-card hud-card shimmer p-5 relative">
+              <!-- TIME TO REACH THE GOAL -->
+              <div class="time-destination-card hud-card shimmer p-4 relative">
                 <div class="scanline"></div>
-                <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-4" style="font-family: 'Orbitron', monospace;">
+                <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-3" style="font-family: 'Orbitron', monospace;">
                   <span class="text-gray-400">TIME TO REACH THE GOAL</span>
                 </h3>
                 <div class="countdown-boxes-container flex justify-center items-center gap-2 md:gap-3">
@@ -455,15 +455,15 @@
               </div>
 
               <!-- MILESTONES PREVIEW -->
-              <div class="milestones-preview-card hud-card shimmer p-5 relative flex-1">
+              <div class="milestones-preview-card hud-card shimmer p-4 relative flex-1">
                 <div class="scanline"></div>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-3">
                   <h3 class="milestones-label text-xs font-bold tracking-wider text-red-500" style="font-family: 'Orbitron', monospace;">MILESTONES</h3>
                   <span class="milestones-count text-xs text-gray-500">{{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }}</span>
                 </div>
                 
                 <!-- Milestones List -->
-                <div class="milestones-list space-y-2 max-h-[150px] overflow-y-auto">
+                <div class="milestones-list space-y-1.5 max-h-[120px] overflow-y-auto">
                   @for (item of actionItems().slice(0, 5); track item.id) {
                   <div class="milestone-item flex items-center gap-3 p-2 rounded-lg transition-all hover:bg-white/5"
                        [class.milestone-completed]="item.completed"
@@ -501,7 +501,7 @@
             <div class="scanline"></div>
             
             <!-- Header with view toggle buttons -->
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-4">
               <div class="daily-progress-header-left flex items-center gap-4">
                 <h3 class="daily-progression-title text-xl font-black" style="font-family: 'Exo 2', sans-serif;">
                   <span class="title-icon">📊</span> Daily Progress
