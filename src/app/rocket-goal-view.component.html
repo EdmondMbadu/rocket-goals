@@ -506,14 +506,49 @@
                 <h3 class="daily-progression-title text-xl font-black" style="font-family: 'Exo 2', sans-serif;">
                   <span class="title-icon">📊</span> Daily Progress
                 </h3>
-                <!-- Deadline Badge -->
-                <div class="deadline-badge flex items-center gap-2">
+                <!-- Deadline Badge - Clickable to Edit -->
+                @if (!isEditingDeadline()) {
+                <div class="deadline-badge flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                     (click)="startEditingDeadline()"
+                     [title]="isGoalOwner() ? 'Click to change deadline' : 'Goal deadline'">
                   <span class="deadline-icon">🎯</span>
                   <div class="deadline-info">
                     <span class="deadline-label-text">DEADLINE</span>
                     <span class="deadline-date-text">{{ getDeadlineDateDisplay() || getFormattedDateFromDayNumber(getTimeframeDays()) }}</span>
                   </div>
+                  @if (isGoalOwner()) {
+                  <svg class="w-3.5 h-3.5 text-gray-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  }
                 </div>
+                } @else {
+                <!-- Inline Deadline Editor -->
+                <div class="deadline-editor flex items-center gap-2">
+                  <span class="deadline-icon">🎯</span>
+                  <input type="date" 
+                         [value]="deadlineInputValue()"
+                         (input)="deadlineInputValue.set($any($event.target).value)"
+                         class="deadline-date-input"
+                         [min]="getMinDeadlineDate()">
+                  <button (click)="saveDeadline()" 
+                          class="deadline-save-btn"
+                          [disabled]="savingDeadline()">
+                    @if (savingDeadline()) {
+                      <span class="animate-spin">⏳</span>
+                    } @else {
+                      ✓
+                    }
+                  </button>
+                  <button (click)="cancelEditingDeadline()" 
+                          class="deadline-cancel-btn">
+                    ✕
+                  </button>
+                </div>
+                @if (deadlineError()) {
+                <span class="deadline-error text-xs text-red-500 ml-2">{{ deadlineError() }}</span>
+                }
+                }
               </div>
               <div class="timeline-view-controls flex items-center gap-2">
                 <!-- View Toggle Buttons -->

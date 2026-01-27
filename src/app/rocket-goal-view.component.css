@@ -5932,8 +5932,18 @@
   z-index: 1;
 }
 
+.daily-progression-card.hud-card {
+  overflow: visible !important;
+}
+
 .daily-progression-card > * {
   overflow: visible;
+}
+
+/* Ensure timeline content doesn't overflow the card width */
+.daily-progression-card .timeline-navigation-container {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dark-mode .daily-progression-card {
@@ -6030,6 +6040,102 @@
 
 .light-mode .deadline-date-text {
   color: #92400e;
+}
+
+/* Deadline Editor Styles */
+.deadline-editor {
+  padding: 6px 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark-mode .deadline-editor {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+}
+
+.light-mode .deadline-editor {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+}
+
+.deadline-date-input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .deadline-date-input {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fef3c7;
+}
+
+.dark-mode .deadline-date-input:focus {
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.light-mode .deadline-date-input {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #92400e;
+}
+
+.light-mode .deadline-date-input:focus {
+  border-color: rgba(217, 119, 6, 0.6);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.15);
+}
+
+.deadline-save-btn,
+.deadline-cancel-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.deadline-save-btn {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.deadline-save-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  transform: scale(1.05);
+}
+
+.deadline-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.deadline-cancel-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.deadline-cancel-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: scale(1.05);
+}
+
+.deadline-error {
+  font-family: 'Exo 2', sans-serif;
 }
 
 /* Responsive for deadline badge */
@@ -6135,12 +6241,28 @@
   overflow: visible !important;
   position: relative;
   width: 100%;
+  flex-wrap: nowrap;
 }
 
 /* Ensure arrows don't shrink or get pushed off */
 .timeline-nav-arrow {
   flex-shrink: 0 !important;
+  flex-grow: 0 !important;
   z-index: 15;
+  position: relative;
+  min-width: 52px;
+}
+
+.timeline-nav-prev {
+  order: 1;
+}
+
+.timeline-days-container {
+  order: 2;
+}
+
+.timeline-nav-next {
+  order: 3;
 }
 
 /* Navigation Arrows */
@@ -6183,7 +6305,7 @@
 /* Timeline Days Container */
 .timeline-days-container {
   display: flex;
-  flex: 1;
+  flex: 1 1 0%;
   justify-content: space-between;
   gap: 8px;
   padding: 0 8px;
@@ -6191,6 +6313,7 @@
   position: relative;
   z-index: 10;
   min-width: 0; /* Prevent flex item from overflowing */
+  max-width: calc(100% - 140px); /* Leave room for both arrows (52px each + gaps) */
 }
 
 /* Timeline Day Column */

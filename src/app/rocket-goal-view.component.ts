@@ -699,6 +699,13 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return `${year}-${month}-${day}`;
   }
 
+  getMinDeadlineDate(): string {
+    // Minimum deadline is tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return this.formatDateInputValue(tomorrow);
+  }
+
   private getCustomTimelineMarkers(totalDays: number): { label: string; day: number }[] {
     if (totalDays <= 7) {
       return Array.from({ length: totalDays }, (_value, index) => ({
