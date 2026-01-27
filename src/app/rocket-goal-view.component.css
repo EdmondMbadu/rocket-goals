@@ -5599,11 +5599,71 @@
   margin-bottom: 0;
 }
 
+/* ===== OWNER PROFILE HEADER ===== */
+.vision-board-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.owner-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.dark-mode .owner-avatar {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+}
+
+.light-mode .owner-avatar {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: 2px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.owner-initials {
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 0.05em;
+}
+
+.owner-goal-title {
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.dark-mode .owner-goal-title {
+  color: #f1f5f9;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.light-mode .owner-goal-title {
+  color: #1e293b;
+}
+
 /* ===== VISION BOARD CARD ===== */
 .vision-board-card {
   border-radius: 20px;
   overflow: hidden;
-  min-height: 320px;
+  min-height: 280px;
   position: relative;
 }
 

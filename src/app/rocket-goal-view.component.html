@@ -306,14 +306,24 @@
           <!-- ==================== REDESIGNED MISSION HERO SECTION ==================== -->
           <div class="mission-hero-section grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
             
-            <!-- LEFT: VISION BOARD -->
-            <div class="vision-board-card hud-card shimmer relative overflow-hidden cursor-pointer group" (click)="hasVisualization() ? openVisualizationModal() : null">
-              <div class="scanline"></div>
-              
-              <!-- Vision Board Label -->
-              <div class="vision-board-label absolute top-4 left-4 z-20">
-                <span class="vision-label-badge">VISION BOARD</span>
+            <!-- LEFT: VISION BOARD with Owner Header -->
+            <div class="vision-board-wrapper flex flex-col">
+              <!-- Owner Profile Header -->
+              <div class="owner-profile-header flex items-center gap-3 mb-3">
+                <div class="owner-avatar">
+                  <span class="owner-initials">{{ getGoalOwnerInitials() }}</span>
+                </div>
+                <span class="owner-goal-title">{{ getGoalOwnerDisplayTitle() }}</span>
               </div>
+              
+              <!-- Vision Board Card -->
+              <div class="vision-board-card hud-card shimmer relative overflow-hidden cursor-pointer group flex-1" (click)="hasVisualization() ? openVisualizationModal() : null">
+                <div class="scanline"></div>
+                
+                <!-- Vision Board Label -->
+                <div class="vision-board-label absolute top-4 left-4 z-20">
+                  <span class="vision-label-badge">VISION BOARD</span>
+                </div>
               
               <!-- Upload/Generate button (only for goal owner) -->
               @if (isGoalOwner()) {
@@ -396,6 +406,7 @@
                 </div>
               </div>
             </div>
+            </div> <!-- Close vision-board-wrapper -->
 
             <!-- RIGHT: MISSION STATS PANEL -->
             <div class="mission-stats-panel flex flex-col gap-4">

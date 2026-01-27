@@ -899,6 +899,20 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return `${ownerName}'s Goal`;
   }
 
+  getGoalOwnerInitials(): string {
+    const goal = this.goal();
+    if (!goal) return '?';
+    const firstName = goal.participant?.firstName || '';
+    const lastName = goal.participant?.lastName || '';
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName.slice(0, 2).toUpperCase();
+    }
+    return 'RG';
+  }
+
   toggleShareDropdown() {
     this.showShareDropdown.set(!this.showShareDropdown());
   }
