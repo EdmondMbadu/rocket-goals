@@ -100,6 +100,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   timelineViewOffset = signal(0);
   // Expanded day on the daily progression timeline (to show milestones for that day)
   expandedTimelineDay = signal<number | null>(null);
+  // Timeline view mode: 'daily' for day-by-day navigation, 'goal' for full timeline snapshot
+  timelineViewMode = signal<'daily' | 'goal'>('daily');
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
   calendarEvents = signal<CalendarEvent[]>([]);
@@ -483,6 +485,44 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       // If no milestones, open the add task modal for that day
       this.addTaskToDay(day);
     }
+  }
+
+  // Toggle between daily and goal view
+  toggleTimelineViewMode(): void {
+    this.timelineViewMode.update(mode => mode === 'daily' ? 'goal' : 'daily');
+    this.expandedTimelineDay.set(null); // Reset expanded day when switching views
+  }
+
+  // Get all days from start to finish for the goal view
+  getGoalTimelineDays(): { day: number; date: Date; isToday: boolean; isPast: boolean; isFuture: boolean; isFinalDay: boolean; hasCompletedMilestones: boolean; hasPendingMilestones: boolean; milestoneCount: number }[] {
+    const goal = this.goal();
+    if (!goal) return [];
+
+    const startTime = goal.startTime || Date.now();
+    const currentDay = this.getCurrentMissionDay();
+    const totalDays = this.getTimeframeDays();
+    
+    const allDays: { day: number; date: Date; isToday: boolean; isPast: boolean; isFuture: boolean; isFinalDay: boolean; hasCompletedMilestones: boolean; hasPendingMilestones: boolean; milestoneCount: number }[] = [];
+    
+    for (let dayNumber = 1; dayNumber <= totalDays; dayNumber++) {
+      const dayDate = new Date(startTime + (dayNumber - 1) * 24 * 60 * 60 * 1000);
+      const dayMilestones = this.getMilestonesForDay(dayNumber);
+      const completedCount = dayMilestones.filter(m => m.completed).length;
+      
+      allDays.push({
+        day: dayNumber,
+        date: dayDate,
+        isToday: dayNumber === currentDay,
+        isPast: dayNumber < currentDay,
+        isFuture: dayNumber > currentDay,
+        isFinalDay: dayNumber === totalDays,
+        hasCompletedMilestones: completedCount > 0,
+        hasPendingMilestones: dayMilestones.length > completedCount,
+        milestoneCount: dayMilestones.length
+      });
+    }
+    
+    return allDays;
   }
 
   // Get completion percentage

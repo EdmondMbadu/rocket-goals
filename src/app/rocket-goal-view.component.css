@@ -5946,6 +5946,66 @@
   font-weight: 700;
 }
 
+/* View Toggle Controls */
+.timeline-view-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-toggle-group {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dark-mode .view-toggle-group {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-mode .view-toggle-group {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.view-toggle-option {
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.dark-mode .view-toggle-option {
+  color: #94a3b8;
+}
+
+.dark-mode .view-toggle-option:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .view-toggle-option.active {
+  color: white;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+}
+
+.light-mode .view-toggle-option {
+  color: #64748b;
+}
+
+.light-mode .view-toggle-option:hover {
+  color: #1e293b;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.light-mode .view-toggle-option.active {
+  color: white;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+}
+
 .recenter-btn {
   border: 1px solid rgba(220, 38, 38, 0.4);
   color: #dc2626;
@@ -6547,6 +6607,253 @@
 
 .light-mode .timeline-day-column.timeline-day-today .timeline-day-number {
   color: #dc2626 !important;
+}
+
+/* ============================================
+   GOAL VIEW - Full Timeline Snapshot
+   ============================================ */
+
+.goal-view-container {
+  padding: 20px 0;
+}
+
+.goal-timeline-track {
+  position: relative;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0 60px;
+}
+
+/* Start Marker */
+.goal-timeline-start {
+  z-index: 10;
+  transform: translateX(-50%);
+}
+
+.start-marker {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.start-label {
+  color: #dc2626;
+}
+
+/* End/Goal Marker */
+.goal-timeline-end {
+  z-index: 10;
+  transform: translateX(50%);
+}
+
+.end-marker {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 0 60px rgba(251, 191, 36, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  animation: goal-pulse 2s ease-in-out infinite;
+}
+
+@keyframes goal-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 0 60px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.8), 0 0 80px rgba(251, 191, 36, 0.4);
+  }
+}
+
+/* Progress Line */
+.goal-progress-line {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dark-mode .goal-progress-line {
+  background: linear-gradient(90deg, rgba(100, 116, 139, 0.3) 0%, rgba(71, 85, 105, 0.2) 100%);
+}
+
+.light-mode .goal-progress-line {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.3) 0%, rgba(203, 213, 225, 0.3) 100%);
+}
+
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f59e0b 100%);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+}
+
+/* Day Markers */
+.goal-day-markers {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+}
+
+.goal-day-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.goal-day-marker:hover {
+  transform: scale(2);
+  z-index: 20;
+}
+
+/* Marker States */
+.dark-mode .goal-day-marker.marker-past {
+  background: #475569;
+}
+
+.dark-mode .goal-day-marker.marker-future {
+  background: #334155;
+  opacity: 0.5;
+}
+
+.light-mode .goal-day-marker.marker-past {
+  background: #94a3b8;
+}
+
+.light-mode .goal-day-marker.marker-future {
+  background: #cbd5e1;
+  opacity: 0.5;
+}
+
+/* Today Marker */
+.goal-day-marker.marker-today {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+  border: 2px solid white;
+  z-index: 15;
+}
+
+/* Final Day Marker */
+.goal-day-marker.marker-final {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.final-marker-glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Markers with Milestones */
+.goal-day-marker.has-milestones {
+  width: 12px;
+  height: 12px;
+}
+
+.goal-day-marker.all-complete {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.goal-day-marker.has-pending {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+/* Marker Dot */
+.marker-dot {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.marker-dot.dot-complete {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.marker-dot.dot-pending {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* Goal Summary Stats */
+.goal-summary-stats {
+  padding: 16px 0;
+}
+
+.dark-mode .stat-divider {
+  background: #374151;
+}
+
+.light-mode .stat-divider {
+  background: #d1d5db;
+}
+
+.light-mode .stat-value {
+  color: #1e293b;
+}
+
+.light-mode .stat-item .stat-value.text-white {
+  color: #1e293b !important;
+}
+
+.light-mode .stat-label {
+  color: #64748b !important;
+}
+
+/* Milestone Legend */
+.milestone-legend {
+  padding-top: 8px;
+}
+
+.legend-dot {
+  box-shadow: 0 0 6px currentColor;
+}
+
+.light-mode .legend-item span {
+  color: #64748b;
 }
 
 /* Light mode text fixes for timeline */
