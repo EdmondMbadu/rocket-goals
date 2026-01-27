@@ -303,512 +303,349 @@
         <!-- RIGHT COLUMN: Mission Info -->
         <div class="left-column flex flex-col gap-5 md:gap-6 overflow-y-auto pb-4">
           
-          <!-- Top Row: Primary Directive + Stats -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+          <!-- ==================== REDESIGNED MISSION HERO SECTION ==================== -->
+          <div class="mission-hero-section grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
             
-            <!-- PRIMARY DIRECTIVE CARD -->
-            <div class="hud-card directive-card shimmer p-6 relative overflow-hidden group">
+            <!-- LEFT: VISION BOARD -->
+            <div class="vision-board-card hud-card shimmer relative overflow-hidden cursor-pointer group" (click)="hasVisualization() ? openVisualizationModal() : null">
               <div class="scanline"></div>
-
-              <!-- Decorative rocket icon -->
-              <div class="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                <svg class="w-20 h-20 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12.5 2c-.3 0-.5.1-.7.3L4.3 9.8c-.4.4-.4 1 0 1.4l3.5 3.5-1.5 1.5c-.4.4-.4 1 0 1.4l1.5 1.5c.4.4 1 .4 1.4 0l1.5-1.5 3.5 3.5c.4.4 1 .4 1.4 0l7.5-7.5c.2-.2.3-.4.3-.7 0-.3-.1-.5-.3-.7l-11-9.4c-.2-.2-.4-.3-.6-.3zm0 2.1l9 7.6-6 6-3.1-3.1 3.3-3.3c.4-.4.4-1 0-1.4-.4-.4-1-.4-1.4 0L11 13.2 7.9 10l4.6-5.9z"/>
-                </svg>
+              
+              <!-- Vision Board Label -->
+              <div class="vision-board-label absolute top-4 left-4 z-20">
+                <span class="vision-label-badge">VISION BOARD</span>
               </div>
-
-              <!-- Owner Name Badge - Prominent Display -->
-              <div class="goal-owner-badge mb-5">
-                <div class="goal-owner-glow"></div>
-                <div class="goal-owner-content">
-                  <span class="goal-owner-icon">🚀</span>
-                  <span class="goal-owner-name">{{ getGoalOwnerDisplayTitle() }}</span>
-                </div>
-              </div>
-
-              <!-- Goal Title (Editable) -->
-              <div class="flex items-start gap-3 mb-2 relative z-10">
-                @if (isEditingGoalTitle()) {
-                <div class="flex-1 flex items-center gap-2">
-                  <input type="text" 
-                    [ngModel]="editingGoalTitleValue()" 
-                    (ngModelChange)="editingGoalTitleValue.set($event)"
-                    (keyup.enter)="saveGoalTitle()" 
-                    (keyup.escape)="cancelEditingGoalTitle()"
-                    class="goal-title-input text-2xl font-bold"
-                    placeholder="Enter mission name..."
-                    #goalTitleInput />
-                  <button (click)="saveGoalTitle()" 
-                    class="text-green-400 hover:text-green-300 transition-colors p-1 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </button>
-                  <button (click)="cancelEditingGoalTitle()" 
-                    class="text-gray-500 hover:text-red-400 transition-colors p-1 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                } @else {
-                <h2 class="directive-title text-2xl md:text-3xl flex-1">
-                  {{ getGoalTitleDisplay() }}
-                </h2>
-                <button (click)="startEditingGoalTitle()" 
-                  class="edit-btn shrink-0 relative z-10">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-                }
-              </div>
-
-              <!-- Theme -->
-              <p class="directive-theme mb-4">
-                {{ getGoalThemeDisplay() }}
-              </p>
-
-              <!-- ONE Thing Success Target (if from launchpad onboarding) -->
-              @if (goal()!.answers['onboarding_one_thing_metric']) {
-              <div class="one-thing-target-card mb-4">
-                <div class="one-thing-target-header">
-                  <span class="one-thing-target-icon">🎯</span>
-                  <span class="one-thing-target-label">{{ goal()!.answers['onboarding_one_thing_label'] || 'SUCCESS TARGET' }}</span>
-                </div>
-                <div class="one-thing-target-value">
-                  @if (goal()!.answers['onboarding_one_thing_unit'] === '$') {
-                    <span class="one-thing-unit-prefix">$</span>{{ formatNumberWithCommas(goal()!.answers['onboarding_one_thing_metric']) }}
-                  } @else if (goal()!.answers['onboarding_one_thing_unit']) {
-                    {{ formatNumberWithCommas(goal()!.answers['onboarding_one_thing_metric']) }} <span class="one-thing-unit-suffix">{{ goal()!.answers['onboarding_one_thing_unit'] }}</span>
+              
+              <!-- Upload/Generate button (only for goal owner) -->
+              @if (isGoalOwner()) {
+              <div class="absolute top-4 right-4 z-20 flex gap-2">
+                @if (hasVisualization() && canUploadVisualization()) {
+                <label class="upload-visualization-btn cursor-pointer" [class.uploading]="uploadingVisualization()" title="Upload your own image">
+                  <input type="file" 
+                    accept="image/*" 
+                    class="hidden" 
+                    (change)="onVisualizationImageSelected($event)"
+                    [disabled]="uploadingVisualization()" />
+                  @if (uploadingVisualization()) {
+                    <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   } @else {
-                    {{ formatNumberWithCommas(goal()!.answers['onboarding_one_thing_metric']) }}
-                  }
-                </div>
-              </div>
-              }
-
-              <!-- Compact Stats -->
-              <div class="flex gap-3 relative z-10">
-                <div class="stat-box-compact rounded-lg flex-1">
-                  <div class="stat-label-sm">THRUST</div>
-                  <div class="stat-value-sm">{{ goal()!.answers['daily_effort'] === '5min' ? '5m' :
-                    goal()!.answers['daily_effort'] === '10min' ? '10m' :
-                    goal()!.answers['daily_effort'] === '20min' ? '20m' :
-                    goal()!.answers['daily_effort'] === '30min' ? '30m' : '1hr' }}</div>
-                </div>
-                <div class="stat-box-compact rounded-lg flex-1">
-                  <div class="stat-label-sm">SUPPORT</div>
-                  <div class="stat-value-sm truncate">{{ getSupportDisplay() }}</div>
-                </div>
-              </div>
-
-              <!-- Fan Reactions & Shout Outs Display - Enhanced Section -->
-              @if ((fanReactions().length > 0 || fanComments().length > 0) && !reactionsLoading() && !commentsLoading()) {
-              <div class="fan-support-section mt-5 pt-5 relative z-10">
-                <!-- Section Header -->
-                <div class="fan-support-header">
-                  <span class="fan-support-icon">💫</span>
-                  <span class="fan-support-title">Fan Support</span>
-                  <span class="fan-support-count">{{ fanReactions().length + fanComments().length }} cheers</span>
-                </div>
-
-                <!-- Emoji Reactions - Beautiful Grid -->
-                @if (fanReactions().length > 0) {
-                <div class="fan-reactions-grid">
-                  @for (reaction of fanReactions(); track reaction.emoji) {
-                  <div class="fan-reaction-bubble" title="{{ reaction.count }} reactions">
-                    <span class="reaction-emoji">{{ reaction.emoji }}</span>
-                    <span class="reaction-count">{{ reaction.count }}</span>
-                  </div>
-                  }
-                </div>
-                }
-
-                <!-- Shout Outs Section - Enhanced Cards -->
-                @if (fanComments().length > 0) {
-                <div class="fan-shoutouts-section" [class.mt-4]="fanReactions().length > 0">
-                  <div class="shoutouts-label">
-                    <span class="shoutouts-icon">📣</span>
-                    <span>Latest Shout Outs</span>
-                  </div>
-
-                  <!-- First shout out - Featured -->
-                  <div class="fan-shoutout-card featured">
-                    <div class="shoutout-avatar">{{ getFanInitials(fanComments()[0].fanName, fanComments()[0].fanEmail) }}</div>
-                    <div class="shoutout-content">
-                      <div class="shoutout-author">
-                        {{ getFanDisplayName(fanComments()[0].fanName, fanComments()[0].fanEmail) }}
-                        @if (fanComments()[0].emoji) {
-                        <span class="shoutout-emoji">{{ fanComments()[0].emoji }}</span>
-                        }
-                      </div>
-                      <p class="shoutout-message">{{ fanComments()[0].content }}</p>
-                    </div>
-                  </div>
-
-                  @if (fanComments().length > 1) {
-                  <button
-                    type="button"
-                    class="shoutouts-expand-btn"
-                    (click)="fanCommentsExpanded.set(!fanCommentsExpanded())">
-                    @if (fanCommentsExpanded()) {
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                      </svg>
-                      <span>Hide</span>
-                    } @else {
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                      </svg>
-                      <span>+{{ fanComments().length - 1 }} more</span>
-                    }
-                  </button>
-                  }
-
-                  <!-- Expandable additional shout outs -->
-                  @if (fanCommentsExpanded() && fanComments().length > 1) {
-                  <div class="fan-shoutouts-list">
-                    @for (comment of fanComments().slice(1, 5); track comment.id) {
-                    <div class="fan-shoutout-card">
-                      <div class="shoutout-avatar small">{{ getFanInitials(comment.fanName, comment.fanEmail) }}</div>
-                      <div class="shoutout-content">
-                        <div class="shoutout-author">
-                          {{ getFanDisplayName(comment.fanName, comment.fanEmail) }}
-                          @if (comment.emoji) {
-                          <span class="shoutout-emoji">{{ comment.emoji }}</span>
-                          }
-                        </div>
-                        <p class="shoutout-message">{{ comment.content }}</p>
-                      </div>
-                    </div>
-                    }
-                    @if (fanComments().length > 5) {
-                    <div class="fan-shoutouts-more">
-                      <span>+{{ fanComments().length - 5 }} more in Fan Log below</span>
-                    </div>
-                    }
-                  </div>
-                  }
-                </div>
-                }
-              </div>
-              }
-            </div>
-
-            <!-- FUTURE SELF VISUALIZATION CARD -->
-            @if (hasVisualization()) {
-            <div class="hud-card visualization-card shimmer p-5 flex flex-col relative overflow-hidden cursor-pointer group" (click)="openVisualizationModal()">
-              <div class="scanline"></div>
-
-              <!-- Header -->
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="timeline-badge text-red-500 text-xs">YOUR FUTURE SELF</h3>
-                <div class="flex items-center gap-1.5 text-gray-400 group-hover:text-red-400 transition-colors">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                  </svg>
-                  <span class="text-[10px] font-medium">Click to enlarge</span>
-                </div>
-              </div>
-
-              <!-- Visualization Image -->
-              <div class="visualization-image-container relative flex-1 rounded-lg overflow-hidden bg-gradient-to-br from-red-900/20 to-gray-900/20 border border-red-500/20">
-                <img
-                  [src]="getVisualizationImageUrl()"
-                  alt="Your Future Self Visualization"
-                  class="visualization-image w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy" />
-
-                <!-- Overlay gradient -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-
-                <!-- Upload button overlay (only for goal owner) -->
-                @if (canUploadVisualization()) {
-                <div class="absolute top-3 right-3 z-20">
-                  <label class="upload-visualization-btn cursor-pointer" [class.uploading]="uploadingVisualization()" title="Upload your own image">
-                    <input type="file" 
-                      accept="image/*" 
-                      class="hidden" 
-                      (change)="onVisualizationImageSelected($event)"
-                      [disabled]="uploadingVisualization()" />
-                    @if (uploadingVisualization()) {
-                      <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    } @else {
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    }
-                  </label>
-                </div>
-                }
-
-                <!-- Bottom label -->
-                <div class="absolute bottom-3 left-3 right-3">
-                  <p class="text-white text-xs font-medium opacity-90" style="font-family: 'Exo 2', sans-serif;">
-                    "This is achievable. This is me — soon."
-                  </p>
-                </div>
-              </div>
-
-              <!-- Glow effect on hover -->
-              <div class="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/5 transition-colors duration-300 pointer-events-none rounded-xl"></div>
-            </div>
-            } @else {
-            <!-- GENERATE VISUALIZATION CARD (shown when no visualization) -->
-            <div class="hud-card visualization-generate-card shimmer p-5 flex flex-col relative overflow-hidden group">
-              <div class="scanline"></div>
-
-              <!-- Header -->
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="timeline-badge text-red-500 text-xs">YOUR FUTURE SELF</h3>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-red-400 text-[10px] font-medium uppercase tracking-wider">AI GENERATED</span>
-                </div>
-              </div>
-
-              <!-- Placeholder with Generate Button -->
-              <div class="relative flex-1 rounded-lg overflow-hidden bg-gradient-to-br from-red-900/30 to-gray-900/30 border border-red-500/20 min-h-[180px] flex flex-col items-center justify-center p-4">
-                <!-- Decorative elements -->
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(220,38,38,0.15),transparent_70%)]"></div>
-
-                @if (visualizationLoading()) {
-                <!-- Loading state -->
-                <div class="relative z-10 text-center">
-                  <div class="w-16 h-16 mx-auto mb-4 relative">
-                    <div class="absolute inset-0 border-4 border-red-500/30 rounded-full"></div>
-                    <div class="absolute inset-0 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                  <p class="text-red-300 text-sm font-medium">Creating your vision...</p>
-                  <p class="text-gray-400 text-xs mt-1">This may take a moment</p>
-                </div>
-                } @else if (canGenerateVisualization()) {
-                <!-- Generate button for owner -->
-                <div class="relative z-10 text-center">
-                  <div class="text-4xl mb-4">🎨</div>
-                  <h4 class="text-white font-bold mb-2" style="font-family: 'Exo 2', sans-serif;">Visualize Your Success</h4>
-                  <p class="text-gray-400 text-xs mb-4 max-w-[200px]">Generate an AI image of your future self achieving this goal</p>
-                  <button (click)="generateVisualization()"
-                    class="generate-visualization-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Generate Image
-                  </button>
-                </div>
-                } @else {
-                <!-- Placeholder for non-owners -->
-                <div class="relative z-10 text-center">
-                  <div class="text-4xl mb-4 opacity-50">🖼️</div>
-                  <p class="text-gray-400 text-sm">No visualization yet</p>
-                  <p class="text-gray-500 text-xs mt-1">The goal owner can generate one</p>
-                </div>
-                }
-              </div>
-
-              <!-- Inspirational quote -->
-              <div class="mt-3 text-center">
-                <p class="text-red-400 text-[10px] italic" style="font-family: 'Exo 2', sans-serif;">
-                  "See it. Believe it. Achieve it."
-                </p>
-              </div>
-            </div>
-            }
-          </div>
-
-          <!-- MISSION TIMELINE CARD -->
-          <div class="hud-card timeline-card shimmer p-5 md:p-6">
-            <div class="scanline"></div>
-
-            <!-- Header Row -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-              <div class="flex items-center gap-4">
-                <h3 class="timeline-badge text-red-500">{{ getTimeframeDisplay() }}</h3>
-                <div class="countdown-timer text-xl md:text-2xl text-white tracking-tight">
-                  T-MINUS <span class="text-red-500">{{ countdown() }}</span>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500" style="font-family: 'Orbitron', monospace;">DAY {{ getCurrentMissionDay() }} of {{ getTimeframeDays() }}</span>
-                <div class="barcode w-16 hidden sm:block"></div>
-              </div>
-            </div>
-
-            @if (isGoalOwner()) {
-            <div class="deadline-row">
-              @if (isEditingDeadline()) {
-              <div class="deadline-edit">
-                <label class="deadline-label">Target date</label>
-                <div class="deadline-edit-controls">
-                  <input type="date" class="deadline-input"
-                    [ngModel]="deadlineInputValue()"
-                    (ngModelChange)="deadlineInputValue.set($event)"
-                    [disabled]="savingDeadline()" />
-                  <button type="button" class="deadline-save-btn" (click)="saveDeadline()" [disabled]="savingDeadline()">
-                    Save
-                  </button>
-                  <button type="button" class="deadline-cancel-btn" (click)="cancelEditingDeadline()" [disabled]="savingDeadline()">
-                    Cancel
-                  </button>
-                </div>
-                @if (deadlineError()) {
-                <p class="deadline-error">{{ deadlineError() }}</p>
-                }
-              </div>
-              } @else {
-              @if (hasCustomDeadline()) {
-              <div class="deadline-display deadline-prominent">
-                <div class="deadline-meta">
-                  <span class="deadline-label">Target date</span>
-                  <span class="deadline-date deadline-date-pop">{{ getDeadlineDateDisplay() }}</span>
-                </div>
-                <button type="button" class="deadline-edit-link" (click)="startEditingDeadline()">Edit</button>
-              </div>
-              } @else {
-              <button type="button" class="deadline-set-btn" (click)="startEditingDeadline()">
-                Set exact deadline
-              </button>
-              }
-              }
-            </div>
-            } @else if (hasCustomDeadline()) {
-            <div class="deadline-row">
-              <div class="deadline-display readonly deadline-prominent">
-                <div class="deadline-meta">
-                  <span class="deadline-label">Target date</span>
-                  <span class="deadline-date deadline-date-pop">{{ getDeadlineDateDisplay() }}</span>
-                </div>
-              </div>
-            </div>
-            }
-
-            <!-- Timeline Track -->
-            <div class="relative py-6">
-              <!-- Background Line -->
-              <div class="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-red-600/80 via-gray-700/50 to-gray-800/30 -translate-y-1/2 rounded-full"></div>
-
-              <!-- Glowing active segment (dynamic based on progress) -->
-              <div class="absolute top-1/2 left-0 h-1 bg-red-500 -translate-y-1/2 rounded-full shadow-lg shadow-red-500/50 transition-all duration-500"
-                   [style.width.%]="getTimelineProgress()"></div>
-
-              <!-- Task Rockets positioned between markers -->
-              @for (taskData of getTasksBetweenMarkers(); track taskData.item.id; let i = $index) {
-              <div class="timeline-task-rocket absolute cursor-pointer group"
-                   [style.left.%]="taskData.positionPercent"
-                   [style.top.%]="50"
-                   [style.transform]="getRocketTransform(taskData, i)"
-                   (click)="toggleTimelineTaskExpanded(taskData.item.id); $event.stopPropagation()"
-                   style="z-index: 40; pointer-events: auto;">
-                <!-- Small Rocket Icon using emoji like pricing page -->
-                <div class="task-rocket-icon"
-                     [class.completed]="taskData.item.completed"
-                     [class.expanded]="expandedTimelineTaskId() === taskData.item.id">
-                  <span class="rocket-emoji-timeline">🚀</span>
-                </div>
-                
-                <!-- Expanded Task Details -->
-                @if (expandedTimelineTaskId() === taskData.item.id) {
-                <div class="timeline-task-popup popup-above">
-                  <div class="timeline-task-popup-header">
-                    <h4 class="timeline-task-popup-title" [class.completed]="taskData.item.completed">
-                      {{ taskData.item.title }}
-                    </h4>
-                    <button (click)="toggleTimelineTaskExpanded(taskData.item.id); $event.stopPropagation()" 
-                            class="timeline-task-popup-close">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  @if (taskData.item.notes) {
-                  <p class="timeline-task-popup-notes">{{ taskData.item.notes }}</p>
                   }
-                  <div class="timeline-task-popup-footer">
-                    <div class="timeline-task-popup-meta">
-                      <span class="timeline-task-popup-day">Day {{ taskData.item.dayNumber }}</span>
-                      <span class="timeline-task-popup-status" [class.completed]="taskData.item.completed">
-                        <span class="status-dot" aria-hidden="true"></span>
-                        {{ taskData.item.completed ? 'Completed' : 'Incomplete' }}
-                      </span>
-                    </div>
-                    <button (click)="toggleActionItemComplete(taskData.item); $event.stopPropagation()"
-                            class="timeline-task-popup-toggle"
-                            [class.completed]="taskData.item.completed">
-                      @if (taskData.item.completed) {
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Mark as incomplete
-                      } @else {
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Mark as complete
-                      }
-                    </button>
-                  </div>
-                </div>
+                </label>
                 }
               </div>
               }
 
-              <!-- Timeline Nodes -->
-              <div class="flex items-center justify-between relative z-30">
-                @for (marker of getTimelineMarkers(); track marker.day; let i = $index) {
-                <div class="timeline-node-wrapper flex flex-col items-center gap-1 cursor-pointer group"
-                     (click)="addTaskToDay(marker.day)"
-                     [title]="'Click to add task to ' + marker.label">
-                  <!-- Task indicator badge -->
-                  @if (getTaskCountForDay(marker.day) > 0) {
-                  <div class="timeline-task-badge"
-                       [class.all-complete]="isAllTasksCompletedForDay(marker.day)"
-                       [class.has-incomplete]="!isAllTasksCompletedForDay(marker.day)">
-                    {{ getCompletedTaskCountForDay(marker.day) }}/{{ getTaskCountForDay(marker.day) }}
+              <!-- Vision Board Image -->
+              <div class="vision-board-image-container relative w-full h-full min-h-[350px] md:min-h-[400px]">
+                @if (hasVisualization()) {
+                <img
+                  [src]="getVisualizationImageUrl()"
+                  alt="Vision Board"
+                  class="vision-board-image w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy" />
+                } @else {
+                <!-- Placeholder gradient background -->
+                <div class="vision-board-placeholder w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center">
+                  @if (visualizationLoading()) {
+                  <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 relative">
+                      <div class="absolute inset-0 border-4 border-red-500/30 rounded-full"></div>
+                      <div class="absolute inset-0 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p class="text-red-300 text-sm font-medium">Creating your vision...</p>
+                  </div>
+                  } @else if (canGenerateVisualization()) {
+                  <div class="text-center p-6">
+                    <div class="text-6xl mb-4">🎨</div>
+                    <button (click)="generateVisualization(); $event.stopPropagation()"
+                      class="generate-visualization-btn inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Generate Vision
+                    </button>
                   </div>
                   } @else {
-                  <div class="timeline-task-badge empty group-hover:opacity-100">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                  <div class="text-center p-6 opacity-50">
+                    <div class="text-6xl mb-4">🖼️</div>
+                    <p class="text-gray-400 text-sm">No vision image yet</p>
                   </div>
                   }
-
-                  <div class="timeline-node flex flex-col items-center gap-2"
-                       [class.timeline-node-active]="getCurrentMissionDay() >= marker.day"
-                       [class.timeline-node-inactive]="getCurrentMissionDay() < marker.day"
-                       [class.timeline-node-current]="getCurrentMissionDay() === marker.day">
-                    <div class="timeline-node-circle-sm group-hover:scale-110 transition-transform">
-                      @if(i === 0 || getCurrentMissionDay() >= marker.day) {
-                      <svg class="w-4 h-4" [class.text-white]="getCurrentMissionDay() >= marker.day" [class.text-gray-500]="getCurrentMissionDay() < marker.day" fill="currentColor" viewBox="0 0 24 24">
-                        @if (isAllTasksCompletedForDay(marker.day) && getTaskCountForDay(marker.day) > 0) {
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                        } @else if (getCurrentMissionDay() >= marker.day && i > 0) {
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                        } @else {
-                        <path d="M12 2.5c-.28 0-.5.22-.5.5v1c0 .28.22.5.5.5s.5-.22.5-.5v-1c0-.28-.22-.5-.5-.5zm0 4c-2.76 0-5 2.24-5 5 0 2.21 1.49 4.07 3.5 4.67V20h3v-3.83c2.01-.6 3.5-2.46 3.5-4.67 0-2.76-2.24-5-5-5z"/>
-                        }
-                      </svg>
-                      } @else {
-                      <span class="text-[10px] text-gray-500 font-bold" style="font-family: 'Orbitron', monospace;">{{ i + 1 }}</span>
-                      }
-                    </div>
-                    <span class="timeline-day-label-sm hidden sm:block text-[9px] relative z-30"
-                          [class.text-white]="getCurrentMissionDay() >= marker.day"
-                          [class.font-bold]="getCurrentMissionDay() >= marker.day"
-                          [class.text-gray-600]="getCurrentMissionDay() < marker.day"
-                          style="margin-top: 8px;">
-                      {{ marker.label }}
-                    </span>
-                  </div>
                 </div>
                 }
+
+                <!-- Gradient overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
+                
+                <!-- Goal Title Overlay -->
+                <div class="absolute bottom-0 left-0 right-0 p-6 z-10">
+                  <h2 class="vision-board-title text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight" style="font-family: 'Exo 2', sans-serif;">
+                    {{ getGoalTitleDisplay() }}
+                  </h2>
+                  @if (isGoalOwner()) {
+                  <button (click)="startEditingGoalTitle(); $event.stopPropagation()" 
+                    class="edit-title-btn mt-2 text-white/60 hover:text-white text-xs flex items-center gap-1 transition-colors">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit title
+                  </button>
+                  }
+                </div>
               </div>
             </div>
 
-            <!-- Timeline hint -->
-            <p class="text-center text-xs text-gray-500 mt-2" style="font-family: 'Orbitron', monospace;">
-              Click on a day to add tasks
-            </p>
+            <!-- RIGHT: MISSION STATS PANEL -->
+            <div class="mission-stats-panel flex flex-col gap-4">
+              
+              <!-- REALITY CHECK CARD -->
+              <div class="reality-check-card hud-card shimmer p-5 relative">
+                <div class="scanline"></div>
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex-1">
+                    <h3 class="reality-check-label text-xs font-bold tracking-wider text-red-500 mb-2" style="font-family: 'Orbitron', monospace;">REALITY CHECK</h3>
+                    <p class="reality-check-text text-sm text-gray-300 leading-relaxed">
+                      {{ getGoalDescription() || getGoalThemeDisplay() || 'Stay focused on your mission. Every step counts towards your goal.' }}
+                    </p>
+                  </div>
+                  <div class="reality-check-percentage text-right flex-shrink-0">
+                    <span class="percentage-value text-3xl md:text-4xl font-black text-red-500" style="font-family: 'Orbitron', monospace;">{{ getCompletionPercentage() }}%</span>
+                    <span class="percentage-label block text-[10px] text-gray-500 uppercase tracking-wider">COMPLETE</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TIME TO DESTINATION -->
+              <div class="time-destination-card hud-card shimmer p-5 relative">
+                <div class="scanline"></div>
+                <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-4" style="font-family: 'Orbitron', monospace;">
+                  <span class="text-gray-400">TIME TO DESTINATION</span>
+                </h3>
+                <div class="countdown-boxes-container flex justify-center items-center gap-2 md:gap-3">
+                  <!-- Days -->
+                  <div class="countdown-box">
+                    <span class="countdown-box-value">{{ countdownDays() }}</span>
+                    <span class="countdown-box-label">DAYS</span>
+                  </div>
+                  <span class="countdown-separator">:</span>
+                  <!-- Hours -->
+                  <div class="countdown-box">
+                    <span class="countdown-box-value">{{ countdownHours() }}</span>
+                    <span class="countdown-box-label">HOURS</span>
+                  </div>
+                  <span class="countdown-separator">:</span>
+                  <!-- Minutes -->
+                  <div class="countdown-box">
+                    <span class="countdown-box-value">{{ countdownMinutes() }}</span>
+                    <span class="countdown-box-label">MINS</span>
+                  </div>
+                  <span class="countdown-separator">:</span>
+                  <!-- Seconds -->
+                  <div class="countdown-box">
+                    <span class="countdown-box-value">{{ countdownSeconds() }}</span>
+                    <span class="countdown-box-label">SECS</span>
+                  </div>
+                </div>
+                <!-- Progress bar -->
+                <div class="countdown-progress-bar mt-4">
+                  <div class="countdown-progress-fill" [style.width.%]="getTimelineProgress()"></div>
+                </div>
+              </div>
+
+              <!-- MILESTONES PREVIEW -->
+              <div class="milestones-preview-card hud-card shimmer p-5 relative flex-1">
+                <div class="scanline"></div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="milestones-label text-xs font-bold tracking-wider text-red-500" style="font-family: 'Orbitron', monospace;">MILESTONES</h3>
+                  <span class="milestones-count text-xs text-gray-500">{{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }}</span>
+                </div>
+                
+                <!-- Milestones List -->
+                <div class="milestones-list space-y-2 max-h-[150px] overflow-y-auto">
+                  @for (item of actionItems().slice(0, 5); track item.id) {
+                  <div class="milestone-item flex items-center gap-3 p-2 rounded-lg transition-all hover:bg-white/5"
+                       [class.milestone-completed]="item.completed"
+                       [class.milestone-pending]="!item.completed">
+                    <!-- Status indicator -->
+                    <div class="milestone-status-dot w-3 h-3 rounded-full flex-shrink-0"
+                         [class.bg-green-500]="item.completed"
+                         [class.bg-red-500]="!item.completed">
+                    </div>
+                    <span class="milestone-item-title text-sm flex-1 truncate"
+                          [class.text-gray-400]="item.completed"
+                          [class.line-through]="item.completed"
+                          [class.text-white]="!item.completed">
+                      {{ item.title }}
+                    </span>
+                  </div>
+                  }
+                  @if (actionItems().length === 0) {
+                  <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">No milestones yet</p>
+                  </div>
+                  }
+                  @if (actionItems().length > 5) {
+                  <div class="text-center pt-2">
+                    <span class="text-gray-500 text-xs">+{{ actionItems().length - 5 }} more milestones</span>
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== DAILY PROGRESSION TIMELINE ==================== -->
+          <div class="daily-progression-card hud-card shimmer p-5 md:p-6 relative">
+            <div class="scanline"></div>
+            
+            <!-- Header with Re-center button -->
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="daily-progression-title text-lg font-bold text-white" style="font-family: 'Exo 2', sans-serif;">
+                Daily Progression
+              </h3>
+              <button (click)="resetTimelineView()" 
+                      class="recenter-btn px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                      [class.active]="timelineViewOffset() !== 0">
+                RE-CENTER FOCUS
+              </button>
+            </div>
+
+            <!-- Timeline with Navigation Arrows -->
+            <div class="timeline-navigation-container flex items-center gap-4">
+              <!-- Left Arrow -->
+              <button (click)="navigateTimelineBackward()" 
+                      class="timeline-nav-arrow timeline-nav-prev flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <!-- Timeline Days -->
+              <div class="timeline-days-container flex-1 flex items-end justify-between gap-2 overflow-hidden">
+                @for (dayInfo of getVisibleTimelineDays(); track dayInfo.day) {
+                <div class="timeline-day-column flex flex-col items-center cursor-pointer group"
+                     (click)="onTimelineDayClick(dayInfo.day)"
+                     [class.timeline-day-today]="dayInfo.isToday"
+                     [class.timeline-day-past]="dayInfo.isPast"
+                     [class.timeline-day-future]="dayInfo.isFuture"
+                     [class.timeline-day-expanded]="expandedTimelineDay() === dayInfo.day">
+                  
+                  <!-- Milestone indicator dot above the column -->
+                  <div class="timeline-day-indicator mb-2 relative">
+                    @if (getMilestonesForDay(dayInfo.day).length > 0) {
+                    <div class="milestone-indicator-dot"
+                         [class.completed]="isAllTasksCompletedForDay(dayInfo.day)"
+                         [class.pending]="!isAllTasksCompletedForDay(dayInfo.day)"
+                         [title]="getMilestonesForDay(dayInfo.day).length + ' milestone(s) - Click to view'">
+                      @if (isAllTasksCompletedForDay(dayInfo.day)) {
+                      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                      } @else {
+                      <span class="text-[10px] text-white font-bold">{{ getMilestonesForDay(dayInfo.day).length }}</span>
+                      }
+                    </div>
+                    } @else {
+                    <div class="milestone-indicator-empty opacity-0 group-hover:opacity-100 transition-opacity"
+                         title="Click to add a milestone">
+                      <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    }
+                  </div>
+
+                  <!-- Day circle/column -->
+                  <div class="timeline-day-circle"
+                       [class.today-highlight]="dayInfo.isToday">
+                    @if (dayInfo.isToday) {
+                    <span class="today-badge">NOW</span>
+                    }
+                  </div>
+
+                  <!-- Day info -->
+                  <div class="timeline-day-info text-center mt-2">
+                    <span class="timeline-day-month text-[10px] text-gray-500 uppercase">{{ getTimelineDateDisplay(dayInfo.date).month }}</span>
+                    <span class="timeline-day-number text-lg font-bold"
+                          [class.text-red-500]="dayInfo.isToday"
+                          [class.text-white]="dayInfo.isPast && !dayInfo.isToday"
+                          [class.text-gray-500]="dayInfo.isFuture">{{ getTimelineDateDisplay(dayInfo.date).day }}</span>
+                    <span class="timeline-day-weekday text-[10px] uppercase"
+                          [class.text-red-400]="dayInfo.isToday"
+                          [class.text-gray-400]="!dayInfo.isToday">{{ getTimelineDateDisplay(dayInfo.date).weekday }}</span>
+                  </div>
+
+                  <!-- Expanded Milestones Panel (shows when day is expanded) -->
+                  @if (expandedTimelineDay() === dayInfo.day && getMilestonesForDay(dayInfo.day).length > 0) {
+                  <div class="timeline-expanded-milestones mt-3 w-full" (click)="$event.stopPropagation()">
+                    <div class="expanded-milestones-header flex items-center justify-between mb-2">
+                      <span class="text-[10px] font-bold text-red-500 uppercase tracking-wide">Day {{ dayInfo.day }} Milestones</span>
+                      <button (click)="addTaskToDay(dayInfo.day); $event.stopPropagation()" 
+                              class="add-milestone-mini-btn" title="Add milestone">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                    @for (task of getMilestonesForDay(dayInfo.day); track task.id) {
+                    <div class="expanded-milestone-item flex items-center gap-2 p-2 rounded-lg mb-1.5 cursor-pointer"
+                         [class.milestone-done]="task.completed"
+                         [class.milestone-todo]="!task.completed"
+                         (click)="openEditActionItemModal(task); $event.stopPropagation()">
+                      <!-- Checkbox -->
+                      <button (click)="toggleActionItemComplete(task); $event.stopPropagation()"
+                              class="milestone-check-btn flex-shrink-0"
+                              [class.checked]="task.completed">
+                        @if (task.completed) {
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                        }
+                      </button>
+                      <!-- Title -->
+                      <span class="expanded-milestone-title flex-1 text-xs truncate"
+                            [class.line-through]="task.completed">
+                        {{ task.title }}
+                      </span>
+                    </div>
+                    }
+                  </div>
+                  } @else if (getMilestonesForDay(dayInfo.day).length > 0) {
+                  <!-- Task preview (shows when not expanded) -->
+                  <div class="timeline-day-tasks mt-2 w-full max-w-[120px]">
+                    @for (task of getMilestonesForDay(dayInfo.day).slice(0, 2); track task.id) {
+                    <div class="timeline-task-preview flex items-center gap-1 p-1.5 rounded text-[10px] mb-1"
+                         [class.task-done]="task.completed"
+                         [class.task-todo]="!task.completed">
+                      <span class="task-status-dot w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            [class.bg-green-500]="task.completed"
+                            [class.bg-red-500]="!task.completed"></span>
+                      <span class="truncate" [class.line-through]="task.completed">{{ task.title }}</span>
+                    </div>
+                    }
+                    @if (getMilestonesForDay(dayInfo.day).length > 2) {
+                    <span class="text-[9px] text-gray-500 pl-1">+{{ getMilestonesForDay(dayInfo.day).length - 2 }} more</span>
+                    }
+                  </div>
+                  } @else {
+                  <div class="timeline-day-empty mt-2 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-[10px] text-gray-500 uppercase">REST DAY</span>
+                  </div>
+                  }
+                </div>
+                }
+              </div>
+
+              <!-- Right Arrow -->
+              <button (click)="navigateTimelineForward()" 
+                      class="timeline-nav-arrow timeline-nav-next flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- TABS: DASHBOARD (if enabled), MILESTONES, CALENDAR, FANS -->

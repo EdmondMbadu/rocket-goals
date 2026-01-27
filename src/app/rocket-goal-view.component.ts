@@ -91,6 +91,15 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   userGoals = signal<any[]>([]);
   loadingGoals = signal(false);
   countdown = signal('23:59:59');
+  // Individual countdown parts for the redesigned UI
+  countdownDays = signal(0);
+  countdownHours = signal(0);
+  countdownMinutes = signal(0);
+  countdownSeconds = signal(0);
+  // Timeline viewport offset for infinite scrolling (number of days offset from current view)
+  timelineViewOffset = signal(0);
+  // Expanded day on the daily progression timeline (to show milestones for that day)
+  expandedTimelineDay = signal<number | null>(null);
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
   calendarEvents = signal<CalendarEvent[]>([]);
@@ -405,6 +414,99 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return '6-MONTH TRANSFORMATION';
   }
 
+  // Timeline navigation methods for infinite scrolling
+  navigateTimelineForward(): void {
+    this.timelineViewOffset.update(v => v + 1);
+  }
+
+  navigateTimelineBackward(): void {
+    this.timelineViewOffset.update(v => v - 1);
+  }
+
+  resetTimelineView(): void {
+    this.timelineViewOffset.set(0);
+  }
+
+  // Get the visible timeline days based on the current offset
+  getVisibleTimelineDays(): { day: number; date: Date; label: string; isToday: boolean; isPast: boolean; isFuture: boolean }[] {
+    const goal = this.goal();
+    if (!goal) return [];
+
+    const startTime = goal.startTime || Date.now();
+    const currentDay = this.getCurrentMissionDay();
+    const offset = this.timelineViewOffset();
+    
+    // Show 7 days centered around the current view position
+    const visibleDays: { day: number; date: Date; label: string; isToday: boolean; isPast: boolean; isFuture: boolean }[] = [];
+    const centerDay = currentDay + offset;
+    
+    for (let i = -3; i <= 3; i++) {
+      const dayNumber = centerDay + i;
+      const dayDate = new Date(startTime + (dayNumber - 1) * 24 * 60 * 60 * 1000);
+      
+      visibleDays.push({
+        day: dayNumber,
+        date: dayDate,
+        label: dayDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
+        isToday: dayNumber === currentDay,
+        isPast: dayNumber < currentDay,
+        isFuture: dayNumber > currentDay
+      });
+    }
+    
+    return visibleDays;
+  }
+
+  // Get milestones for a specific day
+  getMilestonesForDay(day: number): ActionItem[] {
+    return this.actionItems().filter(item => item.dayNumber === day);
+  }
+
+  // Toggle expanded day on the timeline to show/hide milestones
+  toggleExpandedTimelineDay(day: number): void {
+    if (this.expandedTimelineDay() === day) {
+      this.expandedTimelineDay.set(null);
+    } else {
+      this.expandedTimelineDay.set(day);
+    }
+  }
+
+  // Handle click on a timeline day - show milestones or add new task
+  onTimelineDayClick(day: number): void {
+    const milestones = this.getMilestonesForDay(day);
+    if (milestones.length > 0) {
+      // If there are milestones, toggle the expanded view
+      this.toggleExpandedTimelineDay(day);
+    } else {
+      // If no milestones, open the add task modal for that day
+      this.addTaskToDay(day);
+    }
+  }
+
+  // Get completion percentage
+  getCompletionPercentage(): number {
+    const total = this.actionItems().length;
+    if (total === 0) return 0;
+    const completed = this.actionItems().filter(item => item.completed).length;
+    return Math.round((completed / total) * 100);
+  }
+
+  // Get goal description/motivation text
+  getGoalDescription(): string {
+    const goal = this.goal();
+    if (!goal) return '';
+    return goal.answers?.['motivation'] || goal.answers?.['future_result'] || goal.answers?.['daily_effort'] || '';
+  }
+
+  // Get formatted date for timeline display
+  getTimelineDateDisplay(date: Date): { month: string; day: number; weekday: string } {
+    return {
+      month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
+      day: date.getDate(),
+      weekday: date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+    };
+  }
+
   startCountdown() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
 
@@ -432,6 +534,12 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
       const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
       const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+
+      // Update individual countdown signals for the redesigned UI
+      this.countdownDays.set(days);
+      this.countdownHours.set(hours);
+      this.countdownMinutes.set(minutes);
+      this.countdownSeconds.set(seconds);
 
       this.countdown.set(
         `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`

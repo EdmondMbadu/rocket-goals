@@ -5589,6 +5589,887 @@
   box-shadow: none;
 }
 
+/* ============================================
+   REDESIGNED MISSION HERO SECTION
+   Vision Board + Mission Stats Layout
+   ============================================ */
+
+/* Mission Hero Section Grid */
+.mission-hero-section {
+  margin-bottom: 0;
+}
+
+/* ===== VISION BOARD CARD ===== */
+.vision-board-card {
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 400px;
+  position: relative;
+}
+
+.dark-mode .vision-board-card {
+  background: linear-gradient(135deg, rgba(20, 20, 35, 0.95) 0%, rgba(10, 10, 20, 0.98) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-left: 5px solid rgba(220, 38, 38, 1);
+}
+
+.light-mode .vision-board-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-left: 5px solid rgba(220, 38, 38, 0.7);
+}
+
+.vision-board-label {
+  z-index: 20;
+}
+
+.vision-label-badge {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vision-board-image-container {
+  position: absolute;
+  inset: 0;
+}
+
+.vision-board-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vision-board-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vision-board-title {
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+  max-width: 90%;
+}
+
+.edit-title-btn {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.vision-board-card:hover .edit-title-btn {
+  opacity: 1;
+}
+
+/* ===== MISSION STATS PANEL ===== */
+.mission-stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== REALITY CHECK CARD ===== */
+.reality-check-card {
+  border-radius: 16px;
+}
+
+.dark-mode .reality-check-card {
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-left: 4px solid rgba(220, 38, 38, 0.8);
+}
+
+.light-mode .reality-check-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  border-left: 4px solid rgba(220, 38, 38, 0.6);
+}
+
+.reality-check-label {
+  margin-bottom: 8px;
+}
+
+.reality-check-text {
+  line-height: 1.6;
+}
+
+.dark-mode .reality-check-text {
+  color: #94a3b8;
+}
+
+.light-mode .reality-check-text {
+  color: #475569;
+}
+
+.percentage-value {
+  line-height: 1;
+}
+
+/* ===== TIME TO DESTINATION CARD ===== */
+.time-destination-card {
+  border-radius: 16px;
+}
+
+.dark-mode .time-destination-card {
+  background: linear-gradient(135deg, rgba(20, 25, 40, 0.98) 0%, rgba(15, 18, 30, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-left: 4px solid rgba(220, 38, 38, 0.8);
+}
+
+.light-mode .time-destination-card {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  border-left: 4px solid rgba(220, 38, 38, 0.6);
+}
+
+.countdown-boxes-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.countdown-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  min-width: 70px;
+}
+
+.dark-mode .countdown-box {
+  background: linear-gradient(135deg, rgba(30, 35, 50, 0.9) 0%, rgba(20, 25, 40, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.light-mode .countdown-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.countdown-box-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.dark-mode .countdown-box-value {
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.light-mode .countdown-box-value {
+  color: #0f172a;
+}
+
+.countdown-box-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.dark-mode .countdown-box-label {
+  color: #64748b;
+}
+
+.light-mode .countdown-box-label {
+  color: #94a3b8;
+}
+
+.countdown-separator {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  font-weight: 900;
+  color: #64748b;
+  margin: 0 2px;
+}
+
+.countdown-progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dark-mode .countdown-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.light-mode .countdown-progress-bar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.countdown-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+}
+
+/* ===== MILESTONES PREVIEW CARD ===== */
+.milestones-preview-card {
+  border-radius: 16px;
+  flex: 1;
+  min-height: 150px;
+}
+
+.dark-mode .milestones-preview-card {
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-left: 4px solid rgba(220, 38, 38, 0.8);
+}
+
+.light-mode .milestones-preview-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  border-left: 4px solid rgba(220, 38, 38, 0.6);
+}
+
+.milestones-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 38, 38, 0.3) transparent;
+}
+
+.milestones-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.milestones-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.milestones-list::-webkit-scrollbar-thumb {
+  background: rgba(220, 38, 38, 0.3);
+  border-radius: 2px;
+}
+
+.milestone-item {
+  transition: all 0.2s ease;
+}
+
+.milestone-status-dot {
+  box-shadow: 0 0 8px currentColor;
+}
+
+.milestone-completed .milestone-status-dot {
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.milestone-pending .milestone-status-dot {
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* Light mode milestone text fix */
+.light-mode .milestone-item.milestone-completed .milestone-item-title {
+  color: #64748b !important;
+}
+
+.light-mode .milestone-item.milestone-pending .milestone-item-title {
+  color: #1e293b !important;
+}
+
+.light-mode .milestones-list .text-gray-500 {
+  color: #64748b !important;
+}
+
+/* ============================================
+   DAILY PROGRESSION TIMELINE
+   Infinite scroll with navigation arrows
+   ============================================ */
+
+.daily-progression-card {
+  border-radius: 20px;
+  overflow: visible;
+}
+
+.dark-mode .daily-progression-card {
+  background: linear-gradient(135deg, rgba(25, 25, 40, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-left: 5px solid rgba(220, 38, 38, 1);
+}
+
+.light-mode .daily-progression-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  border-left: 5px solid rgba(220, 38, 38, 0.7);
+}
+
+.daily-progression-title {
+  font-weight: 700;
+}
+
+.recenter-btn {
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.recenter-btn:hover,
+.recenter-btn.active {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.6);
+}
+
+.light-mode .recenter-btn {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+/* Timeline Navigation Container */
+.timeline-navigation-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Navigation Arrows */
+.timeline-nav-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.dark-mode .timeline-nav-arrow {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.dark-mode .timeline-nav-arrow:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.5);
+  color: #dc2626;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+}
+
+.light-mode .timeline-nav-arrow {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+.light-mode .timeline-nav-arrow:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+/* Timeline Days Container */
+.timeline-days-container {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+/* Timeline Day Column */
+.timeline-day-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 140px;
+  min-width: 80px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .timeline-day-column:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.light-mode .timeline-day-column:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Day Indicator */
+.timeline-day-indicator {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.milestone-indicator-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.milestone-indicator-dot.completed {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.6), 0 0 30px rgba(34, 197, 94, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.milestone-indicator-dot.pending {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 30px rgba(239, 68, 68, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.milestone-indicator-dot:hover {
+  transform: scale(1.2);
+}
+
+.milestone-indicator-empty {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px dashed rgba(148, 163, 184, 0.3);
+  cursor: pointer;
+}
+
+.milestone-indicator-empty:hover {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.light-mode .milestone-indicator-dot.completed {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .milestone-indicator-dot.pending {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Day Circle */
+.timeline-day-circle {
+  width: 8px;
+  height: 40px;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .timeline-day-column.timeline-day-past .timeline-day-circle {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+}
+
+.dark-mode .timeline-day-column.timeline-day-future .timeline-day-circle {
+  background: linear-gradient(180deg, rgba(100, 116, 139, 0.3) 0%, rgba(71, 85, 105, 0.2) 100%);
+}
+
+.light-mode .timeline-day-column.timeline-day-past .timeline-day-circle {
+  background: linear-gradient(180deg, #94a3b8 0%, #cbd5e1 100%);
+}
+
+.light-mode .timeline-day-column.timeline-day-future .timeline-day-circle {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.3) 0%, rgba(203, 213, 225, 0.2) 100%);
+}
+
+.timeline-day-circle.today-highlight {
+  width: 12px;
+  background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
+}
+
+.today-badge {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: white;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5);
+}
+
+/* Day Info */
+.timeline-day-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.timeline-day-month {
+  line-height: 1;
+}
+
+.timeline-day-number {
+  line-height: 1.2;
+}
+
+.timeline-day-weekday {
+  line-height: 1;
+}
+
+/* Task Preview */
+.timeline-day-tasks {
+  width: 100%;
+}
+
+.timeline-task-preview {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .timeline-task-preview {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .timeline-task-preview:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.light-mode .timeline-task-preview {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .timeline-task-preview:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.task-done {
+  opacity: 0.7;
+}
+
+.dark-mode .task-done {
+  color: #9ca3af;
+}
+
+.light-mode .task-done {
+  color: #6b7280;
+}
+
+.dark-mode .task-todo {
+  color: #f3f4f6;
+}
+
+.light-mode .task-todo {
+  color: #1f2937;
+}
+
+/* Task status dot glow */
+.task-status-dot {
+  box-shadow: 0 0 6px currentColor;
+}
+
+.timeline-day-empty {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Expanded Day Column */
+.timeline-day-column.timeline-day-expanded {
+  flex: 2;
+  max-width: 280px;
+}
+
+.dark-mode .timeline-day-column.timeline-day-expanded {
+  background: rgba(220, 38, 38, 0.08);
+  border-radius: 12px;
+}
+
+.light-mode .timeline-day-column.timeline-day-expanded {
+  background: rgba(220, 38, 38, 0.05);
+  border-radius: 12px;
+}
+
+/* Expanded Milestones Panel */
+.timeline-expanded-milestones {
+  min-width: 200px;
+  max-width: 260px;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.dark-mode .timeline-expanded-milestones {
+  background: rgba(15, 15, 25, 0.9);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.light-mode .timeline-expanded-milestones {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.add-milestone-mini-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .add-milestone-mini-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.dark-mode .add-milestone-mini-btn:hover {
+  background: rgba(220, 38, 38, 0.3);
+  color: white;
+}
+
+.light-mode .add-milestone-mini-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: #64748b;
+}
+
+.light-mode .add-milestone-mini-btn:hover {
+  background: rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+}
+
+/* Expanded Milestone Item */
+.expanded-milestone-item {
+  transition: all 0.2s ease;
+}
+
+.dark-mode .expanded-milestone-item.milestone-done {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.dark-mode .expanded-milestone-item.milestone-todo {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.dark-mode .expanded-milestone-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.light-mode .expanded-milestone-item.milestone-done {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.light-mode .expanded-milestone-item.milestone-todo {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.light-mode .expanded-milestone-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Milestone Check Button */
+.milestone-check-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .milestone-check-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.dark-mode .milestone-check-btn.checked {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-color: #22c55e;
+}
+
+.light-mode .milestone-check-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  color: #1e293b;
+}
+
+.light-mode .milestone-check-btn.checked {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-color: #22c55e;
+  color: white;
+}
+
+/* Expanded Milestone Title */
+.dark-mode .expanded-milestone-item.milestone-done .expanded-milestone-title {
+  color: #6b7280;
+}
+
+.dark-mode .expanded-milestone-item.milestone-todo .expanded-milestone-title {
+  color: #e5e7eb;
+}
+
+.light-mode .expanded-milestone-item.milestone-done .expanded-milestone-title {
+  color: #6b7280;
+}
+
+.light-mode .expanded-milestone-item.milestone-todo .expanded-milestone-title {
+  color: #1f2937;
+}
+
+/* Light mode day number fix */
+.light-mode .timeline-day-column.timeline-day-past .timeline-day-number {
+  color: #334155 !important;
+}
+
+.light-mode .timeline-day-column.timeline-day-future .timeline-day-number {
+  color: #94a3b8 !important;
+}
+
+.light-mode .timeline-day-column.timeline-day-today .timeline-day-number {
+  color: #dc2626 !important;
+}
+
+/* Light mode text fixes for timeline */
+.light-mode .timeline-day-tasks .text-gray-500 {
+  color: #64748b !important;
+}
+
+.light-mode .timeline-day-empty span {
+  color: #94a3b8 !important;
+}
+
+.light-mode .timeline-day-month {
+  color: #64748b !important;
+}
+
+.light-mode .timeline-day-weekday {
+  color: #64748b !important;
+}
+
+.light-mode .expanded-milestones-header span {
+  color: #dc2626 !important;
+}
+
+/* Light mode Reality Check text */
+.light-mode .reality-check-label {
+  color: #dc2626 !important;
+}
+
+/* Light mode Time Destination */
+.light-mode .time-destination-label span {
+  color: #64748b !important;
+}
+
+/* Light mode Milestones label */
+.light-mode .milestones-label {
+  color: #dc2626 !important;
+}
+
+.light-mode .milestones-count {
+  color: #64748b !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mission-hero-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .vision-board-card {
+    min-height: 300px;
+  }
+  
+  .countdown-box {
+    padding: 10px 12px;
+    min-width: 55px;
+  }
+  
+  .countdown-box-value {
+    font-size: 22px;
+  }
+  
+  .countdown-separator {
+    font-size: 18px;
+  }
+  
+  .timeline-days-container {
+    gap: 4px;
+  }
+  
+  .timeline-day-column {
+    min-width: 50px;
+    padding: 6px 2px;
+  }
+  
+  .timeline-day-tasks {
+    display: none;
+  }
+  
+  .timeline-nav-arrow {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .countdown-boxes-container {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .countdown-box {
+    min-width: 50px;
+    padding: 8px 10px;
+  }
+  
+  .countdown-box-value {
+    font-size: 18px;
+  }
+  
+  .countdown-box-label {
+    font-size: 8px;
+  }
+  
+  .countdown-separator {
+    font-size: 16px;
+    margin: 0;
+  }
+  
+  .timeline-day-column {
+    min-width: 40px;
+  }
+  
+  .timeline-day-number {
+    font-size: 14px;
+  }
+}
+
 /* ===== VISUALIZATION CARD & MODAL ===== */
 .visualization-card {
   background: linear-gradient(135deg,
