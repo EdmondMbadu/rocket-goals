@@ -5860,27 +5860,60 @@
 
 .milestone-item {
   transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* Completed milestone in preview - GREEN */
+.dark-mode .milestone-item.milestone-completed {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.light-mode .milestone-item.milestone-completed {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(22, 163, 74, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Pending milestone in preview - subtle red */
+.dark-mode .milestone-item.milestone-pending {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.light-mode .milestone-item.milestone-pending {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
 .milestone-status-dot {
-  box-shadow: 0 0 8px currentColor;
+  box-shadow: 0 0 10px currentColor;
 }
 
 .milestone-completed .milestone-status-dot {
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
 }
 
 .milestone-pending .milestone-status-dot {
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
 }
 
-/* Light mode milestone text fix */
+/* Completed milestone text - GREEN */
+.dark-mode .milestone-item.milestone-completed .milestone-item-title {
+  color: #86efac !important;
+}
+
 .light-mode .milestone-item.milestone-completed .milestone-item-title {
-  color: #64748b !important;
+  color: #166534 !important;
+}
+
+/* Pending milestone text */
+.dark-mode .milestone-item.milestone-pending .milestone-item-title {
+  color: #fecaca !important;
 }
 
 .light-mode .milestone-item.milestone-pending .milestone-item-title {
-  color: #1e293b !important;
+  color: #991b1b !important;
 }
 
 .light-mode .milestones-list .text-gray-500 {
@@ -5940,9 +5973,9 @@
 
 /* Navigation Arrows */
 .timeline-nav-arrow {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5990,10 +6023,10 @@
   flex-direction: column;
   align-items: center;
   flex: 1;
-  max-width: 140px;
-  min-width: 80px;
-  padding: 8px 4px;
-  border-radius: 12px;
+  max-width: 160px;
+  min-width: 100px;
+  padding: 12px 8px;
+  border-radius: 16px;
   transition: all 0.3s ease;
 }
 
@@ -6003,6 +6036,102 @@
 
 .light-mode .timeline-day-column:hover {
   background: rgba(0, 0, 0, 0.02);
+}
+
+/* Final Day Styling */
+.timeline-day-column.timeline-day-final {
+  position: relative;
+  flex: 1.5;
+  max-width: 200px;
+}
+
+.dark-mode .timeline-day-column.timeline-day-final {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.2), inset 0 0 20px rgba(251, 191, 36, 0.05);
+}
+
+.light-mode .timeline-day-column.timeline-day-final {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
+}
+
+.dark-mode .timeline-day-column.timeline-day-final:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+  box-shadow: 0 0 40px rgba(251, 191, 36, 0.3), inset 0 0 25px rgba(251, 191, 36, 0.08);
+}
+
+/* Final Day Badge */
+.final-day-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.final-day-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
+}
+
+.final-day-text {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #fbbf24;
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+  text-align: center;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.9));
+  }
+}
+
+/* Final Day Circle */
+.timeline-day-circle.final-day-circle {
+  width: 14px;
+  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.7), 0 0 50px rgba(251, 191, 36, 0.4);
+}
+
+.final-badge {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1a1a2e;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 15px rgba(251, 191, 36, 0.6);
+}
+
+/* Final day indicator dot */
+.milestone-indicator-dot.final-day-dot {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.milestone-indicator-dot.final-day-dot.completed {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 40px rgba(34, 197, 94, 0.3);
 }
 
 /* Day Indicator */
@@ -6138,51 +6267,79 @@
 }
 
 .timeline-task-preview {
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
-.dark-mode .timeline-task-preview {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Completed task preview - GREEN */
+.dark-mode .timeline-task-preview.task-done {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-.dark-mode .timeline-task-preview:hover {
-  background: rgba(255, 255, 255, 0.1);
+.dark-mode .timeline-task-preview.task-done:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.15) 100%);
+  border-color: rgba(34, 197, 94, 0.5);
 }
 
-.light-mode .timeline-task-preview {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+.light-mode .timeline-task-preview.task-done {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(22, 163, 74, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-.light-mode .timeline-task-preview:hover {
-  background: rgba(0, 0, 0, 0.08);
+.light-mode .timeline-task-preview.task-done:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18) 0%, rgba(22, 163, 74, 0.12) 100%);
 }
 
-.task-done {
-  opacity: 0.7;
+/* Pending task preview - RED */
+.dark-mode .timeline-task-preview.task-todo {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+.dark-mode .timeline-task-preview.task-todo:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.light-mode .timeline-task-preview.task-todo {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.light-mode .timeline-task-preview.task-todo:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Task done text - GREEN tint */
 .dark-mode .task-done {
-  color: #9ca3af;
+  color: #86efac;
 }
 
 .light-mode .task-done {
-  color: #6b7280;
+  color: #166534;
 }
 
+/* Task todo text */
 .dark-mode .task-todo {
-  color: #f3f4f6;
+  color: #fecaca;
 }
 
 .light-mode .task-todo {
-  color: #1f2937;
+  color: #991b1b;
 }
 
 /* Task status dot glow */
 .task-status-dot {
-  box-shadow: 0 0 6px currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.task-status-dot.bg-green-500 {
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.task-status-dot.bg-red-500 {
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
 }
 
 .timeline-day-empty {
@@ -6210,28 +6367,28 @@
 
 /* Expanded Milestones Panel */
 .timeline-expanded-milestones {
-  min-width: 200px;
-  max-width: 260px;
-  padding: 8px;
-  border-radius: 10px;
+  min-width: 240px;
+  max-width: 300px;
+  padding: 12px;
+  border-radius: 14px;
 }
 
 .dark-mode .timeline-expanded-milestones {
-  background: rgba(15, 15, 25, 0.9);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: rgba(15, 15, 25, 0.95);
+  border: 2px solid rgba(220, 38, 38, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(220, 38, 38, 0.1);
 }
 
 .light-mode .timeline-expanded-milestones {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(220, 38, 38, 0.2);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.99);
+  border: 2px solid rgba(220, 38, 38, 0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .add-milestone-mini-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6264,38 +6421,49 @@
 }
 
 .dark-mode .expanded-milestone-item.milestone-done {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.15) 100%);
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
 }
 
 .dark-mode .expanded-milestone-item.milestone-todo {
   background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.dark-mode .expanded-milestone-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+.dark-mode .expanded-milestone-item.milestone-done:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.2) 100%);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+}
+
+.dark-mode .expanded-milestone-item.milestone-todo:hover {
+  background: rgba(239, 68, 68, 0.15);
 }
 
 .light-mode .expanded-milestone-item.milestone-done {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.1) 100%);
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
 }
 
 .light-mode .expanded-milestone-item.milestone-todo {
   background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-.light-mode .expanded-milestone-item:hover {
-  background: rgba(0, 0, 0, 0.05);
+.light-mode .expanded-milestone-item.milestone-done:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.15) 100%);
+}
+
+.light-mode .expanded-milestone-item.milestone-todo:hover {
+  background: rgba(239, 68, 68, 0.12);
 }
 
 /* Milestone Check Button */
 .milestone-check-btn {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6311,6 +6479,7 @@
 .dark-mode .milestone-check-btn.checked {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border-color: #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
 }
 
 .light-mode .milestone-check-btn {
@@ -6323,23 +6492,48 @@
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border-color: #22c55e;
   color: white;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
 }
 
 /* Expanded Milestone Title */
 .dark-mode .expanded-milestone-item.milestone-done .expanded-milestone-title {
-  color: #6b7280;
+  color: #86efac;
 }
 
 .dark-mode .expanded-milestone-item.milestone-todo .expanded-milestone-title {
-  color: #e5e7eb;
+  color: #f1f5f9;
 }
 
 .light-mode .expanded-milestone-item.milestone-done .expanded-milestone-title {
-  color: #6b7280;
+  color: #166534;
 }
 
 .light-mode .expanded-milestone-item.milestone-todo .expanded-milestone-title {
   color: #1f2937;
+}
+
+/* Milestone Status Badge */
+.milestone-status-badge {
+  border-radius: 6px;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 0.05em;
+}
+
+.milestone-status-badge.status-done {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+}
+
+.milestone-status-badge.status-todo {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.light-mode .milestone-status-badge.status-todo {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
 }
 
 /* Light mode day number fix */
@@ -6423,8 +6617,12 @@
   }
   
   .timeline-day-column {
-    min-width: 50px;
-    padding: 6px 2px;
+    min-width: 60px;
+    padding: 8px 4px;
+  }
+  
+  .timeline-day-column.timeline-day-final {
+    min-width: 80px;
   }
   
   .timeline-day-tasks {
@@ -6432,8 +6630,18 @@
   }
   
   .timeline-nav-arrow {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
+  }
+  
+  .final-day-badge {
+    display: none;
+  }
+  
+  .timeline-expanded-milestones {
+    min-width: 180px;
+    max-width: 220px;
+    padding: 10px;
   }
 }
 
@@ -6462,11 +6670,15 @@
   }
   
   .timeline-day-column {
-    min-width: 40px;
+    min-width: 50px;
   }
   
   .timeline-day-number {
-    font-size: 14px;
+    font-size: 16px;
+  }
+  
+  .daily-progression-title {
+    font-size: 16px;
   }
 }
 

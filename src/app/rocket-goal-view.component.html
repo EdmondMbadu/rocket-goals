@@ -497,12 +497,12 @@
           </div>
 
           <!-- ==================== DAILY PROGRESSION TIMELINE ==================== -->
-          <div class="daily-progression-card hud-card shimmer p-5 md:p-6 relative">
+          <div class="daily-progression-card hud-card shimmer p-6 md:p-8 relative">
             <div class="scanline"></div>
             
             <!-- Header with Re-center button -->
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="daily-progression-title text-lg font-bold text-white" style="font-family: 'Exo 2', sans-serif;">
+            <div class="flex items-center justify-between mb-8">
+              <h3 class="daily-progression-title text-xl font-bold text-white" style="font-family: 'Exo 2', sans-serif;">
                 Daily Progression
               </h3>
               <button (click)="resetTimelineView()" 
@@ -513,44 +513,59 @@
             </div>
 
             <!-- Timeline with Navigation Arrows -->
-            <div class="timeline-navigation-container flex items-center gap-4">
+            <div class="timeline-navigation-container flex items-center gap-6">
               <!-- Left Arrow -->
               <button (click)="navigateTimelineBackward()" 
                       class="timeline-nav-arrow timeline-nav-prev flex-shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
 
               <!-- Timeline Days -->
-              <div class="timeline-days-container flex-1 flex items-end justify-between gap-2 overflow-hidden">
+              <div class="timeline-days-container flex-1 flex items-start justify-between gap-3 overflow-hidden py-4">
                 @for (dayInfo of getVisibleTimelineDays(); track dayInfo.day) {
                 <div class="timeline-day-column flex flex-col items-center cursor-pointer group"
                      (click)="onTimelineDayClick(dayInfo.day)"
                      [class.timeline-day-today]="dayInfo.isToday"
                      [class.timeline-day-past]="dayInfo.isPast"
                      [class.timeline-day-future]="dayInfo.isFuture"
+                     [class.timeline-day-final]="dayInfo.isFinalDay"
                      [class.timeline-day-expanded]="expandedTimelineDay() === dayInfo.day">
                   
+                  <!-- Special Final Day Badge -->
+                  @if (dayInfo.isFinalDay) {
+                  <div class="final-day-badge mb-3">
+                    <span class="final-day-icon">🏆</span>
+                    <span class="final-day-text">SUCCESS EXPECTED</span>
+                  </div>
+                  }
+
                   <!-- Milestone indicator dot above the column -->
-                  <div class="timeline-day-indicator mb-2 relative">
+                  <div class="timeline-day-indicator mb-3 relative">
                     @if (getMilestonesForDay(dayInfo.day).length > 0) {
                     <div class="milestone-indicator-dot"
                          [class.completed]="isAllTasksCompletedForDay(dayInfo.day)"
                          [class.pending]="!isAllTasksCompletedForDay(dayInfo.day)"
+                         [class.final-day-dot]="dayInfo.isFinalDay"
                          [title]="getMilestonesForDay(dayInfo.day).length + ' milestone(s) - Click to view'">
                       @if (isAllTasksCompletedForDay(dayInfo.day)) {
-                      <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                       </svg>
                       } @else {
-                      <span class="text-[10px] text-white font-bold">{{ getMilestonesForDay(dayInfo.day).length }}</span>
+                      <span class="text-xs text-white font-bold">{{ getMilestonesForDay(dayInfo.day).length }}</span>
                       }
+                    </div>
+                    } @else if (dayInfo.isFinalDay) {
+                    <div class="milestone-indicator-dot final-day-dot pending"
+                         title="Click to add your success milestone">
+                      <span class="text-lg">🎯</span>
                     </div>
                     } @else {
                     <div class="milestone-indicator-empty opacity-0 group-hover:opacity-100 transition-opacity"
                          title="Click to add a milestone">
-                      <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
@@ -559,38 +574,52 @@
 
                   <!-- Day circle/column -->
                   <div class="timeline-day-circle"
-                       [class.today-highlight]="dayInfo.isToday">
+                       [class.today-highlight]="dayInfo.isToday"
+                       [class.final-day-circle]="dayInfo.isFinalDay">
                     @if (dayInfo.isToday) {
                     <span class="today-badge">NOW</span>
+                    }
+                    @if (dayInfo.isFinalDay && !dayInfo.isToday) {
+                    <span class="final-badge">GOAL</span>
                     }
                   </div>
 
                   <!-- Day info -->
-                  <div class="timeline-day-info text-center mt-2">
-                    <span class="timeline-day-month text-[10px] text-gray-500 uppercase">{{ getTimelineDateDisplay(dayInfo.date).month }}</span>
-                    <span class="timeline-day-number text-lg font-bold"
+                  <div class="timeline-day-info text-center mt-3">
+                    <span class="timeline-day-month text-xs text-gray-500 uppercase">{{ getTimelineDateDisplay(dayInfo.date).month }}</span>
+                    <span class="timeline-day-number text-xl font-bold"
                           [class.text-red-500]="dayInfo.isToday"
-                          [class.text-white]="dayInfo.isPast && !dayInfo.isToday"
-                          [class.text-gray-500]="dayInfo.isFuture">{{ getTimelineDateDisplay(dayInfo.date).day }}</span>
-                    <span class="timeline-day-weekday text-[10px] uppercase"
+                          [class.text-amber-400]="dayInfo.isFinalDay && !dayInfo.isToday"
+                          [class.text-white]="dayInfo.isPast && !dayInfo.isToday && !dayInfo.isFinalDay"
+                          [class.text-gray-500]="dayInfo.isFuture && !dayInfo.isFinalDay">{{ getTimelineDateDisplay(dayInfo.date).day }}</span>
+                    <span class="timeline-day-weekday text-xs uppercase"
                           [class.text-red-400]="dayInfo.isToday"
-                          [class.text-gray-400]="!dayInfo.isToday">{{ getTimelineDateDisplay(dayInfo.date).weekday }}</span>
+                          [class.text-amber-300]="dayInfo.isFinalDay && !dayInfo.isToday"
+                          [class.text-gray-400]="!dayInfo.isToday && !dayInfo.isFinalDay">{{ getTimelineDateDisplay(dayInfo.date).weekday }}</span>
                   </div>
 
                   <!-- Expanded Milestones Panel (shows when day is expanded) -->
                   @if (expandedTimelineDay() === dayInfo.day && getMilestonesForDay(dayInfo.day).length > 0) {
-                  <div class="timeline-expanded-milestones mt-3 w-full" (click)="$event.stopPropagation()">
-                    <div class="expanded-milestones-header flex items-center justify-between mb-2">
-                      <span class="text-[10px] font-bold text-red-500 uppercase tracking-wide">Day {{ dayInfo.day }} Milestones</span>
+                  <div class="timeline-expanded-milestones mt-4 w-full" (click)="$event.stopPropagation()">
+                    <div class="expanded-milestones-header flex items-center justify-between mb-3">
+                      <span class="text-xs font-bold uppercase tracking-wide"
+                            [class.text-amber-400]="dayInfo.isFinalDay"
+                            [class.text-red-500]="!dayInfo.isFinalDay">
+                        @if (dayInfo.isFinalDay) {
+                          🏆 Final Day Milestones
+                        } @else {
+                          Day {{ dayInfo.day }} Milestones
+                        }
+                      </span>
                       <button (click)="addTaskToDay(dayInfo.day); $event.stopPropagation()" 
                               class="add-milestone-mini-btn" title="Add milestone">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                       </button>
                     </div>
                     @for (task of getMilestonesForDay(dayInfo.day); track task.id) {
-                    <div class="expanded-milestone-item flex items-center gap-2 p-2 rounded-lg mb-1.5 cursor-pointer"
+                    <div class="expanded-milestone-item flex items-center gap-3 p-3 rounded-lg mb-2 cursor-pointer"
                          [class.milestone-done]="task.completed"
                          [class.milestone-todo]="!task.completed"
                          (click)="openEditActionItemModal(task); $event.stopPropagation()">
@@ -599,39 +628,45 @@
                               class="milestone-check-btn flex-shrink-0"
                               [class.checked]="task.completed">
                         @if (task.completed) {
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                         </svg>
                         }
                       </button>
                       <!-- Title -->
-                      <span class="expanded-milestone-title flex-1 text-xs truncate"
+                      <span class="expanded-milestone-title flex-1 text-sm"
                             [class.line-through]="task.completed">
                         {{ task.title }}
+                      </span>
+                      <!-- Status indicator -->
+                      <span class="milestone-status-badge text-[10px] font-bold px-2 py-1 rounded"
+                            [class.status-done]="task.completed"
+                            [class.status-todo]="!task.completed">
+                        {{ task.completed ? '✓ DONE' : 'TO DO' }}
                       </span>
                     </div>
                     }
                   </div>
                   } @else if (getMilestonesForDay(dayInfo.day).length > 0) {
                   <!-- Task preview (shows when not expanded) -->
-                  <div class="timeline-day-tasks mt-2 w-full max-w-[120px]">
+                  <div class="timeline-day-tasks mt-3 w-full max-w-[140px]">
                     @for (task of getMilestonesForDay(dayInfo.day).slice(0, 2); track task.id) {
-                    <div class="timeline-task-preview flex items-center gap-1 p-1.5 rounded text-[10px] mb-1"
+                    <div class="timeline-task-preview flex items-center gap-2 p-2 rounded text-xs mb-1.5"
                          [class.task-done]="task.completed"
                          [class.task-todo]="!task.completed">
-                      <span class="task-status-dot w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      <span class="task-status-dot w-2 h-2 rounded-full flex-shrink-0"
                             [class.bg-green-500]="task.completed"
                             [class.bg-red-500]="!task.completed"></span>
                       <span class="truncate" [class.line-through]="task.completed">{{ task.title }}</span>
                     </div>
                     }
                     @if (getMilestonesForDay(dayInfo.day).length > 2) {
-                    <span class="text-[9px] text-gray-500 pl-1">+{{ getMilestonesForDay(dayInfo.day).length - 2 }} more</span>
+                    <span class="text-[10px] text-gray-500 pl-2">+{{ getMilestonesForDay(dayInfo.day).length - 2 }} more</span>
                     }
                   </div>
-                  } @else {
-                  <div class="timeline-day-empty mt-2 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[10px] text-gray-500 uppercase">REST DAY</span>
+                  } @else if (!dayInfo.isFinalDay) {
+                  <div class="timeline-day-empty mt-3 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-xs text-gray-500 uppercase">REST DAY</span>
                   </div>
                   }
                 </div>
@@ -641,7 +676,7 @@
               <!-- Right Arrow -->
               <button (click)="navigateTimelineForward()" 
                       class="timeline-nav-arrow timeline-nav-next flex-shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </button>

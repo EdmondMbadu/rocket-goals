@@ -428,16 +428,17 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   // Get the visible timeline days based on the current offset
-  getVisibleTimelineDays(): { day: number; date: Date; label: string; isToday: boolean; isPast: boolean; isFuture: boolean }[] {
+  getVisibleTimelineDays(): { day: number; date: Date; label: string; isToday: boolean; isPast: boolean; isFuture: boolean; isFinalDay: boolean }[] {
     const goal = this.goal();
     if (!goal) return [];
 
     const startTime = goal.startTime || Date.now();
     const currentDay = this.getCurrentMissionDay();
+    const totalDays = this.getTimeframeDays();
     const offset = this.timelineViewOffset();
     
     // Show 7 days centered around the current view position
-    const visibleDays: { day: number; date: Date; label: string; isToday: boolean; isPast: boolean; isFuture: boolean }[] = [];
+    const visibleDays: { day: number; date: Date; label: string; isToday: boolean; isPast: boolean; isFuture: boolean; isFinalDay: boolean }[] = [];
     const centerDay = currentDay + offset;
     
     for (let i = -3; i <= 3; i++) {
@@ -450,7 +451,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         label: dayDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
         isToday: dayNumber === currentDay,
         isPast: dayNumber < currentDay,
-        isFuture: dayNumber > currentDay
+        isFuture: dayNumber > currentDay,
+        isFinalDay: dayNumber === totalDays
       });
     }
     
