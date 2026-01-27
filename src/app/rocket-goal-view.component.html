@@ -421,7 +421,7 @@
               <div class="time-destination-card hud-card shimmer p-5 relative">
                 <div class="scanline"></div>
                 <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-4" style="font-family: 'Orbitron', monospace;">
-                  <span class="text-gray-400">TIME TO DESTINATION</span>
+                  <span class="text-gray-400">TIME TO REACH THE GOAL</span>
                 </h3>
                 <div class="countdown-boxes-container flex justify-center items-center gap-2 md:gap-3">
                   <!-- Days -->
@@ -576,33 +576,27 @@
                   </div>
                   }
 
-                  <!-- Milestone indicator dot above the column -->
+                  <!-- Milestone rocket indicator above the column -->
                   <div class="timeline-day-indicator mb-3 relative">
                     @if (getMilestonesForDay(dayInfo.day).length > 0) {
-                    <div class="milestone-indicator-dot"
-                         [class.completed]="isAllTasksCompletedForDay(dayInfo.day)"
-                         [class.pending]="!isAllTasksCompletedForDay(dayInfo.day)"
-                         [class.final-day-dot]="dayInfo.isFinalDay"
+                    <div class="milestone-rocket-indicator"
+                         [class.rocket-completed]="isAllTasksCompletedForDay(dayInfo.day)"
+                         [class.rocket-pending]="!isAllTasksCompletedForDay(dayInfo.day)"
+                         [class.rocket-final]="dayInfo.isFinalDay"
                          [title]="getMilestonesForDay(dayInfo.day).length + ' milestone(s) - Click to view'">
-                      @if (isAllTasksCompletedForDay(dayInfo.day)) {
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                      } @else {
-                      <span class="text-xs text-white font-bold">{{ getMilestonesForDay(dayInfo.day).length }}</span>
-                      }
+                      <span class="rocket-icon">🚀</span>
+                      <span class="rocket-count">{{ getMilestonesForDay(dayInfo.day).length }}</span>
                     </div>
                     } @else if (dayInfo.isFinalDay) {
-                    <div class="milestone-indicator-dot final-day-dot pending"
+                    <div class="milestone-rocket-indicator rocket-final rocket-pending"
                          title="Click to add your success milestone">
-                      <span class="text-lg">🎯</span>
+                      <span class="rocket-icon">🚀</span>
+                      <span class="rocket-label">GOAL</span>
                     </div>
                     } @else {
-                    <div class="milestone-indicator-empty opacity-0 group-hover:opacity-100 transition-opacity"
+                    <div class="milestone-rocket-empty opacity-0 group-hover:opacity-100 transition-opacity"
                          title="Click to add a milestone">
-                      <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
+                      <span class="rocket-icon-faded">🚀</span>
                     </div>
                     }
                   </div>
