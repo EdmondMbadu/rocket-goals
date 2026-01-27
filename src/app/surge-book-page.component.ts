@@ -162,15 +162,25 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
                   "Don't just dream of progress - launch it!"
                 </p>
 
-                <button (click)="handleDownload()"
-                  class="group inline-flex items-center gap-3 px-10 py-5 bg-red-600 text-white font-black text-xl rounded-full hover:bg-black transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
-                  Download Now - Free
-                  <svg class="w-6 h-6 transform group-hover:translate-y-1 transition-transform" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
+                <div class="flex flex-wrap items-center gap-4">
+                  <button (click)="handleDownload()"
+                    class="group inline-flex items-center gap-3 px-10 py-5 bg-red-600 text-white font-black text-xl rounded-full hover:bg-black transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                    Download Now - Free
+                    <svg class="w-6 h-6 transform group-hover:translate-y-1 transition-transform" fill="none"
+                      stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </button>
+
+                  <a href="https://www.amazon.com/dp/B0GHZLXM8V" target="_blank" rel="noopener noreferrer"
+                    class="group inline-flex items-center gap-3 px-10 py-5 bg-black text-white font-black text-xl rounded-full hover:bg-red-600 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 dark:bg-white dark:text-black dark:hover:bg-red-600 dark:hover:text-white">
+                    Buy on Amazon
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.493.13.12.197.06.39-.18.58-.18.14-.4.313-.65.517-1.7 1.36-3.61 2.39-5.72 3.1-2.11.7-4.26 1.05-6.44 1.05-2.42 0-4.73-.43-6.92-1.28-2.19-.85-4.12-2.04-5.79-3.57-.04-.03-.06-.07-.06-.11zm6.57-3.55c0-.97.25-1.77.75-2.39.5-.62 1.14-.96 1.93-1.02 1.06-.08 2.04.31 2.93 1.18.37.34.67.74.9 1.19l.18.36c.1.22.1.4-.01.55-.11.14-.27.19-.48.14l-.19-.05c-.44-.11-.83-.23-1.17-.37-.33-.14-.64-.3-.91-.49-.28-.19-.55-.39-.8-.61-.25-.21-.5-.43-.73-.64-.15-.13-.27-.24-.35-.33-.09-.09-.14-.15-.17-.19-.03-.05-.05-.09-.06-.12-.01-.03-.02-.08-.02-.13 0-.1.04-.19.11-.25.08-.06.17-.08.28-.06.1.02.21.07.34.16.12.09.25.2.4.34.3.27.63.53.98.79.35.26.73.5 1.14.72.4.22.82.41 1.26.57.43.16.87.28 1.31.36.1.02.18.05.24.08.06.04.09.08.09.14 0 .12-.07.26-.21.4-.14.14-.34.29-.58.44-.25.15-.53.28-.85.4-.32.12-.64.22-.96.29-.66.16-1.29.25-1.87.25-.58 0-1.13-.09-1.62-.28-.5-.19-.92-.46-1.27-.81-.35-.35-.62-.77-.82-1.26-.2-.49-.3-1.03-.3-1.63z" />
+                    </svg>
+                  </a>
+                </div>
 
               </div>
             </div>
@@ -511,15 +521,25 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
                 Download your free copy of Surge: 42 High-Velocity Prompts and start launching your goals today.
               </p>
 
-              <button (click)="handleDownload()"
-                class="group inline-flex items-center gap-3 px-12 py-6 bg-red-600 text-white font-black text-2xl rounded-full hover:bg-white hover:text-black transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
-                Download Free eBook
-                <svg class="w-7 h-7 transform group-hover:translate-y-1 transition-transform" fill="none"
-                  stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-              </button>
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button (click)="handleDownload()"
+                  class="group inline-flex items-center gap-3 px-12 py-6 bg-red-600 text-white font-black text-2xl rounded-full hover:bg-white hover:text-black transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                  Download Free eBook
+                  <svg class="w-7 h-7 transform group-hover:translate-y-1 transition-transform" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </button>
+
+                <a href="https://www.amazon.com/dp/B0GHZLXM8V" target="_blank" rel="noopener noreferrer"
+                  class="group inline-flex items-center gap-3 px-12 py-6 bg-white text-black font-black text-2xl rounded-full hover:bg-red-600 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                  Buy on Amazon
+                  <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.493.13.12.197.06.39-.18.58-.18.14-.4.313-.65.517-1.7 1.36-3.61 2.39-5.72 3.1-2.11.7-4.26 1.05-6.44 1.05-2.42 0-4.73-.43-6.92-1.28-2.19-.85-4.12-2.04-5.79-3.57-.04-.03-.06-.07-.06-.11zm6.57-3.55c0-.97.25-1.77.75-2.39.5-.62 1.14-.96 1.93-1.02 1.06-.08 2.04.31 2.93 1.18.37.34.67.74.9 1.19l.18.36c.1.22.1.4-.01.55-.11.14-.27.19-.48.14l-.19-.05c-.44-.11-.83-.23-1.17-.37-.33-.14-.64-.3-.91-.49-.28-.19-.55-.39-.8-.61-.25-.21-.5-.43-.73-.64-.15-.13-.27-.24-.35-.33-.09-.09-.14-.15-.17-.19-.03-.05-.05-.09-.06-.12-.01-.03-.02-.08-.02-.13 0-.1.04-.19.11-.25.08-.06.17-.08.28-.06.1.02.21.07.34.16.12.09.25.2.4.34.3.27.63.53.98.79.35.26.73.5 1.14.72.4.22.82.41 1.26.57.43.16.87.28 1.31.36.1.02.18.05.24.08.06.04.09.08.09.14 0 .12-.07.26-.21.4-.14.14-.34.29-.58.44-.25.15-.53.28-.85.4-.32.12-.64.22-.96.29-.66.16-1.29.25-1.87.25-.58 0-1.13-.09-1.62-.28-.5-.19-.92-.46-1.27-.81-.35-.35-.62-.77-.82-1.26-.2-.49-.3-1.03-.3-1.63z" />
+                  </svg>
+                </a>
+              </div>
 
               <div class="pt-8">
                 <a routerLink="/"
