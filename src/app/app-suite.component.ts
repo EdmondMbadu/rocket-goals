@@ -48,7 +48,7 @@ export class AppSuiteComponent implements OnInit {
     {
       id: 'hustle-orbit',
       name: 'HustleOrbit',
-      tagline: 'Solopreneur & Indie Hacker execution co-pilot.',
+      tagline: 'Solopreneur & Indie Hacker execution coach.',
       description: 'Build your indie empire with focused execution. Track product launches, customer acquisition, and revenue milestones.',
       icon: '🚀',
       imageUrl: '/assets/app-suite/hustle-orbit.png',

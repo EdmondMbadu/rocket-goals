@@ -185,7 +185,7 @@ import { WelcomeVideoModalComponent } from './welcome-video-modal.component';
               </div>
             </div>
 
-            <!-- Strategic Co-Pilot Section (Prominent Position) -->
+            <!-- Strategic Coach Section (Prominent Position) -->
             <div class="co-pilot-section animate-slide-up">
               <div class="co-pilot-card">
                 <div class="co-pilot-avatar-wrapper">
@@ -193,7 +193,7 @@ import { WelcomeVideoModalComponent } from './welcome-video-modal.component';
                   <img [src]="t.coPilotAvatar" [alt]="t.coPilotName" class="co-pilot-img" />
                 </div>
                 <div class="co-pilot-info">
-                  <span class="co-pilot-badge" [style.color]="t.accentColor">Strategic Co-Pilot</span>
+                  <span class="co-pilot-badge" [style.color]="t.accentColor">Strategic Coach</span>
                   <h4 class="co-pilot-name">{{ t.coPilotName }}</h4>
                   <p class="co-pilot-role">{{ t.coPilotRole }}</p>
                   <p class="co-pilot-quote">

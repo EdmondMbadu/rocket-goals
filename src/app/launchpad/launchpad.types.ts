@@ -105,7 +105,7 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
   'hustle-orbit': {
     id: 'hustle-orbit',
     name: 'HustleOrbit',
-    tagline: 'Solopreneur & Indie Hacker execution co-pilot.',
+    tagline: 'Solopreneur & Indie Hacker execution coach.',
     description: 'Build your indie empire with focused execution. Track product launches, customer acquisition, and revenue milestones. Designed for makers who ship fast and iterate faster.',
     icon: '🚀',
     imageUrl: '/assets/app-suite/hustle-orbit.png',
