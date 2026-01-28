@@ -1391,17 +1391,22 @@ ${url}`;
     this.activePrimaryTab.set(tab);
     if (tab === 'tasks') {
       if (scrollToSection) {
-        this.scrollToMilestonesSection();
+        this.scrollToMilestonesSectionThenToday();
+      } else {
+        this.scheduleTodayMilestoneScroll();
       }
-      this.scheduleTodayMilestoneScroll();
     }
   }
 
-  private scrollToMilestonesSection() {
+  private scrollToMilestonesSectionThenToday() {
     setTimeout(() => {
       const section = document.getElementById('fan-mission-panel');
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // After scrolling to section, scroll to today's milestone
+        setTimeout(() => {
+          this.scheduleTodayMilestoneScroll();
+        }, 400);
       }
     }, 100);
   }
@@ -3145,7 +3150,9 @@ Generate the milestones now (JSON array only, no other text):`;
   }
 
   private scrollTodayMilestoneIntoView(dayNumber: number) {
-    const target = document.querySelector(`.task-card[data-day="${dayNumber}"]`) as HTMLElement | null;
+    // Try kanban card first, then fall back to task-card
+    const target = document.querySelector(`.kanban-card[data-day="${dayNumber}"]`) as HTMLElement | null
+      || document.querySelector(`.task-card[data-day="${dayNumber}"]`) as HTMLElement | null;
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
