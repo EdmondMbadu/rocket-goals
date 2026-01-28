@@ -12,6 +12,7 @@ export interface ActionItem {
   notes?: string; // User notes/comments on the task
   dayNumber: number; // Which day of the mission this is for (1-based)
   completed: boolean;
+  postponed?: boolean; // Marked as "NOT NOW" - deferred for later
   outcome?: MilestoneOutcome; // How well the milestone was completed
   outcomeNotes?: string; // Notes about the outcome
   metricType?: string; // Type of metric tracked (e.g., 'applications', 'interviews')

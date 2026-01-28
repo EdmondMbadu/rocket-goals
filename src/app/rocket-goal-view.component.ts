@@ -3374,6 +3374,95 @@ Generate the milestones now (JSON array only, no other text):`;
     return this.getActionItemsForCurrentDay();
   }
 
+  // Kanban board - get milestones for each column
+  getPendingMilestones(): ActionItem[] {
+    const items = this.viewAllTasks() ? this.actionItems() : this.getActionItemsForCurrentDay();
+    return items.filter(item => !item.completed && !item.postponed);
+  }
+
+  getPostponedMilestones(): ActionItem[] {
+    const items = this.viewAllTasks() ? this.actionItems() : this.getActionItemsForCurrentDay();
+    return items.filter(item => !item.completed && item.postponed);
+  }
+
+  getCompletedMilestones(): ActionItem[] {
+    const items = this.viewAllTasks() ? this.actionItems() : this.getActionItemsForCurrentDay();
+    return items.filter(item => item.completed);
+  }
+
+  // Kanban - move milestone to a different column
+  async moveMilestoneToColumn(item: ActionItem, column: 'pending' | 'postponed' | 'completed') {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    let updates: { completed?: boolean; postponed?: boolean } = {};
+
+    switch (column) {
+      case 'pending':
+        updates = { completed: false, postponed: false };
+        break;
+      case 'postponed':
+        updates = { completed: false, postponed: true };
+        break;
+      case 'completed':
+        updates = { completed: true, postponed: false };
+        break;
+    }
+
+    try {
+      await this.actionItemsService.updateActionItem(goal.id, item.id, updates);
+      this.actionItems.update(items =>
+        items.map(i => i.id === item.id ? { ...i, ...updates } : i)
+      );
+      // Trigger celebration when moving to completed
+      if (column === 'completed' && !item.completed) {
+        this.triggerCelebration();
+      }
+    } catch (error) {
+      console.error('Error moving milestone:', error);
+    }
+  }
+
+  // Drag and drop handlers for Kanban
+  onDragStart(event: DragEvent, item: ActionItem) {
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', item.id);
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDragEnter(event: DragEvent, column: string) {
+    event.preventDefault();
+    const target = event.currentTarget as HTMLElement;
+    target.classList.add('drag-over');
+  }
+
+  onDragLeave(event: DragEvent) {
+    const target = event.currentTarget as HTMLElement;
+    target.classList.remove('drag-over');
+  }
+
+  async onDrop(event: DragEvent, column: 'pending' | 'postponed' | 'completed') {
+    event.preventDefault();
+    const target = event.currentTarget as HTMLElement;
+    target.classList.remove('drag-over');
+
+    const itemId = event.dataTransfer?.getData('text/plain');
+    if (!itemId) return;
+
+    const item = this.actionItems().find(i => i.id === itemId);
+    if (!item) return;
+
+    await this.moveMilestoneToColumn(item, column);
+  }
+
   // Notes functionality
   toggleNoteExpanded(itemId: string) {
     if (this.expandedNoteItemId() === itemId) {

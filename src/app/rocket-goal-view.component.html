@@ -1891,8 +1891,8 @@
                   </div>
                 </div>
 
-                <!-- Action Items List -->
-                <div class="action-items-list space-y-4">
+                <!-- Kanban Board for Milestones -->
+                <div class="milestones-kanban-board">
                   @if (loadingActionItems()) {
                   <div class="flex items-center justify-center py-8">
                     <div class="w-8 h-8 border-3 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
@@ -1933,138 +1933,246 @@
                     </div>
                   </div>
                   } @else {
-                  <!-- Existing Items -->
-                  @for (item of getDisplayedTasks(); track item.id) {
-                  <div class="task-card"
-                    [class.completed]="item.completed"
-                    [class.today]="item.dayNumber === getCurrentMissionDay()"
-                    [attr.data-day]="item.dayNumber">
-                    <div class="task-card-main">
-                      <!-- Checkbox -->
-                      <button (click)="toggleActionItemComplete(item)"
-                        class="task-checkbox"
-                        [class.checked]="item.completed">
-                        @if (item.completed) {
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                        }
-                      </button>
-
-                      <!-- Main content -->
-                      <div class="task-content">
-                        <!-- Title row -->
-                        @if (editingActionItemId() === item.id) {
-                        <div class="flex items-center gap-2">
-                          <input type="text"
-                            class="task-edit-input"
-                            [ngModel]="editingActionItemTitle()"
-                            (ngModelChange)="editingActionItemTitle.set($event)"
-                            (keyup.enter)="saveEditingActionItem()"
-                            (keyup.escape)="cancelEditingActionItem()"
-                            placeholder="Enter task..." />
-                          <button (click)="saveEditingActionItem()" class="task-action-btn save">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
-                          <button (click)="cancelEditingActionItem()" class="task-action-btn cancel">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                        } @else {
-                        <div class="task-header">
-                          <div class="task-title-row">
-                            <span class="task-title" [class.completed]="item.completed">
-                              {{ item.title }}
-                            </span>
-                            <!-- Day badge when viewing all tasks -->
-                            @if (viewAllTasks()) {
-                            <span class="task-day-badge" [class.current]="item.dayNumber === getCurrentMissionDay()">
-                              Day {{ item.dayNumber }}
-                            </span>
-                            <span class="task-day-date">
-                              {{ getFormattedDateFromDayNumber(item.dayNumber) }}
-                            </span>
+                  <!-- Kanban Three-Column Layout -->
+                  <div class="kanban-columns">
+                    <!-- NOT NOW Column (Left - Red) -->
+                    <div class="kanban-column kanban-column-postponed"
+                         (dragover)="onDragOver($event)"
+                         (dragenter)="onDragEnter($event, 'postponed')"
+                         (dragleave)="onDragLeave($event)"
+                         (drop)="onDrop($event, 'postponed')">
+                      <div class="kanban-column-header postponed">
+                        <span class="kanban-column-count">{{ getPostponedMilestones().length }}</span>
+                        <span class="kanban-column-title">NOT NOW</span>
+                      </div>
+                      <div class="kanban-column-content">
+                        @for (item of getPostponedMilestones(); track item.id) {
+                        <div class="kanban-card postponed"
+                             draggable="true"
+                             (dragstart)="onDragStart($event, item)"
+                             [attr.data-day]="item.dayNumber">
+                          <div class="kanban-card-header">
+                            <span class="kanban-card-day">Day {{ item.dayNumber }}</span>
+                            <div class="kanban-card-actions">
+                              <button (click)="toggleNoteExpanded(item.id)" class="kanban-action-btn" [class.has-note]="item.notes" [title]="item.notes ? 'View note' : 'Add note'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                </svg>
+                              </button>
+                              <button (click)="startEditingActionItem(item)" class="kanban-action-btn" title="Edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button (click)="deleteActionItem(item)" class="kanban-action-btn delete" title="Delete">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <h4 class="kanban-card-title">{{ item.title }}</h4>
+                          @if (item.notes) {
+                          <p class="kanban-card-notes">{{ item.notes }}</p>
+                          }
+                          @if (viewAllTasks()) {
+                          <span class="kanban-card-date">{{ getFormattedDateFromDayNumber(item.dayNumber) }}</span>
+                          }
+                          <!-- Expanded Notes Section -->
+                          @if (expandedNoteItemId() === item.id) {
+                          <div class="kanban-note-section">
+                            @if (editingNoteItemId() === item.id) {
+                            <div class="note-edit-form">
+                              <textarea class="note-textarea" rows="3" [ngModel]="editingNoteValue()" (ngModelChange)="editingNoteValue.set($event)" placeholder="Add a note..." autofocus></textarea>
+                              <div class="note-edit-actions">
+                                <button (click)="cancelEditingNote()" class="note-btn cancel">Cancel</button>
+                                <button (click)="saveNote()" class="note-btn save">Save</button>
+                              </div>
+                            </div>
+                            } @else {
+                            <div class="note-display">
+                              @if (item.notes) {
+                              <p class="note-text">{{ item.notes }}</p>
+                              } @else {
+                              <p class="note-empty">No note yet.</p>
+                              }
+                              <button (click)="startEditingNote(item)" class="note-edit-btn">Edit</button>
+                            </div>
                             }
                           </div>
-
-                          <!-- Actions -->
-                          <div class="task-actions">
-                            <!-- Notes toggle -->
-                            <button (click)="toggleNoteExpanded(item.id)"
-                              class="task-action-btn"
-                              [class.has-note]="item.notes"
-                              [title]="item.notes ? 'View note' : 'Add note'">
-                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                              </svg>
-                            </button>
-                            <!-- Edit -->
-                            <button (click)="startEditingActionItem(item)" class="task-action-btn">
-                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            <!-- Delete -->
-                            <button (click)="deleteActionItem(item)" class="task-action-btn delete">
-                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
+                          }
                         </div>
-
-                        <!-- Notes preview if exists -->
-                        @if (item.notes && expandedNoteItemId() !== item.id) {
-                        <p class="task-note-preview">{{ item.notes }}</p>
                         }
+                        @if (getPostponedMilestones().length === 0) {
+                        <div class="kanban-empty-state">
+                          <span class="kanban-empty-icon">⏸️</span>
+                          <span class="kanban-empty-text">Drag milestones here to postpone</span>
+                        </div>
                         }
                       </div>
                     </div>
 
-                    <!-- Notes section (expandable) -->
-                    @if (expandedNoteItemId() === item.id) {
-                    <div class="task-note-section">
-                      @if (editingNoteItemId() === item.id) {
-                      <div class="note-edit-form">
-                        <textarea
-                          class="note-textarea"
-                          rows="4"
-                          [ngModel]="editingNoteValue()"
-                          (ngModelChange)="editingNoteValue.set($event)"
-                          placeholder="Add a note about this task..."
-                          autofocus></textarea>
-                        <div class="note-edit-actions">
-                          <button (click)="cancelEditingNote()" class="note-btn cancel">Cancel</button>
-                          <button (click)="saveNote()" class="note-btn save">Save Note</button>
-                        </div>
-                      </div>
-                      } @else {
-                      <div class="note-display">
-                        @if (item.notes) {
-                        <p class="note-text">{{ item.notes }}</p>
-                        } @else {
-                        <p class="note-empty">No note yet. Click to add one.</p>
-                        }
-                        <button (click)="startEditingNote(item)" class="note-edit-btn">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <!-- TO DO Column (Middle - Default) -->
+                    <div class="kanban-column kanban-column-pending"
+                         (dragover)="onDragOver($event)"
+                         (dragenter)="onDragEnter($event, 'pending')"
+                         (dragleave)="onDragLeave($event)"
+                         (drop)="onDrop($event, 'pending')">
+                      <div class="kanban-column-header pending">
+                        <span class="kanban-column-count">{{ getPendingMilestones().length }}</span>
+                        <span class="kanban-column-title">TO DO</span>
+                        <button (click)="openAddActionItem()" class="kanban-add-btn" title="Add milestone">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                           </svg>
-                          Edit
                         </button>
                       </div>
-                      }
+                      <div class="kanban-column-content">
+                        @for (item of getPendingMilestones(); track item.id) {
+                        <div class="kanban-card pending"
+                             draggable="true"
+                             (dragstart)="onDragStart($event, item)"
+                             [class.today]="item.dayNumber === getCurrentMissionDay()"
+                             [attr.data-day]="item.dayNumber">
+                          <div class="kanban-card-header">
+                            <span class="kanban-card-day" [class.today]="item.dayNumber === getCurrentMissionDay()">Day {{ item.dayNumber }}</span>
+                            <div class="kanban-card-actions">
+                              <button (click)="toggleNoteExpanded(item.id)" class="kanban-action-btn" [class.has-note]="item.notes" [title]="item.notes ? 'View note' : 'Add note'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                </svg>
+                              </button>
+                              <button (click)="startEditingActionItem(item)" class="kanban-action-btn" title="Edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button (click)="deleteActionItem(item)" class="kanban-action-btn delete" title="Delete">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <h4 class="kanban-card-title">{{ item.title }}</h4>
+                          @if (item.notes) {
+                          <p class="kanban-card-notes">{{ item.notes }}</p>
+                          }
+                          @if (viewAllTasks()) {
+                          <span class="kanban-card-date">{{ getFormattedDateFromDayNumber(item.dayNumber) }}</span>
+                          }
+                          <!-- Expanded Notes Section -->
+                          @if (expandedNoteItemId() === item.id) {
+                          <div class="kanban-note-section">
+                            @if (editingNoteItemId() === item.id) {
+                            <div class="note-edit-form">
+                              <textarea class="note-textarea" rows="3" [ngModel]="editingNoteValue()" (ngModelChange)="editingNoteValue.set($event)" placeholder="Add a note..." autofocus></textarea>
+                              <div class="note-edit-actions">
+                                <button (click)="cancelEditingNote()" class="note-btn cancel">Cancel</button>
+                                <button (click)="saveNote()" class="note-btn save">Save</button>
+                              </div>
+                            </div>
+                            } @else {
+                            <div class="note-display">
+                              @if (item.notes) {
+                              <p class="note-text">{{ item.notes }}</p>
+                              } @else {
+                              <p class="note-empty">No note yet.</p>
+                              }
+                              <button (click)="startEditingNote(item)" class="note-edit-btn">Edit</button>
+                            </div>
+                            }
+                          </div>
+                          }
+                        </div>
+                        }
+                        @if (getPendingMilestones().length === 0) {
+                        <div class="kanban-empty-state">
+                          <span class="kanban-empty-icon">🎯</span>
+                          <span class="kanban-empty-text">No pending milestones</span>
+                        </div>
+                        }
+                      </div>
                     </div>
-                    }
+
+                    <!-- DONE Column (Right - Green) -->
+                    <div class="kanban-column kanban-column-completed"
+                         (dragover)="onDragOver($event)"
+                         (dragenter)="onDragEnter($event, 'completed')"
+                         (dragleave)="onDragLeave($event)"
+                         (drop)="onDrop($event, 'completed')">
+                      <div class="kanban-column-header completed">
+                        <span class="kanban-column-count">{{ getCompletedMilestones().length }}</span>
+                        <span class="kanban-column-title">DONE</span>
+                        <span class="kanban-column-icon">+</span>
+                      </div>
+                      <div class="kanban-column-content">
+                        @for (item of getCompletedMilestones(); track item.id) {
+                        <div class="kanban-card completed"
+                             draggable="true"
+                             (dragstart)="onDragStart($event, item)"
+                             [attr.data-day]="item.dayNumber">
+                          <div class="kanban-card-header">
+                            <span class="kanban-card-day completed">Day {{ item.dayNumber }}</span>
+                            <div class="kanban-card-actions">
+                              <button (click)="toggleNoteExpanded(item.id)" class="kanban-action-btn" [class.has-note]="item.notes" [title]="item.notes ? 'View note' : 'Add note'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                </svg>
+                              </button>
+                              <button (click)="startEditingActionItem(item)" class="kanban-action-btn" title="Edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button (click)="deleteActionItem(item)" class="kanban-action-btn delete" title="Delete">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <h4 class="kanban-card-title completed">{{ item.title }}</h4>
+                          @if (item.notes) {
+                          <p class="kanban-card-notes">{{ item.notes }}</p>
+                          }
+                          @if (viewAllTasks()) {
+                          <span class="kanban-card-date">{{ getFormattedDateFromDayNumber(item.dayNumber) }}</span>
+                          }
+                          <!-- Expanded Notes Section -->
+                          @if (expandedNoteItemId() === item.id) {
+                          <div class="kanban-note-section">
+                            @if (editingNoteItemId() === item.id) {
+                            <div class="note-edit-form">
+                              <textarea class="note-textarea" rows="3" [ngModel]="editingNoteValue()" (ngModelChange)="editingNoteValue.set($event)" placeholder="Add a note..." autofocus></textarea>
+                              <div class="note-edit-actions">
+                                <button (click)="cancelEditingNote()" class="note-btn cancel">Cancel</button>
+                                <button (click)="saveNote()" class="note-btn save">Save</button>
+                              </div>
+                            </div>
+                            } @else {
+                            <div class="note-display">
+                              @if (item.notes) {
+                              <p class="note-text">{{ item.notes }}</p>
+                              } @else {
+                              <p class="note-empty">No note yet.</p>
+                              }
+                              <button (click)="startEditingNote(item)" class="note-edit-btn">Edit</button>
+                            </div>
+                            }
+                          </div>
+                          }
+                        </div>
+                        }
+                        @if (getCompletedMilestones().length === 0) {
+                        <div class="kanban-empty-state">
+                          <span class="kanban-empty-icon">✅</span>
+                          <span class="kanban-empty-text">Drag milestones here when done</span>
+                        </div>
+                        }
+                      </div>
+                    </div>
                   </div>
-                  }
                   }
                 </div>
               </div>
