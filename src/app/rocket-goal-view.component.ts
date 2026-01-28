@@ -1387,11 +1387,23 @@ ${url}`;
     return null;
   }
 
-  selectPrimaryTab(tab: 'dashboard' | 'fans' | 'tasks' | 'calendar' | 'checkins') {
+  selectPrimaryTab(tab: 'dashboard' | 'fans' | 'tasks' | 'calendar' | 'checkins', scrollToSection = false) {
     this.activePrimaryTab.set(tab);
     if (tab === 'tasks') {
+      if (scrollToSection) {
+        this.scrollToMilestonesSection();
+      }
       this.scheduleTodayMilestoneScroll();
     }
+  }
+
+  private scrollToMilestonesSection() {
+    setTimeout(() => {
+      const section = document.getElementById('fan-mission-panel');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   private applyTabFromQuery(): void {

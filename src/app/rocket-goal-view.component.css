@@ -3665,6 +3665,17 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
+
+  /* Reorder columns on mobile: TO DO first, NOT NOW second, DONE third */
+  .kanban-column-pending {
+    order: 1;
+  }
+  .kanban-column-postponed {
+    order: 2;
+  }
+  .kanban-column-completed {
+    order: 3;
+  }
 }
 
 .kanban-column {
@@ -6922,6 +6933,23 @@
 
 .light-mode .timeline-day-column:hover {
   background: rgba(0, 0, 0, 0.02);
+}
+
+/* Today Day Styling */
+.timeline-day-column.timeline-day-today {
+  position: relative;
+}
+
+.dark-mode .timeline-day-column.timeline-day-today {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.1) 100%);
+  border: 2px solid rgba(220, 38, 38, 0.4);
+  border-radius: 16px;
+}
+
+.light-mode .timeline-day-column.timeline-day-today {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(185, 28, 28, 0.05) 100%);
+  border: 2px solid rgba(220, 38, 38, 0.3);
+  border-radius: 16px;
 }
 
 /* Final Day Styling */
