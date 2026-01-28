@@ -3393,20 +3393,26 @@ Generate the milestones now (JSON array only, no other text):`;
     return this.getActionItemsForCurrentDay();
   }
 
-  // Kanban board - get milestones for each column
+  // Kanban board - get milestones for each column (sorted by day number, then order)
   getPendingMilestones(): ActionItem[] {
     const items = this.viewAllTasks() ? this.actionItems() : this.getActionItemsForCurrentDay();
-    return items.filter(item => !item.completed && !item.postponed);
+    return items
+      .filter(item => !item.completed && !item.postponed)
+      .sort((a, b) => a.dayNumber - b.dayNumber || a.order - b.order);
   }
 
   getPostponedMilestones(): ActionItem[] {
     const items = this.viewAllTasks() ? this.actionItems() : this.getActionItemsForCurrentDay();
-    return items.filter(item => !item.completed && item.postponed);
+    return items
+      .filter(item => !item.completed && item.postponed)
+      .sort((a, b) => a.dayNumber - b.dayNumber || a.order - b.order);
   }
 
   getCompletedMilestones(): ActionItem[] {
     const items = this.viewAllTasks() ? this.actionItems() : this.getActionItemsForCurrentDay();
-    return items.filter(item => item.completed);
+    return items
+      .filter(item => item.completed)
+      .sort((a, b) => a.dayNumber - b.dayNumber || a.order - b.order);
   }
 
   // Kanban - move milestone to a different column
