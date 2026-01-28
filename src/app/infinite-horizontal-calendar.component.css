@@ -1,0 +1,327 @@
+.horizontal-calendar-container {
+    position: relative;
+    display: flex;
+    height: 500px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+}
+
+/* Side Drop Zones */
+.side-drop-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 2rem 0;
+}
+
+.not-now-zone {
+    left: 0;
+    background: linear-gradient(to right, rgba(239, 68, 68, 0.15), transparent);
+    border-right: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.done-zone {
+    right: 0;
+    background: linear-gradient(to left, rgba(34, 197, 94, 0.15), transparent);
+    border-left: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.zone-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.not-now-zone .zone-label {
+    color: #ef4444;
+}
+
+.done-zone .zone-label {
+    color: #22c55e;
+}
+
+.zone-count {
+    margin-bottom: 2rem;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 900;
+    font-size: 1.25rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid currentColor;
+}
+
+.not-now-zone .zone-count {
+    color: #ef4444;
+}
+
+.done-zone .zone-count {
+    color: #22c55e;
+}
+
+/* Drag Hover Effects */
+.side-drop-zone.drag-over {
+    width: 120px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.not-now-zone.drag-over {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.done-zone.drag-over {
+    background: rgba(34, 197, 94, 0.3);
+}
+
+/* Main Scrollable Area */
+.calendar-scroll-area {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    scroll-behavior: smooth;
+    padding: 0 80px;
+    scrollbar-width: none;
+}
+
+.calendar-scroll-area::-webkit-scrollbar {
+    display: none;
+}
+
+.time-periods-strip {
+    display: flex;
+    height: 100%;
+}
+
+.period-column {
+    width: 400px;
+    min-width: 400px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+}
+
+.period-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.period-maybe-label {
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.4em;
+    margin-bottom: 0.75rem;
+}
+
+.period-date {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    text-transform: uppercase;
+}
+
+.period-subtitle {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 0.25rem;
+}
+
+/* Cards Area */
+.milestones-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 0.5rem;
+}
+
+.milestones-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.milestones-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.milestone-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    cursor: grab;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+.milestone-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.milestone-card.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+    border-style: dashed;
+}
+
+.card-scanline {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            transparent,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent);
+    background-size: 100% 4px;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.card-title {
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    font-size: 1.125rem;
+}
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.meta-icon {
+    font-size: 1rem;
+}
+
+/* Add Card Button */
+.add-card-btn {
+    width: 100%;
+    padding: 1.25rem;
+    background: rgba(59, 130, 246, 0.05);
+    border: 2px dashed rgba(59, 130, 246, 0.2);
+    border-radius: 1rem;
+    color: #60a5fa;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.add-card-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+}
+
+/* View Controls */
+.calendar-controls {
+    position: absolute;
+    top: 1.5rem;
+    right: 120px;
+    z-index: 30;
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.375rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.view-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.view-btn:hover:not(.active) {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.view-btn.active {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Empty State */
+.empty-period {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.2);
+    gap: 1rem;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.empty-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}

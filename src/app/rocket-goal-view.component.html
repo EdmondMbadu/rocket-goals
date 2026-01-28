@@ -473,17 +473,32 @@
               </div>
 
               <!-- MILESTONES PREVIEW -->
-              <div class="milestones-preview-card hud-card shimmer p-4 relative flex-1">
+              <div class="milestones-preview-card hud-card shimmer p-4 relative flex-1 cursor-pointer group" 
+                   (click)="selectPrimaryTab('tasks')"
+                   title="View all milestones">
                 <div class="scanline"></div>
+                
+                <!-- Header with View All indicator -->
                 <div class="flex items-center justify-between mb-3">
-                  <h3 class="milestones-label text-xs font-bold tracking-wider text-red-500" style="font-family: 'Orbitron', monospace;">MILESTONES</h3>
-                  <span class="milestones-count text-xs text-gray-500">{{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="milestones-icon text-lg">🎯</span>
+                    <h3 class="milestones-label text-xs font-bold tracking-wider text-red-500" style="font-family: 'Orbitron', monospace;">MILESTONES</h3>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="milestones-count text-xs text-gray-500">{{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }}</span>
+                    <div class="view-all-indicator flex items-center gap-1 text-xs text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span class="hidden sm:inline">View All</span>
+                      <svg class="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
                 
                 <!-- Milestones List -->
                 <div class="milestones-list space-y-1.5 max-h-[120px] overflow-y-auto">
                   @for (item of actionItems().slice(0, 5); track item.id) {
-                  <div class="milestone-item flex items-center gap-3 p-2 rounded-lg transition-all hover:bg-white/5"
+                  <div class="milestone-item flex items-center gap-3 p-2 rounded-lg transition-all"
                        [class.milestone-completed]="item.completed"
                        [class.milestone-pending]="!item.completed">
                     <!-- Status indicator -->
@@ -497,16 +512,22 @@
                           [class.text-white]="!item.completed">
                       {{ item.title }}
                     </span>
+                    <!-- Day badge -->
+                    <span class="milestone-day-badge text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-gray-400">
+                      Day {{ item.dayNumber }}
+                    </span>
                   </div>
                   }
                   @if (actionItems().length === 0) {
-                  <div class="text-center py-4">
+                  <div class="text-center py-6">
+                    <div class="text-3xl mb-2 opacity-50">🎯</div>
                     <p class="text-gray-500 text-sm">No milestones yet</p>
+                    <p class="text-gray-600 text-xs mt-1">Click to add your first milestone</p>
                   </div>
                   }
                   @if (actionItems().length > 5) {
-                  <div class="text-center pt-2">
-                    <span class="text-gray-500 text-xs">+{{ actionItems().length - 5 }} more milestones</span>
+                  <div class="view-more-indicator text-center pt-2 border-t border-white/5">
+                    <span class="text-red-400 text-xs font-medium">+{{ actionItems().length - 5 }} more milestones →</span>
                   </div>
                   }
                 </div>

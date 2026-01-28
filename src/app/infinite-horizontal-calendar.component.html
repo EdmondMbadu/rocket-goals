@@ -1,0 +1,76 @@
+<div class="horizontal-calendar-container" [class.dark-mode]="isDarkMode()">
+    <!-- Side Drop Zones -->
+    <div class="side-drop-zone not-now-zone" (dragover)="onDragOver($event, 'not-now')"
+        (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'not-now')"
+        [class.drag-over]="activeDragZone() === 'not-now'">
+        <div class="zone-count">{{ notNowCount() }}</div>
+        <div class="zone-label">NOT NOW</div>
+    </div>
+
+    <div class="side-drop-zone done-zone" (dragover)="onDragOver($event, 'done')" (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event, 'done')" [class.drag-over]="activeDragZone() === 'done'">
+        <div class="zone-count">{{ doneCount() }}</div>
+        <div class="zone-label">DONE</div>
+    </div>
+
+    <!-- View Controls -->
+    <div class="calendar-controls">
+        @for (view of views; track view.id) {
+        <button class="view-btn" [class.active]="currentView() === view.id" (click)="setView(view.id)">
+            {{ view.label }}
+        </button>
+        }
+    </div>
+
+    <!-- Main Scroll Area -->
+    <div class="calendar-scroll-area" #scrollContainer (scroll)="onScroll($event)">
+        <div class="time-periods-strip" [style.width.px]="stripWidth()">
+            @for (period of visiblePeriods(); track period.id) {
+            <div class="period-column">
+                <div class="period-header">
+                    <span class="period-maybe-label">MAYBE?</span>
+                    <h3 class="period-date">{{ period.title }}</h3>
+                    <span class="period-subtitle">{{ period.subtitle }}</span>
+                </div>
+
+                <!-- Add Card Button -->
+                <button class="add-card-btn" (click)="onAddCard(period.date)">
+                    <span class="plus-icon">+</span>
+                    <span>Add a card</span>
+                    <span class="shortcut">C</span>
+                </button>
+
+                <!-- Milestones List for this Period -->
+                <div class="milestones-list" (dragover)="onDragOver($event, 'maybe', period.id)"
+                    (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'maybe', period.date)">
+
+                    @for (milestone of getMilestonesForPeriod(period.date); track milestone.id) {
+                    <div class="milestone-card" draggable="true" (dragstart)="onDragStart($event, milestone)"
+                        (dragend)="onDragEnd($event)" (click)="onCardClick(milestone)">
+                        <div class="card-scanline"></div>
+                        <h4 class="card-title">{{ milestone.title }}</h4>
+                        <div class="card-meta">
+                            <div class="meta-item">
+                                <span class="meta-icon">👤</span>
+                                <span>{{ ownerInitial() }}</span>
+                            </div>
+                            @if (milestone.completed) {
+                            <div class="meta-item">
+                                <span class="meta-icon">✅</span>
+                                <span>DONE</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    } @empty {
+                    <div class="empty-period">
+                        <div class="empty-icon">🛰️</div>
+                        <div class="empty-text">No signals detected</div>
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</div>
