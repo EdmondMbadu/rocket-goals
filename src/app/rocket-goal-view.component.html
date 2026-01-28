@@ -53,7 +53,7 @@
   </div>
 
   <!-- Mission Control Header -->
-  <header class="mission-header relative z-40 px-6 md:px-8 py-5 flex-none">
+  <header class="mission-header relative z-40 px-3 sm:px-6 md:px-8 py-3 sm:py-5 flex-none">
     <div class="flex items-center justify-between max-w-7xl mx-auto w-full gap-6">
       <!-- Logo -->
       <a [routerLink]="authService.profile()?.userId ? '/goals' : '/'" class="logo-container flex items-center gap-3 group flex-none">
@@ -67,8 +67,8 @@
         </span>
       </a>
 
-      <!-- Center Navigation Links -->
-      <div class="flex-1 flex items-center justify-center gap-6">
+      <!-- Center Navigation Links (hidden on mobile) -->
+      <div class="hidden md:flex flex-1 items-center justify-center gap-6">
         <a routerLink="/goals" routerLinkActive="nav-link-active"
           class="nav-link pb-1 text-sm font-bold transition-colors uppercase tracking-wide inline-flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@
       </div>
 
       <!-- Header Actions -->
-      <div class="flex items-center gap-3 flex-none">
+      <div class="flex items-center gap-2 sm:gap-3 flex-none">
         <!-- Dark/Light Mode Toggle -->
         <button (click)="toggleDarkMode()" 
           class="theme-toggle-btn p-2.5 rounded-full transition-all"
@@ -209,12 +209,12 @@
   </header>
 
   <!-- Main Dashboard Content - NEW TWO-COLUMN LAYOUT -->
-  <div class="flex-1 overflow-y-auto relative z-30">
-    <div class="dashboard-container p-4 md:p-6 md:pr-3 lg:pr-4 h-full">
+  <div class="flex-1 overflow-y-auto overflow-x-hidden relative z-30">
+    <div class="dashboard-container px-2 sm:px-4 md:p-6 md:pr-3 lg:pr-4 py-2 sm:py-4 h-full">
       @if (goal()) {
       
       <!-- Two Column Layout: AI (Left) + Mission Info (Right) -->
-      <div class="dashboard-grid gap-5 md:gap-6" style="min-height: calc(100vh - 140px);">
+      <div class="dashboard-grid gap-3 sm:gap-5 md:gap-6" style="min-height: calc(100vh - 140px);">
         
         <!-- LEFT COLUMN: AI Co-Pilot (for owner) or Launch Your Goal (for fans) -->
         <div class="right-column flex flex-col">
@@ -301,7 +301,7 @@
         </div>
 
         <!-- RIGHT COLUMN: Mission Info -->
-        <div class="left-column flex flex-col gap-5 md:gap-6 overflow-y-auto pb-4">
+        <div class="left-column flex flex-col gap-3 sm:gap-5 md:gap-6 overflow-y-auto overflow-x-hidden pb-4">
           
           <!-- ==================== REDESIGNED MISSION HERO SECTION ==================== -->
           <div class="mission-hero-section grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
