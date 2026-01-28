@@ -231,14 +231,14 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   /**
-   * Check if we're on a goal view page (URL contains /goal/)
+   * Check if we're on a rocket goal view page (URL contains /rocketgoal/)
    * This prevents auto-selecting global sessions when the component will load goal-specific ones
    */
   private isOnGoalViewPage(): boolean {
     if (!isPlatformBrowser(this.platformId)) {
       return false;
     }
-    return window.location.pathname.includes('/goal/');
+    return window.location.pathname.includes('/rocketgoal/');
   }
 
   private resetClientState(): void {
@@ -427,7 +427,12 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
 
     // If we're already viewing this goal's conversation, don't reload
-    if (this.currentGoalId === goalId && this.currentSessionId()) {
+    const currentSessionId = this.currentSessionId();
+    const currentSession = currentSessionId
+      ? this.sessions().find(s => s.id === currentSessionId)
+      : null;
+    const isCurrentSessionForGoal = !!currentSession && currentSession.goalId === goalId;
+    if (this.currentGoalId === goalId && currentSessionId && isCurrentSessionForGoal) {
       return;
     }
 
