@@ -2848,16 +2848,31 @@
     </div>
     </div>
 
-    <div class="checkin-section-card">
+    <div class="checkin-section-card checkin-coach-card">
       <div class="checkin-section-header">
-        <p class="checkin-section-title">Ignition Output</p>
-        <p class="checkin-section-subtitle">A quick cue to start strong.</p>
+        <p class="checkin-section-title">{{ getCoachName() }}'s Game Plan</p>
+        <p class="checkin-section-subtitle">Personalized guidance based on your input.</p>
       </div>
-      <div class="checkin-output">
-      <p class="checkin-output-title">AI ignition cue</p>
-      <p class="checkin-output-text">{{ getIgnitionCue() }}</p>
-      <p class="checkin-output-text">{{ getIgnitionTimeBlock() }}</p>
-    </div>
+      <div class="checkin-coach-output">
+        <div class="checkin-coach-output-header">
+          <div class="checkin-coach-avatar-wrapper small">
+            @if (getCoachAvatar()) {
+              <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
+            } @else {
+              <div class="checkin-coach-avatar-placeholder small">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            }
+            <span class="checkin-coach-pulse small"></span>
+          </div>
+          <span class="checkin-coach-output-label">{{ getCoachName() }}</span>
+        </div>
+        <p class="checkin-coach-output-text">{{ getIgnitionCue() }}</p>
+        <p class="checkin-coach-output-tip">{{ getIgnitionTimeBlock() }}</p>
+      </div>
     </div>
 
     <div class="checkin-section-card journey-photo-section">

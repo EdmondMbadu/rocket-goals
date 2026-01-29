@@ -2197,16 +2197,68 @@ ${url}`;
 
   getIgnitionCue(): string {
     const confidence = this.ignitionConfidence();
-    if (confidence === 'high') return 'Lock it in. One move today builds momentum.';
-    if (confidence === 'low') return 'Start small, stay steady. Momentum beats perfection.';
-    return 'Focus on one move today. Progress compounds fast.';
+    const timeOfDay = this.ignitionTimeOfDay();
+    const choice = this.ignitionOneThingChoice();
+    const oneThing = choice === 'suggested'
+      ? this.getSuggestedOneThing()
+      : (choice === 'other' ? this.ignitionOneThingText() : null);
+    const goalTitle = this.goal()?.primaryGoal || this.goal()?.answers?.['goal_title_label'] || 'your goal';
+    const completionPct = this.getCompletionPercentage();
+
+    // Build a dynamic, contextual message
+    let cue = '';
+
+    // Opening based on confidence
+    if (confidence === 'high') {
+      cue = `You're feeling confident — that's powerful. `;
+    } else if (confidence === 'low') {
+      cue = `Low confidence? That's honest, and honesty is the first step. `;
+    } else {
+      cue = `Solid energy today. `;
+    }
+
+    // Add context about the ONE Thing
+    if (oneThing && choice !== 'unsure') {
+      cue += `Your ONE Thing: "${oneThing}". `;
+    } else if (choice === 'unsure') {
+      cue += `Not sure what to focus on? Pick the smallest action that moves you toward "${goalTitle}". `;
+    }
+
+    // Add progress context
+    if (completionPct > 0 && completionPct < 100) {
+      cue += `You're ${completionPct}% through your mission. `;
+    }
+
+    // Time-based tactical advice
+    if (timeOfDay === 'morning') {
+      cue += `Block 60-90 minutes this morning before distractions pile up.`;
+    } else if (timeOfDay === 'afternoon') {
+      cue += `Claim a focused afternoon window — energy dips are normal, push through.`;
+    } else {
+      cue += `Evening work requires discipline. Protect a quiet block and minimize screens after.`;
+    }
+
+    return cue;
   }
 
   getIgnitionTimeBlock(): string {
     const timeOfDay = this.ignitionTimeOfDay();
-    if (timeOfDay === 'morning') return 'Time-block: 1 focused sprint before noon.';
-    if (timeOfDay === 'evening') return 'Time-block: protect a quiet evening block.';
-    return 'Time-block: claim a focused afternoon window.';
+    const confidence = this.ignitionConfidence();
+
+    // More specific tactical advice based on time + confidence
+    if (timeOfDay === 'morning') {
+      if (confidence === 'high') return '💡 Pro tip: Start immediately. High confidence fades if you wait.';
+      if (confidence === 'low') return '💡 Pro tip: Just start for 5 minutes. Momentum builds confidence.';
+      return '💡 Pro tip: Do the hardest part first while your willpower is fresh.';
+    } else if (timeOfDay === 'afternoon') {
+      if (confidence === 'high') return '💡 Pro tip: Ride the wave — knock out the core work before 4pm.';
+      if (confidence === 'low') return '💡 Pro tip: Take a short walk, then attack one small piece.';
+      return '💡 Pro tip: Avoid meetings if possible. Guard your focus time.';
+    } else {
+      if (confidence === 'high') return '💡 Pro tip: Set a hard stop time so you rest well for tomorrow.';
+      if (confidence === 'low') return '💡 Pro tip: Even 20 minutes of progress counts. Don\'t aim for perfect.';
+      return '💡 Pro tip: Prep your environment — quiet space, phone away, clear desk.';
+    }
   }
 
   // Coach helper methods
