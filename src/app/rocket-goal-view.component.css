@@ -10916,13 +10916,22 @@
   gap: 0.6rem;
 }
 
+.checkin-coach-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkin-coach-avatar-wrapper.small {
+  width: 36px;
+  height: 36px;
+}
+
 .checkin-coach-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(6, 182, 212, 0.5);
-  flex-shrink: 0;
 }
 
 .checkin-coach-avatar.small {
@@ -10939,13 +10948,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   color: rgba(255, 255, 255, 0.8);
 }
 
 .checkin-coach-avatar-placeholder.small {
   width: 36px;
   height: 36px;
+}
+
+/* Green live indicator pulse */
+.checkin-coach-pulse {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  animation: coach-pulse-glow 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+.checkin-coach-pulse.small {
+  width: 10px;
+  height: 10px;
+  border-width: 2px;
+}
+
+@keyframes coach-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 8px 3px rgba(34, 197, 94, 0.4);
+  }
+}
+
+.light-mode .checkin-coach-pulse {
+  border-color: #ffffff;
 }
 
 .checkin-coach-message {
@@ -11094,6 +11135,40 @@
 
 .light-mode .checkin-context-value {
   color: #1e293b;
+}
+
+/* Modal error message */
+.checkin-modal-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  animation: error-shake 0.4s ease-in-out;
+}
+
+.checkin-modal-error svg {
+  flex-shrink: 0;
+  color: #ef4444;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.light-mode .checkin-modal-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
 }
 
 @media (max-width: 480px) {

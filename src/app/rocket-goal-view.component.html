@@ -2701,16 +2701,19 @@
       <!-- Coach Section -->
       <div class="checkin-coach-section">
         <div class="checkin-coach-bubble">
-          @if (getCoachAvatar()) {
-            <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar" />
-          } @else {
-            <div class="checkin-coach-avatar-placeholder">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </div>
-          }
+          <div class="checkin-coach-avatar-wrapper">
+            @if (getCoachAvatar()) {
+              <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar" />
+            } @else {
+              <div class="checkin-coach-avatar-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            }
+            <span class="checkin-coach-pulse"></span>
+          </div>
           <div class="checkin-coach-message">
             <p class="checkin-coach-name">{{ getCoachName() }}</p>
             <p class="checkin-coach-question">
@@ -2892,6 +2895,17 @@
       </div>
     </div>
 
+    @if (checkinModalError()) {
+      <div class="checkin-modal-error">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {{ checkinModalError() }}
+      </div>
+    }
+
     <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition() || uploadingJourneyPhoto()">
       @if (savingIgnition() || uploadingJourneyPhoto()) { Saving... } @else { 🔥 IGNITE DAY }
     </button>
@@ -3044,16 +3058,19 @@
     <!-- Coach Evening Engagement -->
     <div class="checkin-section-card checkin-coach-card">
       <div class="checkin-coach-bubble compact">
-        @if (getCoachAvatar()) {
-          <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
-        } @else {
-          <div class="checkin-coach-avatar-placeholder small">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-        }
+        <div class="checkin-coach-avatar-wrapper small">
+          @if (getCoachAvatar()) {
+            <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
+          } @else {
+            <div class="checkin-coach-avatar-placeholder small">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          }
+          <span class="checkin-coach-pulse small"></span>
+        </div>
         <div class="checkin-coach-message">
           <p class="checkin-coach-name small">{{ getCoachName() }}</p>
           <p class="checkin-coach-question small">{{ getMissionCoachQuestion() }}</p>
@@ -3106,6 +3123,17 @@
         }
       </div>
     </div>
+
+    @if (checkinModalError()) {
+      <div class="checkin-modal-error">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {{ checkinModalError() }}
+      </div>
+    }
 
     <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog() || uploadingJourneyPhoto()">
       @if (savingMissionLog() || uploadingJourneyPhoto()) { Saving... } @else { SUBMIT MISSION LOG }

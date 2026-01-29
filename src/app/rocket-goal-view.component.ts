@@ -221,6 +221,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   ignitionCoachResponse = signal('');
   missionCoachResponse = signal('');
   showMissionCoachFollowUp = signal(false);
+  checkinModalError = signal<string | null>(null);
 
   // Journey photo state
   journeyPhotoFile = signal<File | null>(null);
@@ -2110,9 +2111,10 @@ ${url}`;
       return;
     }
     this.checkinModalType.set(type);
-    // Reset coach response signals
+    // Reset coach response signals and error
     this.ignitionCoachResponse.set('');
     this.missionCoachResponse.set('');
+    this.checkinModalError.set(null);
     this.showCheckinModal.set(true);
   }
 
@@ -2453,11 +2455,12 @@ ${url}`;
     }
 
     if (choice === 'other' && !oneThingText) {
-      this.checkinsError.set('Enter your ONE Thing or choose the suggested option.');
+      this.checkinModalError.set('Please enter your ONE Thing or choose the suggested option.');
       return;
     }
 
     this.savingIgnition.set(true);
+    this.checkinModalError.set(null);
     this.checkinsError.set(null);
     this.checkinsNotice.set(null);
     try {
@@ -2477,9 +2480,17 @@ ${url}`;
         this.closeCheckinModal();
       }
       this.scrollToCheckinsSection();
+      // Add coach Q&A to chat history if user responded
+      const coachResponse = this.ignitionCoachResponse().trim();
+      if (coachResponse) {
+        const coachQuestion = this.getIgnitionCoachQuestion();
+        this.rocketGoalsAIService.addAIMessage(`**Morning Check-in**\n\n${coachQuestion}`);
+        this.rocketGoalsAIService.addLocalUserMessage(coachResponse);
+        this.rocketGoalsAIService.addAIMessage(`Thanks for sharing! Let's make today count. 🚀`);
+      }
     } catch (error: any) {
       console.error('Error saving daily ignition:', error);
-      this.checkinsError.set(error?.message || 'Failed to save Daily Ignition.');
+      this.checkinModalError.set(error?.message || 'Failed to save Daily Ignition.');
     } finally {
       this.savingIgnition.set(false);
     }
@@ -2493,11 +2504,12 @@ ${url}`;
     }
     const intendedOneThing = this.missionIntendedOneThing().trim();
     if (this.shouldAskIntendedOneThing() && !intendedOneThing) {
-      this.checkinsError.set('Add the ONE Thing you intended to complete today.');
+      this.checkinModalError.set('Please add the ONE Thing you intended to complete today.');
       return;
     }
 
     this.savingMissionLog.set(true);
+    this.checkinModalError.set(null);
     this.checkinsError.set(null);
     this.checkinsNotice.set(null);
     const coaching = this.buildMissionLogCoaching();
@@ -2517,6 +2529,16 @@ ${url}`;
         await this.uploadJourneyPhoto('mission_log');
       }
       this.missionCoaching.set(coaching);
+
+      // Add coach Q&A to chat history if user responded
+      const coachResponse = this.missionCoachResponse().trim();
+      if (coachResponse) {
+        const coachQuestion = this.getMissionCoachQuestion();
+        this.rocketGoalsAIService.addAIMessage(`**Evening Check-in**\n\n${coachQuestion}`);
+        this.rocketGoalsAIService.addLocalUserMessage(coachResponse);
+        this.rocketGoalsAIService.addAIMessage(this.getMissionCoachFollowUp());
+      }
+
       await this.loadCheckIns(goal.id);
       this.checkinsNotice.set('Mission Log submitted.');
       if (this.showCheckinModal()) {
@@ -2525,7 +2547,7 @@ ${url}`;
       this.scrollToCheckinsSection();
     } catch (error: any) {
       console.error('Error saving mission log:', error);
-      this.checkinsError.set(error?.message || 'Failed to submit Mission Log.');
+      this.checkinModalError.set(error?.message || 'Failed to submit Mission Log.');
     } finally {
       this.savingMissionLog.set(false);
     }
