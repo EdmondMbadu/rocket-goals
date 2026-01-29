@@ -794,6 +794,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       if (currentGoal?.id) {
         await this.loadCalendarEvents(currentGoal.id);
         await this.loadActionItems(currentGoal.id);
+        // Sync milestone colors after both are loaded
+        this.syncMilestoneCalendarColors();
         await this.loadCheckIns(currentGoal.id);
         this.handleLandingMilestonesFlow();
         await this.loadFans(currentGoal.id);
@@ -1973,6 +1975,43 @@ ${url}`;
     }
   }
 
+  // Sync milestone completion status with calendar event colors
+  private syncMilestoneCalendarColors() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const milestones = this.actionItems();
+    const calendarEvents = this.calendarEvents();
+
+    // Update local calendar event colors to match milestone completion status
+    const updatedEvents = calendarEvents.map(event => {
+      // Check if this is a milestone event
+      if (event.title.startsWith('🎯')) {
+        const milestoneTitle = event.title.replace('🎯 ', '');
+        const matchingMilestone = milestones.find(m =>
+          m.title === milestoneTitle || event.title.includes(m.title)
+        );
+
+        if (matchingMilestone) {
+          const correctColor = matchingMilestone.completed ? '#22c55e' : '#ef4444';
+          // Only update if color is different
+          if (event.color !== correctColor) {
+            // Update in Firestore (fire and forget)
+            this.calendarEventsService.updateEvent(goal.id, event.id, {
+              color: correctColor,
+              completed: matchingMilestone.completed
+            }).catch(err => console.error('Error syncing calendar event color:', err));
+
+            return { ...event, color: correctColor, completed: matchingMilestone.completed };
+          }
+        }
+      }
+      return event;
+    });
+
+    this.calendarEvents.set(updatedEvents);
+  }
+
   async loadCheckIns(goalId: string) {
     this.checkinsLoading.set(true);
     this.checkinsError.set(null);
@@ -2882,11 +2921,22 @@ ${url}`;
     const goal = this.goal();
     if (!goal?.id) return;
 
-    const eventTitle = `🎯 ${milestoneTitle}`;
-    const matchingEvent = this.calendarEvents().find(e => e.title === eventTitle);
-    if (!matchingEvent) return;
+    // Try to find the calendar event - check both with and without emoji prefix
+    const eventTitleWithEmoji = `🎯 ${milestoneTitle}`;
+    let matchingEvent = this.calendarEvents().find(e =>
+      e.title === eventTitleWithEmoji ||
+      e.title === milestoneTitle ||
+      e.title.includes(milestoneTitle)
+    );
+
+    if (!matchingEvent) {
+      console.log('No matching calendar event found for milestone:', milestoneTitle);
+      console.log('Available calendar events:', this.calendarEvents().map(e => e.title));
+      return;
+    }
 
     const milestoneColor = completed ? '#22c55e' : '#ef4444';
+    console.log('Updating calendar event color:', matchingEvent.title, 'to', milestoneColor);
 
     // Update in Firestore
     this.calendarEventsService.updateEvent(goal.id, matchingEvent.id, {
@@ -2898,7 +2948,7 @@ ${url}`;
 
     // Update local state
     this.calendarEvents.update(events =>
-      events.map(e => e.id === matchingEvent.id ? { ...e, color: milestoneColor, completed } : e)
+      events.map(e => e.id === matchingEvent!.id ? { ...e, color: milestoneColor, completed } : e)
     );
   }
 
@@ -4138,6 +4188,9 @@ Generate the milestones now (JSON array only, no other text):`;
         await this.updateDashboardMetric(data.metricType, data.metricValue);
       }
 
+      // Update calendar event color to green
+      this.updateCalendarEventColorForMilestone(item.title, true);
+
       this.triggerCelebration();
       this.closeMilestoneCompleteModal();
     } catch (error) {
@@ -4158,6 +4211,10 @@ Generate the milestones now (JSON array only, no other text):`;
       this.actionItems.update(items =>
         items.map(i => i.id === item.id ? { ...i, completed: true } : i)
       );
+
+      // Update calendar event color to green
+      this.updateCalendarEventColorForMilestone(item.title, true);
+
       this.triggerCelebration();
       this.closeMilestoneCompleteModal();
     } catch (error) {
