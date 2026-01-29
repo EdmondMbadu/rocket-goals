@@ -541,7 +541,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   // Get the target metric display for app-suite goals (e.g., "Target Weight: 180 lbs")
-  getTargetMetricDisplay(): { label: string; value: string; unit: string } | null {
+  getTargetMetricDisplay(): { label: string; value: string; formattedValue: string; unit: string } | null {
     const goal = this.goal();
     if (!goal) return null;
 
@@ -551,7 +551,14 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
     if (!metric || !label) return null;
 
-    return { label, value: metric, unit };
+    // Format the value - add commas for numbers
+    let formattedValue = metric;
+    const numericValue = parseFloat(metric.toString().replace(/[^0-9.-]/g, ''));
+    if (!isNaN(numericValue)) {
+      formattedValue = numericValue.toLocaleString('en-US');
+    }
+
+    return { label, value: metric, formattedValue, unit };
   }
 
   // Get formatted date for timeline display
