@@ -540,6 +540,20 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return goal.answers?.['motivation'] || goal.answers?.['future_result'] || goal.answers?.['daily_effort'] || '';
   }
 
+  // Get the target metric display for app-suite goals (e.g., "Target Weight: 180 lbs")
+  getTargetMetricDisplay(): { label: string; value: string; unit: string } | null {
+    const goal = this.goal();
+    if (!goal) return null;
+
+    const metric = goal.answers?.['onboarding_one_thing_metric'];
+    const label = goal.answers?.['onboarding_one_thing_label'];
+    const unit = goal.answers?.['onboarding_one_thing_unit'] || '';
+
+    if (!metric || !label) return null;
+
+    return { label, value: metric, unit };
+  }
+
   // Get formatted date for timeline display
   getTimelineDateDisplay(date: Date): { month: string; day: number; weekday: string } {
     return {
