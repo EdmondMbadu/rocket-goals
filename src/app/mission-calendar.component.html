@@ -21,7 +21,7 @@
     <!-- View Toggle -->
     <div class="view-toggle">
       @for (view of views; track view.id) {
-        <button 
+        <button
           (click)="setView(view.id)"
           [class.active]="currentView() === view.id"
           class="view-btn">
@@ -46,147 +46,70 @@
     </button>
   </div>
 
-  <!-- Calendar Body -->
-  <div class="calendar-body">
-    
-    <!-- DAY VIEW -->
-    @if (currentView() === 'day') {
-      <div class="day-view">
-        <div class="day-header">
-          <div class="day-date-display">
-            <span class="day-number">{{ currentDate().getDate() }}</span>
-            <div class="day-info">
-              <span class="day-name">{{ weekDays[currentDate().getDay()] }}</span>
-              <span class="month-name">{{ months[currentDate().getMonth()] }}</span>
+  <!-- Calendar Feed Body -->
+  <div class="calendar-feed">
+    @for (day of feedDays(); track trackByDay($index, day)) {
+      <!-- Month Separator (for year view) -->
+      @if (day.isFirstOfMonth && currentView() === 'year') {
+        <div class="month-separator">
+          <span class="month-separator-text">{{ day.monthName }} {{ day.year }}</span>
+        </div>
+      }
+
+      <!-- Day Card -->
+      <div class="day-card"
+           [class.is-today]="day.isToday"
+           [class.is-past]="day.isPast"
+           [class.has-events]="day.events.length > 0"
+           (click)="selectDate(day.date)">
+
+        <!-- Day Header -->
+        <div class="day-card-header">
+          <div class="day-card-date">
+            <span class="day-card-number">{{ day.dayNumber }}</span>
+            <div class="day-card-info">
+              <span class="day-card-weekday">{{ day.dayOfWeek }}</span>
+              @if (currentView() !== 'year') {
+                <span class="day-card-month">{{ day.monthName }}</span>
+              }
             </div>
           </div>
-        </div>
-        
-        <div class="hours-grid">
-          @for (hour of hours; track trackByHour($index, hour)) {
-            <div class="hour-row">
-              <div class="hour-label">{{ formatHour(hour) }}</div>
-              <div class="hour-slot" (click)="onCreateEventClick(createDateWithHour(currentDate(), hour), $event)">
-                @for (event of getEventsForHour(currentDate(), hour); track event.id) {
-                  <div class="event-chip" 
-                       [style.background]="getEventBarBackground(event.color)"
-                       [style.border-left-color]="getEventBarBorderColor(event.color)"
-                       (click)="onEventClick(event, $event)">
-                    {{ event.title }}
-                  </div>
-                }
-              </div>
-            </div>
+          @if (getRelativeDayLabel(day)) {
+            <span class="day-card-relative" [class.today-badge]="day.isToday">
+              {{ getRelativeDayLabel(day) }}
+            </span>
           }
+          <button class="day-card-add" (click)="onCreateEventClick(day.date, $event)" title="Add event">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
-      </div>
-    }
 
-    <!-- WEEK VIEW -->
-    @if (currentView() === 'week') {
-      <div class="week-view">
-        <div class="week-header">
-          @for (day of weekDaysData(); track trackByDate($index, day)) {
-            <div class="week-day-header" 
-                 [class.today]="day.isToday"
-                 [class.selected]="day.isSelected"
-                 (click)="selectDate(day.date)">
-              <span class="week-day-name">{{ weekDays[day.date.getDay()] }}</span>
-              <span class="week-day-number" [class.today-number]="day.isToday">
-                {{ day.date.getDate() }}
-              </span>
+        <!-- Events List -->
+        <div class="day-card-events">
+          @if (day.events.length === 0) {
+            <div class="no-events">
+              <span class="no-events-text">No events scheduled</span>
             </div>
-          }
-        </div>
-        
-        <div class="week-grid">
-          @for (hour of hours; track trackByHour($index, hour)) {
-            <div class="week-hour-row">
-              <div class="hour-label">{{ formatHour(hour) }}</div>
-              <div class="week-slots">
-                @for (day of weekDaysData(); track trackByDate($index, day)) {
-                  <div class="week-slot" 
-                       [class.today]="day.isToday"
-                       (click)="onCreateEventClick(createDateWithHour(day.date, hour), $event)">
-                    @for (event of getEventsForHour(day.date, hour); track event.id) {
-                      <div class="event-chip-sm" 
-                           [style.background]="getEventBarBackground(event.color)"
-                           [style.border-left-color]="getEventBarBorderColor(event.color)"
-                           (click)="onEventClick(event, $event)">
-                        {{ event.title }}
-                      </div>
-                    }
-                  </div>
+          } @else {
+            @for (event of day.events; track trackByEvent($index, event)) {
+              <div class="event-item"
+                   [style.background]="getEventBarBackground(event.color)"
+                   [style.border-left-color]="getEventBarBorderColor(event.color)"
+                   [class.completed]="event.completed"
+                   (click)="onEventClick(event, $event)">
+                <div class="event-item-content">
+                  <span class="event-item-title">{{ event.title }}</span>
+                  @if (event.time || event.date) {
+                    <span class="event-item-time">{{ formatEventTime(event) }}</span>
+                  }
+                </div>
+                @if (event.completed) {
+                  <span class="event-item-check">✓</span>
                 }
               </div>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- MONTH VIEW -->
-    @if (currentView() === 'month') {
-      <div class="month-view">
-        <div class="weekday-headers">
-          @for (day of weekDays; track $index) {
-            <div class="weekday-header">{{ day }}</div>
-          }
-        </div>
-        
-        <div class="days-grid">
-          @for (day of calendarDays(); track trackByDate($index, day)) {
-            <div class="day-cell"
-                 [class.other-month]="!day.isCurrentMonth"
-                 [class.today]="day.isToday"
-                 [class.selected]="day.isSelected"
-                 (click)="selectDate(day.date)">
-              <span class="day-cell-number" [class.today-highlight]="day.isToday">
-                {{ day.date.getDate() }}
-              </span>
-              <div class="day-events">
-                @for (event of getEventsForDate(day.date).slice(0, 3); track event.id) {
-                  <div class="event-bar" 
-                       [style.background]="getEventBarBackground(event.color)"
-                       [style.border-left-color]="getEventBarBorderColor(event.color)"
-                       (click)="onEventClick(event, $event)"
-                       [title]="event.title">
-                    <span class="event-bar-text">{{ event.title }}</span>
-                  </div>
-                }
-                @if (getEventsForDate(day.date).length > 3) {
-                  <div class="more-events-bar" 
-                       (click)="selectDate(day.date)"
-                       [title]="getEventsForDate(day.date).length + ' events'">
-                    +{{ getEventsForDate(day.date).length - 3 }} more
-                  </div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- YEAR VIEW -->
-    @if (currentView() === 'year') {
-      <div class="year-view">
-        <div class="months-grid">
-          @for (month of yearMonths(); track trackByMonth($index, month)) {
-            <div class="month-cell"
-                 [class.current-month]="month.isCurrentMonth"
-                 (click)="selectMonth(month.index)">
-              <span class="month-cell-name">{{ month.name }}</span>
-              <div class="month-mini-grid">
-                @for (week of [0,1,2,3,4]; track week) {
-                  <div class="mini-week">
-                    @for (day of [0,1,2,3,4,5,6]; track day) {
-                      <div class="mini-day"></div>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
+            }
           }
         </div>
       </div>
@@ -202,4 +125,3 @@
     <div class="timezone">{{ getTimezoneString() }}</div>
   </div>
 </div>
-
