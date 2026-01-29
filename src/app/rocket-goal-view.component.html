@@ -2698,28 +2698,49 @@
       </button>
     </div>
     <div class="checkin-modal-body">
-      <div class="checkin-section-card">
-        <div class="checkin-section-header">
-          <p class="checkin-section-title">Goal Snapshot</p>
-          <p class="checkin-section-subtitle">Quick context before you check in.</p>
+      <!-- Coach Section -->
+      <div class="checkin-coach-section">
+        <div class="checkin-coach-bubble">
+          @if (getCoachAvatar()) {
+            <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar" />
+          } @else {
+            <div class="checkin-coach-avatar-placeholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          }
+          <div class="checkin-coach-message">
+            <p class="checkin-coach-name">{{ getCoachName() }}</p>
+            <p class="checkin-coach-question">
+              @if (checkinModalType() === 'ignition') {
+                {{ getIgnitionCoachQuestion() }}
+              } @else {
+                {{ getMissionCoachQuestion() }}
+              }
+            </p>
+          </div>
         </div>
-        <div class="checkin-snapshot">
-        <div>
-          <p class="checkin-label">🎯 Your Current Goal</p>
-          <p class="checkin-value">{{ goal()?.primaryGoal || goal()?.answers?.['goal_title_label'] || 'Your Rocket Goal' }}</p>
+        @if (checkinModalType() === 'ignition') {
+          <textarea
+            class="checkin-coach-response"
+            rows="2"
+            placeholder="Share your thoughts with {{ getCoachName() }}..."
+            [value]="ignitionCoachResponse()"
+            (input)="ignitionCoachResponse.set($any($event.target).value)"></textarea>
+        }
+      </div>
+
+      <!-- Compact Goal Context -->
+      <div class="checkin-context-row">
+        <div class="checkin-context-item">
+          <span class="checkin-context-label">🎯 Goal</span>
+          <span class="checkin-context-value">{{ goal()?.primaryGoal || goal()?.answers?.['goal_title_label'] || 'Your Rocket Goal' }}</span>
         </div>
-        <div>
-          <p class="checkin-label">🧩 Active Milestone</p>
-          <p class="checkin-value">{{ getActiveMilestoneTitle() }}</p>
-        </div>
-        <div>
-          <p class="checkin-label">🛠️ Suggested ONE Thing</p>
-          <p class="checkin-value">{{ getSuggestedOneThing() }}</p>
-        </div>
-        <div>
-          <p class="checkin-label">🔄 Last Mission Log Summary</p>
-          <p class="checkin-value">{{ getLastMissionLogSummary() }}</p>
-        </div>
+        <div class="checkin-context-item">
+          <span class="checkin-context-label">🧩 Next Milestone</span>
+          <span class="checkin-context-value">{{ getActiveMilestoneTitle() }}</span>
         </div>
       </div>
 
@@ -3020,33 +3041,36 @@
       </div>
     </div>
 
-    <div class="checkin-section-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">Reflection</p>
-        <p class="checkin-section-subtitle">Capture quick insights to improve tomorrow.</p>
+    <!-- Coach Evening Engagement -->
+    <div class="checkin-section-card checkin-coach-card">
+      <div class="checkin-coach-bubble compact">
+        @if (getCoachAvatar()) {
+          <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
+        } @else {
+          <div class="checkin-coach-avatar-placeholder small">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+        }
+        <div class="checkin-coach-message">
+          <p class="checkin-coach-name small">{{ getCoachName() }}</p>
+          <p class="checkin-coach-question small">{{ getMissionCoachQuestion() }}</p>
+        </div>
       </div>
-      <div class="checkin-field">
-        <p class="checkin-question">Quick note (optional)</p>
-        <textarea class="checkin-textarea" rows="3"
-          placeholder="Drop a quick note or reflection..."
-          [value]="missionNote()"
-          (input)="missionNote.set($any($event.target).value)"></textarea>
-      </div>
+      <textarea
+        class="checkin-coach-response"
+        rows="2"
+        placeholder="Share your thoughts..."
+        [value]="missionCoachResponse()"
+        (input)="missionCoachResponse.set($any($event.target).value)"></textarea>
+      @if (missionCoachResponse().trim()) {
+        <div class="checkin-coach-followup">
+          <p class="checkin-coach-followup-text">{{ getMissionCoachFollowUp() }}</p>
+        </div>
+      }
     </div>
-
-    @if (missionCoaching()) {
-    <div class="checkin-section-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">AI Coaching Output</p>
-        <p class="checkin-section-subtitle">Clear next steps and motivation.</p>
-      </div>
-      <div class="checkin-output">
-        <p class="checkin-output-text"><strong>Re-instruction:</strong> {{ missionCoaching()!.reinstruction }}</p>
-        <p class="checkin-output-text"><strong>Demonstration:</strong> {{ missionCoaching()!.demonstration }}</p>
-        <p class="checkin-output-text"><strong>Hustle:</strong> {{ missionCoaching()!.hustle }}</p>
-      </div>
-    </div>
-    }
 
     <div class="checkin-section-card journey-photo-section">
       <div class="checkin-section-header">

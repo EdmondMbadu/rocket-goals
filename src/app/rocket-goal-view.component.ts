@@ -217,6 +217,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   missionCoaching = signal<MissionLogCoaching | null>(null);
   savingMissionLog = signal(false);
 
+  // Coach interaction signals
+  ignitionCoachResponse = signal('');
+  missionCoachResponse = signal('');
+  showMissionCoachFollowUp = signal(false);
+
   // Journey photo state
   journeyPhotoFile = signal<File | null>(null);
   journeyPhotoPreview = signal<string | null>(null);
@@ -2105,6 +2110,9 @@ ${url}`;
       return;
     }
     this.checkinModalType.set(type);
+    // Reset coach response signals
+    this.ignitionCoachResponse.set('');
+    this.missionCoachResponse.set('');
     this.showCheckinModal.set(true);
   }
 
@@ -2197,6 +2205,69 @@ ${url}`;
     if (timeOfDay === 'morning') return 'Time-block: 1 focused sprint before noon.';
     if (timeOfDay === 'evening') return 'Time-block: protect a quiet evening block.';
     return 'Time-block: claim a focused afternoon window.';
+  }
+
+  // Coach helper methods
+  getCoachName(): string {
+    return this.goal()?.copilot?.name || 'Your Coach';
+  }
+
+  getCoachAvatar(): string | null {
+    return this.goal()?.copilot?.avatar || null;
+  }
+
+  getIgnitionCoachQuestion(): string {
+    const goal = this.goal();
+    const goalTitle = goal?.primaryGoal || goal?.answers?.['goal_title_label'] || 'your goal';
+    const activeMilestone = this.getActiveMilestoneTitle();
+    const completionPct = this.getCompletionPercentage();
+
+    // Generate contextual morning question based on progress
+    if (completionPct === 0) {
+      return `Good morning! Ready to kick off your journey toward "${goalTitle}"? Your first milestone is "${activeMilestone}" — what's one small action you can take today to build momentum?`;
+    } else if (completionPct < 30) {
+      return `Morning! You're ${completionPct}% into your mission. Today's focus: "${activeMilestone}". What's the ONE thing that would move you forward the most?`;
+    } else if (completionPct < 70) {
+      return `You're making solid progress at ${completionPct}%! Looking at "${activeMilestone}" — are you feeling confident about tackling it today?`;
+    } else {
+      return `Amazing — ${completionPct}% complete! You're in the home stretch. For "${activeMilestone}", what would finishing strong look like today?`;
+    }
+  }
+
+  getMissionCoachQuestion(): string {
+    const actionTaken = this.missionActionTaken();
+    const feeling = this.missionFeeling();
+    const focusLevel = this.missionFocusLevel();
+
+    // Generate contextual evening question based on responses
+    if (actionTaken === 'no') {
+      if (feeling === 'frustrated') {
+        return `I see today was tough. No judgment — everyone has off days. What got in the way? Understanding that helps us plan better for tomorrow.`;
+      }
+      return `Looks like today didn't go as planned. That's okay — what was the biggest blocker? Let's figure out how to clear it.`;
+    } else if (actionTaken === 'barely') {
+      if (focusLevel === 'distracted') {
+        return `You showed up, and that counts. Distractions happen. What pulled your focus today, and how might we guard against it tomorrow?`;
+      }
+      return `Some progress is still progress. What would have helped you push a bit further today?`;
+    } else {
+      if (feeling === 'positive') {
+        return `Great work today! What clicked for you? Knowing what works helps us repeat it.`;
+      }
+      return `You got it done — nice. Anything you'd do differently, or are you feeling good about the approach?`;
+    }
+  }
+
+  getMissionCoachFollowUp(): string {
+    const actionTaken = this.missionActionTaken();
+    const coachResponse = this.missionCoachResponse();
+
+    if (!coachResponse.trim()) return '';
+
+    if (actionTaken === 'no' || actionTaken === 'barely') {
+      return `Thanks for sharing. Tomorrow is a fresh start. Let's make sure your ONE Thing is crystal clear and achievable. Rest up!`;
+    }
+    return `Love the reflection. Keep building on that momentum. See you tomorrow morning!`;
   }
 
   private getDateKey(date: Date): string {
