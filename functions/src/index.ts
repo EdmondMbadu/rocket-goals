@@ -14,6 +14,17 @@ import * as crypto from "crypto";
 // Re-export HeyGen functions
 export { initiateHeyGenVideo, checkHeyGenVideoStatus, listHeyGenAvatars } from "./heygen.functions";
 
+// Re-export Telegram/Messaging functions
+export {
+  telegramWebhook,
+  linkTelegramAccount,
+  unlinkTelegramAccount,
+  getTelegramLinkStatus,
+  sendTelegramDailyCheckins,
+  sendTelegramMissionLogReminders,
+  sendTelegramGoalNudge
+} from "./messaging";
+
 // Initialize Firebase Admin
 admin.initializeApp();
 

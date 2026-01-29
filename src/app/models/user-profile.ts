@@ -5,6 +5,14 @@ export interface UserPreferences {
   defaultChatbot?: DirectLaunchTarget;
 }
 
+export interface MessagingPreferences {
+  telegramEnabled: boolean;
+  dailyCheckInEnabled: boolean;
+  checkInTime: string; // "08:00" format (24-hour)
+  missionLogReminderEnabled: boolean;
+  reminderTime: string; // "20:00" format (24-hour)
+}
+
 export interface UserProfile {
   id: string;
   userId: string;
@@ -32,4 +40,11 @@ export interface UserProfile {
   usedPromoCodes?: string[];
   promoSubscription?: boolean;
   phoneNumber?: string;
+
+  // Telegram integration
+  telegramId?: string;
+  telegramLinkedAt?: unknown;
+  telegramUsername?: string;
+  telegramChatId?: number;
+  messagingPreferences?: MessagingPreferences;
 }

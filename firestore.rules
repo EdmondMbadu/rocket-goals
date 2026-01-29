@@ -8,6 +8,16 @@ service cloud.firestore {
       allow create: if true;
     }
 
+    // Telegram integration collections - Cloud Functions only
+    match /telegramToUser/{telegramId} {
+      allow read, write: if false; // Only Cloud Functions can access
+    }
+
+    match /telegramLinkTokens/{token} {
+      allow read: if request.auth != null; // Allow authenticated users to read (for validation)
+      allow write: if false; // Only Cloud Functions can write
+    }
+
     // Allow all access for authenticated users, public read for unauthenticated
     match /{document=**} {
       allow read: if true;

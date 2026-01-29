@@ -343,6 +343,71 @@
 
     <div class="card glass">
       <div class="card-head">
+        <h3>Telegram</h3>
+        @if (telegramLinked()) {
+          <span class="pill success">Connected</span>
+        }
+      </div>
+      @if (telegramError()) {
+        <div class="alert error">{{ telegramError() }}</div>
+      }
+      <div class="settings">
+        @if (telegramLoading()) {
+          <div class="setting-row">
+            <span class="spinner small"></span>
+            <p class="muted tiny">Checking Telegram connection...</p>
+          </div>
+        } @else if (telegramLinked()) {
+          <div class="setting-row">
+            <div>
+              <p class="name">Connected as {{ telegramUsername() ? '@' + telegramUsername() : 'Telegram user' }}</p>
+              <p class="muted tiny">Chat with your AI coach in Telegram. Conversations sync with the web app.</p>
+            </div>
+            <button class="danger xs" (click)="unlinkTelegram()" [disabled]="telegramUnlinkLoading()">
+              {{ telegramUnlinkLoading() ? 'Disconnecting...' : 'Disconnect' }}
+            </button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="name">Morning check-in</p>
+              <p class="muted tiny">Daily reminder to set your ONE thing (e.g. 8:00 AM)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="dailyCheckIn" [checked]="dailyCheckInEnabled()" (change)="dailyCheckInEnabled.set($any($event.target).checked)" />
+              <label for="dailyCheckIn" class="muted tiny">Enabled</label>
+              <input type="time" [value]="checkInTimeDraft()" (input)="checkInTimeDraft.set($any($event.target).value)" class="time-input" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="name">Evening reminder</p>
+              <p class="muted tiny">Reminder to log your mission (e.g. 8:00 PM)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="missionReminder" [checked]="missionLogReminderEnabled()" (change)="missionLogReminderEnabled.set($any($event.target).checked)" />
+              <label for="missionReminder" class="muted tiny">Enabled</label>
+              <input type="time" [value]="reminderTimeDraft()" (input)="reminderTimeDraft.set($any($event.target).value)" class="time-input" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div></div>
+            <button class="solid xs" (click)="saveMessagingPreferences()" [disabled]="messagingPrefsSaving()">
+              {{ messagingPrefsSaving() ? 'Saving...' : 'Save preferences' }}
+            </button>
+          </div>
+        } @else {
+          <div class="setting-row">
+            <div>
+              <p class="name">Connect Telegram</p>
+              <p class="muted tiny">Chat with your RocketGoals AI coach in Telegram. Open Telegram, search for <strong>@RocketGoalsBot</strong> (or RocketGoals), send <strong>/start</strong>, then tap the link we send you to link this account.</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-head">
         <h3>Contact</h3>
       </div>
       <div class="settings">

@@ -441,6 +441,27 @@
   animation: spin 1s linear infinite;
 }
 
+.spinner.small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.pill.success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  font-weight: 600;
+}
+
+.time-input {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

@@ -54,6 +54,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
   phoneNumberDirty = signal(false);
   phoneSavedModalVisible = signal(false);
 
+  // Telegram
+  telegramLinked = signal(false);
+  telegramUsername = signal<string | null>(null);
+  telegramLoading = signal(false);
+  telegramError = signal<string | null>(null);
+  telegramUnlinkLoading = signal(false);
+  messagingPrefsSaving = signal(false);
+  dailyCheckInEnabled = signal(true);
+  checkInTimeDraft = signal('08:00');
+  missionLogReminderEnabled = signal(true);
+  reminderTimeDraft = signal('20:00');
+
   async ngOnInit() {
     // Wait a bit for auth to initialize
     let profile = this.authService.profile();
@@ -70,6 +82,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
     
     this.profile.set(profile);
     this.phoneNumberDraft.set(profile.phoneNumber || '');
+    this.telegramLinked.set(!!profile.telegramId);
+    this.telegramUsername.set(profile.telegramUsername ?? null);
+    const prefs = profile.messagingPreferences;
+    if (prefs) {
+      this.dailyCheckInEnabled.set(prefs.dailyCheckInEnabled ?? true);
+      this.checkInTimeDraft.set(prefs.checkInTime || '08:00');
+      this.missionLogReminderEnabled.set(prefs.missionLogReminderEnabled ?? true);
+      this.reminderTimeDraft.set(prefs.reminderTime || '20:00');
+    }
     
     // Set profile image - check both preview and profile
     const profileImageUrl = profile.profilePictureUrl;
@@ -88,6 +109,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     
     await this.initStorage();
     await this.loadGoals();
+    await this.loadTelegramStatus();
     
     // Watch for profile changes
     const checkProfile = () => {
@@ -109,9 +131,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (!this.rocketGoalPhotoFile && currentProfile.rocketGoalPhotoUrl && currentProfile.rocketGoalPhotoUrl !== this.rocketGoalPhotoPreview()) {
           this.rocketGoalPhotoPreview.set(currentProfile.rocketGoalPhotoUrl);
         }
+        // Sync Telegram and messaging prefs from profile when it updates
+        const prefs = currentProfile.messagingPreferences;
+        if (prefs) {
+          this.dailyCheckInEnabled.set(prefs.dailyCheckInEnabled ?? true);
+          this.checkInTimeDraft.set(prefs.checkInTime || '08:00');
+          this.missionLogReminderEnabled.set(prefs.missionLogReminderEnabled ?? true);
+          this.reminderTimeDraft.set(prefs.reminderTime || '20:00');
+        }
+        this.telegramLinked.set(!!currentProfile.telegramId);
+        this.telegramUsername.set(currentProfile.telegramUsername ?? null);
       }
     };
-    
+
     // Check periodically for profile updates
     setInterval(checkProfile, 2000);
   }
@@ -821,6 +853,94 @@ export class ProfileComponent implements OnInit, OnDestroy {
       setTimeout(() => this.subscriptionError.set(null), 5000);
     } finally {
       this.subscriptionLoading.set(false);
+    }
+  }
+
+  async loadTelegramStatus() {
+    const profile = this.profile();
+    if (!profile?.userId) return;
+
+    this.telegramLoading.set(true);
+    this.telegramError.set(null);
+    try {
+      const appModule = await import("firebase/app");
+      const functionsModule = await import("firebase/functions");
+      const { firebaseConfig } = await import("../../environments/environment");
+
+      const app =
+        appModule.getApps().length === 0
+          ? appModule.initializeApp(firebaseConfig)
+          : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, "us-central1");
+      const getTelegramLinkStatus = functionsModule.httpsCallable(functions, "getTelegramLinkStatus");
+      const result = await getTelegramLinkStatus({});
+      const data = result.data as { linked: boolean; telegramUsername?: string | null; linkedAt?: unknown };
+
+      this.telegramLinked.set(!!data?.linked);
+      this.telegramUsername.set(data?.telegramUsername ?? null);
+    } catch (err: unknown) {
+      console.error("Error loading Telegram status:", err);
+      this.telegramError.set("Could not load Telegram status.");
+    } finally {
+      this.telegramLoading.set(false);
+    }
+  }
+
+  async unlinkTelegram() {
+    if (!confirm("Disconnect Telegram? You can reconnect anytime by messaging the bot again.")) return;
+
+    this.telegramUnlinkLoading.set(true);
+    this.telegramError.set(null);
+    try {
+      const appModule = await import("firebase/app");
+      const functionsModule = await import("firebase/functions");
+      const { firebaseConfig } = await import("../../environments/environment");
+
+      const app =
+        appModule.getApps().length === 0
+          ? appModule.initializeApp(firebaseConfig)
+          : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, "us-central1");
+      const unlinkTelegramAccount = functionsModule.httpsCallable(functions, "unlinkTelegramAccount");
+      await unlinkTelegramAccount({});
+
+      const updatedProfile = await this.authService.refreshProfile();
+      if (updatedProfile) this.profile.set(updatedProfile);
+      this.telegramLinked.set(false);
+      this.telegramUsername.set(null);
+      this.success.set("Telegram disconnected.");
+      setTimeout(() => this.success.set(null), 5000);
+    } catch (err: unknown) {
+      console.error("Error unlinking Telegram:", err);
+      this.telegramError.set(err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Could not disconnect.");
+      setTimeout(() => this.telegramError.set(null), 5000);
+    } finally {
+      this.telegramUnlinkLoading.set(false);
+    }
+  }
+
+  async saveMessagingPreferences() {
+    this.messagingPrefsSaving.set(true);
+    this.telegramError.set(null);
+    try {
+      const prefs = {
+        telegramEnabled: this.telegramLinked(),
+        dailyCheckInEnabled: this.dailyCheckInEnabled(),
+        checkInTime: this.checkInTimeDraft(),
+        missionLogReminderEnabled: this.missionLogReminderEnabled(),
+        reminderTime: this.reminderTimeDraft(),
+      };
+      await this.updateProfile({ messagingPreferences: prefs });
+      this.success.set("Notification preferences saved.");
+      setTimeout(() => this.success.set(null), 4000);
+    } catch (err: unknown) {
+      console.error("Error saving messaging preferences:", err);
+      this.telegramError.set("Could not save preferences.");
+      setTimeout(() => this.telegramError.set(null), 5000);
+    } finally {
+      this.messagingPrefsSaving.set(false);
     }
   }
 
