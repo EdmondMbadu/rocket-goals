@@ -1191,7 +1191,14 @@ ${url}`;
       console.log('Loading calendar events for goal:', goalId);
       const eventsData = await this.calendarEventsService.getEventsByGoalId(goalId);
       console.log('Loaded events data:', eventsData.length, 'events');
-      const events = eventsData.map(eventData => this.calendarEventsService.toCalendarEvent(eventData));
+      const events = eventsData.map(eventData => {
+        const event = this.calendarEventsService.toCalendarEvent(eventData);
+        // For milestone events, ensure color reflects completion status (green=done, red=todo)
+        if (event.title.startsWith('🎯')) {
+          event.color = event.completed ? '#22c55e' : '#ef4444';
+        }
+        return event;
+      });
       this.calendarEvents.set(events);
       console.log('Calendar events set:', events.length, 'events');
     } catch (error) {
@@ -2547,11 +2554,16 @@ ${url}`;
     }
 
     try {
-      await this.actionItemsService.toggleActionItemComplete(goal.id, item.id, !item.completed);
+      const newCompletedStatus = !item.completed;
+      await this.actionItemsService.toggleActionItemComplete(goal.id, item.id, newCompletedStatus);
       // Update local state
       this.actionItems.update(items =>
-        items.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i)
+        items.map(i => i.id === item.id ? { ...i, completed: newCompletedStatus } : i)
       );
+
+      // Update calendar event color based on completion status
+      this.updateCalendarEventColorForMilestone(item.title, newCompletedStatus);
+
       if (!wasCompleted) {
         this.triggerCelebration();
       }
@@ -2806,10 +2818,12 @@ ${url}`;
   // Helper to create a calendar event for a milestone
   private async createCalendarEventForMilestone(goalId: string, title: string, date: Date, description?: string, completed: boolean = false) {
     try {
+      // Use green for completed, red for incomplete
+      const milestoneColor = completed ? '#22c55e' : '#ef4444';
       const eventData: any = {
         title: `🎯 ${title}`,
         date,
-        color: '#9333ea', // Purple for milestones
+        color: milestoneColor,
         completed
       };
       if (description) {
@@ -2844,11 +2858,14 @@ ${url}`;
       const matchingEvent = this.calendarEvents().find(e => e.title === originalTitle);
       if (!matchingEvent) return;
 
+      // Use green for completed, red for incomplete
+      const milestoneColor = updates.completed ? '#22c55e' : '#ef4444';
       const eventUpdates = {
         title: `🎯 ${updates.title}`,
         date: this.getDateFromDayNumber(updates.dayNumber),
         description: updates.notes,
-        completed: updates.completed
+        completed: updates.completed,
+        color: milestoneColor
       };
 
       await this.calendarEventsService.updateEvent(goalId, matchingEvent.id, eventUpdates);
@@ -2858,6 +2875,31 @@ ${url}`;
     } catch (error) {
       console.error('Error updating calendar event for milestone:', error);
     }
+  }
+
+  // Helper to update only the color of a milestone's calendar event
+  private updateCalendarEventColorForMilestone(milestoneTitle: string, completed: boolean) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const eventTitle = `🎯 ${milestoneTitle}`;
+    const matchingEvent = this.calendarEvents().find(e => e.title === eventTitle);
+    if (!matchingEvent) return;
+
+    const milestoneColor = completed ? '#22c55e' : '#ef4444';
+
+    // Update in Firestore
+    this.calendarEventsService.updateEvent(goal.id, matchingEvent.id, {
+      color: milestoneColor,
+      completed
+    }).catch(error => {
+      console.error('Error updating calendar event color:', error);
+    });
+
+    // Update local state
+    this.calendarEvents.update(events =>
+      events.map(e => e.id === matchingEvent.id ? { ...e, color: milestoneColor, completed } : e)
+    );
   }
 
   // Get action items for a specific day
