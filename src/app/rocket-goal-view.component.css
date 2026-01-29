@@ -4323,6 +4323,50 @@
   background: #ffffff;
 }
 
+/* ===== MILESTONE TITLE TEXTAREA ===== */
+.task-modal-title-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(100, 116, 139, 0.3);
+  border-radius: 14px;
+  padding: 16px 18px;
+  color: #f1f5f9;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.5;
+  resize: none;
+  overflow: hidden;
+  min-height: 60px;
+  max-height: 150px;
+  overflow-y: auto;
+  transition: all 0.2s ease;
+  field-sizing: content;
+}
+
+.task-modal-title-textarea:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+}
+
+.task-modal-title-textarea::placeholder {
+  color: #64748b;
+  font-weight: 400;
+}
+
+.light-mode.task-modal-overlay .task-modal-title-textarea,
+.light-mode .task-modal-title-textarea {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+  color: #0f172a;
+}
+
+.light-mode.task-modal-overlay .task-modal-title-textarea:focus,
+.light-mode .task-modal-title-textarea:focus {
+  background: #ffffff;
+}
+
 .task-modal-textarea {
   width: 100%;
   background: rgba(0, 0, 0, 0.3);

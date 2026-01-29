@@ -2288,13 +2288,14 @@
           </svg>
           Milestone Title
         </label>
-        <input type="text"
-          class="task-modal-input"
+        <textarea
+          class="task-modal-title-textarea"
           [ngModel]="newActionItemTitle()"
           (ngModelChange)="newActionItemTitle.set($event)"
-          (keyup.enter)="addNewActionItem()"
+          (keydown.enter)="$event.preventDefault(); addNewActionItem()"
           placeholder="What milestone do you want to achieve?"
-          autofocus />
+          rows="2"
+          autofocus></textarea>
       </div>
 
       <!-- Date Selection -->
