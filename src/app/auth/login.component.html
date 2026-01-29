@@ -67,6 +67,11 @@
             {{ verificationNotice() }}
           </div>
           }
+          @if (isTelegramLinkRedirect()) {
+          <div class="rounded-2xl border border-blue-200 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-800 px-4 py-3 text-sm font-semibold text-blue-800 dark:text-blue-200">
+            Log in to connect your Telegram account to RocketGoals. After you sign in, we'll link your bot chat automatically.
+          </div>
+          }
           <label class="block space-y-2">
             <span class="text-sm font-semibold text-black/70 dark:text-white/80 uppercase tracking-widest">Email</span>
             <input type="email" formControlName="email" placeholder="you@rocketprompt.io"

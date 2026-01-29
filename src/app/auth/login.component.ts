@@ -107,4 +107,10 @@ export class LoginComponent {
   private get redirectUrl() {
     return this.route.snapshot.queryParamMap.get('redirectTo') || '/ai';
   }
+
+  /** True when user was sent here to complete Telegram account linking. */
+  isTelegramLinkRedirect(): boolean {
+    const redirectTo = this.route.snapshot.queryParamMap.get('redirectTo') || '';
+    return redirectTo.includes('link-telegram');
+  }
 }

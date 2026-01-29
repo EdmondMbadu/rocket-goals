@@ -856,6 +856,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** URL to open the RocketGoals Telegram bot (user can send /start to get a link). */
+  telegramBotUrl(): string {
+    return "https://t.me/RocketGoalsBot";
+  }
+
   async loadTelegramStatus() {
     const profile = this.profile();
     if (!profile?.userId) return;
