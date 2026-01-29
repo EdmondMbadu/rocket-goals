@@ -418,30 +418,37 @@
             <!-- RIGHT: MISSION STATS PANEL -->
             <div class="mission-stats-panel flex flex-col gap-4">
               
-              <!-- TARGET METRIC CARD -->
-              @if (getTargetMetricDisplay(); as targetMetric) {
+              <!-- TARGET METRIC / PROGRESS CARD -->
               <div class="target-metric-card hud-card shimmer p-4 relative">
                 <div class="scanline"></div>
                 <div class="flex items-center justify-between gap-4">
-                  <div class="flex-1">
-                    <h3 class="text-[10px] font-bold tracking-wider text-cyan-400 uppercase mb-1" style="font-family: 'Orbitron', monospace;">TARGET</h3>
-                    <div class="flex items-baseline gap-1">
-                      <span class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white" style="font-family: 'Orbitron', monospace; text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);">
-                        {{ targetMetric.unit }}{{ targetMetric.formattedValue }}
-                      </span>
-                      @if (targetMetric.unit === 'lbs' || targetMetric.unit === '%' || targetMetric.unit === 'miles') {
-                        <span class="text-sm text-gray-400 font-medium">{{ targetMetric.unit }}</span>
-                      }
+                  @if (getTargetMetricDisplay(); as targetMetric) {
+                    <div class="flex-1">
+                      <h3 class="text-[10px] font-bold tracking-wider text-cyan-400 uppercase mb-1" style="font-family: 'Orbitron', monospace;">TARGET</h3>
+                      <div class="flex items-baseline gap-1">
+                        <span class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white" style="font-family: 'Orbitron', monospace; text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);">
+                          {{ targetMetric.unit }}{{ targetMetric.formattedValue }}
+                        </span>
+                        @if (targetMetric.unit === 'lbs' || targetMetric.unit === '%' || targetMetric.unit === 'miles') {
+                          <span class="text-sm text-gray-400 font-medium">{{ targetMetric.unit }}</span>
+                        }
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">{{ targetMetric.label }}</p>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">{{ targetMetric.label }}</p>
-                  </div>
+                  } @else {
+                    <div class="flex-1">
+                      <h3 class="text-[10px] font-bold tracking-wider text-cyan-400 uppercase mb-1" style="font-family: 'Orbitron', monospace;">MISSION PROGRESS</h3>
+                      <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                        {{ getGoalDescription() || getGoalThemeDisplay() || 'Stay focused on your mission.' }}
+                      </p>
+                    </div>
+                  }
                   <div class="text-right flex-shrink-0">
                     <span class="text-3xl md:text-4xl font-black text-emerald-400" style="font-family: 'Orbitron', monospace;">{{ getCompletionPercentage() }}%</span>
                     <span class="block text-[10px] text-gray-500 uppercase tracking-wider">COMPLETE</span>
                   </div>
                 </div>
               </div>
-              }
 
               <!-- TIME TO REACH THE GOAL -->
               <div class="time-destination-card hud-card shimmer p-4 relative">
