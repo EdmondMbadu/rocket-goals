@@ -2482,11 +2482,10 @@ ${url}`;
       this.scrollToCheckinsSection();
       // Add coach Q&A to chat history if user responded
       const coachResponse = this.ignitionCoachResponse().trim();
-      if (coachResponse) {
-        const coachQuestion = this.getIgnitionCoachQuestion();
-        this.rocketGoalsAIService.addAIMessage(`**Morning Check-in**\n\n${coachQuestion}`);
-        this.rocketGoalsAIService.addLocalUserMessage(coachResponse);
-        this.rocketGoalsAIService.addAIMessage(`Thanks for sharing! Let's make today count. 🚀`);
+      if (coachResponse && goal.id) {
+        const coachQuestion = `**Morning Check-in**\n\n${this.getIgnitionCoachQuestion()}`;
+        const coachFollowUp = `Thanks for sharing! Let's make today count. 🚀`;
+        await this.rocketGoalsAIService.addCheckinConversation(coachQuestion, coachResponse, coachFollowUp, goal.id);
       }
     } catch (error: any) {
       console.error('Error saving daily ignition:', error);
@@ -2532,11 +2531,10 @@ ${url}`;
 
       // Add coach Q&A to chat history if user responded
       const coachResponse = this.missionCoachResponse().trim();
-      if (coachResponse) {
-        const coachQuestion = this.getMissionCoachQuestion();
-        this.rocketGoalsAIService.addAIMessage(`**Evening Check-in**\n\n${coachQuestion}`);
-        this.rocketGoalsAIService.addLocalUserMessage(coachResponse);
-        this.rocketGoalsAIService.addAIMessage(this.getMissionCoachFollowUp());
+      if (coachResponse && goal.id) {
+        const coachQuestion = `**Evening Check-in**\n\n${this.getMissionCoachQuestion()}`;
+        const coachFollowUp = this.getMissionCoachFollowUp();
+        await this.rocketGoalsAIService.addCheckinConversation(coachQuestion, coachResponse, coachFollowUp, goal.id);
       }
 
       await this.loadCheckIns(goal.id);

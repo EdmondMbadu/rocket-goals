@@ -421,8 +421,10 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
    * If a conversation exists for this goal, load it; otherwise start fresh
    */
   async loadConversationForGoal(goalId: string): Promise<void> {
+    console.log('[LoadConversation] Loading for goalId:', goalId);
     // Don't load old conversations if a fresh prompt is pending
     if (this.preventAutoSelect) {
+      console.log('[LoadConversation] Skipping - preventAutoSelect is true');
       return;
     }
 
@@ -454,17 +456,21 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     try {
       // Try to load sessions for this specific goal (without auto-selecting)
       await this.loadSessionsForCurrentUser(false, goalId);
-      
+      console.log('[LoadConversation] Found sessions:', this.sessions().length, this.sessions().map(s => ({ id: s.id, goalId: s.goalId })));
+
       // If a session exists for this goal, load it
       if (this.sessions().length > 0) {
         // Load the most recent session for this goal
+        console.log('[LoadConversation] Loading session:', this.sessions()[0].id);
         await this.loadSession(this.sessions()[0].id);
+        console.log('[LoadConversation] Loaded messages:', this.messages().length);
       } else {
         // No session found for this goal - start fresh
+        console.log('[LoadConversation] No sessions found, starting fresh');
         this.startNewSession();
       }
     } catch (error: any) {
-      console.error('Failed to load conversation for goal', error);
+      console.error('[LoadConversation] Failed to load conversation for goal', error);
       // On error, clear and start fresh
       this.messages.set([]);
       this.conversationHistory = [];
@@ -579,8 +585,16 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       this.currentSessionTitle.set(title);
       this.currentSessionCreatedAt.set(new Date());
 
-      // Refresh session list but don't override selection
-      void this.loadSessionsForCurrentUser(false, goalId);
+      // Add the new session to the local list immediately so it's available for updates
+      const newSession: ChatSessionMeta = {
+        id: docRef.id,
+        title,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastMessage: initialUserMessage || 'New chat',
+        goalId: goalId
+      };
+      this.sessions.update(list => [newSession, ...list]);
 
       return docRef.id;
     } catch (error) {
@@ -608,7 +622,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
         {
           role: message.role,
           content: message.content,
-          createdAt: firestoreModule.serverTimestamp()
+          createdAt: firestoreModule.Timestamp.fromDate(message.timestamp)
         }
       );
 
@@ -647,7 +661,8 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           title: updates['title'] || existing?.title || this.currentSessionTitle() || 'Chat',
           createdAt: existing?.createdAt || new Date(),
           updatedAt: new Date(),
-          lastMessage: message.content
+          lastMessage: message.content,
+          goalId: existing?.goalId // Preserve the goalId
         };
 
         const without = list.filter(item => item.id !== sessionId);
@@ -994,6 +1009,69 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     const sessionId = this.currentSessionId();
     if (sessionId) {
       void this.persistMessageToSession(sessionId, message);
+    }
+  }
+
+  /**
+   * Add a check-in conversation (coach question, user response, coach follow-up) to chat history.
+   * This ensures all messages are persisted properly to the same session.
+   */
+  async addCheckinConversation(coachQuestion: string, userResponse: string, coachFollowUp: string, goalId?: string): Promise<void> {
+    console.log('[CheckinConversation] Starting with goalId:', goalId);
+    if (!coachQuestion.trim() || !userResponse.trim()) {
+      console.log('[CheckinConversation] Empty question or response, skipping');
+      return;
+    }
+
+    // Ensure we have an active session first, passing goalId to associate with the goal
+    const sessionId = await this.ensureActiveSession(userResponse, goalId);
+    console.log('[CheckinConversation] Got sessionId:', sessionId);
+    if (!sessionId) {
+      console.warn('[CheckinConversation] Failed to create session for check-in conversation');
+      return;
+    }
+
+    const now = Date.now();
+
+    // Create all messages with sequential timestamps
+    const coachQuestionMsg: ChatMessage = {
+      role: 'model',
+      content: coachQuestion.trim(),
+      timestamp: new Date(now),
+    };
+
+    const userResponseMsg: ChatMessage = {
+      role: 'user',
+      content: userResponse.trim(),
+      timestamp: new Date(now + 1),
+    };
+
+    const coachFollowUpMsg: ChatMessage = {
+      role: 'model',
+      content: coachFollowUp.trim(),
+      timestamp: new Date(now + 2),
+    };
+
+    // Add all messages to local state
+    this.messages.update(msgs => [...msgs, coachQuestionMsg, userResponseMsg, coachFollowUpMsg]);
+
+    // Add to conversation history for context
+    this.conversationHistory.push(
+      { role: 'model', content: coachQuestion.trim() },
+      { role: 'user', content: userResponse.trim() },
+      { role: 'model', content: coachFollowUp.trim() }
+    );
+
+    // Persist all messages to Firestore
+    try {
+      await Promise.all([
+        this.persistMessageToSession(sessionId, coachQuestionMsg),
+        this.persistMessageToSession(sessionId, userResponseMsg),
+        this.persistMessageToSession(sessionId, coachFollowUpMsg),
+      ]);
+      console.log('[CheckinConversation] Successfully persisted all messages to session:', sessionId);
+    } catch (error) {
+      console.error('[CheckinConversation] Failed to persist check-in conversation:', error);
     }
   }
 
