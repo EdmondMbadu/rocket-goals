@@ -33,6 +33,28 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   readonly hasGreeted = signal(false);
   readonly currentSessionTitle = this.aiService.currentSessionTitle;
   readonly currentSessionCreatedAt = this.aiService.currentSessionCreatedAt;
+  readonly attachments = signal<File[]>([]);
+  readonly attachmentsUploading = signal(false);
+  readonly attachmentsError = signal<string | null>(null);
+
+  private readonly maxAttachmentCount = 4;
+  private readonly maxAttachmentSizeBytes = 15 * 1024 * 1024;
+  private readonly maxTotalAttachmentSizeBytes = 25 * 1024 * 1024;
+  private readonly allowedExtensions = new Set([
+    'png', 'jpg', 'jpeg', 'gif', 'webp',
+    'pdf', 'txt', 'md', 'csv', 'json',
+    'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'
+  ]);
+  private readonly allowedMimeTypes = new Set([
+    'image/png', 'image/jpeg', 'image/gif', 'image/webp',
+    'application/pdf', 'text/plain', 'text/markdown', 'text/csv', 'application/json',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ]);
 
   // Typewriter effect state
   readonly typewriterMessageId = signal<number | null>(null);
@@ -320,7 +342,35 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   async sendMessage(): Promise<void> {
     const message = this.inputMessage().trim();
-    if (!message || this.isLoading()) return;
+    const pendingAttachments = this.attachments();
+    if (this.isLoading() || this.attachmentsUploading()) return;
+    if (!message && pendingAttachments.length === 0) return;
+
+    this.attachmentsError.set(null);
+    let finalMessage = message;
+    if (pendingAttachments.length > 0) {
+      this.attachmentsUploading.set(true);
+      try {
+        const uploaded = await this.uploadAttachments(pendingAttachments);
+        if (uploaded.length > 0) {
+          const attachmentLines = uploaded
+            .map(att => `- [${att.name}](${att.url})`)
+            .join('\n');
+          finalMessage = finalMessage
+            ? `${finalMessage}\n\nAttachments:\n${attachmentLines}`
+            : `Attachments:\n${attachmentLines}`;
+        }
+        this.attachments.set([]);
+      } catch (error) {
+        console.error('Failed to upload attachments:', error);
+        this.attachmentsError.set('Could not upload attachments. Please try again.');
+        return;
+      } finally {
+        this.attachmentsUploading.set(false);
+      }
+    }
+
+    if (!finalMessage.trim()) return;
 
     // Allow both logged-in and non-logged-in users to send messages
     this.inputMessage.set('');
@@ -330,7 +380,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     const wasAutoLaunch = this.aiService.isFreshPromptPending();
 
     try {
-      const result = await this.aiService.sendMessageWithoutAddingResponse(message, this.goalContext);
+      const result = await this.aiService.sendMessageWithoutAddingResponse(finalMessage, this.goalContext);
       // Check if result contains side effects (calendar actions, etc.)
       if (typeof result === 'object' && result !== null && 'response' in result) {
         // Add response with typewriter effect
@@ -370,6 +420,54 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
       event.preventDefault();
       this.sendMessage();
     }
+  }
+
+  onAttachmentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const files = Array.from(input.files);
+    input.value = '';
+
+    const current = this.attachments();
+    const next: File[] = [...current];
+    let totalSize = next.reduce((sum, file) => sum + file.size, 0);
+    this.attachmentsError.set(null);
+
+    for (const file of files) {
+      if (next.length >= this.maxAttachmentCount) {
+        this.attachmentsError.set(`You can attach up to ${this.maxAttachmentCount} files.`);
+        break;
+      }
+      if (!this.isAllowedFile(file)) {
+        this.attachmentsError.set('Unsupported file type. Try PDF, images, or office docs.');
+        continue;
+      }
+      if (file.size > this.maxAttachmentSizeBytes) {
+        this.attachmentsError.set('Each file must be 15MB or less.');
+        continue;
+      }
+      if (totalSize + file.size > this.maxTotalAttachmentSizeBytes) {
+        this.attachmentsError.set('Total attachments must be 25MB or less.');
+        break;
+      }
+      next.push(file);
+      totalSize += file.size;
+    }
+
+    this.attachments.set(next);
+  }
+
+  removeAttachment(index: number): void {
+    const current = [...this.attachments()];
+    current.splice(index, 1);
+    this.attachments.set(current);
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   clearChat(): void {
@@ -464,13 +562,23 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   }
 
   formatMessage(content: string): string {
-    // Basic markdown-like formatting
-    return content
+    const safe = this.escapeHtml(content);
+    return safe
       .replace(/^### (.+)$/gm, '<h3 class="ai-heading">$1</h3>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="ai-link" href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
       .replace(/\n/g, '<br>');
+  }
+
+  private escapeHtml(content: string): string {
+    return content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   trackByTimestamp(_index: number, message: ChatMessage): number {
@@ -510,6 +618,43 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   formatSessionTimestamp(date: Date | null): string {
     if (!date) return '';
     return date.toLocaleString();
+  }
+
+  private isAllowedFile(file: File): boolean {
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+    return this.allowedExtensions.has(extension) || this.allowedMimeTypes.has(file.type);
+  }
+
+  private async uploadAttachments(files: File[]): Promise<Array<{ name: string; url: string; size: number; type: string }>> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      throw new Error('Sign in required to upload attachments.');
+    }
+
+    const appModule = await import('firebase/app');
+    const storageModule = await import('firebase/storage');
+    const { firebaseConfig } = await import('../../environments/environment');
+
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+    const storage = storageModule.getStorage(app);
+    const sessionId = this.aiService.currentSessionId() || 'general';
+    const timestamp = Date.now();
+
+    const uploads: Array<{ name: string; url: string; size: number; type: string }> = [];
+    for (const file of files) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `ai-attachments/${profile.userId}/${sessionId}/${timestamp}-${safeName}`;
+      const storageRef = storageModule.ref(storage, path);
+      await storageModule.uploadBytes(storageRef, file);
+      const url = await storageModule.getDownloadURL(storageRef);
+      uploads.push({ name: file.name, url, size: file.size, type: file.type });
+    }
+
+    return uploads;
   }
 
   async copyMessage(message: ChatMessage): Promise<void> {

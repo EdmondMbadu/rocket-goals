@@ -132,8 +132,8 @@
 
         <!-- User Message -->
         <div *ngIf="message.role === 'user'"
-          class="ai-user-message max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed">
-          {{ message.content }}
+          class="ai-user-message max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed"
+          [innerHTML]="formatMessage(message.content)">
         </div>
       </div>
 
@@ -171,17 +171,48 @@
 
   <!-- Input Area -->
   <div class="ai-input-area p-4">
+    @if (attachments().length > 0 || attachmentsError() || attachmentsUploading()) {
+      <div class="attachment-row">
+        <div class="attachment-list">
+          @for (file of attachments(); track file.name + '-' + file.size) {
+            <div class="attachment-chip">
+              <span class="attachment-name">{{ file.name }}</span>
+              <span class="attachment-size">{{ formatFileSize(file.size) }}</span>
+              <button type="button" class="attachment-remove" (click)="removeAttachment($index)" aria-label="Remove attachment">×</button>
+            </div>
+          }
+        </div>
+        @if (attachmentsUploading()) {
+          <span class="attachment-status">Uploading…</span>
+        }
+        @if (attachmentsError()) {
+          <span class="attachment-error">{{ attachmentsError() }}</span>
+        }
+      </div>
+    }
     <div class="flex items-end gap-3">
+      <div class="attachment-button-wrap">
+        <button type="button" class="ai-attach-btn" (click)="attachmentInput.click()"
+          [disabled]="isLoading() || attachmentsUploading()" aria-label="Attach files">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21.44 11.05l-8.49 8.49a5 5 0 01-7.07-7.07l8.49-8.49a3.5 3.5 0 014.95 4.95l-8.13 8.13a2 2 0 01-2.83-2.83l7.78-7.78" />
+          </svg>
+        </button>
+        <input #attachmentInput type="file" class="hidden" multiple
+          accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.txt,.md,.csv,.json,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          (change)="onAttachmentSelected($event)" />
+      </div>
       <div class="relative flex-1">
         <textarea #messageInput
           class="ai-textarea w-full resize-none rounded-xl px-4 py-3 pr-12 text-sm placeholder-gray-500 outline-none transition"
           placeholder="Ask me anything..." rows="1" [value]="inputMessage()"
           (input)="inputMessage.set($any($event.target).value)" (keydown)="handleKeydown($event)"
-          [disabled]="isLoading()"></textarea>
+          [disabled]="isLoading() || attachmentsUploading()"></textarea>
       </div>
       <button type="button"
         class="ai-send-btn flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl transition-all duration-200 disabled:opacity-50"
-        [disabled]="isLoading() || !inputMessage().trim()" (click)="sendMessage()" aria-label="Send message">
+        [disabled]="isLoading() || attachmentsUploading() || (!inputMessage().trim() && attachments().length === 0)" (click)="sendMessage()" aria-label="Send message">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -323,8 +354,8 @@
 
         <!-- User Message -->
         <div *ngIf="message.role === 'user'"
-          class="max-w-[85%] rounded-2xl rounded-br-md bg-gray-100 px-4 py-3 text-sm leading-relaxed text-gray-900 border border-gray-200">
-          {{ message.content }}
+          class="ai-user-message max-w-[85%] rounded-2xl rounded-br-md bg-gray-100 px-4 py-3 text-sm leading-relaxed text-gray-900 border border-gray-200"
+          [innerHTML]="formatMessage(message.content)">
         </div>
       </div>
 
@@ -356,17 +387,48 @@
 
   <!-- Input Area -->
   <div class="border-t border-gray-100 bg-white p-5">
+    @if (attachments().length > 0 || attachmentsError() || attachmentsUploading()) {
+      <div class="attachment-row">
+        <div class="attachment-list">
+          @for (file of attachments(); track file.name + '-' + file.size) {
+            <div class="attachment-chip">
+              <span class="attachment-name">{{ file.name }}</span>
+              <span class="attachment-size">{{ formatFileSize(file.size) }}</span>
+              <button type="button" class="attachment-remove" (click)="removeAttachment($index)" aria-label="Remove attachment">×</button>
+            </div>
+          }
+        </div>
+        @if (attachmentsUploading()) {
+          <span class="attachment-status">Uploading…</span>
+        }
+        @if (attachmentsError()) {
+          <span class="attachment-error">{{ attachmentsError() }}</span>
+        }
+      </div>
+    }
     <div class="flex items-end gap-3">
+      <div class="attachment-button-wrap">
+        <button type="button" class="ai-attach-btn" (click)="attachmentInputFloating.click()"
+          [disabled]="isLoading() || attachmentsUploading()" aria-label="Attach files">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21.44 11.05l-8.49 8.49a5 5 0 01-7.07-7.07l8.49-8.49a3.5 3.5 0 014.95 4.95l-8.13 8.13a2 2 0 01-2.83-2.83l7.78-7.78" />
+          </svg>
+        </button>
+        <input #attachmentInputFloating type="file" class="hidden" multiple
+          accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.txt,.md,.csv,.json,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          (change)="onAttachmentSelected($event)" />
+      </div>
       <div class="relative flex-1">
         <textarea #messageInput
           class="max-h-28 min-h-[52px] w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3.5 pr-12 text-sm text-black placeholder-gray-400 outline-none transition focus:border-gray-300 focus:bg-white focus:ring-2 focus:ring-red-500/10"
           placeholder="Ask anything about goals..." rows="1" [value]="inputMessage()"
           (input)="inputMessage.set($any($event.target).value)" (keydown)="handleKeydown($event)"
-          [disabled]="isLoading()"></textarea>
+          [disabled]="isLoading() || attachmentsUploading()"></textarea>
       </div>
       <button type="button"
         class="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg shadow-red-500/25 transition-all duration-200 hover:bg-red-700 hover:shadow-red-500/35 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
-        [disabled]="isLoading() || !inputMessage().trim()" (click)="sendMessage()" aria-label="Send message">
+        [disabled]="isLoading() || attachmentsUploading() || (!inputMessage().trim() && attachments().length === 0)" (click)="sendMessage()" aria-label="Send message">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
