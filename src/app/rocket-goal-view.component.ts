@@ -256,6 +256,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   updatingFanAvatarId = signal<string | null>(null);
   readonly fanAvatarIds = FAN_AVATAR_IDS;
 
+  // Telegram connection state
+  telegramLinked = signal(false);
+  telegramLoading = signal(false);
+  showTelegramBanner = signal(true);
+
   async ngOnInit() {
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
@@ -794,6 +799,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       const currentUser = this.authService.profile();
       if (currentGoal?.userId && currentUser?.userId && currentGoal.userId === currentUser.userId) {
         this.loadUserGoals(currentGoal.userId);
+        // Load Telegram status for owner (to show connect banner if not connected)
+        this.checkTelegramBannerDismissed();
+        this.loadTelegramStatus();
       }
       
       // Load calendar events and action items
@@ -4473,5 +4481,63 @@ Generate the milestones now (JSON array only, no other text):`;
    */
   getDefaultTab(): 'dashboard' | 'tasks' {
     return this.hasDashboard() ? 'dashboard' : 'tasks';
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Telegram Integration
+  // ─────────────────────────────────────────────────────────────────────
+
+  /** URL to open the RocketGoals Telegram bot. */
+  telegramBotUrl(): string {
+    return 'https://t.me/RocketGoalsBot';
+  }
+
+  /** Check if user has Telegram connected. */
+  async loadTelegramStatus(): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return;
+
+    // Check from profile first (cached)
+    if (profile.telegramId) {
+      this.telegramLinked.set(true);
+      return;
+    }
+
+    this.telegramLoading.set(true);
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app =
+        appModule.getApps().length === 0
+          ? appModule.initializeApp(firebaseConfig)
+          : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const getTelegramLinkStatus = functionsModule.httpsCallable(functions, 'getTelegramLinkStatus');
+      const result = await getTelegramLinkStatus({});
+      const data = result.data as { linked: boolean };
+
+      this.telegramLinked.set(!!data?.linked);
+    } catch (err) {
+      console.error('Error loading Telegram status:', err);
+    } finally {
+      this.telegramLoading.set(false);
+    }
+  }
+
+  /** Dismiss the Telegram connect banner. */
+  dismissTelegramBanner(): void {
+    this.showTelegramBanner.set(false);
+    // Remember dismissal for this session
+    sessionStorage.setItem('telegramBannerDismissed', 'true');
+  }
+
+  /** Check if banner was previously dismissed this session. */
+  private checkTelegramBannerDismissed(): void {
+    if (sessionStorage.getItem('telegramBannerDismissed') === 'true') {
+      this.showTelegramBanner.set(false);
+    }
   }
 }

@@ -219,6 +219,23 @@
         <!-- LEFT COLUMN: AI Co-Pilot (for owner) or Launch Your Goal (for fans) -->
         <div class="right-column flex flex-col">
           @if (isGoalOwner()) {
+            <!-- Telegram Connect Banner (show if not connected and not dismissed) -->
+            @if (!telegramLinked() && showTelegramBanner() && !telegramLoading()) {
+              <div class="telegram-connect-banner">
+                <div class="telegram-banner-content">
+                  <span class="telegram-icon">📱</span>
+                  <span class="telegram-text">Chat with your coach on Telegram</span>
+                </div>
+                <div class="telegram-banner-actions">
+                  <a [href]="telegramBotUrl()" target="_blank" rel="noopener noreferrer" class="telegram-connect-btn">
+                    Connect
+                  </a>
+                  <button class="telegram-dismiss-btn" (click)="dismissTelegramBanner()" title="Dismiss">
+                    ×
+                  </button>
+                </div>
+              </div>
+            }
             <!-- Owner sees the AI Co-Pilot -->
             <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
           } @else {
