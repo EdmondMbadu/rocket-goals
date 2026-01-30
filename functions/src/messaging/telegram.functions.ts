@@ -345,6 +345,7 @@ async function getConversationHistory(
 
 /**
  * Store messages in Firestore (same location as web app)
+ * Uses explicit timestamps to ensure proper ordering (user message before AI response)
  */
 async function storeMessages(
   userId: string,
@@ -365,29 +366,35 @@ async function storeMessages(
     .collection('aiChats')
     .doc(sessionId);
 
+  // Use explicit timestamps to guarantee ordering
+  // User message gets current time, AI response gets current time + 1ms
+  const now = Date.now();
+  const userTimestamp = admin.firestore.Timestamp.fromMillis(now);
+  const aiTimestamp = admin.firestore.Timestamp.fromMillis(now + 1); // 1ms later
+
   const batch = admin.firestore().batch();
 
-  // Add user message
+  // Add user message (first)
   const userMsgRef = messagesRef.doc();
   batch.set(userMsgRef, {
     role: 'user',
     content: userMessage,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: userTimestamp,
     source: 'telegram'
   });
 
-  // Add AI response
+  // Add AI response (1ms after user message to ensure ordering)
   const aiMsgRef = messagesRef.doc();
   batch.set(aiMsgRef, {
     role: 'model',
     content: aiResponse,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: aiTimestamp,
     source: 'telegram'
   });
 
   // Update session metadata
   batch.update(sessionRef, {
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: aiTimestamp,
     lastMessage: aiResponse.substring(0, 100)
   });
 
