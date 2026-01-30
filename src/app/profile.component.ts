@@ -8,11 +8,12 @@ import { RocketGoalsService } from './rocket-goals.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
 import { ThemeService } from './theme.service';
+import { TelegramQrModalComponent } from './telegram-qr-modal.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AvatarDropdownComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AvatarDropdownComponent, TelegramQrModalComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
@@ -61,6 +62,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   telegramError = signal<string | null>(null);
   telegramUnlinkLoading = signal(false);
   telegramConnecting = signal(false);
+  showTelegramQrModal = signal(false);
+  telegramDeepLink = signal<string | null>(null);
   messagingPrefsSaving = signal(false);
   dailyCheckInEnabled = signal(true);
   checkInTimeDraft = signal('08:00');
@@ -861,6 +864,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   async connectTelegram(): Promise<void> {
     this.telegramConnecting.set(true);
     this.telegramError.set(null);
+    this.telegramDeepLink.set(null);
+    const isMobile = this.isMobileDevice();
+    if (!isMobile) {
+      this.showTelegramQrModal.set(true);
+    }
     try {
       const appModule = await import("firebase/app");
       const functionsModule = await import("firebase/functions");
@@ -880,12 +888,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.telegramLinked.set(true);
         this.success.set("Telegram is already connected!");
         setTimeout(() => this.success.set(null), 3000);
-        return;
       }
 
-      if (data.deepLink) {
-        // Open the deep link in a new tab
-        window.open(data.deepLink, "_blank");
+      const deepLink = data.deepLink || "https://t.me/RocketGoalsBot";
+      if (deepLink) {
+        this.telegramDeepLink.set(deepLink);
+        if (isMobile && data.deepLink) {
+          window.location.href = deepLink;
+        }
+      } else {
+        this.telegramError.set("Could not generate Telegram link. Please try again.");
       }
     } catch (err: unknown) {
       console.error("Error generating Telegram deep link:", err);
@@ -894,6 +906,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
     } finally {
       this.telegramConnecting.set(false);
     }
+  }
+
+  closeTelegramQrModal(): void {
+    this.showTelegramQrModal.set(false);
+  }
+
+  retryTelegramConnect(): void {
+    void this.connectTelegram();
+  }
+
+  private isMobileDevice(): boolean {
+    const ua = navigator.userAgent || '';
+    return /android|iphone|ipad|ipod/i.test(ua);
   }
 
   async loadTelegramStatus() {

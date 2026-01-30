@@ -11,6 +11,7 @@ import { EventModalComponent } from './event-modal.component';
 import { CalendarEventsService } from './calendar-events.service';
 import { ActionItemsService, ActionItem } from './action-items.service';
 import { CheckInsService } from './check-ins.service';
+import { TelegramQrModalComponent } from './telegram-qr-modal.component';
 import type { RocketGoal, CareerQuestMetrics } from './models/rocket-goal';
 import type {
   DailyIgnition,
@@ -57,7 +58,7 @@ import { LAUNCHPAD_TEMPLATES, DashboardConfig } from './launchpad/launchpad.type
 @Component({
   selector: 'app-rocket-goal-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent, EventModalComponent, MilestoneCompleteModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent, RocketGoalsAIComponent, MissionCalendarComponent, EventModalComponent, MilestoneCompleteModalComponent, TelegramQrModalComponent],
   templateUrl: './rocket-goal-view.component.html',
   styleUrl: './rocket-goal-view.component.css'
 })
@@ -261,6 +262,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   telegramLoading = signal(false);
   telegramConnecting = signal(false);
   showTelegramBanner = signal(true);
+  showTelegramQrModal = signal(false);
+  telegramDeepLink = signal<string | null>(null);
+  telegramError = signal<string | null>(null);
 
   async ngOnInit() {
     // Load custom dashboard title from localStorage
@@ -4491,6 +4495,12 @@ Generate the milestones now (JSON array only, no other text):`;
   /** Generate a deep link and open Telegram for instant connection. */
   async connectTelegram(): Promise<void> {
     this.telegramConnecting.set(true);
+    this.telegramError.set(null);
+    this.telegramDeepLink.set(null);
+    const isMobile = this.isMobileDevice();
+    if (!isMobile) {
+      this.showTelegramQrModal.set(true);
+    }
     try {
       const appModule = await import('firebase/app');
       const functionsModule = await import('firebase/functions');
@@ -4509,17 +4519,36 @@ Generate the milestones now (JSON array only, no other text):`;
       if (data.alreadyLinked) {
         this.telegramLinked.set(true);
         this.showTelegramBanner.set(false);
-        return;
       }
 
-      if (data.deepLink) {
-        window.open(data.deepLink, '_blank');
+      const deepLink = data.deepLink || "https://t.me/RocketGoalsBot";
+      if (deepLink) {
+        this.telegramDeepLink.set(deepLink);
+        if (isMobile && data.deepLink) {
+          window.location.href = deepLink;
+        }
+      } else {
+        this.telegramError.set('Could not generate Telegram link. Please try again.');
       }
     } catch (err) {
       console.error('Error generating Telegram deep link:', err);
+      this.telegramError.set('Could not generate Telegram link. Please try again.');
     } finally {
       this.telegramConnecting.set(false);
     }
+  }
+
+  closeTelegramQrModal(): void {
+    this.showTelegramQrModal.set(false);
+  }
+
+  retryTelegramConnect(): void {
+    void this.connectTelegram();
+  }
+
+  private isMobileDevice(): boolean {
+    const ua = navigator.userAgent || '';
+    return /android|iphone|ipad|ipod/i.test(ua);
   }
 
   /** Check if user has Telegram connected. */

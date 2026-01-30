@@ -467,3 +467,13 @@
     </div>
   </div>
 </div>
+
+@if (showTelegramQrModal()) {
+  <app-telegram-qr-modal
+    [deepLink]="telegramDeepLink"
+    [loading]="telegramConnecting"
+    [error]="telegramError"
+    (close)="closeTelegramQrModal()"
+    (retry)="retryTelegramConnect()"
+  />
+}

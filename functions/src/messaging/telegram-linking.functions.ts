@@ -271,12 +271,7 @@ export const generateTelegramDeepLink = onCall({
     .doc(userId)
     .get();
 
-  if (userProfile.exists && userProfile.data()?.telegramId) {
-    return {
-      alreadyLinked: true,
-      deepLink: null
-    };
-  }
+  const alreadyLinked = !!(userProfile.exists && userProfile.data()?.telegramId);
 
   // Generate a token with the userId embedded
   const token = admin.firestore().collection('telegramLinkTokens').doc().id;
@@ -302,7 +297,7 @@ export const generateTelegramDeepLink = onCall({
   console.log(`🔗 Generated Telegram deep link for user ${userId}`);
 
   return {
-    alreadyLinked: false,
+    alreadyLinked,
     deepLink,
     expiresAt: expiresAt.toISOString()
   };
