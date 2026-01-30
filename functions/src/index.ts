@@ -895,6 +895,33 @@ ${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ''}`;
     return contextualPrompt;
 }
 
+const MAX_ATTACHMENT_CONTEXT_CHARS = 12000;
+
+function buildAttachmentContext(attachments: any[]): string | null {
+    if (!Array.isArray(attachments) || attachments.length === 0) {
+        return null;
+    }
+
+    const entries = attachments
+        .filter(att => att && typeof att.text === 'string' && att.text.trim().length > 0)
+        .map(att => {
+            const name = att.name || 'Unnamed file';
+            const type = att.mimeType || 'unknown';
+            return `File: ${name}\nType: ${type}\nContent:\n${att.text}`;
+        });
+
+    if (entries.length === 0) {
+        return null;
+    }
+
+    let combined = entries.join('\n\n');
+    if (combined.length > MAX_ATTACHMENT_CONTEXT_CHARS) {
+        combined = `${combined.slice(0, MAX_ATTACHMENT_CONTEXT_CHARS)}\n...[truncated]`;
+    }
+
+    return `User attached files (for reference):\n${combined}`;
+}
+
 /**
  * HTTPS callable function for chat-based AI responses with native function calling
  * Uses Gemini's tool/function calling for reliable calendar operations
@@ -925,6 +952,7 @@ export const rocketGoalsAI = onCall({
         const data = request?.data || {};
         const userMessage = (data?.message || "").toString().trim();
         const conversationHistory = Array.isArray(data?.conversationHistory) ? data.conversationHistory : [];
+        const attachments = Array.isArray(data?.attachments) ? data.attachments : [];
         const goalContext = data?.goalContext;
         const calendarEvents = Array.isArray(data?.calendarEvents) ? data.calendarEvents : [];
 
@@ -979,6 +1007,15 @@ export const rocketGoalsAI = onCall({
             role: "user",
             parts: [{ text: userMessage }],
         });
+
+        // Add attachment context if provided
+        const attachmentContext = buildAttachmentContext(attachments);
+        if (attachmentContext) {
+            history.push({
+                role: "user",
+                parts: [{ text: attachmentContext }],
+            });
+        }
 
         console.log(`📝 Sending ${history.length} messages to AI`);
 
@@ -2942,6 +2979,104 @@ The final image should make the viewer think:
             "internal",
             error?.message || "Failed to generate visualization"
         );
+    }
+});
+
+/**
+ * Extract text or describe images from uploaded chat attachments.
+ * Supports PDF, DOCX, and common image formats.
+ */
+export const extractAttachmentContent = onCall({
+    region: "us-central1",
+    secrets: [geminiApiKey],
+    timeoutSeconds: 60,
+    cors: [
+        "https://rocket-goals.web.app",
+        "https://rocket-goals.firebaseapp.com",
+        "https://www.rocketgoals.com",
+        "https://rocketgoals.com",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    ]
+}, async (request: any) => {
+    try {
+        if (!request.auth) {
+            throw new HttpsError("unauthenticated", "You must be logged in to read attachments.");
+        }
+
+        const apiKey = geminiApiKey.value();
+        if (!apiKey) {
+            throw new HttpsError("failed-precondition", "Google AI API key is not configured");
+        }
+
+        const data = request?.data || {};
+        const storagePath = (data?.storagePath || "").toString().trim();
+        const fileName = (data?.fileName || "").toString().trim();
+        const mimeType = (data?.mimeType || "").toString().trim();
+
+        if (!storagePath || !fileName) {
+            throw new HttpsError("invalid-argument", "storagePath and fileName are required");
+        }
+
+        // Ensure the user can only read their own attachments
+        if (!storagePath.includes(`/${request.auth.uid}/`)) {
+            throw new HttpsError("permission-denied", "You don't have access to this file.");
+        }
+
+        const bucket = admin.storage().bucket();
+        const file = bucket.file(storagePath);
+        const [buffer] = await file.download();
+
+        const extension = fileName.split('.').pop()?.toLowerCase() || '';
+        const maxChars = 12000;
+        let text = '';
+        let kind: 'text' | 'image' | 'unsupported' = 'text';
+
+        if (extension === 'pdf' || mimeType === 'application/pdf') {
+            const pdfParse = (await import('pdf-parse')).default;
+            const result = await pdfParse(buffer);
+            text = result?.text || '';
+        } else if (extension === 'docx' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            const mammoth = await import('mammoth');
+            const result = await mammoth.extractRawText({ buffer });
+            text = result?.value || '';
+        } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension) || mimeType.startsWith('image/')) {
+            kind = 'image';
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const base64Data = buffer.toString('base64');
+            const response = await model.generateContent({
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: "Describe this image for context. Include any visible text. Be concise." },
+                        { inlineData: { mimeType: mimeType || 'image/png', data: base64Data } }
+                    ]
+                }]
+            });
+            text = response.response?.text?.() || '';
+        } else {
+            kind = 'unsupported';
+            text = '';
+        }
+
+        if (!text) {
+            return { text: '', truncated: false, kind };
+        }
+
+        let truncated = false;
+        if (text.length > maxChars) {
+            text = `${text.slice(0, maxChars)}\n...[truncated]`;
+            truncated = true;
+        }
+
+        return { text, truncated, kind };
+    } catch (error: any) {
+        console.error("❌ extractAttachmentContent error:", error);
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        throw new HttpsError("internal", error?.message || "Failed to read attachment");
     }
 });
 

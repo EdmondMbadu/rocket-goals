@@ -39,6 +39,7 @@ type FirestoreMessageDoc = {
 interface AIRequest {
   message: string;
   conversationHistory?: { role: 'user' | 'model'; content: string }[];
+  attachments?: Array<{ name: string; text: string; url: string; mimeType: string }>;
   goalContext?: {
     id: string;
     title: string;
@@ -678,7 +679,11 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
   }
 
-  async sendMessage(userMessage: string, goalContext?: RocketGoal | null): Promise<string> {
+  async sendMessage(
+    userMessage: string,
+    goalContext?: RocketGoal | null,
+    attachments?: Array<{ name: string; text: string; url: string; mimeType: string }>
+  ): Promise<string> {
     if (!userMessage.trim()) {
       throw new Error('Message cannot be empty');
     }
@@ -726,6 +731,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       const result = await callable({
         message: userMessage.trim(),
         conversationHistory: conversationHistory.slice(0, -1), // Exclude the current message we just added
+        attachments,
         goalContext: goalContext ? {
           id: goalContext.id,
           title: this.getGoalTitle(goalContext),
@@ -823,7 +829,11 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
   }
 
   // Send message but don't add the AI response (let component handle with typewriter)
-  async sendMessageWithoutAddingResponse(userMessage: string, goalContext?: RocketGoal | null): Promise<string | { response: string; sideEffects?: SideEffect[] }> {
+  async sendMessageWithoutAddingResponse(
+    userMessage: string,
+    goalContext?: RocketGoal | null,
+    attachments?: Array<{ name: string; text: string; url: string; mimeType: string }>
+  ): Promise<string | { response: string; sideEffects?: SideEffect[] }> {
     if (!userMessage.trim()) {
       throw new Error('Message cannot be empty');
     }
@@ -909,6 +919,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
       const result = await callable({
         message: userMessage.trim(),
         conversationHistory: conversationHistory.slice(0, -1),
+        attachments,
         goalContext: goalContext ? {
           id: goalContext.id,
           title: this.getGoalTitle(goalContext),

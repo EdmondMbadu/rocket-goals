@@ -343,6 +343,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   async sendMessage(): Promise<void> {
     const message = this.inputMessage().trim();
     const pendingAttachments = this.attachments();
+    let attachmentContext: Array<{ name: string; text: string; url: string; mimeType: string }> = [];
     if (this.isLoading() || this.attachmentsUploading()) return;
     if (!message && pendingAttachments.length === 0) return;
 
@@ -359,6 +360,12 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
           finalMessage = finalMessage
             ? `${finalMessage}\n\nAttachments:\n${attachmentLines}`
             : `Attachments:\n${attachmentLines}`;
+          try {
+            attachmentContext = await this.extractAttachmentContext(uploaded);
+          } catch (error) {
+            console.warn('Attachment extraction failed, sending without context:', error);
+            this.attachmentsError.set('Uploaded, but could not read attachment content.');
+          }
         }
         this.attachments.set([]);
       } catch (error) {
@@ -380,7 +387,11 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     const wasAutoLaunch = this.aiService.isFreshPromptPending();
 
     try {
-      const result = await this.aiService.sendMessageWithoutAddingResponse(finalMessage, this.goalContext);
+      const result = await this.aiService.sendMessageWithoutAddingResponse(
+        finalMessage,
+        this.goalContext,
+        attachmentContext.length > 0 ? attachmentContext : undefined
+      );
       // Check if result contains side effects (calendar actions, etc.)
       if (typeof result === 'object' && result !== null && 'response' in result) {
         // Add response with typewriter effect
@@ -566,7 +577,8 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     const withMarkdownLinks = safe
       .replace(/^### (.+)$/gm, '<h3 class="ai-heading">$1</h3>')
       .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="ai-attachment-link" href="$2" target="_blank" rel="noopener noreferrer"><span class="ai-attachment-icon" aria-hidden="true">📎</span><span class="ai-attachment-name">$1</span></a>');
-    return withMarkdownLinks
+    const withAutoLinks = withMarkdownLinks.replace(/(^|[\s(])((https?:\/\/)[^\s<]+)/g, '$1<a class="ai-link" href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
+    return withAutoLinks
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
@@ -626,7 +638,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     return this.allowedExtensions.has(extension) || this.allowedMimeTypes.has(file.type);
   }
 
-  private async uploadAttachments(files: File[]): Promise<Array<{ name: string; url: string; size: number; type: string }>> {
+  private async uploadAttachments(files: File[]): Promise<Array<{ name: string; url: string; size: number; type: string; path: string }>> {
     const profile = this.authService.profile();
     if (!profile?.userId) {
       throw new Error('Sign in required to upload attachments.');
@@ -645,17 +657,54 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     const sessionId = this.aiService.currentSessionId() || 'general';
     const timestamp = Date.now();
 
-    const uploads: Array<{ name: string; url: string; size: number; type: string }> = [];
+    const uploads: Array<{ name: string; url: string; size: number; type: string; path: string }> = [];
     for (const file of files) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = `ai-attachments/${profile.userId}/${sessionId}/${timestamp}-${safeName}`;
       const storageRef = storageModule.ref(storage, path);
       await storageModule.uploadBytes(storageRef, file);
       const url = await storageModule.getDownloadURL(storageRef);
-      uploads.push({ name: file.name, url, size: file.size, type: file.type });
+      uploads.push({ name: file.name, url, size: file.size, type: file.type, path });
     }
 
     return uploads;
+  }
+
+  private async extractAttachmentContext(
+    uploads: Array<{ name: string; url: string; size: number; type: string; path: string }>
+  ): Promise<Array<{ name: string; text: string; url: string; mimeType: string }>> {
+    const appModule = await import('firebase/app');
+    const functionsModule = await import('firebase/functions');
+    const { firebaseConfig } = await import('../../environments/environment');
+
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const extractAttachmentContent = functionsModule.httpsCallable<
+      { storagePath: string; fileName: string; mimeType: string },
+      { text: string; truncated: boolean; kind: 'text' | 'image' | 'unsupported' }
+    >(functions, 'extractAttachmentContent');
+
+    const results = await Promise.all(
+      uploads.map(async (upload) => {
+        const result = await extractAttachmentContent({
+          storagePath: upload.path,
+          fileName: upload.name,
+          mimeType: upload.type
+        });
+        return {
+          name: upload.name,
+          url: upload.url,
+          mimeType: upload.type || 'application/octet-stream',
+          text: result.data.text || ''
+        };
+      })
+    );
+
+    return results.filter(item => item.text && item.text.trim().length > 0);
   }
 
   async copyMessage(message: ChatMessage): Promise<void> {

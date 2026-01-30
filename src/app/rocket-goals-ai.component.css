@@ -633,6 +633,14 @@
   white-space: nowrap;
 }
 
+:host ::ng-deep .ai-message-bubble .ai-link,
+.ai-user-message .ai-link {
+  color: #38bdf8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
 :host ::ng-deep .ai-message-bubble em {
   color: #22c55e;
 }
