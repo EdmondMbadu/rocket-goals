@@ -608,12 +608,29 @@
   font-weight: 600;
 }
 
-:host ::ng-deep .ai-message-bubble .ai-link,
-.ai-user-message .ai-link {
+:host ::ng-deep .ai-message-bubble .ai-attachment-link,
+.ai-user-message .ai-attachment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.12);
   color: #38bdf8;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
   word-break: break-word;
+}
+
+.ai-attachment-icon {
+  font-size: 0.85rem;
+}
+
+.ai-attachment-name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 :host ::ng-deep .ai-message-bubble em {

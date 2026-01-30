@@ -354,7 +354,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
         const uploaded = await this.uploadAttachments(pendingAttachments);
         if (uploaded.length > 0) {
           const attachmentLines = uploaded
-            .map(att => `- [${att.name}](${att.url})\n  ${att.url}`)
+            .map(att => `- [${att.name}](${att.url})`)
             .join('\n');
           finalMessage = finalMessage
             ? `${finalMessage}\n\nAttachments:\n${attachmentLines}`
@@ -565,9 +565,8 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     const safe = this.escapeHtml(content);
     const withMarkdownLinks = safe
       .replace(/^### (.+)$/gm, '<h3 class="ai-heading">$1</h3>')
-      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="ai-link" href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-    const withAutoLinks = withMarkdownLinks.replace(/(^|[\s(])((https?:\/\/)[^\s<]+)/g, '$1<a class="ai-link" href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
-    return withAutoLinks
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="ai-attachment-link" href="$2" target="_blank" rel="noopener noreferrer"><span class="ai-attachment-icon" aria-hidden="true">📎</span><span class="ai-attachment-name">$1</span></a>');
+    return withMarkdownLinks
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
