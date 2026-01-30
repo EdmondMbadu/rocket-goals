@@ -227,9 +227,9 @@
                   <span class="telegram-text">Chat with your coach on Telegram</span>
                 </div>
                 <div class="telegram-banner-actions">
-                  <a [href]="telegramBotUrl()" target="_blank" rel="noopener noreferrer" class="telegram-connect-btn">
-                    Connect
-                  </a>
+                  <button class="telegram-connect-btn" (click)="connectTelegram()" [disabled]="telegramConnecting()">
+                    {{ telegramConnecting() ? 'Opening...' : 'Connect' }}
+                  </button>
                   <button class="telegram-dismiss-btn" (click)="dismissTelegramBanner()" title="Dismiss">
                     ×
                   </button>

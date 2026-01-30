@@ -399,11 +399,11 @@
           <div class="setting-row">
             <div>
               <p class="name">Connect Telegram</p>
-              <p class="muted tiny">Chat with your RocketGoals AI coach in Telegram. Open the bot, send <strong>/start</strong>, then tap the link we send you to link this account.</p>
+              <p class="muted tiny">Chat with your RocketGoals AI coach in Telegram. One click to connect!</p>
             </div>
-            <a [href]="telegramBotUrl()" target="_blank" rel="noopener noreferrer" class="solid xs">
-              Open Telegram to connect
-            </a>
+            <button class="solid xs" (click)="connectTelegram()" [disabled]="telegramConnecting()">
+              {{ telegramConnecting() ? 'Opening...' : 'Connect Telegram' }}
+            </button>
           </div>
         }
       </div>

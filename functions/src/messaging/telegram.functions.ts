@@ -545,6 +545,98 @@ async function createLinkToken(
 }
 
 /**
+ * Try to auto-link a Telegram account using a pre-generated token from the web app
+ * This enables 2-step linking: user clicks deep link from web → bot auto-links
+ */
+async function tryAutoLink(
+  token: string,
+  telegramId: string,
+  chatId: number,
+  firstName: string,
+  username?: string
+): Promise<boolean> {
+  try {
+    const tokenRef = admin.firestore().collection('telegramLinkTokens').doc(token);
+    const tokenDoc = await tokenRef.get();
+
+    if (!tokenDoc.exists) {
+      console.log('Auto-link: Token not found');
+      return false;
+    }
+
+    const tokenData = tokenDoc.data();
+
+    // Check if token is already used
+    if (tokenData?.used) {
+      console.log('Auto-link: Token already used');
+      return false;
+    }
+
+    // Check if token has expired
+    const now = admin.firestore.Timestamp.now();
+    if (tokenData?.expiresAt && tokenData.expiresAt.toMillis() < now.toMillis()) {
+      console.log('Auto-link: Token expired');
+      return false;
+    }
+
+    // Get the userId from the token (this is the key difference - token was created by authenticated user)
+    const userId = tokenData?.userId;
+    if (!userId) {
+      console.log('Auto-link: Token has no userId (old-style token)');
+      return false;
+    }
+
+    // Check if this Telegram account is already linked to another user
+    const existingLink = await admin.firestore()
+      .collection('telegramToUser')
+      .doc(telegramId)
+      .get();
+
+    if (existingLink.exists) {
+      const existingData = existingLink.data();
+      if (existingData?.userId !== userId) {
+        console.log('Auto-link: Telegram already linked to different user');
+        return false;
+      }
+      // Already linked to this user - success
+      return true;
+    }
+
+    // Create the link
+    const batch = admin.firestore().batch();
+
+    // Create telegramToUser index document
+    batch.set(admin.firestore().doc(`telegramToUser/${telegramId}`), {
+      userId,
+      linkedAt: admin.firestore.FieldValue.serverTimestamp(),
+      telegramUsername: username || null,
+      telegramFirstName: firstName,
+      telegramChatId: chatId
+    });
+
+    // Update user profile with Telegram info
+    batch.update(admin.firestore().doc(`userProfiles/${userId}`), {
+      telegramId,
+      telegramLinkedAt: admin.firestore.FieldValue.serverTimestamp(),
+      telegramUsername: username || null,
+      telegramChatId: chatId,
+      'messagingPreferences.telegramEnabled': true
+    });
+
+    // Mark token as used
+    batch.update(tokenRef, { used: true });
+
+    await batch.commit();
+
+    console.log(`✅ Auto-linked Telegram ${telegramId} to user ${userId}`);
+    return true;
+  } catch (error) {
+    console.error('Auto-link error:', error);
+    return false;
+  }
+}
+
+/**
  * Main Telegram Webhook Handler
  */
 export const telegramWebhook = onRequest({
@@ -589,17 +681,42 @@ export const telegramWebhook = onRequest({
 
     console.log(`📱 Telegram message from ${firstName} (${telegramId}): "${userMessage.substring(0, 50)}..."`);
 
-    // Handle /start command
-    if (userMessage === '/start') {
+    // Handle /start command (with optional auto-link token)
+    if (userMessage.startsWith('/start')) {
       const existingUser = await findUserByTelegramId(telegramId);
 
+      // Check for auto-link token: /start TOKEN
+      const startParts = userMessage.split(' ');
+      const autoLinkToken = startParts.length > 1 ? startParts[1] : null;
+
       if (existingUser) {
+        // Already linked
         await sendTelegramMessage(
           chatId,
           `Welcome back, ${firstName}! 🚀\n\nYour account is connected. How can I help you with your goals today?\n\n*Commands:*\n/goals - List your goals\n/current - Show current goal\n/help - Show all commands`,
           botToken
         );
+      } else if (autoLinkToken) {
+        // Try to auto-link with the provided token
+        const linked = await tryAutoLink(autoLinkToken, telegramId, chatId, firstName, username);
+
+        if (linked) {
+          await sendTelegramMessage(
+            chatId,
+            `🎉 Account linked successfully, ${firstName}!\n\nYou're all set to chat with your RocketGoals AI coach. I'll help you stay on track with your goals.\n\n*Commands:*\n/goals - List your goals\n/current - Show current goal\n/help - Show all commands\n\nTry saying: "What should I focus on today?"`,
+            botToken
+          );
+        } else {
+          // Token invalid or expired - fall back to regular flow
+          const linkToken = await createLinkToken(telegramId, chatId, firstName, username);
+          await sendTelegramMessage(
+            chatId,
+            `Welcome to RocketGoals! 🚀\n\nThe link token was invalid or expired. Here's a new one:\n\nhttps://rocketgoals.com/link-telegram?token=${linkToken}\n\n(This link expires in ${LINK_TOKEN_EXPIRY_MINUTES} minutes)`,
+            botToken
+          );
+        }
       } else {
+        // No token provided - send linking instructions
         const linkToken = await createLinkToken(telegramId, chatId, firstName, username);
         await sendTelegramMessage(
           chatId,

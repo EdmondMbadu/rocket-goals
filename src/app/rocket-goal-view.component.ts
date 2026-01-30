@@ -259,6 +259,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   // Telegram connection state
   telegramLinked = signal(false);
   telegramLoading = signal(false);
+  telegramConnecting = signal(false);
   showTelegramBanner = signal(true);
 
   async ngOnInit() {
@@ -4487,9 +4488,38 @@ Generate the milestones now (JSON array only, no other text):`;
   // Telegram Integration
   // ─────────────────────────────────────────────────────────────────────
 
-  /** URL to open the RocketGoals Telegram bot. */
-  telegramBotUrl(): string {
-    return 'https://t.me/RocketGoalsBot';
+  /** Generate a deep link and open Telegram for instant connection. */
+  async connectTelegram(): Promise<void> {
+    this.telegramConnecting.set(true);
+    try {
+      const appModule = await import('firebase/app');
+      const functionsModule = await import('firebase/functions');
+      const { firebaseConfig } = await import('../../environments/environment');
+
+      const app =
+        appModule.getApps().length === 0
+          ? appModule.initializeApp(firebaseConfig)
+          : appModule.getApp();
+
+      const functions = functionsModule.getFunctions(app, 'us-central1');
+      const generateTelegramDeepLink = functionsModule.httpsCallable(functions, 'generateTelegramDeepLink');
+      const result = await generateTelegramDeepLink({});
+      const data = result.data as { alreadyLinked: boolean; deepLink: string | null };
+
+      if (data.alreadyLinked) {
+        this.telegramLinked.set(true);
+        this.showTelegramBanner.set(false);
+        return;
+      }
+
+      if (data.deepLink) {
+        window.open(data.deepLink, '_blank');
+      }
+    } catch (err) {
+      console.error('Error generating Telegram deep link:', err);
+    } finally {
+      this.telegramConnecting.set(false);
+    }
   }
 
   /** Check if user has Telegram connected. */

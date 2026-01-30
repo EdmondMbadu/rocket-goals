@@ -20,6 +20,7 @@ export {
   linkTelegramAccount,
   unlinkTelegramAccount,
   getTelegramLinkStatus,
+  generateTelegramDeepLink,
   sendTelegramDailyCheckins,
   sendTelegramMissionLogReminders,
   sendTelegramGoalNudge

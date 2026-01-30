@@ -4,6 +4,7 @@ export {
   linkTelegramAccount,
   unlinkTelegramAccount,
   getTelegramLinkStatus,
+  generateTelegramDeepLink,
 } from "./telegram-linking.functions";
 export {
   sendTelegramDailyCheckins,

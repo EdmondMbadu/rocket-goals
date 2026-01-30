@@ -244,6 +244,71 @@ export const unlinkTelegramAccount = onCall({
 });
 
 /**
+ * Generate a deep link token for Telegram connection
+ * Called from the web app - creates a token that can auto-link when user opens Telegram
+ * This enables 2-step linking instead of 3-step
+ */
+export const generateTelegramDeepLink = onCall({
+  region: "us-central1",
+  cors: [
+    "https://rocket-goals.web.app",
+    "https://rocket-goals.firebaseapp.com",
+    "https://www.rocketgoals.com",
+    "https://rocketgoals.com",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200"
+  ]
+}, async (request) => {
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'Must be logged in to generate Telegram link');
+  }
+
+  // Check if user already has Telegram linked
+  const userProfile = await admin.firestore()
+    .collection('userProfiles')
+    .doc(userId)
+    .get();
+
+  if (userProfile.exists && userProfile.data()?.telegramId) {
+    return {
+      alreadyLinked: true,
+      deepLink: null
+    };
+  }
+
+  // Generate a token with the userId embedded
+  const token = admin.firestore().collection('telegramLinkTokens').doc().id;
+
+  const expiresAt = new Date();
+  expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 minute expiry
+
+  await admin.firestore()
+    .collection('telegramLinkTokens')
+    .doc(token)
+    .set({
+      userId, // This is the key difference - we know who the user is
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+      used: false,
+      source: 'web_deep_link'
+    });
+
+  // Generate the Telegram deep link
+  // Format: https://t.me/BotUsername?start=TOKEN
+  const deepLink = `https://t.me/RocketGoalsBot?start=${token}`;
+
+  console.log(`🔗 Generated Telegram deep link for user ${userId}`);
+
+  return {
+    alreadyLinked: false,
+    deepLink,
+    expiresAt: expiresAt.toISOString()
+  };
+});
+
+/**
  * Check if user has Telegram linked
  */
 export const getTelegramLinkStatus = onCall({
