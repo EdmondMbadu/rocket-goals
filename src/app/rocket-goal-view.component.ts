@@ -4518,7 +4518,6 @@ Generate the milestones now (JSON array only, no other text):`;
 
       if (data.alreadyLinked) {
         this.telegramLinked.set(true);
-        this.showTelegramBanner.set(false);
       }
 
       const deepLink = data.deepLink || "https://t.me/RocketGoalsBot";

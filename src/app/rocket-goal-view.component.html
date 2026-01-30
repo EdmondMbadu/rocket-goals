@@ -220,7 +220,7 @@
         <div class="right-column flex flex-col">
           @if (isGoalOwner()) {
             <!-- Telegram Connect Banner (show if not connected and not dismissed) -->
-            @if (!telegramLinked() && showTelegramBanner() && !telegramLoading()) {
+            @if (showTelegramBanner() && !telegramLoading()) {
               <div class="telegram-connect-banner">
                 <div class="telegram-banner-content">
                   <span class="telegram-icon">📱</span>
@@ -228,7 +228,7 @@
                 </div>
                 <div class="telegram-banner-actions">
                   <button class="telegram-connect-btn" (click)="connectTelegram()" [disabled]="telegramConnecting()">
-                    {{ telegramConnecting() ? 'Opening...' : 'Connect' }}
+                    {{ telegramConnecting() ? 'Opening...' : (telegramLinked() ? 'Open' : 'Connect') }}
                   </button>
                   <button class="telegram-dismiss-btn" (click)="dismissTelegramBanner()" title="Dismiss">
                     ×
