@@ -2813,13 +2813,13 @@ The final image should make the viewer think:
         // Initialize Gemini with image generation capabilities
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Use Gemini 2.0 Flash Experimental for image generation
+        // Use Gemini 2.5 Flash Image for native image generation
         // This model supports native image output with responseModalities
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-exp",
+            model: "gemini-2.5-flash-image",
         });
 
-        console.log(`🎨 Sending image generation request to Gemini 2.0 Flash...`);
+        console.log(`🎨 Sending image generation request to Gemini 2.5 Flash Image...`);
 
         // Build the content parts for the request
         const contentParts: any[] = [];
@@ -2859,7 +2859,7 @@ The final image should make the viewer think:
                 parts: contentParts
             }],
             generationConfig: {
-                responseModalities: ["image", "text"] as any,
+                responseModalities: ["Image", "Text"] as any,
             } as any,
         });
 
