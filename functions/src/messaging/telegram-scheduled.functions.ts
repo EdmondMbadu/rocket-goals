@@ -46,18 +46,29 @@ async function sendTelegramMessage(
  * Get user's active goal title
  */
 async function getActiveGoalTitle(userId: string): Promise<string | null> {
-  const goalsSnapshot = await admin.firestore()
-    .collection('rocketGoals')
-    .where('userId', '==', userId)
-    .where('status', '==', 'active')
-    .orderBy('createdAt', 'desc')
-    .limit(1)
-    .get();
+  try {
+    const goalsSnapshot = await admin.firestore()
+      .collection("rocketGoals")
+      .where("userId", "==", userId)
+      .where("status", "==", "active")
+      .limit(5)
+      .get();
 
-  if (goalsSnapshot.empty) return null;
+    if (goalsSnapshot.empty) return null;
 
-  const goalData = goalsSnapshot.docs[0].data();
-  return goalData.primaryGoal || goalData.answers?.primary_goal || 'your goal';
+    // Sort manually to avoid index requirement
+    const sortedDocs = goalsSnapshot.docs.sort((a, b) => {
+      const aTime = a.data().createdAt?.toMillis?.() || 0;
+      const bTime = b.data().createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
+    const goalData = sortedDocs[0].data();
+    return goalData.primaryGoal || goalData.answers?.primary_goal || "your goal";
+  } catch (error) {
+    console.error("Error getting active goal title:", error);
+    return null;
+  }
 }
 
 /**

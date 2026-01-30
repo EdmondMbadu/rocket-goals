@@ -67,43 +67,58 @@ async function findUserByTelegramId(telegramId: string): Promise<TelegramToUser 
  * Get user's active goal and context
  */
 async function getActiveGoalContext(userId: string): Promise<any> {
-  // Get user's most recent active goal
-  const goalsSnapshot = await admin.firestore()
-    .collection('rocketGoals')
-    .where('userId', '==', userId)
-    .where('status', '==', 'active')
-    .orderBy('createdAt', 'desc')
-    .limit(1)
-    .get();
+  try {
+    // Get user's active goals - simplified query to avoid index issues
+    const goalsSnapshot = await admin.firestore()
+      .collection("rocketGoals")
+      .where("userId", "==", userId)
+      .where("status", "==", "active")
+      .limit(5)
+      .get();
 
-  if (goalsSnapshot.empty) return null;
+    if (goalsSnapshot.empty) return null;
 
-  const goalDoc = goalsSnapshot.docs[0];
-  const goalData = goalDoc.data();
+    // Sort by createdAt manually to avoid compound index requirement
+    const sortedDocs = goalsSnapshot.docs.sort((a, b) => {
+      const aTime = a.data().createdAt?.toMillis?.() || 0;
+      const bTime = b.data().createdAt?.toMillis?.() || 0;
+      return bTime - aTime; // Descending
+    });
 
-  // Get calendar events for this goal
-  const eventsSnapshot = await admin.firestore()
-    .collection('rocketGoals')
-    .doc(goalDoc.id)
-    .collection('calendarEvents')
-    .orderBy('date', 'asc')
-    .limit(20)
-    .get();
+    const goalDoc = sortedDocs[0];
+    const goalData = goalDoc.data();
 
-  const calendarEvents = eventsSnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+    // Get calendar events for this goal (no ordering to avoid index)
+    let calendarEvents: any[] = [];
+    try {
+      const eventsSnapshot = await admin.firestore()
+        .collection("rocketGoals")
+        .doc(goalDoc.id)
+        .collection("calendarEvents")
+        .limit(20)
+        .get();
 
-  return {
-    id: goalDoc.id,
-    title: goalData.primaryGoal || goalData.answers?.primary_goal || 'Your Goal',
-    primaryGoal: goalData.primaryGoal,
-    status: goalData.status,
-    answers: goalData.answers || {},
-    copilot: goalData.copilot,
-    calendarEvents
-  };
+      calendarEvents = eventsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (e) {
+      console.log("Could not fetch calendar events:", e);
+    }
+
+    return {
+      id: goalDoc.id,
+      title: goalData.primaryGoal || goalData.answers?.primary_goal || "Your Goal",
+      primaryGoal: goalData.primaryGoal,
+      status: goalData.status,
+      answers: goalData.answers || {},
+      copilot: goalData.copilot,
+      calendarEvents,
+    };
+  } catch (error) {
+    console.error("Error getting goal context:", error);
+    return null; // Return null instead of throwing - AI can still respond without goal context
+  }
 }
 
 /**
