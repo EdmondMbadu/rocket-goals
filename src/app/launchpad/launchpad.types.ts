@@ -586,7 +586,7 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     imageUrl: '/assets/app-suite/lean-launch.png',
     coPilotAvatar: '/assets/jordan-blake.jpg',
     coPilotName: 'Coach Tess',
-    coPilotRole: 'Home Workout & Weight Loss Coach',
+    coPilotRole: 'Home Workout & Weight Loss Coach. Tess the "Time-Shifter" is sharp, no-nonsense, and packs dense 20-minute workouts.',
     color: 'from-emerald-950 via-slate-900 to-black',
     category: 'Health',
     accentColor: '#059669',

@@ -18,6 +18,7 @@ export class SignupComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   protected theme = inject(ThemeService);
+  readonly redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
 
   readonly signupForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -55,6 +56,9 @@ export class SignupComponent implements OnInit {
     this.serverError.set(null);
     this.verificationNotice.set(null);
     try {
+      if (this.redirectTo) {
+        sessionStorage.setItem('redirectTo', this.redirectTo);
+      }
       const { firstName, lastName, email, password } = this.signupForm.getRawValue();
       await this.authService.signUpWithEmail({ firstName, lastName, email, password });
       await this.authService.sendEmailVerification();
@@ -77,7 +81,7 @@ export class SignupComponent implements OnInit {
         // Send welcome email with Surge book for new users (fire and forget)
         this.authService.sendWelcomeEmail().catch(() => {});
       }
-      await this.router.navigateByUrl('/ai');
+      await this.router.navigateByUrl(this.redirectTo || '/ai');
     } catch {
       this.serverError.set(this.authService.authError());
     }
