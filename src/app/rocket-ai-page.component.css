@@ -806,6 +806,12 @@
   }
 }
 
+@media (max-width: 1023px) {
+  .mobile-hide {
+    display: none !important;
+  }
+}
+
 /* ===== DARK MODE STYLES ===== */
 .dark-mode {
   color: #e5e7eb;
