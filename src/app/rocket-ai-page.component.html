@@ -13,40 +13,7 @@
       </a>
       <div class="badge" *ngIf="isLoggedIn()">Premium AI</div>
     </div>
-    <div class="nav-center hidden md:block" *ngIf="isLoggedIn()">
-      <div class="nav-links">
-        <a routerLink="/goals" routerLinkActive="nav-active">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          Home
-        </a>
-        <a routerLink="/ai" routerLinkActive="nav-active">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          AI
-        </a>
-        <a routerLink="/profile" routerLinkActive="nav-active">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          Profile
-        </a>
-        <a routerLink="/app-suite" routerLinkActive="nav-active">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-          </svg>
-          App Suite
-        </a>
-      </div>
-    </div>
+    <div class="nav-center hidden" *ngIf="isLoggedIn()"></div>
     <div class="nav-right" *ngIf="isLoggedIn()">
       <a routerLink="/pricing" class="upgrade-btn">
         Upgrade
@@ -95,7 +62,7 @@
         <a routerLink="/login" class="ghost-btn">Log in</a>
         <button type="button" class="solid-btn" (click)="openGoalModal()">Launch Your Goal</button>
       </div>
-      <button type="button" class="ghost-btn icon-btn sm:hidden" (click)="toggleMobileNav()" aria-label="Open menu">
+      <button type="button" class="ghost-btn icon-btn md:hidden" (click)="toggleMobileNav()" aria-label="Open menu">
         <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
