@@ -796,6 +796,16 @@
   padding: 9px 12px;
 }
 
+.mobile-only {
+  display: inline-flex;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
 /* ===== DARK MODE STYLES ===== */
 .dark-mode {
   color: #e5e7eb;
