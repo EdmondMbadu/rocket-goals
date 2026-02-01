@@ -40,7 +40,7 @@
           ROCKET<span class="text-red-600">GOALS</span>
         </span>
       </a>
-      <div class="flex-1 flex items-center justify-center gap-6">
+      <div class="hidden md:flex flex-1 items-center justify-center gap-6">
         <a routerLink="/goals" routerLinkActive="text-red-600 border-b-2 border-red-600"
           class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,9 +101,30 @@
           }
         </button>
         <app-avatar-dropdown />
+        <button type="button" (click)="toggleMobileNav()"
+          class="md:hidden p-2.5 rounded-full border border-black/10 text-black/70 hover:bg-black/5 transition-colors dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+          aria-label="Open menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
       </div>
     </div>
   </header>
+
+  @if (mobileNavOpen()) {
+  <div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden" (click)="closeMobileNav()"></div>
+  <div
+    class="fixed top-24 left-4 right-4 z-50 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-black/10 dark:border-white/10 shadow-2xl md:hidden">
+    <div class="p-4 grid gap-2 text-sm font-semibold">
+      <a routerLink="/goals" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Home</a>
+      <a routerLink="/ai" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">AI</a>
+      <a routerLink="/profile" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Profile</a>
+      <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">App Suite</a>
+      <a routerLink="/pricing" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Upgrade</a>
+    </div>
+  </div>
+  }
 
   <!-- Main Content -->
   <div class="flex-1 overflow-y-auto p-6 md:p-8 relative z-30">

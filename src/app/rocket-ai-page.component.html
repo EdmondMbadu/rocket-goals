@@ -13,7 +13,7 @@
       </a>
       <div class="badge" *ngIf="isLoggedIn()">Premium AI</div>
     </div>
-    <div class="nav-center" *ngIf="isLoggedIn()">
+    <div class="nav-center hidden md:block" *ngIf="isLoggedIn()">
       <div class="nav-links">
         <a routerLink="/goals" routerLinkActive="nav-active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,6 +73,11 @@
         </svg>
       </button>
       <app-avatar-dropdown />
+      <button type="button" class="ghost-btn icon-btn md:hidden" (click)="toggleMobileNav()" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
     </div>
     <div class="nav-right" *ngIf="!isLoggedIn()">
       <button type="button" class="ghost-btn icon-btn" (click)="toggleTheme()" aria-label="Toggle theme">
@@ -86,10 +91,36 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
         </svg>
       </button>
-      <a routerLink="/login" class="ghost-btn">Log in</a>
-      <button type="button" class="solid-btn" (click)="openGoalModal()">Launch Your Goal</button>
+      <div class="hidden sm:flex items-center gap-2">
+        <a routerLink="/login" class="ghost-btn">Log in</a>
+        <button type="button" class="solid-btn" (click)="openGoalModal()">Launch Your Goal</button>
+      </div>
+      <button type="button" class="ghost-btn icon-btn sm:hidden" (click)="toggleMobileNav()" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
     </div>
   </header>
+
+  @if (mobileNavOpen()) {
+  <div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden" (click)="closeMobileNav()"></div>
+  <div class="fixed top-20 left-4 right-4 z-50 rounded-2xl shadow-2xl md:hidden glass">
+    <div class="p-4 grid gap-2 text-sm font-semibold">
+      @if (isLoggedIn()) {
+      <a routerLink="/goals" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">Home</a>
+      <a routerLink="/ai" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">AI</a>
+      <a routerLink="/profile" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">Profile</a>
+      <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">App Suite</a>
+      <a routerLink="/pricing" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">Upgrade</a>
+      } @else {
+      <a routerLink="/login" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">Log in</a>
+      <button type="button" class="px-4 py-3 rounded-xl solid-btn text-center" (click)="openGoalModal(); closeMobileNav()">Launch Your Goal</button>
+      <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl">App Suite</a>
+      }
+    </div>
+  </div>
+  }
 
   <main class="ai-layout" [class.history-hidden]="!showHistory() || !isLoggedIn()" [class.logged-out]="!isLoggedIn()">
     <aside class="history-panel glass" *ngIf="showHistory() && isLoggedIn()">

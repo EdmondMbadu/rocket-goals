@@ -56,6 +56,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly functions = getFunctions(getApp(), 'us-central1');
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
+  protected readonly mobileNavOpen = signal(false);
   private routerSubscription?: Subscription;
   private storage: any = null;
 
@@ -374,6 +375,14 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   navigateToGoal(goalId: string) {

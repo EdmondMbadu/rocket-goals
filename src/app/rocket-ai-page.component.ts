@@ -56,6 +56,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly showHistory = signal(true);
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
+  protected readonly mobileNavOpen = signal(false);
   protected readonly sessions = this.aiService.sessions;
   protected readonly sessionsLoading = this.aiService.sessionsLoading;
   protected readonly sessionsError = this.aiService.sessionsError;
@@ -367,6 +368,14 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected toggleTheme(): void {
     this.theme.toggleDarkMode();
+  }
+
+  protected toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  protected closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   protected toggleHistory(): void {
