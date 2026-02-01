@@ -239,18 +239,18 @@ export class AppSuiteComponent implements OnInit {
     },
     {
       id: 'lean-launch',
-      name: 'LeanLaunch',
-      tagline: 'Elite body transformation & composition mastery.',
-      description: 'Transform your body with sustainable habits. Track nutrition, workouts, and progress toward your ideal weight.',
+      name: 'Home Workout and Weight Loss',
+      tagline: 'Home workout plan and weight loss coaching.',
+      description: 'Build a sustainable home workout routine and lose weight with simple, guided coaching and tracking.',
       icon: '⚖️',
       imageUrl: '/assets/app-suite/lean-launch.png',
       color: 'from-emerald-950 via-slate-900 to-black',
       category: 'Health',
       defaultGoals: {
-        primaryGoal: 'Achieve my ideal weight and body composition',
+        primaryGoal: 'Lose weight with consistent home workouts',
         theme: 'health',
         dailyEffort: '30min',
-        objectives: ['Track calories', 'Daily movement', 'Weekly weigh-ins']
+        objectives: ['Weekly workouts', 'Daily movement', 'Weekly weigh-ins']
       }
     }
   ];

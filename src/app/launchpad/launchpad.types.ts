@@ -579,14 +579,14 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
   },
   'lean-launch': {
     id: 'lean-launch',
-    name: 'LeanLaunch',
-    tagline: 'Elite body transformation & composition mastery.',
-    description: 'Master your physical potential with elite-level transformation protocols. Track every metric of your body composition, optimize nutrition, and execute high-performance workouts with AI-driven precision.',
+    name: 'Home Workout and Weight Loss',
+    tagline: 'Home workout plan and weight loss coaching.',
+    description: 'Build a sustainable home workout routine and lose weight with guided coaching, simple tracking, and momentum you can keep.',
     icon: '⚖️',
     imageUrl: '/assets/app-suite/lean-launch.png',
     coPilotAvatar: '/assets/jordan-blake.jpg',
-    coPilotName: 'Coach Jordan Blake',
-    coPilotRole: 'Weight Loss & Fitness Coach',
+    coPilotName: 'Coach Tess',
+    coPilotRole: 'Home Workout & Weight Loss Coach',
     color: 'from-emerald-950 via-slate-900 to-black',
     category: 'Health',
     accentColor: '#059669',
@@ -594,18 +594,18 @@ export const LAUNCHPAD_TEMPLATES: Record<string, LaunchpadTemplate> = {
     gradientVia: '#020617',
     gradientTo: '#000000',
     features: [
-      'Precision calorie & macro tracking',
-      'Body composition analytics',
-      'High-performance workout planning',
-      'Visual transformation timeline',
-      'Metabolic health monitoring',
-      'Elite mindset & motivation coaching'
+      'Simple home workout planning',
+      'Weekly progress check-ins',
+      'Lightweight nutrition guidance',
+      'Body composition tracking',
+      'Motivation & habit building',
+      'Accountability and coaching prompts'
     ],
     defaultGoals: {
-      primaryGoal: 'Achieve my ideal weight and body composition',
+      primaryGoal: 'Lose weight with consistent home workouts',
       theme: 'health',
       dailyEffort: '30min',
-      objectives: ['Track calories', 'Daily movement', 'Weekly weigh-ins']
+      objectives: ['Weekly workouts', 'Daily movement', 'Weekly weigh-ins']
     },
     oneThingMetric: {
       label: 'Target Weight',
