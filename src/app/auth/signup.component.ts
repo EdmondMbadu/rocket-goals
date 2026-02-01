@@ -19,6 +19,7 @@ export class SignupComponent implements OnInit {
   private route = inject(ActivatedRoute);
   protected theme = inject(ThemeService);
   readonly redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
+  readonly mobileNavOpen = signal(false);
 
   readonly signupForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -85,6 +86,14 @@ export class SignupComponent implements OnInit {
     } catch {
       this.serverError.set(this.authService.authError());
     }
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   async resendVerificationEmail() {

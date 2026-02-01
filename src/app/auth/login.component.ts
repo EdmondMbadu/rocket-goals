@@ -18,6 +18,7 @@ export class LoginComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   protected theme = inject(ThemeService);
+  readonly redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -30,6 +31,7 @@ export class LoginComponent {
   readonly resetError = signal<string | null>(null);
   readonly sendingReset = signal(false);
   readonly verificationNotice = signal<string | null>(null);
+  readonly mobileNavOpen = signal(false);
 
   ngOnInit() {
     const verified = this.route.snapshot.queryParamMap.get('verified');
@@ -111,6 +113,14 @@ export class LoginComponent {
       sessionStorage.removeItem('redirectTo');
     }
     return queryRedirect || storedRedirect || '/ai';
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   /** True when user was sent here to complete Telegram account linking. */
