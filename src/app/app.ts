@@ -104,6 +104,7 @@ export class App implements AfterViewInit, OnDestroy {
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
   private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book']);
   protected currentRoute = signal<string>(this.router.url || '/');
+  protected mobileNavOpen = signal(false);
   protected readonly isAuthRoute = computed(() => {
     const route = this.currentRoute();
     // Show router outlet for auth routes and component routes (goals, rocketgoal, profile)
@@ -156,6 +157,7 @@ export class App implements AfterViewInit, OnDestroy {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
         this.currentRoute.set(event.urlAfterRedirects || event.url);
+        this.mobileNavOpen.set(false);
         // Auto-start challenge if query param is present (works on any route)
         const urlString = event.urlAfterRedirects || event.url;
         this.checkAndStartChallenge(urlString);
@@ -183,6 +185,14 @@ export class App implements AfterViewInit, OnDestroy {
         }
       }
     });
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   toggleDarkMode() {

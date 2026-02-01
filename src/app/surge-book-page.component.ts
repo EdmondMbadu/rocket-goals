@@ -96,19 +96,55 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
               @if (isLoggedIn()) {
               <app-avatar-dropdown />
               } @else {
-              <a routerLink="/login" class="px-5 py-2 text-sm font-bold border rounded-full transition-colors"
-                [class]="isDarkMode() ? 'text-white/80 border-white/20 hover:bg-white/10' : 'text-slate-700 border-slate-300 hover:bg-slate-100'">
-                Log in
-              </a>
-              <a routerLink="/signup"
-                class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30">
-                Start Free
-              </a>
+              <div class="hidden sm:flex items-center gap-3">
+                <a routerLink="/login" class="px-5 py-2 text-sm font-bold border rounded-full transition-colors"
+                  [class]="isDarkMode() ? 'text-white/80 border-white/20 hover:bg-white/10' : 'text-slate-700 border-slate-300 hover:bg-slate-100'">
+                  Log in
+                </a>
+                <a routerLink="/signup"
+                  class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30">
+                  Start Free
+                </a>
+              </div>
               }
+              <button type="button" (click)="toggleMobileNav()"
+                class="sm:hidden p-2 rounded-full border transition-colors"
+                [class]="isDarkMode() ? 'border-white/20 text-white/80 hover:text-white hover:bg-white/10' : 'border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-100'"
+                aria-label="Open menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
       </nav>
+
+      @if (mobileNavOpen()) {
+      <div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm sm:hidden" (click)="closeMobileNav()"></div>
+      <div class="fixed top-20 left-4 right-4 z-50 rounded-2xl shadow-2xl sm:hidden"
+        [class]="isDarkMode() ? 'bg-slate-950 border border-white/10' : 'bg-white border border-slate-200'">
+        <div class="p-4 grid gap-2 text-sm font-semibold">
+          @if (isLoggedIn()) {
+          <a routerLink="/goals" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl"
+            [class]="isDarkMode() ? 'hover:bg-white/10' : 'hover:bg-slate-100'">Home</a>
+          <a routerLink="/ai" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl"
+            [class]="isDarkMode() ? 'hover:bg-white/10' : 'hover:bg-slate-100'">AI</a>
+          <a routerLink="/profile" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl"
+            [class]="isDarkMode() ? 'hover:bg-white/10' : 'hover:bg-slate-100'">Profile</a>
+          <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl"
+            [class]="isDarkMode() ? 'hover:bg-white/10' : 'hover:bg-slate-100'">App Suite</a>
+          } @else {
+          <a routerLink="/login" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl"
+            [class]="isDarkMode() ? 'hover:bg-white/10' : 'hover:bg-slate-100'">Log in</a>
+          <a routerLink="/signup" (click)="closeMobileNav()"
+            class="px-4 py-3 rounded-xl bg-red-600 text-white text-center">Start Free</a>
+          <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl"
+            [class]="isDarkMode() ? 'hover:bg-white/10' : 'hover:bg-slate-100'">App Suite</a>
+          }
+        </div>
+      </div>
+      }
 
       <!-- Spacer for fixed nav -->
       <div class="h-20"></div>
@@ -693,6 +729,7 @@ export class SurgeBookPageComponent implements OnInit {
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
+  protected readonly mobileNavOpen = signal(false);
 
   readonly bookPdfUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FSurge_%2042_High_Velocity_Prompts_PDF_Final.pdf?alt=media&token=c2a60c20-e51b-49ea-bcae-1800545ce047';
   readonly bookImageUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2Fsurge-book.png?alt=media&token=1fa8febd-bf3e-4bce-aa9f-13ed5cb03462';
@@ -712,6 +749,14 @@ export class SurgeBookPageComponent implements OnInit {
 
   ngOnInit(): void {
     window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   toggleTheme(): void {

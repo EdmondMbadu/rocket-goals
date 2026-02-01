@@ -43,6 +43,7 @@ export class AppSuiteComponent implements OnInit {
   protected readonly isCreating = signal(false);
   protected readonly selectedTemplate = signal<PrebuiltTemplate | null>(null);
   protected readonly showConfirmModal = signal(false);
+  protected readonly mobileNavOpen = signal(false);
 
   readonly prebuiltTemplates: PrebuiltTemplate[] = [
     {
@@ -267,6 +268,14 @@ export class AppSuiteComponent implements OnInit {
 
   toggleTheme() {
     this.theme.toggleDarkMode();
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.set(!this.mobileNavOpen());
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   selectTemplate(template: PrebuiltTemplate) {
