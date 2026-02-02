@@ -242,7 +242,7 @@ export class AppSuiteComponent implements OnInit {
       id: 'lean-launch',
       name: 'Home Workout and Weight Loss',
       tagline: 'Home workout plan and weight loss coaching.',
-      description: 'Build a sustainable home workout routine and lose weight with simple, guided coaching and tracking.',
+      description: 'Home Workout & Weight Loss Coach. Tess the "Time-Shifter" is a sharp, no-nonsense coach backed by the latest training and nutrition innovations. She can help you create power-packed 20-30 minute home workouts routines tailored to your schedule and goals, while also building a personalized diet and weight loss plan.\n\n"I\'ll be your lead strategist for this mission. Our objective is to optimize your health trajectory through focused execution and high-performance protocols."',
       icon: '⚖️',
       imageUrl: '/assets/app-suite/lean-launch.png',
       color: 'from-emerald-950 via-slate-900 to-black',
