@@ -231,9 +231,10 @@ export class LaunchpadService {
 
       // Parse the response
       const milestones = this.parseMilestonesResponse(response, totalDays, startTime);
+      const normalizedMilestones = this.ensureMilestonesForAllDays(milestones, totalDays, startTime, template);
 
       // Create action items and calendar events from milestones
-      for (const milestone of milestones) {
+      for (const milestone of normalizedMilestones) {
         // Create action item
         await this.actionItemsService.createActionItem({
           goalId,
@@ -248,7 +249,7 @@ export class LaunchpadService {
         await this.createCalendarEventForMilestone(goalId, milestone.title, milestoneDate);
       }
 
-      console.log(`Generated ${milestones.length} milestones with calendar events for goal ${goalId}`);
+      console.log(`Generated ${normalizedMilestones.length} milestones with calendar events for goal ${goalId}`);
     } catch (error) {
       console.error('Error generating milestones:', error);
       // Don't throw - milestone generation failure shouldn't block goal creation
@@ -364,6 +365,47 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
         dayNumber
       };
     }).filter(m => m.title);
+  }
+
+  private ensureMilestonesForAllDays(
+    milestones: Array<{ title: string; date?: string; dayNumber: number }>,
+    totalDays: number,
+    startTime: number,
+    template: LaunchpadTemplate
+  ): Array<{ title: string; date: string; dayNumber: number }> {
+    const dayMs = 24 * 60 * 60 * 1000;
+    const byDay = new Map<number, { title: string; date: string; dayNumber: number }>();
+
+    for (const milestone of milestones) {
+      if (!milestone?.title) continue;
+      const dayNumber = Math.min(Math.max(1, milestone.dayNumber), totalDays);
+      const date = milestone.date || this.formatDateISO(new Date(startTime + ((dayNumber - 1) * dayMs)));
+      if (!byDay.has(dayNumber)) {
+        byDay.set(dayNumber, { title: milestone.title.trim(), date, dayNumber });
+      }
+    }
+
+    const normalized: Array<{ title: string; date: string; dayNumber: number }> = [];
+    for (let day = 1; day <= totalDays; day++) {
+      const date = this.formatDateISO(new Date(startTime + ((day - 1) * dayMs)));
+      const existing = byDay.get(day);
+      if (existing) {
+        normalized.push({ ...existing, date });
+        continue;
+      }
+      normalized.push({
+        title: this.buildFallbackMilestoneTitle(template, day),
+        date,
+        dayNumber: day
+      });
+    }
+
+    return normalized;
+  }
+
+  private buildFallbackMilestoneTitle(template: LaunchpadTemplate, dayNumber: number): string {
+    const goal = template.defaultGoals.primaryGoal || template.name || 'your mission';
+    return `Day ${dayNumber}: Make progress toward ${goal}`;
   }
 
   /**
@@ -495,4 +537,3 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
     }
   }
 }
-

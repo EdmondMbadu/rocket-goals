@@ -3185,9 +3185,8 @@ ${url}`;
     if (obstacles) contextSection += `\nPotential obstacles to address: ${obstacles}`;
     if (motivation) contextSection += `\nCore motivation: ${motivation}`;
 
-    const isLongGoal = totalDays > 30;
-    const milestoneCount = isLongGoal ? Math.max(1, Math.ceil(rangeDays / 7)) : rangeDays;
-    const milestoneType = isLongGoal ? 'weekly' : 'daily';
+    const milestoneCount = rangeDays;
+    const milestoneType = 'daily';
 
     const prompt = `Create ${milestoneCount} ${milestoneType} milestones for achieving: "${goalTitle}"
 
@@ -3197,7 +3196,7 @@ ${contextSection}
 
 REQUIREMENTS:
 1. Return milestones ONLY for day numbers in the range ${clampedStart} to ${clampedEnd}
-2. Generate EXACTLY ${milestoneCount} milestones
+2. Generate EXACTLY ${milestoneCount} milestones (ONE per day)
 3. Each milestone must be specific, actionable, and measurable
 4. Build progressive momentum and keep effort realistic for this period
 
