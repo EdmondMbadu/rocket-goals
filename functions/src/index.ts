@@ -1581,6 +1581,29 @@ type MilestoneEmailItem = {
     updateUrl: string;
 };
 
+type GroupedGoalReminderItem = {
+    id: string;
+    title: string;
+    url: string;
+    milestones?: MilestoneEmailItem[];
+    activeMilestone?: string;
+    oneThing?: string;
+    missionLogSummary?: string;
+};
+
+type GroupedGoalEmailOptions = {
+    subject: string;
+    headline: string;
+    intro: string;
+    ctaLabel: string;
+    includeMilestones?: boolean;
+    includeActiveMilestone?: boolean;
+    includeOneThing?: boolean;
+    includeMissionLogSummary?: boolean;
+    footerText?: string;
+    footerHtml?: string;
+};
+
 /**
  * Helper function to generate goal reminder email content
  */
@@ -1648,6 +1671,123 @@ Keep pushing forward! 🚀
     `;
 
     return { subject, text, html };
+}
+
+function buildGroupedGoalBlocks(
+    goals: GroupedGoalReminderItem[],
+    options: GroupedGoalEmailOptions
+): { text: string; html: string } {
+    const textSections = goals.map((goal, index) => {
+        const lines: string[] = [];
+        lines.push(`${index + 1}. ${goal.title}`);
+        lines.push(`   Link: ${goal.url}`);
+
+        if (options.includeActiveMilestone && goal.activeMilestone) {
+            lines.push(`   Active milestone: ${goal.activeMilestone}`);
+        }
+        if (options.includeOneThing && goal.oneThing) {
+            lines.push(`   ONE Thing: ${goal.oneThing}`);
+        }
+        if (options.includeMissionLogSummary && goal.missionLogSummary) {
+            lines.push(`   Last mission log: ${goal.missionLogSummary}`);
+        }
+        if (options.includeMilestones && goal.milestones && goal.milestones.length) {
+            lines.push('   Upcoming milestones:');
+            goal.milestones.forEach(milestone => {
+                lines.push(`   - ${milestone.title} (${milestone.dateLabel})`);
+            });
+        }
+
+        return lines.join('\n');
+    });
+
+    const text = textSections.join('\n\n');
+
+    const htmlItems = goals.map(goal => {
+        const detailLines: string[] = [];
+        if (options.includeActiveMilestone && goal.activeMilestone) {
+            detailLines.push(`<p style="margin: 4px 0 0 0; color: #6b7280; font-size: 13px;"><strong>Active milestone:</strong> ${goal.activeMilestone}</p>`);
+        }
+        if (options.includeOneThing && goal.oneThing) {
+            detailLines.push(`<p style="margin: 4px 0 0 0; color: #6b7280; font-size: 13px;"><strong>ONE Thing:</strong> ${goal.oneThing}</p>`);
+        }
+        if (options.includeMissionLogSummary && goal.missionLogSummary) {
+            detailLines.push(`<p style="margin: 4px 0 0 0; color: #6b7280; font-size: 13px;"><strong>Last mission log:</strong> ${goal.missionLogSummary}</p>`);
+        }
+
+        let milestonesHtml = '';
+        if (options.includeMilestones && goal.milestones && goal.milestones.length) {
+            const milestoneItems = goal.milestones
+                .map(milestone => `<li style="margin: 4px 0;">${milestone.title} <span style="color: #9ca3af;">(${milestone.dateLabel})</span></li>`)
+                .join('');
+            milestonesHtml = `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600; font-size: 13px;">Upcoming milestones</p>
+                    <ul style="margin: 0; padding-left: 18px; color: #6b7280; font-size: 13px; line-height: 1.5;">
+                        ${milestoneItems}
+                    </ul>
+                </div>
+            `;
+        }
+
+        return `
+            <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 14px; background: #ffffff;">
+                <p style="margin: 0; color: #111827; font-weight: 700; font-size: 16px;">${goal.title}</p>
+                ${detailLines.join('')}
+                ${milestonesHtml}
+                <div style="margin-top: 14px;">
+                    <a href="${goal.url}"
+                       style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 13px;">
+                        ${options.ctaLabel}
+                    </a>
+                </div>
+            </div>
+        `;
+    });
+
+    const html = htmlItems.join('');
+    return { text, html };
+}
+
+function generateGroupedGoalReminderEmail(
+    participantName: string,
+    goals: GroupedGoalReminderItem[],
+    options: GroupedGoalEmailOptions
+) {
+    const safeName = participantName.trim() || 'there';
+    const blocks = buildGroupedGoalBlocks(goals, options);
+    const footerText = options.footerText || 'Keep pushing forward! 🚀\n\n- The Rocket Goals Team';
+    const footerHtml = options.footerHtml || `
+        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 24px 0 0 0;">Keep pushing forward! 🚀</p>
+        <p style="color: #9ca3af; font-size: 14px; margin: 12px 0 0 0;">- The Rocket Goals Team</p>
+    `;
+
+    const text = `Hi ${safeName},
+
+${options.headline}
+
+${options.intro}
+
+${blocks.text}
+
+${footerText}`;
+
+    const html = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 Rocket Goals</h1>
+            </div>
+            <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">${options.headline}</h2>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hi ${safeName},</p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">${options.intro}</p>
+                ${blocks.html}
+                ${footerHtml}
+            </div>
+        </div>
+    `;
+
+    return { subject: options.subject, text, html };
 }
 
 function buildMilestoneEmailBlocks(milestones: MilestoneEmailItem[]): { text: string; html: string } {
@@ -1981,6 +2121,169 @@ export const sendTestGoalReminder = functions.runWith({
 });
 
 /**
+ * Cloud Function to send a test daily reminder (grouped by user) for ignition or mission log
+ * Only accessible by admin users
+ */
+export const sendTestDailyReminder = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: { email: string; reminderType: ReminderType }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send test reminder emails.'
+        );
+    }
+
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can send test reminder emails.'
+        );
+    }
+
+    const email = data?.email?.trim().toLowerCase();
+    const reminderType = data?.reminderType || 'mission_log';
+
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing required field: email');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid email address format');
+    }
+
+    if (reminderType !== 'ignition' && reminderType !== 'mission_log') {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid reminder type');
+    }
+
+    try {
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set. Please set it using: firebase functions:secrets:set SENDGRID_API_KEY');
+        }
+        sgMail.setApiKey(apiKey);
+
+        const goalsSnapshot = await admin.firestore()
+            .collection('rocketGoals')
+            .where('participant.email', '==', email)
+            .get();
+
+        if (goalsSnapshot.empty) {
+            throw new functions.https.HttpsError('not-found', 'No goals found for this email.');
+        }
+
+        const activeGoals = goalsSnapshot.docs.filter(doc => (doc.data().status || 'active') === 'active');
+        if (!activeGoals.length) {
+            throw new functions.https.HttpsError('not-found', 'No active goals found for this email.');
+        }
+
+        const firstParticipant = activeGoals[0].data().participant || {};
+        const participantName = firstParticipant.firstName
+            ? `${firstParticipant.firstName} ${firstParticipant.lastName || ''}`.trim()
+            : email.split('@')[0];
+
+        const goals: GroupedGoalReminderItem[] = [];
+
+        for (const goalDoc of activeGoals) {
+            const goalData = goalDoc.data();
+            const goalTitle = goalData.primaryGoal || goalData.answers?.goal_title_label || 'Your Rocket Goal';
+            const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalDoc.id}?tab=checkins&checkin=${reminderType}`;
+
+            const [milestones, activeMilestone, latestIgnition, latestMissionLog] = await Promise.all([
+                getUpcomingMilestones(goalDoc.id, goalData),
+                getActiveMilestoneLabel(goalDoc.id, goalData),
+                getLatestDailyIgnition(goalDoc.id),
+                getLatestMissionLog(goalDoc.id)
+            ]);
+
+            const oneThing = (latestIgnition?.oneThingText || activeMilestone || '').trim();
+            const missionLogSummary = summarizeMissionLog(latestMissionLog);
+
+            goals.push({
+                id: goalDoc.id,
+                title: goalTitle,
+                url: goalUrl,
+                milestones: milestones.slice(0, 3),
+                activeMilestone,
+                oneThing,
+                missionLogSummary
+            });
+        }
+
+        let templates: { subject?: string; text?: string; html?: string } | undefined;
+        const reminderSnapshot = await admin.firestore()
+            .collection('scheduledReminders')
+            .where('enabled', '==', true)
+            .where('reminderType', '==', reminderType)
+            .orderBy('time', 'asc')
+            .limit(1)
+            .get();
+
+        if (!reminderSnapshot.empty) {
+            const reminderData = reminderSnapshot.docs[0].data() as ScheduledReminder;
+            templates = {
+                subject: reminderData.emailSubject,
+                text: reminderData.emailBodyText,
+                html: reminderData.emailBodyHtml
+            };
+        } else {
+            const fallback = getDefaultReminderEmailTemplate(reminderType);
+            templates = {
+                subject: fallback.subject,
+                text: fallback.text,
+                html: fallback.html
+            };
+        }
+
+        const { subject, text, html } = buildGroupedReminderEmailContent(
+            reminderType,
+            participantName,
+            goals,
+            templates
+        );
+
+        const msg = {
+            to: email,
+            from: 'missioncontrol@rocketgoals.com',
+            subject,
+            text,
+            html
+        };
+
+        await sgMail.send(msg);
+
+        return {
+            success: true,
+            message: `Test ${reminderType === 'ignition' ? 'Daily Ignition' : 'Mission Log'} reminder sent to ${email}.`,
+            goals: goals.length
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending test daily reminder email:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send test reminder email: ${error.message}`
+        );
+    }
+});
+
+/**
  * Cloud Function to send bulk goal reminders to all active goals
  * Only accessible by admin users
  */
@@ -2041,6 +2344,8 @@ export const sendBulkGoalReminders = functions.runWith({
             errors: [] as Array<{ goalId: string; email: string; error: string }>
         };
 
+        const groupedByEmail = new Map<string, { email: string; name: string; goals: GroupedGoalReminderItem[] }>();
+
         // Process goals in batches to avoid overwhelming SendGrid
         const batchSize = 10;
         const goals = goalsSnapshot.docs;
@@ -2072,31 +2377,29 @@ export const sendBulkGoalReminders = functions.runWith({
                             ? `${participant.firstName} ${participant.lastName || ''}`.trim()
                             : participant.email.split('@')[0];
 
-                        const milestones = await getUpcomingMilestones(goalId, goalData);
-
-                        // Generate email content
-                        const emailContent = generateGoalReminderEmail(
-                            goalTitle,
-                            participantName,
-                            participant.email,
-                            goalId,
+                        const milestones = (await getUpcomingMilestones(goalId, goalData)).slice(0, 3);
+                        const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}?tab=milestones`;
+                        const goalItem: GroupedGoalReminderItem = {
+                            id: goalId,
+                            title: goalTitle,
+                            url: goalUrl,
                             milestones
-                        );
-
-                        // Create email message
-                        const msg = {
-                            to: participant.email,
-                            from: 'missioncontrol@rocketgoals.com',
-                            subject: emailContent.subject,
-                            text: emailContent.text,
-                            html: emailContent.html,
                         };
 
-                        // Send the email
-                        await sgMail.send(msg);
-                        results.sent++;
-
-                        console.log(`✅ Reminder sent to ${participant.email} for goal: ${goalTitle}`);
+                        const emailKey = participant.email.toLowerCase();
+                        const existing = groupedByEmail.get(emailKey);
+                        if (existing) {
+                            existing.goals.push(goalItem);
+                            if (!existing.name) {
+                                existing.name = participantName;
+                            }
+                        } else {
+                            groupedByEmail.set(emailKey, {
+                                email: participant.email,
+                                name: participantName,
+                                goals: [goalItem]
+                            });
+                        }
                     } catch (error: any) {
                         results.failed++;
                         const goalData = goalDoc.data();
@@ -2117,6 +2420,66 @@ export const sendBulkGoalReminders = functions.runWith({
             }
         }
 
+        const recipients = Array.from(groupedByEmail.values());
+        if (!recipients.length) {
+            return {
+                success: true,
+                message: 'No valid participants found to send reminders to.',
+                sent: results.sent,
+                failed: results.failed,
+                total: 0,
+                errors: results.errors.slice(0, 10)
+            };
+        }
+
+        const emailOptions: GroupedGoalEmailOptions = {
+            subject: '🚀 Your Rocket Goals progress reminders',
+            headline: 'Time to update your progress!',
+            intro: 'Here are your active goals. Pick one to update and keep your momentum going.',
+            ctaLabel: 'Update goal',
+            includeMilestones: true
+        };
+
+        for (let i = 0; i < recipients.length; i += batchSize) {
+            const batch = recipients.slice(i, i + batchSize);
+
+            await Promise.allSettled(
+                batch.map(async (recipient) => {
+                    try {
+                        const emailContent = generateGroupedGoalReminderEmail(
+                            recipient.name,
+                            recipient.goals,
+                            emailOptions
+                        );
+
+                        const msg = {
+                            to: recipient.email,
+                            from: 'missioncontrol@rocketgoals.com',
+                            subject: emailContent.subject,
+                            text: emailContent.text,
+                            html: emailContent.html,
+                        };
+
+                        await sgMail.send(msg);
+                        results.sent++;
+                        console.log(`✅ Grouped reminder sent to ${recipient.email} (${recipient.goals.length} goals)`);
+                    } catch (error: any) {
+                        results.failed++;
+                        results.errors.push({
+                            goalId: recipient.goals[0]?.id || 'unknown',
+                            email: recipient.email,
+                            error: error.message || 'Unknown error'
+                        });
+                        console.error(`❌ Failed to send grouped reminder to ${recipient.email}:`, error);
+                    }
+                })
+            );
+
+            if (i + batchSize < recipients.length) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
         console.log(`✅ Bulk reminder sending completed. Sent: ${results.sent}, Failed: ${results.failed}`);
 
         return {
@@ -2124,7 +2487,7 @@ export const sendBulkGoalReminders = functions.runWith({
             message: `Bulk reminders sent. ${results.sent} successful, ${results.failed} failed.`,
             sent: results.sent,
             failed: results.failed,
-            total: goals.length,
+            total: recipients.length,
             errors: results.errors.slice(0, 10) // Return first 10 errors to avoid response size issues
         };
     } catch (error: any) {
@@ -4211,23 +4574,11 @@ function getDefaultReminderEmailTemplate(reminderType: ReminderType = 'mission_l
         const text = `Hi {{participantName}},
 
 🔥 DAILY IGNITION
-Set today’s trajectory.
+Set today’s trajectory across your goals.
 
-Your Current Goal: {{goalTitle}}
-Active Milestone: {{activeMilestone}}
-Suggested ONE Thing: {{oneThing}}
+{{goalsText}}
 
-What is your ONE Thing today?
-- Use suggested ONE Thing
-- Choose another ONE Thing
-- I’m not sure yet
-
-When will you do it? Morning / Afternoon / Evening
-How confident do you feel? High / Medium / Low
-
-Lock it in. One move today builds momentum.
-
-Start here: {{goalUrl}}
+Pick one goal above and set your ONE Thing for today.
 
 - RocketGoals Team`;
 
@@ -4242,31 +4593,10 @@ Start here: {{goalUrl}}
                     <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                         Hi {{participantName}},
                     </p>
-                    <div style="background: #f9fafb; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 10px;">
-                        <p style="margin: 0; color: #111827; font-weight: 700;">🎯 Your Current Goal</p>
-                        <p style="margin: 6px 0 0; color: #111827; font-size: 16px;">{{goalTitle}}</p>
-                        <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🧩 Active Milestone</p>
-                        <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{activeMilestone}}</p>
-                        <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🛠️ Suggested ONE Thing</p>
-                        <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{oneThing}}</p>
-                    </div>
-                    <div style="margin: 18px 0;">
-                        <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">What is your ONE Thing today?</p>
-                        <ul style="margin: 0; padding-left: 18px; color: #374151; line-height: 1.6;">
-                            <li>Use suggested ONE Thing</li>
-                            <li>Choose another ONE Thing</li>
-                            <li>I’m not sure yet</li>
-                        </ul>
-                    </div>
-                    <p style="margin: 0 0 12px 0; color: #374151;">When will you do it? Morning / Afternoon / Evening</p>
-                    <p style="margin: 0 0 20px 0; color: #374151;">How confident do you feel? High / Medium / Low</p>
-                    <p style="margin: 0 0 24px 0; color: #111827; font-weight: 600;">Lock it in. One move today builds momentum.</p>
-                    <div style="text-align: center; margin: 24px 0;">
-                        <a href="{{goalUrl}}"
-                           style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #000000 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px;">
-                            🔥 IGNITE DAY
-                        </a>
-                    </div>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Choose a goal below and set your ONE Thing for today.
+                    </p>
+                    {{goalsHtml}}
                     <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
                         - RocketGoals Team
                     </p>
@@ -4283,10 +4613,7 @@ Start here: {{goalUrl}}
 📘 MISSION LOG
 Review the day. Course-correct fast.
 
-Your Current Goal: {{goalTitle}}
-Active Milestone: {{activeMilestone}}
-Your ONE Thing Today: {{oneThing}}
-Last Mission Log Summary: {{lastMissionLogSummary}}
+{{goalsText}}
 
 Did you take action toward your ONE Thing today? Yes / Barely / No
 How focused was your effort? Full Focus / Distracted / Low Energy
@@ -4294,7 +4621,7 @@ How challenging was today? Tough Day / Average / Easy
 How did you feel while working? Positive / Neutral / Frustrated
 Did you connect with your team today? Yes / No / Solo Effort
 
-Submit your Mission Log: {{goalUrl}}
+Choose a goal above to submit your Mission Log.
 
 - RocketGoals Team`;
 
@@ -4303,22 +4630,13 @@ Submit your Mission Log: {{goalUrl}}
             <div style="background: linear-gradient(135deg, #dc2626 0%, #000000 100%); padding: 30px; border-radius: 16px 16px 0 0;">
                 <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 800;">🚀 RocketGoals</h1>
             </div>
-            <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
-                <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 0 0 8px 0;">Mission Log</p>
-                <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Review the day. Course-correct fast.</h2>
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Hi {{participantName}},
-                </p>
-                <div style="background: #f9fafb; border-left: 4px solid #111827; padding: 16px; margin: 20px 0; border-radius: 10px;">
-                    <p style="margin: 0; color: #111827; font-weight: 700;">🎯 Your Current Goal</p>
-                    <p style="margin: 6px 0 0; color: #111827; font-size: 16px;">{{goalTitle}}</p>
-                    <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🧩 Active Milestone</p>
-                    <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{activeMilestone}}</p>
-                    <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🛠️ Your ONE Thing Today</p>
-                    <p style="margin: 6px 0 0; color: #374151; font-size: 15px;">{{oneThing}}</p>
-                    <p style="margin: 12px 0 0; color: #111827; font-weight: 700;">🔄 Last Mission Log Summary</p>
-                    <p style="margin: 6px 0 0; color: #6b7280; font-size: 14px;">{{lastMissionLogSummary}}</p>
-                </div>
+                <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 0 0 8px 0;">Mission Log</p>
+                    <h2 style="color: #111827; margin: 0 0 16px 0; font-size: 22px;">Review the day. Course-correct fast.</h2>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hi {{participantName}},
+                    </p>
+                {{goalsHtml}}
                 <div style="margin: 18px 0;">
                     <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">Did you take action toward your ONE Thing today?</p>
                     <p style="margin: 0 0 12px 0; color: #374151;">Yes / Barely / No</p>
@@ -4330,12 +4648,6 @@ Submit your Mission Log: {{goalUrl}}
                     <p style="margin: 0 0 12px 0; color: #374151;">Positive / Neutral / Frustrated</p>
                     <p style="margin: 0 0 6px 0; color: #111827; font-weight: 600;">Did you connect with your team today?</p>
                     <p style="margin: 0; color: #374151;">Yes / No / Solo Effort</p>
-                </div>
-                <div style="text-align: center; margin: 24px 0;">
-                    <a href="{{goalUrl}}"
-                       style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px;">
-                        SUBMIT MISSION LOG
-                    </a>
                 </div>
                 <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
                     - RocketGoals Team
@@ -4373,6 +4685,86 @@ function applyEmailTemplate(
         // Replace old hardcoded URLs with the specific goal URL (for existing templates in Firestore)
         .replace(/https:\/\/rocket-goals\.web\.app\/goals/g, goalUrl)
         .replace(/https:\/\/www\.rocketgoals\.com\/goals/g, goalUrl);
+}
+
+function templateUsesGroupedPlaceholders(template: string): boolean {
+    return /\{\{\s*goalsText\s*\}\}|\{\{\s*goalsHtml\s*\}\}|\{\{\s*goalsCount\s*\}\}|\{\{\s*reminderType\s*\}\}/i.test(template);
+}
+
+function applyGroupedEmailTemplate(
+    template: string,
+    participantName: string,
+    goals: GroupedGoalReminderItem[],
+    goalsText: string,
+    goalsHtml: string,
+    reminderTypeLabel: string
+): string {
+    const firstGoal = goals[0];
+    const milestoneBlocks = firstGoal?.milestones ? buildMilestoneEmailBlocks(firstGoal.milestones) : { text: '', html: '' };
+
+    return template
+        .replace(/\{\{participantName\}\}/g, participantName)
+        .replace(/\{\{goalsText\}\}/g, goalsText)
+        .replace(/\{\{goalsHtml\}\}/g, goalsHtml)
+        .replace(/\{\{goalsCount\}\}/g, String(goals.length))
+        .replace(/\{\{reminderType\}\}/g, reminderTypeLabel)
+        // Legacy single-goal placeholders map to the first goal
+        .replace(/\{\{goalTitle\}\}/g, firstGoal?.title || '')
+        .replace(/\{\{goalUrl\}\}/g, firstGoal?.url || '')
+        .replace(/\{\{milestonesText\}\}/g, milestoneBlocks.text)
+        .replace(/\{\{milestonesHtml\}\}/g, milestoneBlocks.html)
+        .replace(/\{\{activeMilestone\}\}/g, firstGoal?.activeMilestone || '')
+        .replace(/\{\{oneThing\}\}/g, firstGoal?.oneThing || '')
+        .replace(/\{\{lastMissionLogSummary\}\}/g, firstGoal?.missionLogSummary || '')
+        .replace(/https:\/\/rocket-goals\.web\.app\/goals/g, firstGoal?.url || '')
+        .replace(/https:\/\/www\.rocketgoals\.com\/goals/g, firstGoal?.url || '');
+}
+
+function buildGroupedReminderEmailContent(
+    reminderType: ReminderType,
+    participantName: string,
+    goals: GroupedGoalReminderItem[],
+    templates?: { subject?: string; text?: string; html?: string }
+): { subject: string; text: string; html: string } {
+    const reminderTypeLabel = reminderType === 'ignition' ? 'Daily Ignition' : 'Mission Log';
+    const defaultOptions: GroupedGoalEmailOptions = {
+        subject: reminderType === 'ignition'
+            ? '🔥 Daily Ignition — Check in across your goals'
+            : '📘 Mission Log — Review the day across your goals',
+        headline: reminderType === 'ignition'
+            ? 'Daily Ignition check-in'
+            : 'Mission Log check-in',
+        intro: reminderType === 'ignition'
+            ? 'Choose a goal below and set your ONE Thing for today.'
+            : 'Choose a goal below to log your Mission Log for today.',
+        ctaLabel: reminderType === 'ignition' ? 'Ignite day' : 'Submit log',
+        includeActiveMilestone: true,
+        includeOneThing: true,
+        includeMissionLogSummary: reminderType === 'mission_log'
+    };
+
+    const usesGroupedTemplate = templates
+        ? templateUsesGroupedPlaceholders(templates.subject || '')
+          || templateUsesGroupedPlaceholders(templates.text || '')
+          || templateUsesGroupedPlaceholders(templates.html || '')
+        : false;
+
+    if (usesGroupedTemplate) {
+        const blocks = buildGroupedGoalBlocks(goals, {
+            ...defaultOptions,
+            includeMilestones: false
+        });
+        const subjectTemplate = templates?.subject || defaultOptions.subject;
+        const textTemplate = templates?.text || '';
+        const htmlTemplate = templates?.html || '';
+        return {
+            subject: applyGroupedEmailTemplate(subjectTemplate, participantName, goals, blocks.text, blocks.html, reminderTypeLabel),
+            text: applyGroupedEmailTemplate(textTemplate, participantName, goals, blocks.text, blocks.html, reminderTypeLabel),
+            html: applyGroupedEmailTemplate(htmlTemplate, participantName, goals, blocks.text, blocks.html, reminderTypeLabel)
+        };
+    }
+
+    return generateGroupedGoalReminderEmail(participantName, goals, defaultOptions);
 }
 
 /**
@@ -4656,6 +5048,7 @@ export const processScheduledReminders = functions.runWith({
                 let failed = 0;
                 const batchSize = 10;
                 const goals = goalsSnapshot.docs;
+                const groupedByEmail = new Map<string, { email: string; name: string; goals: GroupedGoalReminderItem[] }>();
 
                 for (let i = 0; i < goals.length; i += batchSize) {
                     const batch = goals.slice(i, i + batchSize);
@@ -4686,56 +5079,32 @@ export const processScheduledReminders = functions.runWith({
                                     getLatestMissionLog(goalDoc.id)
                                 ]);
 
-                                const milestoneBlocks = buildMilestoneEmailBlocks(milestones);
                                 const oneThing = (latestIgnition?.oneThingText || activeMilestone || '').trim();
                                 const missionLogSummary = summarizeMissionLog(latestMissionLog);
-
-                                // Apply template
-                                const subject = applyEmailTemplate(
-                                    reminder.emailSubject,
-                                    goalTitle,
-                                    participantName,
-                                    goalUrl,
-                                    milestoneBlocks.text,
-                                    milestoneBlocks.html,
+                                const goalItem: GroupedGoalReminderItem = {
+                                    id: goalDoc.id,
+                                    title: goalTitle,
+                                    url: goalUrl,
+                                    milestones: milestones.slice(0, 3),
                                     activeMilestone,
                                     oneThing,
                                     missionLogSummary
-                                );
-                                const text = applyEmailTemplate(
-                                    reminder.emailBodyText,
-                                    goalTitle,
-                                    participantName,
-                                    goalUrl,
-                                    milestoneBlocks.text,
-                                    milestoneBlocks.html,
-                                    activeMilestone,
-                                    oneThing,
-                                    missionLogSummary
-                                );
-                                const html = applyEmailTemplate(
-                                    reminder.emailBodyHtml,
-                                    goalTitle,
-                                    participantName,
-                                    goalUrl,
-                                    milestoneBlocks.text,
-                                    milestoneBlocks.html,
-                                    activeMilestone,
-                                    oneThing,
-                                    missionLogSummary
-                                );
-
-                                const msg = {
-                                    to: participant.email,
-                                    from: 'missioncontrol@rocketgoals.com',
-                                    subject,
-                                    text,
-                                    html,
                                 };
 
-                                await sgMail.send(msg);
-                                sent++;
-                                console.log(`✅ Scheduled reminder sent to ${participant.email}`);
+                                const emailKey = participant.email.toLowerCase();
+                                const existing = groupedByEmail.get(emailKey);
+                                if (existing) {
+                                    existing.goals.push(goalItem);
+                                    if (!existing.name) {
+                                        existing.name = participantName;
+                                    }
+                                } else {
+                                    groupedByEmail.set(emailKey, {
+                                        email: participant.email,
+                                        name: participantName,
+                                        goals: [goalItem]
+                                    });
+                                }
                             } catch (error: any) {
                                 failed++;
                                 console.error(`❌ Failed to send scheduled reminder:`, error.message);
@@ -4744,6 +5113,50 @@ export const processScheduledReminders = functions.runWith({
                     );
 
                     if (i + batchSize < goals.length) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+
+                const recipients = Array.from(groupedByEmail.values());
+                const reminderType = reminder.reminderType || inferReminderTypeFromTime(reminder.time);
+                const templates = {
+                    subject: reminder.emailSubject,
+                    text: reminder.emailBodyText,
+                    html: reminder.emailBodyHtml
+                };
+
+                for (let i = 0; i < recipients.length; i += batchSize) {
+                    const batch = recipients.slice(i, i + batchSize);
+
+                    await Promise.allSettled(
+                        batch.map(async (recipient) => {
+                            try {
+                                const { subject, text, html } = buildGroupedReminderEmailContent(
+                                    reminderType,
+                                    recipient.name,
+                                    recipient.goals,
+                                    templates
+                                );
+
+                                const msg = {
+                                    to: recipient.email,
+                                    from: 'missioncontrol@rocketgoals.com',
+                                    subject,
+                                    text,
+                                    html,
+                                };
+
+                                await sgMail.send(msg);
+                                sent++;
+                                console.log(`✅ Scheduled grouped reminder sent to ${recipient.email}`);
+                            } catch (error: any) {
+                                failed++;
+                                console.error(`❌ Failed to send scheduled grouped reminder:`, error.message);
+                            }
+                        })
+                    );
+
+                    if (i + batchSize < recipients.length) {
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }

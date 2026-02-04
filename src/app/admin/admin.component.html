@@ -1101,6 +1101,44 @@
             </button>
           </div>
 
+          <!-- Test Daily Reminder -->
+          <div class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <h3 class="text-lg font-bold text-slate-900 mb-3">Test Daily Reminder</h3>
+            <p class="text-sm text-slate-600 mb-4">Send the exact Daily Ignition or Mission Log email a user would receive.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="block text-slate-700 font-semibold text-sm">Reminder Type</label>
+                <select [value]="reminderTestType()" (change)="reminderTestType.set($any($event.target).value)"
+                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all">
+                  <option value="ignition">Daily Ignition</option>
+                  <option value="mission_log">Mission Log</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-slate-700 font-semibold text-sm">User Email</label>
+                <input type="email" [value]="reminderTestUserEmail()"
+                  (input)="reminderTestUserEmail.set($any($event.target).value)"
+                  placeholder="Enter user email to test"
+                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-rose-400 transition-all" />
+              </div>
+            </div>
+            <div class="mt-4">
+              <button (click)="sendTestDailyReminder()" [disabled]="reminderUserTestLoading() || reminderBulkLoading() || reminderLoading()"
+                class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                @if (reminderUserTestLoading()) {
+                <div class="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                <span>Sending...</span>
+                } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Send Test Daily Reminder</span>
+                }
+              </button>
+            </div>
+          </div>
+
           <!-- Email Preview -->
           @if (reminderPreviewHtml()) {
           <div class="mt-6 space-y-4">
@@ -1147,7 +1185,7 @@
             <div class="grid grid-cols-3 gap-4 mb-4">
               <div class="text-center">
                 <p class="text-2xl font-bold text-slate-900">{{ reminderBulkResults()!.total }}</p>
-                <p class="text-sm text-slate-600">Total Goals</p>
+                <p class="text-sm text-slate-600">Total Recipients</p>
               </div>
               <div class="text-center">
                 <p class="text-2xl font-bold text-green-600">{{ reminderBulkResults()!.sent }}</p>
@@ -1293,12 +1331,17 @@
                   <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
                     <p class="font-semibold mb-1">Available template variables:</p>
                     <div class="space-y-1 text-xs">
-                      <div><code>{{'{{goalTitle}}'}}</code> - Goal title</div>
                       <div><code>{{'{{participantName}}'}}</code> - Participant name</div>
-                      <div><code>{{'{{goalUrl}}'}}</code> - Link to check-in page</div>
-                      <div><code>{{'{{activeMilestone}}'}}</code> - Current active milestone</div>
-                      <div><code>{{'{{oneThing}}'}}</code> - Suggested ONE Thing</div>
-                      <div><code>{{'{{lastMissionLogSummary}}'}}</code> - Latest Mission Log summary</div>
+                      <div><code>{{'{{goalsText}}'}}</code> - Text list of goals with links</div>
+                      <div><code>{{'{{goalsHtml}}'}}</code> - HTML list of goals with links</div>
+                      <div><code>{{'{{goalsCount}}'}}</code> - Number of goals in the email</div>
+                      <div><code>{{'{{reminderType}}'}}</code> - Daily Ignition or Mission Log</div>
+                      <div class="pt-2 text-slate-600">Single-goal placeholders map to the first goal:</div>
+                      <div><code>{{'{{goalTitle}}'}}</code> - First goal title</div>
+                      <div><code>{{'{{goalUrl}}'}}</code> - Link to first goal</div>
+                      <div><code>{{'{{activeMilestone}}'}}</code> - First goal active milestone</div>
+                      <div><code>{{'{{oneThing}}'}}</code> - First goal suggested ONE Thing</div>
+                      <div><code>{{'{{lastMissionLogSummary}}'}}</code> - First goal Mission Log summary</div>
                     </div>
                   </div>
 

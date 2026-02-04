@@ -113,11 +113,14 @@ export class AdminComponent implements OnInit {
   reminderParticipantName = signal('John Doe');
   reminderParticipantEmail = signal('john@example.com');
   reminderTestEmail = signal('');
+  reminderTestUserEmail = signal('');
+  reminderTestType = signal<'ignition' | 'mission_log'>('ignition');
   reminderPreviewHtml = signal<string | null>(null);
   reminderPreviewSubject = signal<string | null>(null);
   reminderPreviewText = signal<string | null>(null);
   reminderLoading = signal(false);
   reminderBulkLoading = signal(false);
+  reminderUserTestLoading = signal(false);
   reminderBulkResults = signal<{ sent: number; failed: number; total: number; errors: Array<{ goalId: string; email: string; error: string }> } | null>(null);
 
   // Scheduled reminders state
@@ -534,6 +537,56 @@ export class AdminComponent implements OnInit {
         this.success.set(null);
         this.error.set(null);
       }, 10000);
+    }
+  }
+
+  async sendTestDailyReminder() {
+    const email = this.reminderTestUserEmail().trim();
+    const reminderType = this.reminderTestType();
+
+    if (!email) {
+      this.error.set('Please enter a user email address');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.error.set('Please enter a valid email address');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    this.reminderUserTestLoading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const sendTestDaily = httpsCallable(functions, 'sendTestDailyReminder');
+
+      const result = await sendTestDaily({ email, reminderType });
+      const data = result.data as { success: boolean; message: string };
+
+      if (data.success) {
+        this.success.set(`✅ ${data.message}`);
+      } else {
+        this.error.set('Failed to send test daily reminder');
+      }
+    } catch (err: any) {
+      console.error('Error sending test daily reminder:', err);
+      const errorMessage = err.message || 'An unexpected error occurred';
+      this.error.set(`Failed to send test daily reminder: ${errorMessage}`);
+    } finally {
+      this.reminderUserTestLoading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 8000);
     }
   }
 
