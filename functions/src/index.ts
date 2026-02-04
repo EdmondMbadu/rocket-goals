@@ -1589,6 +1589,8 @@ type GroupedGoalReminderItem = {
     activeMilestone?: string;
     oneThing?: string;
     missionLogSummary?: string;
+    imageUrl?: string;
+    isMyOneThing?: boolean;
 };
 
 type GroupedGoalEmailOptions = {
@@ -1679,7 +1681,8 @@ function buildGroupedGoalBlocks(
 ): { text: string; html: string } {
     const textSections = goals.map((goal, index) => {
         const lines: string[] = [];
-        lines.push(`${index + 1}. ${goal.title}`);
+        const oneThingTag = goal.isMyOneThing ? ' [MY ONE THING]' : '';
+        lines.push(`${index + 1}. ${goal.title}${oneThingTag}`);
         lines.push(`   Link: ${goal.url}`);
 
         if (options.includeActiveMilestone && goal.activeMilestone) {
@@ -1705,6 +1708,15 @@ function buildGroupedGoalBlocks(
 
     const htmlItems = goals.map(goal => {
         const detailLines: string[] = [];
+        const highlightClass = goal.isMyOneThing ? 'border: 2px solid #111827; box-shadow: 0 18px 40px rgba(17,24,39,0.2);' : 'border: 1px solid #e5e7eb;';
+        const ribbon = goal.isMyOneThing
+            ? `<div style="position: absolute; top: 0; left: 0; right: 0; padding: 8px 12px; text-align: center; background: linear-gradient(90deg,#111827,#dc2626 55%,#f97316); color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;">My One THING</div>`
+            : '';
+        const imageBlock = goal.imageUrl
+            ? `<div style="margin: 12px 0 10px 0; border-radius: 12px; overflow: hidden; border: 1px solid #f3f4f6;">
+                    <img src="${goal.imageUrl}" alt="${goal.title}" style="width: 100%; height: 150px; object-fit: cover; display: block;" />
+               </div>`
+            : '';
         if (options.includeActiveMilestone && goal.activeMilestone) {
             detailLines.push(`<p style="margin: 4px 0 0 0; color: #6b7280; font-size: 13px;"><strong>Active milestone:</strong> ${goal.activeMilestone}</p>`);
         }
@@ -1731,8 +1743,11 @@ function buildGroupedGoalBlocks(
         }
 
         return `
-            <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 14px; background: #ffffff;">
+            <div style="position: relative; ${highlightClass} border-radius: 14px; padding: 16px; margin-bottom: 16px; background: #ffffff;">
+                ${ribbon}
+                <div style="padding-top: ${goal.isMyOneThing ? '28px' : '0'};">
                 <p style="margin: 0; color: #111827; font-weight: 700; font-size: 16px;">${goal.title}</p>
+                ${imageBlock}
                 ${detailLines.join('')}
                 ${milestonesHtml}
                 <div style="margin-top: 14px;">
@@ -1740,6 +1755,7 @@ function buildGroupedGoalBlocks(
                        style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 13px;">
                         ${options.ctaLabel}
                     </a>
+                </div>
                 </div>
             </div>
         `;
@@ -2189,6 +2205,17 @@ export const sendTestDailyReminder = functions.runWith({
             ? `${firstParticipant.firstName} ${firstParticipant.lastName || ''}`.trim()
             : email.split('@')[0];
 
+        let oneThingGoalId: string | undefined;
+        const userId = activeGoals[0].data().userId;
+        if (userId) {
+            try {
+                const profileDoc = await admin.firestore().collection('userProfiles').doc(userId).get();
+                oneThingGoalId = profileDoc.exists ? (profileDoc.data() as any).myOneThingGoalId : undefined;
+            } catch (error) {
+                console.warn('Unable to load My One THING for test reminder:', error);
+            }
+        }
+
         const goals: GroupedGoalReminderItem[] = [];
 
         for (const goalDoc of activeGoals) {
@@ -2213,7 +2240,8 @@ export const sendTestDailyReminder = functions.runWith({
                 milestones: milestones.slice(0, 3),
                 activeMilestone,
                 oneThing,
-                missionLogSummary
+                missionLogSummary,
+                imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl
             });
         }
 
@@ -2242,10 +2270,11 @@ export const sendTestDailyReminder = functions.runWith({
             };
         }
 
+        const orderedGoals = sortGoalsByOneThing(goals, oneThingGoalId);
         const { subject, text, html } = buildGroupedReminderEmailContent(
             reminderType,
             participantName,
-            goals,
+            orderedGoals,
             templates
         );
 
@@ -2344,7 +2373,7 @@ export const sendBulkGoalReminders = functions.runWith({
             errors: [] as Array<{ goalId: string; email: string; error: string }>
         };
 
-        const groupedByEmail = new Map<string, { email: string; name: string; goals: GroupedGoalReminderItem[] }>();
+        const groupedByEmail = new Map<string, { email: string; name: string; userId?: string; goals: GroupedGoalReminderItem[] }>();
 
         // Process goals in batches to avoid overwhelming SendGrid
         const batchSize = 10;
@@ -2383,7 +2412,8 @@ export const sendBulkGoalReminders = functions.runWith({
                             id: goalId,
                             title: goalTitle,
                             url: goalUrl,
-                            milestones
+                            milestones,
+                            imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl
                         };
 
                         const emailKey = participant.email.toLowerCase();
@@ -2397,6 +2427,7 @@ export const sendBulkGoalReminders = functions.runWith({
                             groupedByEmail.set(emailKey, {
                                 email: participant.email,
                                 name: participantName,
+                                userId: goalData.userId,
                                 goals: [goalItem]
                             });
                         }
@@ -2446,9 +2477,19 @@ export const sendBulkGoalReminders = functions.runWith({
             await Promise.allSettled(
                 batch.map(async (recipient) => {
                     try {
+                        let oneThingGoalId: string | undefined;
+                        if (recipient.userId) {
+                            try {
+                                const profileDoc = await admin.firestore().collection('userProfiles').doc(recipient.userId).get();
+                                oneThingGoalId = profileDoc.exists ? (profileDoc.data() as any).myOneThingGoalId : undefined;
+                            } catch (error) {
+                                console.warn('Unable to load My One THING for bulk reminder:', error);
+                            }
+                        }
+                        const orderedGoals = sortGoalsByOneThing(recipient.goals, oneThingGoalId);
                         const emailContent = generateGroupedGoalReminderEmail(
                             recipient.name,
-                            recipient.goals,
+                            orderedGoals,
                             emailOptions
                         );
 
@@ -2462,7 +2503,7 @@ export const sendBulkGoalReminders = functions.runWith({
 
                         await sgMail.send(msg);
                         results.sent++;
-                        console.log(`✅ Grouped reminder sent to ${recipient.email} (${recipient.goals.length} goals)`);
+                        console.log(`✅ Grouped reminder sent to ${recipient.email} (${orderedGoals.length} goals)`);
                     } catch (error: any) {
                         results.failed++;
                         results.errors.push({
@@ -4720,6 +4761,18 @@ function applyGroupedEmailTemplate(
         .replace(/https:\/\/www\.rocketgoals\.com\/goals/g, firstGoal?.url || '');
 }
 
+function sortGoalsByOneThing(goals: GroupedGoalReminderItem[], oneThingGoalId?: string): GroupedGoalReminderItem[] {
+    if (!oneThingGoalId) return goals;
+    return goals
+        .map(goal => ({ ...goal, isMyOneThing: goal.id === oneThingGoalId }))
+        .sort((a, b) => {
+            const aScore = a.id === oneThingGoalId ? 1 : 0;
+            const bScore = b.id === oneThingGoalId ? 1 : 0;
+            if (aScore !== bScore) return bScore - aScore;
+            return 0;
+        });
+}
+
 function buildGroupedReminderEmailContent(
     reminderType: ReminderType,
     participantName: string,
@@ -5048,7 +5101,7 @@ export const processScheduledReminders = functions.runWith({
                 let failed = 0;
                 const batchSize = 10;
                 const goals = goalsSnapshot.docs;
-                const groupedByEmail = new Map<string, { email: string; name: string; goals: GroupedGoalReminderItem[] }>();
+                const groupedByEmail = new Map<string, { email: string; name: string; userId?: string; goals: GroupedGoalReminderItem[] }>();
 
                 for (let i = 0; i < goals.length; i += batchSize) {
                     const batch = goals.slice(i, i + batchSize);
@@ -5088,7 +5141,8 @@ export const processScheduledReminders = functions.runWith({
                                     milestones: milestones.slice(0, 3),
                                     activeMilestone,
                                     oneThing,
-                                    missionLogSummary
+                                    missionLogSummary,
+                                    imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl
                                 };
 
                                 const emailKey = participant.email.toLowerCase();
@@ -5102,6 +5156,7 @@ export const processScheduledReminders = functions.runWith({
                                     groupedByEmail.set(emailKey, {
                                         email: participant.email,
                                         name: participantName,
+                                        userId: goalData.userId,
                                         goals: [goalItem]
                                     });
                                 }
@@ -5131,10 +5186,20 @@ export const processScheduledReminders = functions.runWith({
                     await Promise.allSettled(
                         batch.map(async (recipient) => {
                             try {
+                                let oneThingGoalId: string | undefined;
+                                if (recipient.userId) {
+                                    try {
+                                        const profileDoc = await admin.firestore().collection('userProfiles').doc(recipient.userId).get();
+                                        oneThingGoalId = profileDoc.exists ? (profileDoc.data() as any).myOneThingGoalId : undefined;
+                                    } catch (error) {
+                                        console.warn('Unable to load My One THING for scheduled reminder:', error);
+                                    }
+                                }
+                                const orderedGoals = sortGoalsByOneThing(recipient.goals, oneThingGoalId);
                                 const { subject, text, html } = buildGroupedReminderEmailContent(
                                     reminderType,
                                     recipient.name,
-                                    recipient.goals,
+                                    orderedGoals,
                                     templates
                                 );
 
