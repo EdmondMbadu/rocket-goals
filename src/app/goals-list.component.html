@@ -285,26 +285,10 @@
                 </p>
               </div>
             <div class="flex flex-col items-end gap-2 shrink-0">
-              <button
-                (click)="setMyOneThing(goal); $event.stopPropagation()"
-                class="one-thing-toggle"
-                [class.is-selected]="isMyOneThing(goal)"
-                [class.is-loading]="isUpdatingMyOneThing()"
-                [attr.aria-pressed]="isMyOneThing(goal)"
-                [disabled]="isUpdatingMyOneThing()">
-                @if (isUpdatingMyOneThing() && isMyOneThing(goal) === false) {
-                <span class="one-thing-spinner"></span>
-                }
-                @if (isMyOneThing(goal)) {
-                <span class="one-thing-label">My One THING</span>
-                } @else {
-                <span class="one-thing-label">Set as My One THING</span>
-                }
-              </button>
               <span class="px-3 py-1.5 text-xs font-bold rounded-full uppercase tracking-wider"
                 [class.bg-green-100]="getGoalStatus(goal) === 'active'"
-                  [class.text-green-700]="getGoalStatus(goal) === 'active'"
-                  [class.bg-gray-100]="getGoalStatus(goal) === 'completed'"
+                [class.text-green-700]="getGoalStatus(goal) === 'active'"
+                [class.bg-gray-100]="getGoalStatus(goal) === 'completed'"
                   [class.text-gray-700]="getGoalStatus(goal) === 'completed'"
                   [class.bg-yellow-100]="getGoalStatus(goal) === 'draft'"
                   [class.text-yellow-700]="getGoalStatus(goal) === 'draft'">
@@ -329,13 +313,25 @@
                     </svg>
                   </button>
                 </div>
-              </div>
             </div>
+          </div>
 
-            <div class="space-y-3 mb-4">
-              <div class="flex items-center gap-2 text-sm">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          <div class="space-y-3 mb-4">
+            @if (!isMyOneThing(goal)) {
+            <button
+              (click)="setMyOneThing(goal); $event.stopPropagation()"
+              class="one-thing-toggle inline-flex"
+              [class.is-loading]="isUpdatingMyOneThing()"
+              [disabled]="isUpdatingMyOneThing()">
+              @if (isUpdatingMyOneThing()) {
+              <span class="one-thing-spinner"></span>
+              }
+              <span class="one-thing-label">Set as My One THING</span>
+            </button>
+            }
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span class="text-gray-600">Daily:</span>
