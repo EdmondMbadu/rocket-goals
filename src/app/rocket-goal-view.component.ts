@@ -956,6 +956,21 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     return 'RG';
   }
 
+  async deleteGoal() {
+    const goal = this.goal();
+    if (!goal) return;
+    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      await this.rocketGoalsService.deleteRocketGoal(goal.id);
+      this.router.navigateByUrl('/goals');
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      alert('Failed to delete goal. Please try again.');
+    }
+  }
+
   getGoalOwnerAvatarUrl(): string | null {
     // If the current user is the goal owner, use their profile picture
     if (this.isGoalOwner()) {

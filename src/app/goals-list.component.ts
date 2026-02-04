@@ -76,6 +76,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   leavingFanIds = signal<Record<string, boolean>>({});
   editingGoalId = signal<string | null>(null);
   editingGoalTitleValue = signal<string>('');
+  activeGoalMenuId = signal<string | null>(null);
 
   // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
@@ -445,6 +446,20 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeMobileNav(): void {
     this.mobileNavOpen.set(false);
+  }
+
+  toggleGoalMenu(goalId: string, event?: Event) {
+    event?.stopPropagation();
+    const current = this.activeGoalMenuId();
+    this.activeGoalMenuId.set(current === goalId ? null : goalId);
+  }
+
+  closeGoalMenu() {
+    this.activeGoalMenuId.set(null);
+  }
+
+  isGoalMenuOpen(goalId: string): boolean {
+    return this.activeGoalMenuId() === goalId;
   }
 
   navigateToGoal(goalId: string) {
@@ -1231,6 +1246,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     const target = event.target as HTMLElement;
     if (!target.closest('.avatar-dropdown-container')) {
       this.closeAvatarDropdown();
+    }
+    if (!target.closest('.goal-action-menu')) {
+      this.closeGoalMenu();
     }
   }
 }

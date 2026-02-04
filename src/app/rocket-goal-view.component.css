@@ -263,6 +263,32 @@
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
 }
 
+/* Delete goal button */
+.delete-goal-btn {
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-goal-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.35);
+}
+
+.light-mode .delete-goal-btn {
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+
+.light-mode .delete-goal-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #7f1d1d;
+}
+
 /* Logo glow effect */
 .logo-container {
   position: relative;
