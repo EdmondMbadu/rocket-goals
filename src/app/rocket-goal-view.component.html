@@ -739,10 +739,12 @@
 
                   <!-- Day circle/column -->
                   <div class="timeline-day-circle"
-                       [class.today-highlight]="dayInfo.isToday"
+                       [class.today-highlight]="dayInfo.isToday && !isAllTasksCompletedForDay(dayInfo.day)"
+                       [class.today-complete]="dayInfo.isToday && isAllTasksCompletedForDay(dayInfo.day)"
                        [class.final-day-circle]="dayInfo.isFinalDay">
                     @if (dayInfo.isToday) {
-                    <span class="today-badge">NOW</span>
+                    <span class="today-badge"
+                          [class.today-badge-complete]="isAllTasksCompletedForDay(dayInfo.day)">NOW</span>
                     }
                     @if (dayInfo.isFinalDay && !dayInfo.isToday) {
                     <span class="final-badge">GOAL</span>
@@ -753,12 +755,14 @@
                   <div class="timeline-day-info text-center mt-3">
                     <span class="timeline-day-month text-xs text-gray-500 uppercase">{{ getTimelineDateDisplay(dayInfo.date).month }}</span>
                     <span class="timeline-day-number text-xl font-bold"
-                          [class.text-red-500]="dayInfo.isToday"
+                          [class.text-red-500]="dayInfo.isToday && !isAllTasksCompletedForDay(dayInfo.day)"
+                          [class.text-green-500]="dayInfo.isToday && isAllTasksCompletedForDay(dayInfo.day)"
                           [class.text-amber-400]="dayInfo.isFinalDay && !dayInfo.isToday"
                           [class.text-white]="dayInfo.isPast && !dayInfo.isToday && !dayInfo.isFinalDay"
                           [class.text-gray-500]="dayInfo.isFuture && !dayInfo.isFinalDay">{{ getTimelineDateDisplay(dayInfo.date).day }}</span>
                     <span class="timeline-day-weekday text-xs uppercase"
-                          [class.text-red-400]="dayInfo.isToday"
+                          [class.text-red-400]="dayInfo.isToday && !isAllTasksCompletedForDay(dayInfo.day)"
+                          [class.text-green-400]="dayInfo.isToday && isAllTasksCompletedForDay(dayInfo.day)"
                           [class.text-amber-300]="dayInfo.isFinalDay && !dayInfo.isToday"
                           [class.text-gray-400]="!dayInfo.isToday && !dayInfo.isFinalDay">{{ getTimelineDateDisplay(dayInfo.date).weekday }}</span>
                   </div>
