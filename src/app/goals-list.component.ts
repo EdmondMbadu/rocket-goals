@@ -319,6 +319,11 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     return goal.answers['goal_title_label'] || goal.answers['custom_goal_title'] || goal.primaryGoal || 'Untitled Goal';
   }
 
+  isMyOneThing(goal: RocketGoal): boolean {
+    const firstGoal = this.goals()[0];
+    return !!firstGoal && firstGoal.id === goal.id;
+  }
+
   getFanGoalTitle(goal: RocketGoal | null, goalId: string): string {
     if (goal) {
       return this.getGoalTitle(goal);

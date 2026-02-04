@@ -104,6 +104,53 @@
   outline: none;
 }
 
+/* My One Thing highlight */
+.my-one-thing-card {
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  box-shadow:
+    0 35px 80px rgba(15, 23, 42, 0.25),
+    0 0 0 6px rgba(239, 68, 68, 0.18);
+  transform: translateY(-6px);
+}
+
+.my-one-thing-badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 20;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #111827 0%, #dc2626 55%, #f97316 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(220, 38, 38, 0.35);
+}
+
+.my-one-thing-glow {
+  position: absolute;
+  inset: -30% -20%;
+  background: radial-gradient(circle at top left, rgba(239, 68, 68, 0.35), transparent 55%);
+  opacity: 0.8;
+  filter: blur(30px);
+  z-index: 1;
+  pointer-events: none;
+  animation: oneThingPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes oneThingPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
 /* =====================================================
    GOAL CREATION MODAL
    ===================================================== */
