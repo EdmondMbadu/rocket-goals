@@ -63,6 +63,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   goals = signal<RocketGoal[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+  success = signal<string | null>(null);
   showAvatarDropdown = signal(false);
   dashboardTitle = signal<string>('MISSION CONTROL');
   isEditingTitle = signal(false);
@@ -93,6 +94,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly isSkippingPhoto = signal(false); // True when user clicks Skip
   protected readonly isPhotoPrefilled = signal(false); // True when photo was loaded from profile
   protected readonly isLoadingPrefill = signal(false); // True while loading photo from profile
+  myOneThingGoalId = signal<string | null>(null);
+  isUpdatingMyOneThing = signal(false);
   private videoStream: MediaStream | null = null;
 
   // Quiz answers
@@ -248,6 +251,21 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
       console.log('Loaded goals:', goals);
       this.goals.set(goals as RocketGoal[]);
+      const preferredGoalId = profile?.myOneThingGoalId;
+      const preferredExists = preferredGoalId && (goals as RocketGoal[]).some(goal => goal.id === preferredGoalId);
+      const defaultGoalId = (goals as RocketGoal[])[0]?.id || null;
+      if (preferredExists) {
+        this.myOneThingGoalId.set(preferredGoalId || null);
+      } else {
+        this.myOneThingGoalId.set(defaultGoalId);
+        if (defaultGoalId && !preferredGoalId) {
+          try {
+            await this.authService.updateUserProfile({ myOneThingGoalId: defaultGoalId });
+          } catch (error) {
+            console.warn('Failed to save My One THING default:', error);
+          }
+        }
+      }
       this.loadFanMemberships();
       if (goals.length === 0) {
         console.log('No goals found for user - showing empty state');
@@ -320,8 +338,47 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isMyOneThing(goal: RocketGoal): boolean {
+    const selected = this.myOneThingGoalId();
+    if (selected) return selected === goal.id;
     const firstGoal = this.goals()[0];
     return !!firstGoal && firstGoal.id === goal.id;
+  }
+
+  getMyOneThingTitle(): string {
+    const selectedId = this.myOneThingGoalId();
+    const goals = this.goals();
+    const selectedGoal = selectedId ? goals.find(goal => goal.id === selectedId) : null;
+    const fallbackGoal = goals[0];
+    return selectedGoal ? this.getGoalTitle(selectedGoal) : (fallbackGoal ? this.getGoalTitle(fallbackGoal) : 'your goal');
+  }
+
+  async setMyOneThing(goal: RocketGoal) {
+    if (this.isUpdatingMyOneThing()) return;
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      this.error.set('Please log in to update your One Thing.');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+    if (this.myOneThingGoalId() === goal.id) {
+      return;
+    }
+    this.isUpdatingMyOneThing.set(true);
+    this.error.set(null);
+    try {
+      await this.authService.updateUserProfile({ myOneThingGoalId: goal.id });
+      this.myOneThingGoalId.set(goal.id);
+      this.success.set('✅ My One THING updated.');
+    } catch (error: any) {
+      console.error('Failed to update My One THING:', error);
+      this.error.set('Failed to update My One THING. Please try again.');
+    } finally {
+      this.isUpdatingMyOneThing.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 4000);
+    }
   }
 
   getFanGoalTitle(goal: RocketGoal | null, goalId: string): string {

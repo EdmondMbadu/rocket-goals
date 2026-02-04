@@ -213,6 +213,13 @@
           <div>
             <h2 class="text-3xl md:text-4xl font-black text-black mb-2 tracking-tight">Your Rocket Goals</h2>
             <p class="text-gray-600">Select a mission to view its dashboard</p>
+            @if (goals().length > 0) {
+            <div class="mt-3 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-semibold uppercase tracking-[0.2em]">
+              <span>My One THING</span>
+              <span class="text-red-900 normal-case tracking-normal font-bold">{{ getMyOneThingTitle() }}</span>
+              <span class="text-red-500 normal-case tracking-normal font-medium">Use “Set as My One THING” to switch</span>
+            </div>
+            }
           </div>
           <div class="flex items-center gap-3">
             <button (click)="openGoalModal()"
@@ -284,9 +291,25 @@
                 <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 dark:text-slate-400">{{ getGoalTheme(goal) }}
                 </p>
               </div>
-              <div class="flex flex-col items-end gap-2 shrink-0">
-                <span class="px-3 py-1.5 text-xs font-bold rounded-full uppercase tracking-wider"
-                  [class.bg-green-100]="getGoalStatus(goal) === 'active'"
+            <div class="flex flex-col items-end gap-2 shrink-0">
+              <button
+                (click)="setMyOneThing(goal); $event.stopPropagation()"
+                class="one-thing-toggle"
+                [class.is-selected]="isMyOneThing(goal)"
+                [class.is-loading]="isUpdatingMyOneThing()"
+                [attr.aria-pressed]="isMyOneThing(goal)"
+                [disabled]="isUpdatingMyOneThing()">
+                @if (isUpdatingMyOneThing() && isMyOneThing(goal) === false) {
+                <span class="one-thing-spinner"></span>
+                }
+                @if (isMyOneThing(goal)) {
+                <span class="one-thing-label">My One THING</span>
+                } @else {
+                <span class="one-thing-label">Set as My One THING</span>
+                }
+              </button>
+              <span class="px-3 py-1.5 text-xs font-bold rounded-full uppercase tracking-wider"
+                [class.bg-green-100]="getGoalStatus(goal) === 'active'"
                   [class.text-green-700]="getGoalStatus(goal) === 'active'"
                   [class.bg-gray-100]="getGoalStatus(goal) === 'completed'"
                   [class.text-gray-700]="getGoalStatus(goal) === 'completed'"

@@ -40,6 +40,7 @@ export interface UserProfile {
   usedPromoCodes?: string[];
   promoSubscription?: boolean;
   phoneNumber?: string;
+  myOneThingGoalId?: string;
 
   // Telegram integration
   telegramId?: string;

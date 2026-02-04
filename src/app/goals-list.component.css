@@ -109,13 +109,42 @@
   border: 2px solid rgba(15, 23, 42, 0.9);
   box-shadow:
     0 35px 80px rgba(15, 23, 42, 0.25),
-    0 0 0 6px rgba(239, 68, 68, 0.18);
-  transform: translateY(-6px);
+    0 0 0 8px rgba(239, 68, 68, 0.24),
+    0 0 60px rgba(239, 68, 68, 0.25);
+  transform: translateY(-10px) scale(1.01);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(254, 242, 242, 0.92));
+}
+
+.my-one-thing-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 18;
+  padding: 10px 16px;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: #ffffff;
+  background: linear-gradient(90deg, #111827, #dc2626 45%, #f97316 100%);
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.4);
+}
+
+.my-one-thing-strip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.45) 45%, transparent 90%);
+  opacity: 0.7;
+  transform: translateX(-100%);
+  animation: oneThingShine 3.4s ease-in-out infinite;
 }
 
 .my-one-thing-badge {
   position: absolute;
-  top: 18px;
+  top: 46px;
   left: 18px;
   z-index: 20;
   padding: 8px 14px;
@@ -148,6 +177,68 @@
   50% {
     opacity: 1;
     transform: scale(1.05);
+  }
+}
+
+@keyframes oneThingShine {
+  0% {
+    transform: translateX(-120%);
+  }
+  60% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.one-thing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  color: #b91c1c;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.one-thing-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(239, 68, 68, 0.25);
+  background: #fff1f2;
+  color: #991b1b;
+}
+
+.one-thing-toggle.is-selected {
+  background: linear-gradient(135deg, #111827 0%, #dc2626 55%, #f97316 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 12px 24px rgba(220, 38, 38, 0.35);
+}
+
+.one-thing-toggle:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.one-thing-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(220, 38, 38, 0.25);
+  border-top-color: #dc2626;
+  animation: oneThingSpin 0.8s linear infinite;
+}
+
+@keyframes oneThingSpin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
