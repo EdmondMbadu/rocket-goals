@@ -605,7 +605,7 @@
             <div class="flex items-center justify-between mb-4">
               <div class="daily-progress-header-left flex items-center gap-4">
                 <h3 class="daily-progression-title text-xl font-black" style="font-family: 'Exo 2', sans-serif;">
-                  <span class="title-icon">📊</span> Daily Progress
+                  <span class="title-icon">📊</span> Daily Momentum
                 </h3>
                 <!-- Deadline Badge - Clickable to Edit -->
                 @if (!isEditingDeadline()) {
@@ -712,27 +712,27 @@
                   </div>
                   }
 
-                  <!-- Milestone rocket indicator above the column -->
+                  <!-- Milestone light indicator above the column -->
                   <div class="timeline-day-indicator mb-3 relative">
                     @if (getMilestonesForDay(dayInfo.day).length > 0) {
-                    <div class="milestone-rocket-indicator"
-                         [class.rocket-completed]="isAllTasksCompletedForDay(dayInfo.day)"
-                         [class.rocket-pending]="!isAllTasksCompletedForDay(dayInfo.day)"
-                         [class.rocket-final]="dayInfo.isFinalDay"
+                    <div class="milestone-light-indicator"
+                         [class.light-completed]="isAllTasksCompletedForDay(dayInfo.day)"
+                         [class.light-pending]="!isAllTasksCompletedForDay(dayInfo.day)"
+                         [class.light-final]="dayInfo.isFinalDay"
                          [title]="getMilestonesForDay(dayInfo.day).length + ' milestone(s) - Click to view'">
-                      <span class="rocket-icon">🚀</span>
-                      <span class="rocket-count">{{ getMilestonesForDay(dayInfo.day).length }}</span>
+                      <span class="light-dot"></span>
+                      <span class="light-count">{{ getMilestonesForDay(dayInfo.day).length }}</span>
                     </div>
                     } @else if (dayInfo.isFinalDay) {
-                    <div class="milestone-rocket-indicator rocket-final rocket-pending"
+                    <div class="milestone-light-indicator light-final light-pending"
                          title="Click to add your success milestone">
-                      <span class="rocket-icon">🚀</span>
-                      <span class="rocket-label">GOAL</span>
+                      <span class="light-dot"></span>
+                      <span class="light-label">GOAL</span>
                     </div>
                     } @else {
-                    <div class="milestone-rocket-empty opacity-0 group-hover:opacity-100 transition-opacity"
+                    <div class="milestone-light-indicator light-pending light-empty opacity-0 group-hover:opacity-100 transition-opacity"
                          title="Click to add a milestone">
-                      <span class="rocket-icon-faded">🚀</span>
+                      <span class="light-dot"></span>
                     </div>
                     }
                   </div>
