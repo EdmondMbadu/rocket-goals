@@ -899,7 +899,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   getGoalTitleDisplay(): string {
     const goal = this.goal();
     if (!goal) return '';
-    return goal.answers['goal_title_label'] || goal.answers['custom_goal_title'] || goal.primaryGoal || 'Your 7-Day Mission';
+    const rawTitle = goal.answers['goal_title_label'] || goal.answers['custom_goal_title'] || goal.primaryGoal || 'Your 7-Day Mission';
+    return typeof rawTitle === 'string' ? rawTitle.replace(/^#+\s*/, '').trim() : rawTitle;
   }
 
   getGoalThemeDisplay(): string {

@@ -474,9 +474,9 @@
                       <h3 class="text-[10px] font-bold tracking-wider text-cyan-400 uppercase mb-1" style="font-family: 'Orbitron', monospace;">TARGET</h3>
                       <div class="flex items-baseline gap-1">
                         <span class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white" style="font-family: 'Orbitron', monospace; text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);">
-                          {{ targetMetric.unit }}{{ targetMetric.formattedValue }}
+                          {{ targetMetric.formattedValue }}
                         </span>
-                        @if (targetMetric.unit === 'lbs' || targetMetric.unit === '%' || targetMetric.unit === 'miles') {
+                        @if (targetMetric.unit) {
                           <span class="text-sm text-gray-400 font-medium">{{ targetMetric.unit }}</span>
                         }
                       </div>
