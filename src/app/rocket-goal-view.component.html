@@ -699,6 +699,8 @@
                 <div class="timeline-day-column flex flex-col items-center cursor-pointer group"
                      (click)="onTimelineDayClick(dayInfo.day)"
                      [class.timeline-day-today]="dayInfo.isToday"
+                     [class.timeline-day-complete]="isAllTasksCompletedForDay(dayInfo.day)"
+                     [class.timeline-day-pending]="!isAllTasksCompletedForDay(dayInfo.day)"
                      [class.timeline-day-past]="dayInfo.isPast"
                      [class.timeline-day-future]="dayInfo.isFuture"
                      [class.timeline-day-final]="dayInfo.isFinalDay"
@@ -769,11 +771,15 @@
 
                   <!-- Expanded Milestones Panel (shows when day is expanded) -->
                   @if (expandedTimelineDay() === dayInfo.day && getMilestonesForDay(dayInfo.day).length > 0) {
-                  <div class="timeline-expanded-milestones mt-4 w-full" (click)="$event.stopPropagation()">
+                  <div class="timeline-expanded-milestones mt-4 w-full"
+                       [class.milestones-complete]="isAllTasksCompletedForDay(dayInfo.day)"
+                       [class.milestones-pending]="!isAllTasksCompletedForDay(dayInfo.day)"
+                       (click)="$event.stopPropagation()">
                     <div class="expanded-milestones-header flex items-center justify-between mb-3">
                       <span class="text-xs font-bold uppercase tracking-wide"
                             [class.text-amber-400]="dayInfo.isFinalDay"
-                            [class.text-red-500]="!dayInfo.isFinalDay">
+                            [class.text-red-500]="!dayInfo.isFinalDay && !isAllTasksCompletedForDay(dayInfo.day)"
+                            [class.text-green-500]="!dayInfo.isFinalDay && isAllTasksCompletedForDay(dayInfo.day)">
                         @if (dayInfo.isFinalDay) {
                           🏆 Final Day Milestones
                         } @else {
