@@ -204,19 +204,22 @@ type ViewMode = 'view' | 'edit';
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.12);
       padding: 6px 12px;
       border-radius: 999px;
       text-transform: uppercase;
       font-size: 10px;
       letter-spacing: 0.25em;
       font-weight: 700;
-      color: rgba(255, 255, 255, 0.7);
+      color: #fecaca;
       margin-bottom: 14px;
     }
 
     .plan-modal-container.light-mode .plan-badge {
-      color: #64748b;
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.08);
+      color: #b91c1c;
     }
 
     .plan-title {
@@ -535,9 +538,9 @@ type ViewMode = 'view' | 'edit';
     }
 
     .save-all-btn {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #fff;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #86efac;
       padding: 10px 16px;
       border-radius: 12px;
       font-weight: 700;
@@ -548,9 +551,9 @@ type ViewMode = 'view' | 'edit';
     }
 
     .plan-modal-container.light-mode .save-all-btn {
-      background: rgba(15, 23, 42, 0.08);
-      border-color: rgba(15, 23, 42, 0.16);
-      color: #0f172a;
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #166534;
     }
 
     .commit-btn {
