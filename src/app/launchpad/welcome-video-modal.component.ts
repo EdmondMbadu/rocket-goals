@@ -471,6 +471,7 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
   `]
 })
 export class WelcomeVideoModalComponent implements OnInit, OnDestroy {
+  private readonly leanLaunchVideoUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FTess%20-%20Day%201%20Workout.mp4?alt=media&token=87a46b83-fbb3-4ac5-8855-5db546a740e9';
   @ViewChild('videoPlayer') videoPlayer!: ElementRef<HTMLVideoElement>;
 
   @Input({ required: true }) template!: LaunchpadTemplate;
@@ -529,6 +530,13 @@ export class WelcomeVideoModalComponent implements OnInit, OnDestroy {
 
   private async startVideoGeneration(): Promise<void> {
     try {
+      if (this.template.id === 'lean-launch') {
+        this.videoUrl.set(this.leanLaunchVideoUrl);
+        this.progressPercent.set(100);
+        this.state.set('ready');
+        return;
+      }
+
       // Build the video config with HeyGen avatar/voice from template
       const config: WelcomeVideoConfig = {
         firstName: this.firstName,
