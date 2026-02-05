@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild, ElementRef, computed, inject, signal } from '@angular/core';
 import { ActionItem, ActionItemsService } from '../action-items.service';
 import { CalendarEventsService } from '../calendar-events.service';
 import { RocketGoalsAIService } from '../rocket-goals-ai.service';
@@ -68,7 +68,7 @@ type ViewMode = 'view' | 'edit';
               <div class="error-message">{{ loadError() }}</div>
             </div>
           } @else {
-            <div class="plan-scroll">
+            <div class="plan-scroll" #planScroll>
               @if (viewMode() === 'view') {
                 <div class="milestone-list">
                   @for (item of milestones(); track item.id) {
@@ -113,7 +113,7 @@ type ViewMode = 'view' | 'edit';
                 </div>
               }
             </div>
-            <div class="scroll-hint">
+            <div class="scroll-hint" (click)="scrollPlanDown()">
               <span>Scroll to see the full plan</span>
               <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
@@ -391,6 +391,7 @@ type ViewMode = 'view' | 'edit';
       color: rgba(255, 255, 255, 0.45);
       padding-bottom: 6px;
       animation: floatHint 2s ease-in-out infinite;
+      cursor: pointer;
     }
 
     .plan-modal-container.light-mode .scroll-hint {
@@ -430,18 +431,18 @@ type ViewMode = 'view' | 'edit';
     .milestone-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .milestone-row {
       display: grid;
       grid-template-columns: auto 1fr auto;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 16px;
-      padding: 14px 16px;
+      padding: 10px 14px;
     }
 
     .plan-modal-container.light-mode .milestone-row {
@@ -456,7 +457,7 @@ type ViewMode = 'view' | 'edit';
     .milestone-title {
       color: #fff;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.4;
     }
 
@@ -470,9 +471,9 @@ type ViewMode = 'view' | 'edit';
     }
 
     .day-pill {
-      padding: 6px 12px;
+      padding: 5px 10px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.14em;
@@ -513,9 +514,9 @@ type ViewMode = 'view' | 'edit';
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: rgba(255, 255, 255, 0.8);
-      padding: 6px 12px;
+      padding: 5px 10px;
       border-radius: 10px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -866,6 +867,7 @@ export class MissionPlanReviewModalComponent {
   private goalContext: any | null = null;
   private goalStartTime = 0;
   private goalTotalDays = 0;
+  @ViewChild('planScroll') private planScroll?: ElementRef<HTMLDivElement>;
 
   protected readonly hasUnsavedChanges = computed(() => {
     if (this.viewMode() !== 'edit') return false;
@@ -982,6 +984,17 @@ export class MissionPlanReviewModalComponent {
   updateAiPrompt(event: Event) {
     const value = (event.target as HTMLTextAreaElement).value;
     this.aiPrompt.set(value);
+  }
+
+  scrollPlanDown() {
+    const container = this.planScroll?.nativeElement;
+    if (!container) return;
+
+    const firstRow = container.querySelector<HTMLElement>('.milestone-row, .milestone-edit-row');
+    const rowHeight = firstRow ? firstRow.getBoundingClientRect().height : 48;
+    const gap = 10;
+    const scrollBy = (rowHeight + gap) * 3;
+    container.scrollBy({ top: scrollBy, behavior: 'smooth' });
   }
 
   async regeneratePlan() {
