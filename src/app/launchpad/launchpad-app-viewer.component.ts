@@ -6,12 +6,13 @@ import { AvatarDropdownComponent } from '../avatar-dropdown.component';
 import { LaunchpadService } from './launchpad.service';
 import { LAUNCHPAD_TEMPLATES, LaunchpadTemplate, MissionOnboardingData } from './launchpad.types';
 import { MissionOnboardingModalComponent } from './mission-onboarding-modal.component';
+import { MissionPlanReviewModalComponent } from './mission-plan-review-modal.component';
 import { WelcomeVideoModalComponent } from './welcome-video-modal.component';
 
 @Component({
   selector: 'app-launchpad-app-viewer',
   standalone: true,
-  imports: [CommonModule, RouterLink, AvatarDropdownComponent, MissionOnboardingModalComponent, WelcomeVideoModalComponent],
+  imports: [CommonModule, RouterLink, AvatarDropdownComponent, MissionOnboardingModalComponent, MissionPlanReviewModalComponent, WelcomeVideoModalComponent],
   template: `
     <!-- Full-Screen Launch Loading Overlay -->
     @if (isLaunching()) {
@@ -264,6 +265,15 @@ import { WelcomeVideoModalComponent } from './welcome-video-modal.component';
         (onSkip)="handleWelcomeVideoSkip()"
       />
     }
+
+    <!-- Mission Plan Review Modal -->
+    @if (showPlanReviewModal() && template() && planReviewGoalId()) {
+      <app-mission-plan-review-modal
+        [template]="template()!"
+        [goalId]="planReviewGoalId()!"
+        (onCommit)="handlePlanReviewCommit()"
+      />
+    }
   `,
   styleUrls: ['./launchpad-base.css']
 })
@@ -277,6 +287,7 @@ export class LaunchpadAppViewerComponent implements OnInit {
   protected readonly isLaunching = signal(false);
   protected readonly showOnboardingModal = signal(false);
   protected readonly showWelcomeVideoModal = signal(false);
+  protected readonly showPlanReviewModal = signal(false);
   protected readonly currentYear = new Date().getFullYear();
 
   // Welcome video modal data
@@ -285,6 +296,7 @@ export class LaunchpadAppViewerComponent implements OnInit {
   protected readonly welcomeVideoMetric = signal<string>('');
   protected readonly welcomeVideoLabel = signal<string>('');
   protected readonly welcomeVideoTotalDays = signal<number>(30);
+  protected readonly planReviewGoalId = signal<string | null>(null);
 
   // Reactive template selection based on route ID
   protected readonly template = computed(() => {
@@ -306,8 +318,19 @@ export class LaunchpadAppViewerComponent implements OnInit {
     }
 
     if (this.isLoggedIn()) {
-      const handled = await this.launchpadService.checkPendingLaunchpad();
-      if (handled) return;
+      const pending = await this.launchpadService.checkPendingLaunchpad();
+      if (pending?.goalId) {
+        if (pending.onboardingData && pending.template) {
+          this.prepareWelcomeVideo(
+            pending.goalId,
+            pending.template,
+            pending.onboardingData
+          );
+        } else {
+          this.router.navigate(['/rocketgoal', pending.goalId]);
+        }
+        return;
+      }
     }
   }
 
@@ -337,25 +360,8 @@ export class LaunchpadAppViewerComponent implements OnInit {
     try {
       const goalId = await this.launchpadService.launchMissionWithOnboarding(t, onboardingData);
       if (goalId) {
-        // Calculate total days for the welcome video
-        const startDate = new Date(onboardingData.startDate);
-        const endDate = new Date(onboardingData.endDate);
-        const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        // Get user first name from profile
-        const profile = this.launchpadService.getUserProfile();
-        const firstName = profile?.firstName || 'there';
-
-        // Set welcome video modal data
-        this.welcomeVideoGoalId.set(goalId);
-        this.userFirstName.set(firstName);
-        this.welcomeVideoMetric.set(onboardingData.oneThingMetric);
-        this.welcomeVideoLabel.set(t.oneThingMetric.label);
-        this.welcomeVideoTotalDays.set(totalDays);
-
-        // Hide launching overlay and show welcome video modal
+        this.prepareWelcomeVideo(goalId, t, onboardingData);
         this.isLaunching.set(false);
-        this.showWelcomeVideoModal.set(true);
       }
     } catch (error) {
       console.error('Failed to launch mission:', error);
@@ -366,16 +372,42 @@ export class LaunchpadAppViewerComponent implements OnInit {
   handleWelcomeVideoContinue() {
     const goalId = this.welcomeVideoGoalId();
     this.showWelcomeVideoModal.set(false);
-    if (goalId) {
-      this.router.navigate(['/rocketgoal', goalId]);
-    }
+    if (goalId) this.openPlanReview(goalId);
   }
 
   handleWelcomeVideoSkip() {
     const goalId = this.welcomeVideoGoalId();
     this.showWelcomeVideoModal.set(false);
+    if (goalId) this.openPlanReview(goalId);
+  }
+
+  handlePlanReviewCommit() {
+    const goalId = this.planReviewGoalId();
+    this.showPlanReviewModal.set(false);
     if (goalId) {
       this.router.navigate(['/rocketgoal', goalId]);
     }
+  }
+
+  private openPlanReview(goalId: string) {
+    this.planReviewGoalId.set(goalId);
+    this.showPlanReviewModal.set(true);
+  }
+
+  private prepareWelcomeVideo(goalId: string, template: LaunchpadTemplate, onboardingData: MissionOnboardingData) {
+    const startDate = new Date(onboardingData.startDate);
+    const endDate = new Date(onboardingData.endDate);
+    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    const profile = this.launchpadService.getUserProfile();
+    const firstName = profile?.firstName || 'there';
+
+    this.welcomeVideoGoalId.set(goalId);
+    this.userFirstName.set(firstName);
+    this.welcomeVideoMetric.set(onboardingData.oneThingMetric);
+    this.welcomeVideoLabel.set(template.oneThingMetric.label);
+    this.welcomeVideoTotalDays.set(totalDays);
+
+    this.showWelcomeVideoModal.set(true);
   }
 }

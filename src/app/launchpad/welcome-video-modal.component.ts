@@ -47,7 +47,7 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
 
             <!-- Skip Button -->
             <button class="skip-button" (click)="skip()">
-              Skip and go to dashboard
+              Skip and review plan
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
               </svg>
@@ -88,7 +88,7 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
                 [style.background]="template.accentColor"
                 (click)="continue()"
               >
-                Continue to Dashboard
+                Review Plan
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                 </svg>
@@ -119,7 +119,7 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
               [style.background]="template.accentColor"
               (click)="continue()"
             >
-              Start My Mission
+              Review My Plan
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
               </svg>

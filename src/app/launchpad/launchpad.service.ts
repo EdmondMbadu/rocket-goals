@@ -487,7 +487,7 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
     }
   }
 
-  async checkPendingLaunchpad(): Promise<boolean> {
+  async checkPendingLaunchpad(): Promise<{ goalId: string; template?: LaunchpadTemplate; onboardingData?: MissionOnboardingData } | null> {
     const pending = sessionStorage.getItem('pendingLaunchpad');
     if (pending && this.isLoggedIn()) {
       try {
@@ -505,8 +505,11 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
           }
 
           if (goalId) {
-            this.router.navigate(['/rocketgoal', goalId]);
-            return true;
+            return {
+              goalId,
+              template,
+              onboardingData: data.onboardingData
+            };
           }
         }
       } catch (error) {
@@ -514,7 +517,7 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
         sessionStorage.removeItem('pendingLaunchpad');
       }
     }
-    return false;
+    return null;
   }
 
   private async imageUrlToBase64(url: string): Promise<string | null> {
