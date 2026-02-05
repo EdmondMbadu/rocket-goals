@@ -120,44 +120,46 @@ type ViewMode = 'view' | 'edit';
               </svg>
             </div>
 
-            <div class="ai-panel">
-              <div class="ai-header">
-                <img [src]="template.coPilotAvatar" [alt]="template.coPilotName" class="ai-avatar" />
-                <div>
-                  <div class="ai-title">{{ template.coPilotName }} Review</div>
-                  <div class="ai-subtitle">
-                    What do you feel about this plan? Ask for edits and I will restructure the milestones.
+            @if (viewMode() === 'view') {
+              <div class="ai-panel">
+                <div class="ai-header">
+                  <img [src]="template.coPilotAvatar" [alt]="template.coPilotName" class="ai-avatar" />
+                  <div>
+                    <div class="ai-title">{{ template.coPilotName }} Review</div>
+                    <div class="ai-subtitle">
+                      What do you feel about this plan? Ask for edits and I will restructure the milestones.
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="ai-body">
-                <textarea
-                  class="ai-textarea"
-                  rows="3"
-                  [value]="aiPrompt()"
-                  (input)="updateAiPrompt($event)"
-                  placeholder="Tell me what you want changed or added. Example: Make Day 3 lighter and add a recovery focus..."
-                ></textarea>
-                <div class="ai-actions">
-                  @if (aiStatus()) {
-                    <span class="ai-status">{{ aiStatus() }}</span>
+                <div class="ai-body">
+                  <textarea
+                    class="ai-textarea"
+                    rows="3"
+                    [value]="aiPrompt()"
+                    (input)="updateAiPrompt($event)"
+                    placeholder="Tell me what you want changed or added. Example: Make Day 3 lighter and add a recovery focus..."
+                  ></textarea>
+                  <div class="ai-actions">
+                    @if (aiStatus()) {
+                      <span class="ai-status">{{ aiStatus() }}</span>
+                    }
+                    <button
+                      class="ai-regenerate-btn"
+                      [disabled]="isRegenerating() || !aiPrompt().trim()"
+                      (click)="regeneratePlan()"
+                    >
+                      {{ isRegenerating() ? 'Regenerating...' : 'Regenerate Plan' }}
+                    </button>
+                  </div>
+                  @if (isRegenerating()) {
+                    <div class="ai-loading">
+                      <span class="ai-spinner"></span>
+                      <span>Generating a refreshed plan…</span>
+                    </div>
                   }
-                  <button
-                    class="ai-regenerate-btn"
-                    [disabled]="isRegenerating() || !aiPrompt().trim()"
-                    (click)="regeneratePlan()"
-                  >
-                    {{ isRegenerating() ? 'Regenerating...' : 'Regenerate Plan' }}
-                  </button>
                 </div>
-                @if (isRegenerating()) {
-                  <div class="ai-loading">
-                    <span class="ai-spinner"></span>
-                    <span>Generating a refreshed plan…</span>
-                  </div>
-                }
               </div>
-            </div>
+            }
           }
         </div>
 
@@ -385,17 +387,22 @@ type ViewMode = 'view' | 'edit';
       align-items: center;
       justify-content: center;
       gap: 8px;
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.2em;
-      color: rgba(255, 255, 255, 0.45);
-      padding-bottom: 6px;
+      letter-spacing: 0.18em;
+      color: rgba(255, 255, 255, 0.75);
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
       animation: floatHint 2s ease-in-out infinite;
       cursor: pointer;
     }
 
     .plan-modal-container.light-mode .scroll-hint {
-      color: #94a3b8;
+      color: #475569;
+      border-color: rgba(15, 23, 42, 0.12);
+      background: rgba(15, 23, 42, 0.06);
     }
 
     .scroll-icon {
