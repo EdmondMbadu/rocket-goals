@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
 import { ActionItem, ActionItemsService } from '../action-items.service';
+import { CalendarEventsService } from '../calendar-events.service';
+import { RocketGoalsAIService } from '../rocket-goals-ai.service';
 import { RocketGoalsService } from '../rocket-goals.service';
 import { ThemeService } from '../theme.service';
 import { LaunchpadTemplate } from './launchpad.types';
@@ -110,6 +112,39 @@ type ViewMode = 'view' | 'edit';
                   }
                 </div>
               }
+            </div>
+
+            <div class="ai-panel">
+              <div class="ai-header">
+                <img [src]="template.coPilotAvatar" [alt]="template.coPilotName" class="ai-avatar" />
+                <div>
+                  <div class="ai-title">{{ template.coPilotName }} Review</div>
+                  <div class="ai-subtitle">
+                    What do you feel about this plan? Ask for edits and I will restructure the milestones.
+                  </div>
+                </div>
+              </div>
+              <div class="ai-body">
+                <textarea
+                  class="ai-textarea"
+                  rows="3"
+                  [value]="aiPrompt()"
+                  (input)="updateAiPrompt($event)"
+                  placeholder="Tell me what you want changed or added. Example: Make Day 3 lighter and add a recovery focus..."
+                ></textarea>
+                <div class="ai-actions">
+                  @if (aiStatus()) {
+                    <span class="ai-status">{{ aiStatus() }}</span>
+                  }
+                  <button
+                    class="ai-regenerate-btn"
+                    [disabled]="isRegenerating() || !aiPrompt().trim()"
+                    (click)="regeneratePlan()"
+                  >
+                    {{ isRegenerating() ? 'Regenerating...' : 'Regenerate Plan' }}
+                  </button>
+                </div>
+              </div>
             </div>
           }
         </div>
@@ -574,6 +609,127 @@ type ViewMode = 'view' | 'edit';
     .plan-modal-container.light-mode .commit-btn {
       box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
     }
+
+    .ai-panel {
+      margin: 12px 6px 22px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .plan-modal-container.light-mode .ai-panel {
+      border-color: rgba(15, 23, 42, 0.08);
+      background: rgba(15, 23, 42, 0.03);
+    }
+
+    .ai-header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .ai-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+    }
+
+    .plan-modal-container.light-mode .ai-avatar {
+      border-color: rgba(15, 23, 42, 0.12);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+    }
+
+    .ai-title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .plan-modal-container.light-mode .ai-title {
+      color: #0f172a;
+    }
+
+    .ai-subtitle {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 12px;
+    }
+
+    .plan-modal-container.light-mode .ai-subtitle {
+      color: #64748b;
+    }
+
+    .ai-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ai-textarea {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 88px;
+    }
+
+    .plan-modal-container.light-mode .ai-textarea {
+      background: #ffffff;
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #0f172a;
+    }
+
+    .ai-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ai-status {
+      font-size: 12px;
+      color: rgba(34, 197, 94, 0.9);
+      font-weight: 600;
+    }
+
+    .plan-modal-container.light-mode .ai-status {
+      color: #166534;
+    }
+
+    .ai-regenerate-btn {
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #fecaca;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .plan-modal-container.light-mode .ai-regenerate-btn {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #b91c1c;
+    }
+
+    .ai-regenerate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .commit-btn:disabled,
     .save-all-btn:disabled {
       opacity: 0.6;
@@ -621,6 +777,8 @@ type ViewMode = 'view' | 'edit';
 export class MissionPlanReviewModalComponent {
   private readonly theme = inject(ThemeService);
   private readonly actionItemsService = inject(ActionItemsService);
+  private readonly calendarEventsService = inject(CalendarEventsService);
+  private readonly aiService = inject(RocketGoalsAIService);
   private readonly goalsService = inject(RocketGoalsService);
 
   @Input({ required: true }) template!: LaunchpadTemplate;
@@ -637,6 +795,12 @@ export class MissionPlanReviewModalComponent {
   protected readonly isSaving = signal(false);
   protected readonly goalTitle = signal('Your RocketGoal');
   protected readonly isDarkMode = this.theme.isDarkMode;
+  protected readonly aiPrompt = signal('');
+  protected readonly aiStatus = signal<string | null>(null);
+  protected readonly isRegenerating = signal(false);
+  private goalContext: any | null = null;
+  private goalStartTime = 0;
+  private goalTotalDays = 0;
 
   protected readonly hasUnsavedChanges = computed(() => {
     if (this.viewMode() !== 'edit') return false;
@@ -658,6 +822,7 @@ export class MissionPlanReviewModalComponent {
       ]);
 
       if (goal) {
+        this.goalContext = goal;
         const fallbackTitle = `${this.template.name} Mission`;
         const title =
           goal?.answers?.custom_goal_title ||
@@ -665,6 +830,8 @@ export class MissionPlanReviewModalComponent {
           goal?.primaryGoal ||
           fallbackTitle;
         this.goalTitle.set(title);
+        this.goalStartTime = this.resolveStartTime(goal);
+        this.goalTotalDays = this.resolveTotalDays(goal, items.length);
       }
 
       this.milestones.set(items);
@@ -747,6 +914,50 @@ export class MissionPlanReviewModalComponent {
     }
   }
 
+  updateAiPrompt(event: Event) {
+    const value = (event.target as HTMLTextAreaElement).value;
+    this.aiPrompt.set(value);
+  }
+
+  async regeneratePlan() {
+    if (!this.aiPrompt().trim() || this.isRegenerating()) return;
+    if (!this.goalContext) return;
+
+    this.isRegenerating.set(true);
+    this.aiStatus.set('Creating a refreshed milestone plan...');
+    try {
+      const totalDays = this.goalTotalDays || this.milestones().length;
+      const goalTitle = this.goalTitle();
+      const userNotes = this.aiPrompt().trim();
+      const prompt = `
+You are an expert coach. Regenerate a ${totalDays}-day milestone plan for the goal: "${goalTitle}".
+Requirements:
+1. Create EXACTLY ${totalDays} milestones, one per day (Day 1..Day ${totalDays}).
+2. Each milestone must be specific, actionable, and measurable.
+3. Keep titles short (max 12 words).
+4. Use the user's guidance below to adjust the plan.
+
+User guidance:
+${userNotes}
+
+Return ONLY a JSON array of objects with keys: "dayNumber" (number) and "title" (string). No extra text.
+      `.trim();
+
+      const response = await this.aiService.callAISilent(prompt, this.goalContext);
+      const parsed = this.parseMilestonesResponse(response, totalDays);
+      const normalized = this.normalizeMilestones(parsed, totalDays);
+
+      await this.replaceMilestones(normalized);
+      this.aiStatus.set('Plan updated. Review the refreshed milestones below.');
+      this.aiPrompt.set('');
+    } catch (error: any) {
+      console.error('Failed to regenerate milestones:', error);
+      this.aiStatus.set(error?.message || 'Unable to regenerate milestones right now.');
+    } finally {
+      this.isRegenerating.set(false);
+    }
+  }
+
   async commitPlan() {
     if (this.hasUnsavedChanges()) {
       await this.saveAllEdits();
@@ -799,6 +1010,133 @@ export class MissionPlanReviewModalComponent {
       acc[item.id] = item.title;
       return acc;
     }, {} as Record<string, string>);
+  }
+
+  private async replaceMilestones(items: { title: string; dayNumber: number }[]) {
+    const current = this.milestones();
+
+    for (const item of current) {
+      await this.actionItemsService.deleteActionItem(this.goalId, item.id);
+    }
+
+    const events = await this.calendarEventsService.getEventsByGoalId(this.goalId);
+    const milestoneEvents = events.filter(event => event.title?.startsWith('🎯 '));
+    for (const event of milestoneEvents) {
+      await this.calendarEventsService.deleteEvent(this.goalId, event.id);
+    }
+
+    const created: ActionItem[] = [];
+    for (const item of items) {
+      const id = await this.actionItemsService.createActionItem({
+        goalId: this.goalId,
+        title: item.title,
+        dayNumber: item.dayNumber,
+        completed: false,
+        order: item.dayNumber
+      });
+      created.push({
+        id,
+        goalId: this.goalId,
+        title: item.title,
+        dayNumber: item.dayNumber,
+        completed: false,
+        order: item.dayNumber,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      if (this.goalStartTime) {
+        const date = new Date(this.goalStartTime + (item.dayNumber - 1) * 24 * 60 * 60 * 1000);
+        await this.calendarEventsService.createEvent(this.goalId, {
+          title: `🎯 ${item.title}`,
+          date,
+          color: '#9333ea',
+          completed: false
+        });
+      }
+    }
+
+    this.milestones.set(created);
+    this.bulkEdits.set(this.buildBulkEdits(created));
+    this.viewMode.set('view');
+  }
+
+  private parseMilestonesResponse(response: string, totalDays: number) {
+    const trimmed = response.trim();
+    const jsonStart = trimmed.indexOf('[');
+    const jsonEnd = trimmed.lastIndexOf(']');
+    const jsonStr = jsonStart >= 0 && jsonEnd > jsonStart
+      ? trimmed.slice(jsonStart, jsonEnd + 1)
+      : trimmed;
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      parsed = [];
+    }
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((item: any, index: number) => ({
+        dayNumber: Number(item.dayNumber ?? item.day ?? index + 1),
+        title: String(item.title ?? item.milestone ?? '').trim()
+      }))
+      .filter(item => item.title && item.dayNumber >= 1 && item.dayNumber <= totalDays);
+  }
+
+  private normalizeMilestones(items: { title: string; dayNumber: number }[], totalDays: number) {
+    const fallback = this.milestones();
+    const byDay = new Map<number, string>();
+    for (const item of items) {
+      byDay.set(item.dayNumber, item.title);
+    }
+
+    const normalized: { title: string; dayNumber: number }[] = [];
+    for (let day = 1; day <= totalDays; day += 1) {
+      const title = byDay.get(day) || fallback.find(item => item.dayNumber === day)?.title || `Day ${day} milestone`;
+      normalized.push({ dayNumber: day, title });
+    }
+    return normalized;
+  }
+
+  private resolveStartTime(goal: any) {
+    if (goal?.startTime) return Number(goal.startTime);
+    const onboardingStart = goal?.answers?.onboarding_start_date;
+    if (onboardingStart) {
+      const parsed = new Date(onboardingStart).getTime();
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+    return Date.now();
+  }
+
+  private resolveTotalDays(goal: any, fallbackCount: number) {
+    const onboardingEnd = goal?.answers?.onboarding_end_date;
+    const onboardingStart = goal?.answers?.onboarding_start_date;
+    if (onboardingStart && onboardingEnd) {
+      const start = new Date(onboardingStart).getTime();
+      const end = new Date(onboardingEnd).getTime();
+      if (!Number.isNaN(start) && !Number.isNaN(end)) {
+        return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+      }
+    }
+
+    if (goal?.answers?.timeframe_days) {
+      const days = Number(goal.answers.timeframe_days);
+      if (!Number.isNaN(days) && days > 0) return days;
+    }
+
+    if (goal?.answers?.deadlineDate) {
+      const end = Number(goal.answers.deadlineDate);
+      if (!Number.isNaN(end) && this.goalStartTime) {
+        return Math.max(1, Math.ceil((end - this.goalStartTime) / (1000 * 60 * 60 * 24)));
+      }
+    }
+
+    return Math.max(1, fallbackCount);
   }
 
   private escapeHtml(value: string) {
