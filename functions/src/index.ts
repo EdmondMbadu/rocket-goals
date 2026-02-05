@@ -1591,6 +1591,7 @@ type GroupedGoalReminderItem = {
     missionLogSummary?: string;
     imageUrl?: string;
     isMyOneThing?: boolean;
+    createdAtMs?: number;
 };
 
 type GroupedGoalEmailOptions = {
@@ -2241,7 +2242,8 @@ export const sendTestDailyReminder = functions.runWith({
                 activeMilestone,
                 oneThing,
                 missionLogSummary,
-                imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl
+                imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl,
+                createdAtMs: getTimestampMs(goalData.createdAt) || getTimestampMs(goalData.startTime) || undefined
             });
         }
 
@@ -2413,7 +2415,8 @@ export const sendBulkGoalReminders = functions.runWith({
                             title: goalTitle,
                             url: goalUrl,
                             milestones,
-                            imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl
+                            imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl,
+                            createdAtMs: getTimestampMs(goalData.createdAt) || getTimestampMs(goalData.startTime) || undefined
                         };
 
                         const emailKey = participant.email.toLowerCase();
@@ -4762,12 +4765,26 @@ function applyGroupedEmailTemplate(
 }
 
 function sortGoalsByOneThing(goals: GroupedGoalReminderItem[], oneThingGoalId?: string): GroupedGoalReminderItem[] {
-    if (!oneThingGoalId) return goals;
+    let targetId = oneThingGoalId;
+    const hasTarget = targetId ? goals.some(goal => goal.id === targetId) : false;
+    if (!hasTarget) {
+        const withTimestamp = goals
+            .filter(goal => typeof goal.createdAtMs === 'number')
+            .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+        if (withTimestamp.length) {
+            targetId = withTimestamp[0].id;
+        } else if (goals.length) {
+            targetId = goals[0].id;
+        }
+    }
+
+    if (!targetId) return goals;
+
     return goals
-        .map(goal => ({ ...goal, isMyOneThing: goal.id === oneThingGoalId }))
+        .map(goal => ({ ...goal, isMyOneThing: goal.id === targetId }))
         .sort((a, b) => {
-            const aScore = a.id === oneThingGoalId ? 1 : 0;
-            const bScore = b.id === oneThingGoalId ? 1 : 0;
+            const aScore = a.id === targetId ? 1 : 0;
+            const bScore = b.id === targetId ? 1 : 0;
             if (aScore !== bScore) return bScore - aScore;
             return 0;
         });
@@ -5142,7 +5159,8 @@ export const processScheduledReminders = functions.runWith({
                                     activeMilestone,
                                     oneThing,
                                     missionLogSummary,
-                                    imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl
+                                    imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl,
+                                    createdAtMs: getTimestampMs(goalData.createdAt) || getTimestampMs(goalData.startTime) || undefined
                                 };
 
                                 const emailKey = participant.email.toLowerCase();
