@@ -113,6 +113,12 @@ type ViewMode = 'view' | 'edit';
                 </div>
               }
             </div>
+            <div class="scroll-hint">
+              <span>Scroll to see the full plan</span>
+              <svg class="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
 
             <div class="ai-panel">
               <div class="ai-header">
@@ -144,6 +150,12 @@ type ViewMode = 'view' | 'edit';
                     {{ isRegenerating() ? 'Regenerating...' : 'Regenerate Plan' }}
                   </button>
                 </div>
+                @if (isRegenerating()) {
+                  <div class="ai-loading">
+                    <span class="ai-spinner"></span>
+                    <span>Generating a refreshed plan…</span>
+                  </div>
+                }
               </div>
             </div>
           }
@@ -366,6 +378,28 @@ type ViewMode = 'view' | 'edit';
       flex: 1;
       overflow-y: auto;
       padding: 12px 6px 18px;
+    }
+
+    .scroll-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(255, 255, 255, 0.45);
+      padding-bottom: 6px;
+      animation: floatHint 2s ease-in-out infinite;
+    }
+
+    .plan-modal-container.light-mode .scroll-hint {
+      color: #94a3b8;
+    }
+
+    .scroll-icon {
+      width: 16px;
+      height: 16px;
     }
 
     .plan-loading,
@@ -730,6 +764,32 @@ type ViewMode = 'view' | 'edit';
       opacity: 0.6;
       cursor: not-allowed;
     }
+
+    .ai-loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .plan-modal-container.light-mode .ai-loading {
+      color: #475569;
+    }
+
+    .ai-spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #22c55e;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .plan-modal-container.light-mode .ai-spinner {
+      border-color: rgba(15, 23, 42, 0.15);
+      border-top-color: #16a34a;
+    }
     .commit-btn:disabled,
     .save-all-btn:disabled {
       opacity: 0.6;
@@ -771,6 +831,11 @@ type ViewMode = 'view' | 'edit';
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
+    }
+
+    @keyframes floatHint {
+      0%, 100% { transform: translateY(0); opacity: 0.7; }
+      50% { transform: translateY(4px); opacity: 1; }
     }
   `]
 })
