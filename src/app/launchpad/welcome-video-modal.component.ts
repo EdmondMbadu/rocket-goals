@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output, signal, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, OnInit, OnDestroy, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LaunchpadTemplate } from './launchpad.types';
 import { HeyGenService, WelcomeVideoConfig } from '../heygen.service';
+import { ThemeService } from '../theme.service';
 
 export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped';
 
@@ -10,8 +11,8 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="video-modal-backdrop">
-      <div class="video-modal-container">
+    <div class="video-modal-backdrop" [class.light-mode]="!isDarkMode()">
+      <div class="video-modal-container" [class.light-mode]="!isDarkMode()">
         <!-- Generating State -->
         @if (state() === 'generating') {
           <div class="generating-state">
@@ -143,6 +144,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       animation: fadeIn 0.3s ease-out;
     }
 
+    .video-modal-backdrop.light-mode {
+      background: rgba(148, 163, 184, 0.35);
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -158,6 +163,13 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       border-radius: 24px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
       animation: slideUp 0.4s ease-out;
+    }
+
+    .video-modal-container.light-mode {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 24px 45px rgba(15, 23, 42, 0.12);
+      color: #0f172a;
     }
 
     @keyframes slideUp {
@@ -178,6 +190,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       align-items: center;
       padding: 48px 32px;
       text-align: center;
+    }
+
+    .light-mode .generating-state {
+      color: #0f172a;
     }
 
     .avatar-container {
@@ -219,6 +235,11 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       z-index: 1;
     }
 
+    .light-mode .copilot-avatar {
+      border-color: rgba(15, 23, 42, 0.1);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.15);
+    }
+
     .generating-title {
       font-size: 1.5rem;
       font-weight: 800;
@@ -226,11 +247,19 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       margin: 0 0 8px 0;
     }
 
+    .light-mode .generating-title {
+      color: #0f172a;
+    }
+
     .generating-subtitle {
       font-size: 1rem;
       color: rgba(255, 255, 255, 0.5);
       margin: 0 0 32px 0;
       max-width: 400px;
+    }
+
+    .light-mode .generating-subtitle {
+      color: #64748b;
     }
 
     .progress-container {
@@ -247,6 +276,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       margin-bottom: 8px;
     }
 
+    .light-mode .progress-bar {
+      background: rgba(15, 23, 42, 0.12);
+    }
+
     .progress-fill {
       height: 100%;
       border-radius: 3px;
@@ -256,6 +289,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
     .progress-text {
       font-size: 0.8125rem;
       color: rgba(255, 255, 255, 0.5);
+    }
+
+    .light-mode .progress-text {
+      color: #64748b;
     }
 
     .status-messages {
@@ -272,6 +309,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       gap: 8px;
       font-size: 0.875rem;
       color: rgba(255, 255, 255, 0.7);
+    }
+
+    .light-mode .status-item {
+      color: #475569;
     }
 
     .status-icon {
@@ -310,10 +351,21 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       transition: all 0.2s;
     }
 
+    .light-mode .skip-button {
+      border-color: rgba(15, 23, 42, 0.2);
+      color: #475569;
+    }
+
     .skip-button:hover {
       background: rgba(255, 255, 255, 0.05);
       border-color: rgba(255, 255, 255, 0.3);
       color: rgba(255, 255, 255, 0.9);
+    }
+
+    .light-mode .skip-button:hover {
+      background: rgba(15, 23, 42, 0.05);
+      border-color: rgba(15, 23, 42, 0.35);
+      color: #0f172a;
     }
 
     /* Video State */
@@ -325,6 +377,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
     .video-header {
       padding: 20px 24px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .light-mode .video-header {
+      border-bottom-color: rgba(15, 23, 42, 0.08);
     }
 
     .copilot-info {
@@ -341,11 +397,19 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
+    .light-mode .copilot-avatar-small {
+      border-color: rgba(15, 23, 42, 0.12);
+    }
+
     .copilot-name {
       font-size: 1rem;
       font-weight: 700;
       color: #ffffff;
       margin: 0;
+    }
+
+    .light-mode .copilot-name {
+      color: #0f172a;
     }
 
     .copilot-role {
@@ -354,9 +418,17 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       margin: 2px 0 0 0;
     }
 
+    .light-mode .copilot-role {
+      color: #64748b;
+    }
+
     .video-container {
       padding: 20px;
       background: #000;
+    }
+
+    .light-mode .video-container {
+      background: #e2e8f0;
     }
 
     .welcome-video {
@@ -365,11 +437,19 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       background: #000;
     }
 
+    .light-mode .welcome-video {
+      background: #e2e8f0;
+    }
+
     .video-footer {
       padding: 20px 24px;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       justify-content: center;
+    }
+
+    .light-mode .video-footer {
+      border-top-color: rgba(15, 23, 42, 0.08);
     }
 
     .continue-button {
@@ -392,6 +472,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
 
+    .light-mode .continue-button {
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.2);
+    }
+
     /* Error/Fallback State */
     .error-state {
       display: flex;
@@ -408,6 +492,10 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       margin: 0 0 28px 0;
     }
 
+    .light-mode .welcome-title {
+      color: #0f172a;
+    }
+
     .welcome-message {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -418,11 +506,20 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       text-align: left;
     }
 
+    .light-mode .welcome-message {
+      background: #f8fafc;
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
     .welcome-message p {
       font-size: 1rem;
       line-height: 1.7;
       color: rgba(255, 255, 255, 0.85);
       margin: 0 0 16px 0;
+    }
+
+    .light-mode .welcome-message p {
+      color: #1f2937;
     }
 
     .welcome-message p:last-child {
@@ -434,10 +531,18 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
       color: #ffffff;
     }
 
+    .light-mode .welcome-message .closing {
+      color: #0f172a;
+    }
+
     .welcome-message .signature {
       font-style: italic;
       color: rgba(255, 255, 255, 0.6);
       margin-top: 20px;
+    }
+
+    .light-mode .welcome-message .signature {
+      color: #64748b;
     }
 
     /* Responsive */
@@ -471,6 +576,7 @@ export type VideoState = 'generating' | 'ready' | 'playing' | 'error' | 'skipped
   `]
 })
 export class WelcomeVideoModalComponent implements OnInit, OnDestroy {
+  private readonly theme = inject(ThemeService);
   private readonly leanLaunchVideoUrl = 'https://firebasestorage.googleapis.com/v0/b/rocket-prompt.firebasestorage.app/o/site%2FTess%20-%20Day%201%20Workout.mp4?alt=media&token=87a46b83-fbb3-4ac5-8855-5db546a740e9';
   @ViewChild('videoPlayer') videoPlayer!: ElementRef<HTMLVideoElement>;
 
@@ -488,6 +594,7 @@ export class WelcomeVideoModalComponent implements OnInit, OnDestroy {
   readonly videoUrl = signal<string | null>(null);
   readonly progressPercent = signal(0);
   readonly statusMessages = signal<string[]>([]);
+  readonly isDarkMode = this.theme.isDarkMode;
 
   private pollAttempts = 0;
   private isDestroyed = false;

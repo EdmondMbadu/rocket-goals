@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
 import { ActionItem, ActionItemsService } from '../action-items.service';
 import { RocketGoalsService } from '../rocket-goals.service';
+import { ThemeService } from '../theme.service';
 import { LaunchpadTemplate } from './launchpad.types';
 
 type ViewMode = 'view' | 'edit';
@@ -11,8 +12,8 @@ type ViewMode = 'view' | 'edit';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="plan-modal-backdrop">
-      <div class="plan-modal-container">
+    <div class="plan-modal-backdrop" [class.light-mode]="!isDarkMode()">
+      <div class="plan-modal-container" [class.light-mode]="!isDarkMode()">
         <div class="plan-header">
           <div class="plan-title-block">
             <div class="plan-badge" [style.border-color]="template.accentColor">
@@ -158,6 +159,10 @@ type ViewMode = 'view' | 'edit';
       animation: fadeIn 0.3s ease-out;
     }
 
+    .plan-modal-backdrop.light-mode {
+      background: rgba(148, 163, 184, 0.28);
+    }
+
     .plan-modal-container {
       width: min(960px, 100%);
       max-height: 92vh;
@@ -171,6 +176,13 @@ type ViewMode = 'view' | 'edit';
       animation: slideUp 0.4s ease-out;
     }
 
+    .plan-modal-container.light-mode {
+      background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+      color: #0f172a;
+    }
+
     .plan-header {
       display: flex;
       align-items: flex-start;
@@ -178,6 +190,10 @@ type ViewMode = 'view' | 'edit';
       gap: 24px;
       padding: 28px 32px 18px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .plan-modal-container.light-mode .plan-header {
+      border-bottom-color: rgba(15, 23, 42, 0.08);
     }
 
     .plan-title-block {
@@ -199,6 +215,10 @@ type ViewMode = 'view' | 'edit';
       margin-bottom: 14px;
     }
 
+    .plan-modal-container.light-mode .plan-badge {
+      color: #64748b;
+    }
+
     .plan-title {
       font-size: clamp(24px, 3.4vw, 34px);
       font-weight: 800;
@@ -206,10 +226,18 @@ type ViewMode = 'view' | 'edit';
       margin: 0 0 8px;
     }
 
+    .plan-modal-container.light-mode .plan-title {
+      color: #0f172a;
+    }
+
     .plan-subtitle {
       color: rgba(255, 255, 255, 0.6);
       margin: 0;
       font-size: 14px;
+    }
+
+    .plan-modal-container.light-mode .plan-subtitle {
+      color: #64748b;
     }
 
     .plan-actions {
@@ -226,6 +254,10 @@ type ViewMode = 'view' | 'edit';
       gap: 4px;
     }
 
+    .plan-modal-container.light-mode .view-toggle {
+      background: rgba(15, 23, 42, 0.08);
+    }
+
     .toggle-btn {
       background: transparent;
       border: none;
@@ -240,9 +272,18 @@ type ViewMode = 'view' | 'edit';
       letter-spacing: 0.14em;
     }
 
+    .plan-modal-container.light-mode .toggle-btn {
+      color: #475569;
+    }
+
     .toggle-btn.active {
       background: rgba(255, 255, 255, 0.18);
       color: #fff;
+    }
+
+    .plan-modal-container.light-mode .toggle-btn.active {
+      background: rgba(15, 23, 42, 0.12);
+      color: #0f172a;
     }
 
     .print-btn {
@@ -259,9 +300,20 @@ type ViewMode = 'view' | 'edit';
       transition: all 0.2s ease;
     }
 
+    .plan-modal-container.light-mode .print-btn {
+      background: rgba(15, 23, 42, 0.06);
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #475569;
+    }
+
     .print-btn:hover {
       background: rgba(255, 255, 255, 0.16);
       color: #fff;
+    }
+
+    .plan-modal-container.light-mode .print-btn:hover {
+      background: rgba(15, 23, 42, 0.12);
+      color: #0f172a;
     }
 
     .plan-body {
@@ -287,6 +339,11 @@ type ViewMode = 'view' | 'edit';
       color: rgba(255, 255, 255, 0.7);
       padding: 40px;
       text-align: center;
+    }
+
+    .plan-modal-container.light-mode .plan-loading,
+    .plan-modal-container.light-mode .plan-error {
+      color: #475569;
     }
 
     .plan-spinner {
@@ -315,6 +372,11 @@ type ViewMode = 'view' | 'edit';
       padding: 14px 16px;
     }
 
+    .plan-modal-container.light-mode .milestone-row {
+      background: rgba(15, 23, 42, 0.03);
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
     .milestone-content {
       min-width: 0;
     }
@@ -324,6 +386,10 @@ type ViewMode = 'view' | 'edit';
       font-weight: 600;
       font-size: 14px;
       line-height: 1.4;
+    }
+
+    .plan-modal-container.light-mode .milestone-title {
+      color: #0f172a;
     }
 
     .milestone-actions {
@@ -343,6 +409,11 @@ type ViewMode = 'view' | 'edit';
       white-space: nowrap;
     }
 
+    .plan-modal-container.light-mode .day-pill {
+      color: #475569;
+      border-color: rgba(15, 23, 42, 0.12);
+    }
+
     .milestone-input {
       width: 100%;
       background: rgba(15, 23, 42, 0.7);
@@ -354,6 +425,12 @@ type ViewMode = 'view' | 'edit';
       font-weight: 500;
       outline: none;
       transition: border 0.2s ease;
+    }
+
+    .plan-modal-container.light-mode .milestone-input {
+      background: #ffffff;
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #0f172a;
     }
 
     .milestone-input:focus {
@@ -372,6 +449,12 @@ type ViewMode = 'view' | 'edit';
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.2s ease;
+    }
+
+    .plan-modal-container.light-mode .mini-btn {
+      background: rgba(15, 23, 42, 0.06);
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #475569;
     }
 
     .mini-btn.save {
@@ -397,6 +480,11 @@ type ViewMode = 'view' | 'edit';
       padding: 12px 14px;
     }
 
+    .plan-modal-container.light-mode .milestone-edit-row {
+      background: rgba(15, 23, 42, 0.02);
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
     .plan-footer {
       display: flex;
       align-items: center;
@@ -406,12 +494,20 @@ type ViewMode = 'view' | 'edit';
       border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    .plan-modal-container.light-mode .plan-footer {
+      border-top-color: rgba(15, 23, 42, 0.08);
+    }
+
     .plan-footer-left {
       display: flex;
       align-items: center;
       gap: 16px;
       color: rgba(255, 255, 255, 0.55);
       font-size: 12px;
+    }
+
+    .plan-modal-container.light-mode .plan-footer-left {
+      color: #64748b;
     }
 
     .ghost-btn {
@@ -425,6 +521,11 @@ type ViewMode = 'view' | 'edit';
       letter-spacing: 0.1em;
       text-transform: uppercase;
       cursor: pointer;
+    }
+
+    .plan-modal-container.light-mode .ghost-btn {
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #475569;
     }
 
     .plan-footer-right {
@@ -446,6 +547,12 @@ type ViewMode = 'view' | 'edit';
       cursor: pointer;
     }
 
+    .plan-modal-container.light-mode .save-all-btn {
+      background: rgba(15, 23, 42, 0.08);
+      border-color: rgba(15, 23, 42, 0.16);
+      color: #0f172a;
+    }
+
     .commit-btn {
       color: #fff;
       border: none;
@@ -461,6 +568,9 @@ type ViewMode = 'view' | 'edit';
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
     }
 
+    .plan-modal-container.light-mode .commit-btn {
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    }
     .commit-btn:disabled,
     .save-all-btn:disabled {
       opacity: 0.6;
@@ -506,6 +616,7 @@ type ViewMode = 'view' | 'edit';
   `]
 })
 export class MissionPlanReviewModalComponent {
+  private readonly theme = inject(ThemeService);
   private readonly actionItemsService = inject(ActionItemsService);
   private readonly goalsService = inject(RocketGoalsService);
 
@@ -522,6 +633,7 @@ export class MissionPlanReviewModalComponent {
   protected readonly bulkEdits = signal<Record<string, string>>({});
   protected readonly isSaving = signal(false);
   protected readonly goalTitle = signal('Your RocketGoal');
+  protected readonly isDarkMode = this.theme.isDarkMode;
 
   protected readonly hasUnsavedChanges = computed(() => {
     if (this.viewMode() !== 'edit') return false;
