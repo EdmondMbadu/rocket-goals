@@ -234,6 +234,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   missionTeamConnection = signal<MissionTeamConnection>('yes');
   missionNote = signal('');
   missionIntendedOneThing = signal('');
+  missionTomorrowEditingId = signal<string | null>(null);
+  missionTomorrowDraftTitle = signal('');
+  missionTomorrowSavingId = signal<string | null>(null);
   missionCoaching = signal<MissionLogCoaching | null>(null);
   savingMissionLog = signal(false);
 
@@ -2774,6 +2777,52 @@ ${url}`;
   getTomorrowMilestonesDateLabel(): string {
     const tomorrow = this.getDateFromDayNumber(this.getCurrentMissionDay() + 1);
     return tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+
+  startEditingTomorrowMilestone(item: ActionItem) {
+    this.missionTomorrowEditingId.set(item.id);
+    this.missionTomorrowDraftTitle.set(item.title);
+  }
+
+  cancelEditingTomorrowMilestone() {
+    this.missionTomorrowEditingId.set(null);
+    this.missionTomorrowDraftTitle.set('');
+  }
+
+  async saveTomorrowMilestoneEdit(item: ActionItem) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const nextTitle = this.missionTomorrowDraftTitle().trim();
+    if (!nextTitle) {
+      this.checkinModalError.set('Milestone title cannot be empty.');
+      return;
+    }
+    if (nextTitle === item.title) {
+      this.cancelEditingTomorrowMilestone();
+      return;
+    }
+
+    this.missionTomorrowSavingId.set(item.id);
+    this.checkinModalError.set(null);
+    try {
+      await this.actionItemsService.updateActionItem(goal.id, item.id, { title: nextTitle });
+      this.actionItems.update(items =>
+        items.map(existing => existing.id === item.id ? { ...existing, title: nextTitle } : existing)
+      );
+      await this.updateCalendarEventForMilestone(goal.id, item, {
+        title: nextTitle,
+        dayNumber: item.dayNumber,
+        notes: item.notes,
+        completed: item.completed
+      });
+      this.cancelEditingTomorrowMilestone();
+    } catch (error) {
+      console.error('Error updating tomorrow milestone:', error);
+      this.checkinModalError.set('Could not update tomorrow milestone. Please try again.');
+    } finally {
+      this.missionTomorrowSavingId.set(null);
+    }
   }
 
   private buildMissionLogCoaching(): MissionLogCoaching {

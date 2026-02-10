@@ -10961,8 +10961,9 @@
 }
 
 .tomorrow-preview-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(139, 92, 246, 0.08));
-  border-color: rgba(167, 139, 250, 0.35);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(139, 92, 246, 0.18));
+  border-color: rgba(167, 139, 250, 0.45);
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.28);
 }
 
 .tomorrow-preview-list {
@@ -10994,6 +10995,64 @@
   color: #f8fafc;
   font-size: 0.85rem;
   line-height: 1.4;
+  flex: 1;
+}
+
+.tomorrow-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tomorrow-preview-btn {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+  color: #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+
+.tomorrow-preview-btn.save {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.tomorrow-preview-input {
+  flex: 1;
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.82rem;
+}
+
+.light-mode .tomorrow-preview-btn {
+  background: rgba(255, 255, 255, 0.92);
+  color: #334155;
+}
+
+.light-mode .tomorrow-preview-card {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(224, 231, 255, 0.75));
+  border-color: rgba(167, 139, 250, 0.42);
+}
+
+.light-mode .tomorrow-preview-item {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(148, 163, 184, 0.34);
+}
+
+.light-mode .tomorrow-preview-title {
+  color: #0f172a;
+}
+
+.light-mode .tomorrow-preview-input {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.45);
 }
 
 /* Coach Section Styles */

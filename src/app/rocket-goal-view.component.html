@@ -3164,7 +3164,29 @@
           @for (item of getTomorrowMilestonesPreview(); track item.id) {
             <div class="tomorrow-preview-item">
               <span class="tomorrow-preview-dot"></span>
-              <span class="tomorrow-preview-title">{{ item.title }}</span>
+              @if (missionTomorrowEditingId() === item.id) {
+                <input
+                  class="checkin-input tomorrow-preview-input"
+                  [value]="missionTomorrowDraftTitle()"
+                  (input)="missionTomorrowDraftTitle.set($any($event.target).value)" />
+                <div class="tomorrow-preview-actions">
+                  <button
+                    type="button"
+                    class="tomorrow-preview-btn save"
+                    [disabled]="missionTomorrowSavingId() === item.id"
+                    (click)="saveTomorrowMilestoneEdit(item)">
+                    Save
+                  </button>
+                  <button type="button" class="tomorrow-preview-btn" (click)="cancelEditingTomorrowMilestone()">
+                    Cancel
+                  </button>
+                </div>
+              } @else {
+                <span class="tomorrow-preview-title">{{ item.title }}</span>
+                <button type="button" class="tomorrow-preview-btn" (click)="startEditingTomorrowMilestone(item)">
+                  Edit
+                </button>
+              }
             </div>
           }
         </div>
