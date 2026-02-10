@@ -2387,6 +2387,24 @@ ${url}`;
     await this.updateCalendarEventForMilestone(goal.id, todayMilestone, updates);
   }
 
+  private async markTodayMilestoneCompletedAfterIgnition() {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const currentDay = this.getCurrentMissionDay();
+    const todayPending = this.actionItems()
+      .filter(item => item.dayNumber === currentDay && !item.completed)
+      .sort((a, b) => a.order - b.order)[0];
+
+    if (!todayPending) return;
+
+    await this.actionItemsService.updateActionItem(goal.id, todayPending.id, { completed: true });
+    this.actionItems.update(items =>
+      items.map(item => item.id === todayPending.id ? { ...item, completed: true } : item)
+    );
+    this.updateCalendarEventColorForMilestone(todayPending.title, true);
+  }
+
   getSuggestedOneThing(): string {
     const latest = this.latestDailyIgnition();
     if (latest?.oneThingText) return latest.oneThingText;
@@ -2804,6 +2822,7 @@ ${url}`;
           teamConnection: this.ignitionExecutionTeamConnection()
         }
       });
+      await this.markTodayMilestoneCompletedAfterIgnition();
       if (this.journeyPhotoFile()) {
         await this.uploadJourneyPhoto('ignition');
       }
