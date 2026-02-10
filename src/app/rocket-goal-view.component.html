@@ -2715,7 +2715,7 @@
           @if (checkinModalType() === 'ignition') { 🔥 Daily Ignition } @else { 📘 Mission Log }
         </p>
         <p class="checkin-modal-subtitle">
-          @if (checkinModalType() === 'ignition') { Set today's trajectory. } @else { Review the day. Course-correct fast. }
+          @if (checkinModalType() === 'ignition') { 3-step ignition sequence: visualize, execute, claim. } @else { Review the day. Course-correct fast. }
         </p>
       </div>
       <button type="button" class="checkin-modal-close" (click)="closeCheckinModal()">
@@ -2789,90 +2789,260 @@
     <div class="checkin-section-card">
       <div class="checkin-section-header">
         <p class="checkin-section-title">ONE Thing Focus</p>
-        <p class="checkin-section-subtitle">Pick the single move that matters today.</p>
+        <p class="checkin-section-subtitle">Use the suggested ONE Thing or set your own.</p>
       </div>
-    <div class="checkin-field">
-      <p class="checkin-question">What is your ONE Thing today?</p>
-      <div class="checkin-radio-group">
-        <label class="checkin-radio">
-          <input type="radio" name="oneThingChoice"
-            [checked]="ignitionOneThingChoice() === 'suggested'"
-            (change)="ignitionOneThingChoice.set('suggested')" />
-          Use suggested ONE Thing
-        </label>
-        <label class="checkin-radio">
-          <input type="radio" name="oneThingChoice"
-            [checked]="ignitionOneThingChoice() === 'other'"
-            (change)="ignitionOneThingChoice.set('other')" />
-          Choose another ONE Thing
-        </label>
-        <label class="checkin-radio">
-          <input type="radio" name="oneThingChoice"
-            [checked]="ignitionOneThingChoice() === 'unsure'"
-            (change)="ignitionOneThingChoice.set('unsure')" />
-          I’m not sure yet
-        </label>
-      </div>
-      @if (ignitionOneThingChoice() === 'other') {
-      <input class="checkin-input" type="text" placeholder="Enter your ONE Thing"
-        [value]="ignitionOneThingText()"
-        (input)="ignitionOneThingText.set($any($event.target).value)" />
-      }
-    </div>
-    </div>
-
-    <div class="checkin-section-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">Timing + Confidence</p>
-        <p class="checkin-section-subtitle">Lock the window and your energy level.</p>
-      </div>
-    <div class="checkin-field">
-      <p class="checkin-question">When will you do it?</p>
-      <div class="checkin-radio-group">
-        <label class="checkin-radio">
-          <input type="radio" name="timeOfDay"
-            [checked]="ignitionTimeOfDay() === 'morning'"
-            (change)="ignitionTimeOfDay.set('morning')" />
-          Morning
-        </label>
-        <label class="checkin-radio">
-          <input type="radio" name="timeOfDay"
-            [checked]="ignitionTimeOfDay() === 'afternoon'"
-            (change)="ignitionTimeOfDay.set('afternoon')" />
-          Afternoon
-        </label>
-        <label class="checkin-radio">
-          <input type="radio" name="timeOfDay"
-            [checked]="ignitionTimeOfDay() === 'evening'"
-            (change)="ignitionTimeOfDay.set('evening')" />
-          Evening
-        </label>
+      <div class="checkin-field">
+        <p class="checkin-question">Your ONE Thing today</p>
+        <div class="checkin-radio-group">
+          <label class="checkin-radio">
+            <input type="radio" name="oneThingChoice"
+              [checked]="ignitionOneThingChoice() === 'suggested'"
+              (change)="ignitionOneThingChoice.set('suggested')" />
+            Use suggested ONE Thing
+          </label>
+          <label class="checkin-radio">
+            <input type="radio" name="oneThingChoice"
+              [checked]="ignitionOneThingChoice() === 'other'"
+              (change)="ignitionOneThingChoice.set('other')" />
+            Enter my own ONE Thing
+          </label>
+        </div>
+        @if (ignitionOneThingChoice() === 'suggested') {
+          <div class="ignition-one-thing-highlight">
+            {{ getSuggestedOneThing() }}
+          </div>
+        } @else {
+          <input class="checkin-input" type="text" placeholder="Enter your ONE Thing"
+            [value]="ignitionOneThingText()"
+            (input)="ignitionOneThingText.set($any($event.target).value)" />
+          @if (ignitionOneThingText().trim()) {
+            <div class="ignition-one-thing-highlight">
+              {{ ignitionOneThingText().trim() }}
+            </div>
+          }
+        }
+        <div class="ignition-one-thing-highlight subtle">
+          Suggested: {{ getSuggestedOneThing() }}
+        </div>
       </div>
     </div>
 
-    <div class="checkin-field">
-      <p class="checkin-question">How confident do you feel?</p>
-      <div class="checkin-radio-group">
-        <label class="checkin-radio">
-          <input type="radio" name="confidence"
-            [checked]="ignitionConfidence() === 'high'"
-            (change)="ignitionConfidence.set('high')" />
-          High
-        </label>
-        <label class="checkin-radio">
-          <input type="radio" name="confidence"
-            [checked]="ignitionConfidence() === 'medium'"
-            (change)="ignitionConfidence.set('medium')" />
-          Medium
-        </label>
-        <label class="checkin-radio">
-          <input type="radio" name="confidence"
-            [checked]="ignitionConfidence() === 'low'"
-            (change)="ignitionConfidence.set('low')" />
-          Low
-        </label>
-      </div>
-    </div>
+    <div class="ignition-step-grid">
+      <section class="checkin-section-card ignition-step-card" [class.active]="ignitionSequenceStep() === 1">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">STEP 1: VISUALIZE + IGNITE</p>
+          <p class="checkin-section-subtitle">Light the fire</p>
+        </div>
+        <p class="ignition-step-copy">
+          See your future body. Feel the energy. Hear the compliments. Then lock in your ignition stack to trigger immediate launch.
+        </p>
+        <div class="checkin-field">
+          <p class="checkin-question">Activation Ritual</p>
+          <label class="checkin-checkbox">
+            <input type="checkbox"
+              [checked]="ignitionBreathsComplete()"
+              (change)="ignitionBreathsComplete.set($any($event.target).checked)" />
+            Stand up and take 3 deep breaths
+          </label>
+          <label class="checkin-checkbox">
+            <input type="checkbox"
+              [checked]="ignitionIdentityStatementComplete()"
+              (change)="ignitionIdentityStatementComplete.set($any($event.target).checked)" />
+            Say out loud: "I am someone who executes."
+          </label>
+          <input class="checkin-input" type="text"
+            placeholder="Your environmental cue (example: shoes at the door)"
+            [value]="ignitionEnvironmentalCue()"
+            (input)="ignitionEnvironmentalCue.set($any($event.target).value)" />
+        </div>
+        <div class="ignition-step-actions">
+          <button type="button" class="checkin-cta ignition-sequence-btn"
+            [disabled]="!canStartIgnitionSequence()"
+            (click)="startIgnitionSequence()">
+            Initiate Ignition Sequence
+          </button>
+          @if (ignitionCountdownActive()) {
+            <div class="ignition-countdown-chip">Launch in {{ getIgnitionCountdownLabel() }}</div>
+          }
+        </div>
+      </section>
+
+      <section class="checkin-section-card ignition-step-card" [class.active]="ignitionSequenceStep() === 2">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">STEP 2: EXECUTE + AMPLIFY</p>
+          <p class="checkin-section-subtitle">Feed the fire</p>
+        </div>
+        <p class="ignition-step-copy">
+          45-minute burn windows where every rep and every hard moment becomes the reward itself.
+        </p>
+        <div class="checkin-field">
+          <p class="checkin-question">COMMITMENT MOMENT</p>
+          <p class="ignition-meta-line"><strong>Your task:</strong> {{ getIgnitionSelectedTask() }}</p>
+          <input class="checkin-input" type="text"
+            placeholder="Accountability partner name"
+            [value]="ignitionAccountabilityPartner()"
+            (input)="ignitionAccountabilityPartner.set($any($event.target).value)" />
+          <textarea class="checkin-coach-response" rows="2" readonly
+            [value]="getIgnitionCommitmentMessage()"></textarea>
+        </div>
+        <div class="ignition-step-actions">
+          <button type="button" class="checkin-cta ignition-sequence-btn secondary"
+            [disabled]="ignitionSequenceStep() < 2 || ignitionBurnTimerActive()"
+            (click)="sendIgnitionCommitmentMessage()">
+            Send Commitment Message
+          </button>
+          <button type="button" class="checkin-cta ignition-sequence-btn"
+            [disabled]="!ignitionCommitmentMessageSent() || ignitionBurnTimerActive()"
+            (click)="startIgnitionBurnWindow()">
+            Message Sent → Start Burn Window
+          </button>
+        </div>
+        @if (ignitionBurnTimerActive() || ignitionBurnCompleted()) {
+          <div class="ignition-burn-timer">
+            Burn Window Elapsed: {{ getIgnitionBurnElapsedLabel() }}
+          </div>
+        }
+        @if (ignitionBurnTimerActive()) {
+          <button type="button" class="checkin-cta ignition-sequence-btn"
+            (click)="completeIgnitionBurnWindow()">
+            Done → Continue to Step 3
+          </button>
+        }
+      </section>
+
+      <section class="checkin-section-card ignition-step-card" [class.active]="ignitionSequenceStep() === 3">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">STEP 3: CLAIM + LOG</p>
+          <p class="checkin-section-subtitle">Bank the fire</p>
+        </div>
+        <p class="ignition-step-copy">
+          Own your new identity: "I'm someone who shows up." Track your data. Build your streak. Daily reps. Visible streaks. Compound momentum.
+        </p>
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">Execution</p>
+          <p class="checkin-section-subtitle">Be honest — this powers better coaching.</p>
+        </div>
+
+        <div class="checkin-field">
+          <p class="checkin-question">Did you take action toward your ONE Thing today?</p>
+          <div class="checkin-radio-group">
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionActionTaken"
+                [checked]="ignitionExecutionActionTaken() === 'yes'"
+                (change)="ignitionExecutionActionTaken.set('yes')" />
+              Yes
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionActionTaken"
+                [checked]="ignitionExecutionActionTaken() === 'barely'"
+                (change)="ignitionExecutionActionTaken.set('barely')" />
+              Barely
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionActionTaken"
+                [checked]="ignitionExecutionActionTaken() === 'no'"
+                (change)="ignitionExecutionActionTaken.set('no')" />
+              No
+            </label>
+          </div>
+        </div>
+
+        <div class="checkin-field">
+          <p class="checkin-question">How focused was your effort?</p>
+          <div class="checkin-radio-group">
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionFocusLevel"
+                [checked]="ignitionExecutionFocusLevel() === 'full_focus'"
+                (change)="ignitionExecutionFocusLevel.set('full_focus')" />
+              Full Focus
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionFocusLevel"
+                [checked]="ignitionExecutionFocusLevel() === 'distracted'"
+                (change)="ignitionExecutionFocusLevel.set('distracted')" />
+              Distracted
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionFocusLevel"
+                [checked]="ignitionExecutionFocusLevel() === 'low_energy'"
+                (change)="ignitionExecutionFocusLevel.set('low_energy')" />
+              Low Energy
+            </label>
+          </div>
+        </div>
+
+        <div class="checkin-field">
+          <p class="checkin-question">How challenging was today?</p>
+          <div class="checkin-radio-group">
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionChallengeLevel"
+                [checked]="ignitionExecutionChallengeLevel() === 'tough_day'"
+                (change)="ignitionExecutionChallengeLevel.set('tough_day')" />
+              Tough Day
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionChallengeLevel"
+                [checked]="ignitionExecutionChallengeLevel() === 'average'"
+                (change)="ignitionExecutionChallengeLevel.set('average')" />
+              Average
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionChallengeLevel"
+                [checked]="ignitionExecutionChallengeLevel() === 'easy'"
+                (change)="ignitionExecutionChallengeLevel.set('easy')" />
+              Easy
+            </label>
+          </div>
+        </div>
+
+        <div class="checkin-field">
+          <p class="checkin-question">How did you feel while working?</p>
+          <div class="checkin-radio-group">
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionFeeling"
+                [checked]="ignitionExecutionFeeling() === 'positive'"
+                (change)="ignitionExecutionFeeling.set('positive')" />
+              Positive
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionFeeling"
+                [checked]="ignitionExecutionFeeling() === 'neutral'"
+                (change)="ignitionExecutionFeeling.set('neutral')" />
+              Neutral
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionFeeling"
+                [checked]="ignitionExecutionFeeling() === 'frustrated'"
+                (change)="ignitionExecutionFeeling.set('frustrated')" />
+              Frustrated
+            </label>
+          </div>
+        </div>
+
+        <div class="checkin-field">
+          <p class="checkin-question">Did you connect with your team today?</p>
+          <div class="checkin-radio-group">
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionTeamConnection"
+                [checked]="ignitionExecutionTeamConnection() === 'yes'"
+                (change)="ignitionExecutionTeamConnection.set('yes')" />
+              Yes
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionTeamConnection"
+                [checked]="ignitionExecutionTeamConnection() === 'no'"
+                (change)="ignitionExecutionTeamConnection.set('no')" />
+              No
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="ignitionTeamConnection"
+                [checked]="ignitionExecutionTeamConnection() === 'solo'"
+                (change)="ignitionExecutionTeamConnection.set('solo')" />
+              Solo Effort
+            </label>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="checkin-section-card checkin-coach-card">
@@ -2948,7 +3118,7 @@
       </div>
     }
 
-    <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition() || uploadingJourneyPhoto()">
+    <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition() || uploadingJourneyPhoto() || ignitionSequenceStep() !== 3">
       @if (savingIgnition() || uploadingJourneyPhoto()) { Saving... } @else { 🔥 IGNITE DAY }
     </button>
   </div>

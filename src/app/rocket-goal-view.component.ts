@@ -114,6 +114,8 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private countdownInterval: any;
   private fanInviteSearchTimeout?: any;
   private visualizationPollInterval?: any;
+  private ignitionCountdownInterval?: any;
+  private ignitionBurnTimerInterval?: any;
   private storage: any = null;
   visualizationImageFile: File | null = null;
   uploadingVisualization = signal(false);
@@ -206,6 +208,23 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   ignitionOneThingText = signal('');
   ignitionTimeOfDay = signal<IgnitionTimeOfDay>('morning');
   ignitionConfidence = signal<IgnitionConfidence>('medium');
+  ignitionSequenceStep = signal<1 | 2 | 3>(1);
+  ignitionBreathsComplete = signal(false);
+  ignitionIdentityStatementComplete = signal(false);
+  ignitionEnvironmentalCue = signal('');
+  ignitionSequenceStarted = signal(false);
+  ignitionCountdownSeconds = signal(45);
+  ignitionCountdownActive = signal(false);
+  ignitionAccountabilityPartner = signal('');
+  ignitionCommitmentMessageSent = signal(false);
+  ignitionBurnTimerActive = signal(false);
+  ignitionBurnElapsedSeconds = signal(0);
+  ignitionBurnCompleted = signal(false);
+  ignitionExecutionActionTaken = signal<MissionActionTaken>('yes');
+  ignitionExecutionFocusLevel = signal<MissionFocusLevel>('full_focus');
+  ignitionExecutionChallengeLevel = signal<MissionChallengeLevel>('average');
+  ignitionExecutionFeeling = signal<MissionFeeling>('positive');
+  ignitionExecutionTeamConnection = signal<MissionTeamConnection>('yes');
   savingIgnition = signal(false);
 
   missionActionTaken = signal<MissionActionTaken>('yes');
@@ -327,6 +346,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
     }
+    this.clearIgnitionSequenceTimers();
     if (this.fanInviteSearchTimeout) {
       clearTimeout(this.fanInviteSearchTimeout);
     }
@@ -2140,6 +2160,9 @@ ${url}`;
       return;
     }
     this.checkinModalType.set(type);
+    if (type === 'ignition') {
+      this.resetIgnitionSequence();
+    }
     // Reset coach response signals and error
     this.ignitionCoachResponse.set('');
     this.missionCoachResponse.set('');
@@ -2148,7 +2171,140 @@ ${url}`;
   }
 
   closeCheckinModal() {
+    this.clearIgnitionSequenceTimers();
     this.showCheckinModal.set(false);
+  }
+
+  getIgnitionSelectedTask(): string {
+    const choice = this.ignitionOneThingChoice();
+    if (choice === 'other') {
+      return this.ignitionOneThingText().trim() || this.getActiveMilestoneTitle();
+    }
+    if (choice === 'suggested') {
+      return this.getSuggestedOneThing();
+    }
+    return this.getActiveMilestoneTitle();
+  }
+
+  getIgnitionCommitmentMessage(): string {
+    const partner = this.ignitionAccountabilityPartner().trim() || 'my accountability partner';
+    const task = this.getIgnitionSelectedTask();
+    const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return `Starting my 45-min burn on ${task} at ${time}. Hold me to it. (${partner})`;
+  }
+
+  getIgnitionCountdownLabel(): string {
+    return `${this.ignitionCountdownSeconds()}s`;
+  }
+
+  getIgnitionBurnElapsedLabel(): string {
+    const totalSeconds = this.ignitionBurnElapsedSeconds();
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  canStartIgnitionSequence(): boolean {
+    return this.ignitionBreathsComplete()
+      && this.ignitionIdentityStatementComplete()
+      && this.ignitionEnvironmentalCue().trim().length > 0
+      && !this.ignitionCountdownActive();
+  }
+
+  startIgnitionSequence() {
+    if (!this.canStartIgnitionSequence()) return;
+    this.clearIgnitionSequenceTimers();
+    this.ignitionSequenceStarted.set(true);
+    this.ignitionCountdownActive.set(true);
+    this.ignitionCountdownSeconds.set(45);
+
+    this.ignitionCountdownInterval = setInterval(() => {
+      const next = this.ignitionCountdownSeconds() - 1;
+      this.ignitionCountdownSeconds.set(next);
+      if (next <= 0) {
+        this.clearIgnitionCountdownTimer();
+        this.ignitionSequenceStep.set(2);
+      }
+    }, 1000);
+  }
+
+  async sendIgnitionCommitmentMessage() {
+    const message = this.getIgnitionCommitmentMessage();
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: message });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(message);
+      }
+      this.ignitionCommitmentMessageSent.set(true);
+    } catch (error) {
+      console.warn('Unable to send/share commitment message', error);
+      this.ignitionCommitmentMessageSent.set(false);
+      this.checkinModalError.set('Could not open share/copy flow. Please copy the message manually.');
+    }
+  }
+
+  startIgnitionBurnWindow() {
+    if (!this.ignitionCommitmentMessageSent() || this.ignitionBurnTimerActive()) return;
+    this.checkinModalError.set(null);
+    this.ignitionBurnTimerActive.set(true);
+    this.ignitionBurnElapsedSeconds.set(0);
+    this.ignitionBurnTimerInterval = setInterval(() => {
+      this.ignitionBurnElapsedSeconds.update(value => value + 1);
+    }, 1000);
+  }
+
+  completeIgnitionBurnWindow() {
+    if (!this.ignitionBurnTimerActive()) return;
+    this.clearIgnitionBurnTimer();
+    this.ignitionBurnCompleted.set(true);
+    this.ignitionSequenceStep.set(3);
+  }
+
+  resetIgnitionSequence() {
+    this.clearIgnitionSequenceTimers();
+    this.ignitionOneThingChoice.set('suggested');
+    this.ignitionOneThingText.set('');
+    this.ignitionTimeOfDay.set('morning');
+    this.ignitionConfidence.set('medium');
+    this.ignitionSequenceStep.set(1);
+    this.ignitionBreathsComplete.set(false);
+    this.ignitionIdentityStatementComplete.set(false);
+    this.ignitionEnvironmentalCue.set('');
+    this.ignitionSequenceStarted.set(false);
+    this.ignitionCountdownSeconds.set(45);
+    this.ignitionCountdownActive.set(false);
+    this.ignitionAccountabilityPartner.set('');
+    this.ignitionCommitmentMessageSent.set(false);
+    this.ignitionBurnTimerActive.set(false);
+    this.ignitionBurnElapsedSeconds.set(0);
+    this.ignitionBurnCompleted.set(false);
+    this.ignitionExecutionActionTaken.set('yes');
+    this.ignitionExecutionFocusLevel.set('full_focus');
+    this.ignitionExecutionChallengeLevel.set('average');
+    this.ignitionExecutionFeeling.set('positive');
+    this.ignitionExecutionTeamConnection.set('yes');
+  }
+
+  private clearIgnitionCountdownTimer() {
+    if (this.ignitionCountdownInterval) {
+      clearInterval(this.ignitionCountdownInterval);
+      this.ignitionCountdownInterval = null;
+    }
+    this.ignitionCountdownActive.set(false);
+  }
+
+  private clearIgnitionBurnTimer() {
+    if (this.ignitionBurnTimerInterval) {
+      clearInterval(this.ignitionBurnTimerInterval);
+      this.ignitionBurnTimerInterval = null;
+    }
+    this.ignitionBurnTimerActive.set(false);
+  }
+
+  private clearIgnitionSequenceTimers() {
+    this.clearIgnitionCountdownTimer();
+    this.clearIgnitionBurnTimer();
   }
 
   getActiveMilestoneTitle(): string {
@@ -2539,6 +2695,10 @@ ${url}`;
       this.checkinModalError.set('Please enter your ONE Thing or choose the suggested option.');
       return;
     }
+    if (this.ignitionSequenceStep() !== 3 || !this.ignitionBurnCompleted()) {
+      this.checkinModalError.set('Complete Steps 1 and 2 before logging execution.');
+      return;
+    }
 
     this.savingIgnition.set(true);
     this.checkinModalError.set(null);
@@ -2550,7 +2710,25 @@ ${url}`;
         oneThingChoice: choice,
         oneThingText: oneThingText || undefined,
         timeOfDay: this.ignitionTimeOfDay(),
-        confidence: this.ignitionConfidence()
+        confidence: this.ignitionConfidence(),
+        activationRitual: {
+          breathsComplete: this.ignitionBreathsComplete(),
+          identityStatementComplete: this.ignitionIdentityStatementComplete(),
+          environmentalCue: this.ignitionEnvironmentalCue().trim()
+        },
+        commitment: {
+          task: this.getIgnitionSelectedTask(),
+          accountabilityPartner: this.ignitionAccountabilityPartner().trim() || undefined,
+          messageSent: this.ignitionCommitmentMessageSent(),
+          burnDurationSeconds: this.ignitionBurnElapsedSeconds()
+        },
+        execution: {
+          actionTaken: this.ignitionExecutionActionTaken(),
+          focusLevel: this.ignitionExecutionFocusLevel(),
+          challengeLevel: this.ignitionExecutionChallengeLevel(),
+          feeling: this.ignitionExecutionFeeling(),
+          teamConnection: this.ignitionExecutionTeamConnection()
+        }
       });
       if (this.journeyPhotoFile()) {
         await this.uploadJourneyPhoto('ignition');

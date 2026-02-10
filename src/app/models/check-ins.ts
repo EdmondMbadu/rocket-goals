@@ -22,6 +22,24 @@ export type DailyIgnition = {
   oneThingText?: string;
   timeOfDay: IgnitionTimeOfDay;
   confidence: IgnitionConfidence;
+  activationRitual?: {
+    breathsComplete?: boolean;
+    identityStatementComplete?: boolean;
+    environmentalCue?: string;
+  };
+  commitment?: {
+    task?: string;
+    accountabilityPartner?: string;
+    messageSent?: boolean;
+    burnDurationSeconds?: number;
+  };
+  execution?: {
+    actionTaken?: MissionActionTaken;
+    focusLevel?: MissionFocusLevel;
+    challengeLevel?: MissionChallengeLevel;
+    feeling?: MissionFeeling;
+    teamConnection?: MissionTeamConnection;
+  };
   createdAt: unknown;
   createdAtMs?: number;
 };
