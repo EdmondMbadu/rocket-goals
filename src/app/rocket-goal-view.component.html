@@ -1551,7 +1551,7 @@
                         Start Daily Ignition
                       </button>
                       <button type="button" class="checkins-action mission" (click)="openCheckinModal('mission_log')">
-                        Submit Mission Log
+                        End of Day Check-in
                       </button>
                     </div>
                   </div>
@@ -1564,7 +1564,7 @@
                     <button type="button" class="checkins-tab"
                       [class.active]="activeCheckinTab() === 'mission_log'"
                       (click)="selectCheckinTab('mission_log')">
-                      Mission Log
+                      End of Day Check-in
                     </button>
                   </div>
                   @if (checkinsNotice()) {
@@ -2712,10 +2712,10 @@
       <div>
         <p class="checkin-modal-date">{{ getTodayFormatted() }}</p>
         <p class="checkin-modal-title">
-          @if (checkinModalType() === 'ignition') { 🔥 Daily Ignition } @else { 📘 Mission Log }
+          @if (checkinModalType() === 'ignition') { 🔥 Daily Ignition } @else { 🌙 End of Day Check-in }
         </p>
         <p class="checkin-modal-subtitle">
-          @if (checkinModalType() === 'ignition') { 3-step ignition sequence: visualize, execute, claim. } @else { Review the day. Course-correct fast. }
+          @if (checkinModalType() === 'ignition') { 3-step ignition sequence: visualize, execute, claim. } @else { Reflect, adjust, and prepare tomorrow's mission. }
         </p>
       </div>
       <button type="button" class="checkin-modal-close" (click)="closeCheckinModal()">
@@ -2887,7 +2887,7 @@
           <button type="button" class="checkin-cta ignition-sequence-btn secondary"
             [disabled]="ignitionSequenceStep() < 2 || ignitionBurnTimerActive()"
             (click)="sendIgnitionCommitmentMessage()">
-            Send Commitment Message
+            Open Message Composer
           </button>
           <button type="button" class="checkin-cta ignition-sequence-btn secondary"
             [disabled]="ignitionBurnTimerActive()"
@@ -3129,178 +3129,47 @@
 
 <ng-template #missionLogForm>
   <div class="checkin-form">
-    @if (shouldAskIntendedOneThing()) {
     <div class="checkin-section-card">
       <div class="checkin-section-header">
-        <p class="checkin-section-title">Intent</p>
-        <p class="checkin-section-subtitle">You skipped Ignition today — set the intention now.</p>
+        <p class="checkin-section-title">End of Day Reflection</p>
+        <p class="checkin-section-subtitle">Be specific so tomorrow starts sharper.</p>
       </div>
       <div class="checkin-field">
-        <p class="checkin-question">What ONE Thing did you intend to complete today?</p>
-        <input class="checkin-input" type="text" placeholder="Enter the ONE Thing you intended"
-          [value]="missionIntendedOneThing()"
-          (input)="missionIntendedOneThing.set($any($event.target).value)" />
-      </div>
-    </div>
-    }
-
-    <div class="checkin-section-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">Execution</p>
-        <p class="checkin-section-subtitle">Be honest — this powers better coaching.</p>
+        <p class="checkin-question">How did you feel about today's work?</p>
+        <textarea
+          class="checkin-coach-response"
+          rows="3"
+          placeholder="Reflect honestly on what went well and what felt hard..."
+          [value]="missionNote()"
+          (input)="missionNote.set($any($event.target).value)"></textarea>
       </div>
       <div class="checkin-field">
-        <p class="checkin-question">Did you take action toward your ONE Thing today?</p>
-        <div class="checkin-radio-group">
-          <label class="checkin-radio">
-            <input type="radio" name="actionTaken"
-              [checked]="missionActionTaken() === 'yes'"
-              (change)="missionActionTaken.set('yes')" />
-            Yes
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="actionTaken"
-              [checked]="missionActionTaken() === 'barely'"
-              (change)="missionActionTaken.set('barely')" />
-            Barely
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="actionTaken"
-              [checked]="missionActionTaken() === 'no'"
-              (change)="missionActionTaken.set('no')" />
-            No
-          </label>
-        </div>
-      </div>
-
-      <div class="checkin-field">
-        <p class="checkin-question">How focused was your effort?</p>
-        <div class="checkin-radio-group">
-          <label class="checkin-radio">
-            <input type="radio" name="focusLevel"
-              [checked]="missionFocusLevel() === 'full_focus'"
-              (change)="missionFocusLevel.set('full_focus')" />
-            Full Focus
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="focusLevel"
-              [checked]="missionFocusLevel() === 'distracted'"
-              (change)="missionFocusLevel.set('distracted')" />
-            Distracted
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="focusLevel"
-              [checked]="missionFocusLevel() === 'low_energy'"
-              (change)="missionFocusLevel.set('low_energy')" />
-            Low Energy
-          </label>
-        </div>
-      </div>
-
-      <div class="checkin-field">
-        <p class="checkin-question">How challenging was today?</p>
-        <div class="checkin-radio-group">
-          <label class="checkin-radio">
-            <input type="radio" name="challengeLevel"
-              [checked]="missionChallengeLevel() === 'tough_day'"
-              (change)="missionChallengeLevel.set('tough_day')" />
-            Tough Day
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="challengeLevel"
-              [checked]="missionChallengeLevel() === 'average'"
-              (change)="missionChallengeLevel.set('average')" />
-            Average
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="challengeLevel"
-              [checked]="missionChallengeLevel() === 'easy'"
-              (change)="missionChallengeLevel.set('easy')" />
-            Easy
-          </label>
-        </div>
-      </div>
-
-      <div class="checkin-field">
-        <p class="checkin-question">How did you feel while working?</p>
-        <div class="checkin-radio-group">
-          <label class="checkin-radio">
-            <input type="radio" name="feeling"
-              [checked]="missionFeeling() === 'positive'"
-              (change)="missionFeeling.set('positive')" />
-            Positive
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="feeling"
-              [checked]="missionFeeling() === 'neutral'"
-              (change)="missionFeeling.set('neutral')" />
-            Neutral
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="feeling"
-              [checked]="missionFeeling() === 'frustrated'"
-              (change)="missionFeeling.set('frustrated')" />
-            Frustrated
-          </label>
-        </div>
-      </div>
-
-      <div class="checkin-field">
-        <p class="checkin-question">Did you connect with your team today?</p>
-        <div class="checkin-radio-group">
-          <label class="checkin-radio">
-            <input type="radio" name="teamConnection"
-              [checked]="missionTeamConnection() === 'yes'"
-              (change)="missionTeamConnection.set('yes')" />
-            Yes
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="teamConnection"
-              [checked]="missionTeamConnection() === 'no'"
-              (change)="missionTeamConnection.set('no')" />
-            No
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="teamConnection"
-              [checked]="missionTeamConnection() === 'solo'"
-              (change)="missionTeamConnection.set('solo')" />
-            Solo Effort
-          </label>
-        </div>
+        <p class="checkin-question">Anything you will change to make tomorrow better?</p>
+        <textarea
+          class="checkin-coach-response"
+          rows="3"
+          placeholder="Name one concrete change for tomorrow..."
+          [value]="missionCoachResponse()"
+          (input)="missionCoachResponse.set($any($event.target).value)"></textarea>
       </div>
     </div>
 
-    <!-- Coach Evening Engagement -->
-    <div class="checkin-section-card checkin-coach-card">
-      <div class="checkin-coach-bubble compact">
-        <div class="checkin-coach-avatar-wrapper small">
-          @if (getCoachAvatar()) {
-            <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
-          } @else {
-            <div class="checkin-coach-avatar-placeholder small">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+    <div class="checkin-section-card tomorrow-preview-card">
+      <div class="checkin-section-header">
+        <p class="checkin-section-title">Tomorrow's Milestones</p>
+        <p class="checkin-section-subtitle">{{ getTomorrowMilestonesDateLabel() }}</p>
+      </div>
+      @if (getTomorrowMilestonesPreview().length > 0) {
+        <div class="tomorrow-preview-list">
+          @for (item of getTomorrowMilestonesPreview(); track item.id) {
+            <div class="tomorrow-preview-item">
+              <span class="tomorrow-preview-dot"></span>
+              <span class="tomorrow-preview-title">{{ item.title }}</span>
             </div>
           }
-          <span class="checkin-coach-pulse small"></span>
         </div>
-        <div class="checkin-coach-message">
-          <p class="checkin-coach-name small">{{ getCoachName() }}</p>
-          <p class="checkin-coach-question small">{{ getMissionCoachQuestion() }}</p>
-        </div>
-      </div>
-      <textarea
-        class="checkin-coach-response"
-        rows="2"
-        placeholder="Share your thoughts..."
-        [value]="missionCoachResponse()"
-        (input)="missionCoachResponse.set($any($event.target).value)"></textarea>
-      @if (missionCoachResponse().trim()) {
-        <div class="checkin-coach-followup">
-          <p class="checkin-coach-followup-text">{{ getMissionCoachFollowUp() }}</p>
-        </div>
+      } @else {
+        <p class="checkin-section-subtitle">No milestones scheduled for tomorrow yet.</p>
       }
     </div>
 
@@ -3351,7 +3220,7 @@
     }
 
     <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog() || uploadingJourneyPhoto()">
-      @if (savingMissionLog() || uploadingJourneyPhoto()) { Saving... } @else { SUBMIT MISSION LOG }
+      @if (savingMissionLog() || uploadingJourneyPhoto()) { Saving... } @else { COMPLETE CHECK-IN }
     </button>
   </div>
 </ng-template>

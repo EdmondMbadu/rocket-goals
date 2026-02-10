@@ -2166,6 +2166,7 @@ ${url}`;
     // Reset coach response signals and error
     this.ignitionCoachResponse.set('');
     this.missionCoachResponse.set('');
+    this.missionNote.set('');
     this.checkinModalError.set(null);
     this.showCheckinModal.set(true);
   }
@@ -2231,6 +2232,17 @@ ${url}`;
   async sendIgnitionCommitmentMessage() {
     const message = this.getIgnitionCommitmentMessage();
     try {
+      // Prefer opening the native messaging composer on mobile.
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
+        window.location.href = smsUrl;
+        this.ignitionCommitmentMessageSent.set(true);
+        this.checkinModalError.set(null);
+        return;
+      }
+
+      // Fallback for desktop: use share sheet if available, otherwise copy.
       if (navigator.share) {
         await navigator.share({ text: message });
       } else if (navigator.clipboard) {
@@ -2751,6 +2763,19 @@ ${url}`;
     return this.recentMissionLogs().slice(0, 10);
   }
 
+  getTomorrowMilestonesPreview(): ActionItem[] {
+    const tomorrowDay = this.getCurrentMissionDay() + 1;
+    return this.actionItems()
+      .filter(item => item.dayNumber === tomorrowDay)
+      .sort((a, b) => a.order - b.order)
+      .slice(0, 6);
+  }
+
+  getTomorrowMilestonesDateLabel(): string {
+    const tomorrow = this.getDateFromDayNumber(this.getCurrentMissionDay() + 1);
+    return tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+
   private buildMissionLogCoaching(): MissionLogCoaching {
     const actionTaken = this.missionActionTaken();
     const focus = this.missionFocusLevel();
@@ -2853,9 +2878,10 @@ ${url}`;
     if (!this.ensureCheckinLogin('mission_log')) {
       return;
     }
-    const intendedOneThing = this.missionIntendedOneThing().trim();
-    if (this.shouldAskIntendedOneThing() && !intendedOneThing) {
-      this.checkinModalError.set('Please add the ONE Thing you intended to complete today.');
+    const workReflection = this.missionNote().trim();
+    const tomorrowChange = this.missionCoachResponse().trim();
+    if (!workReflection || !tomorrowChange) {
+      this.checkinModalError.set('Please answer both reflection questions before submitting.');
       return;
     }
 
@@ -2864,6 +2890,7 @@ ${url}`;
     this.checkinsError.set(null);
     this.checkinsNotice.set(null);
     const coaching = this.buildMissionLogCoaching();
+    const reflectionNote = `How I felt about today's work: ${workReflection}\nWhat I will change tomorrow: ${tomorrowChange}`;
     try {
       await this.checkInsService.upsertMissionLog({
         goalId: goal.id,
@@ -2872,8 +2899,7 @@ ${url}`;
         challengeLevel: this.missionChallengeLevel(),
         feeling: this.missionFeeling(),
         teamConnection: this.missionTeamConnection(),
-        note: this.missionNote().trim() || undefined,
-        intendedOneThing: intendedOneThing || undefined,
+        note: reflectionNote,
         aiCoaching: coaching
       });
       if (this.journeyPhotoFile()) {
@@ -2883,10 +2909,11 @@ ${url}`;
 
       // Add coach Q&A to chat history if user responded
       const coachResponse = this.missionCoachResponse().trim();
-      if (coachResponse && goal.id) {
-        const coachQuestion = `**Evening Check-in**\n\n${this.getMissionCoachQuestion()}`;
-        const coachFollowUp = this.getMissionCoachFollowUp();
-        await this.rocketGoalsAIService.addCheckinConversation(coachQuestion, coachResponse, coachFollowUp, goal.id);
+      if ((workReflection || coachResponse) && goal.id) {
+        const coachQuestion = `**End of Day Check-in**\n\nHow did you feel about today's work?\n\nAnything you will change to make tomorrow better?`;
+        const combinedResponse = `How I felt: ${workReflection}\nWhat I will change: ${coachResponse}`;
+        const coachFollowUp = `Great reflection. Bring that adjustment into tomorrow's first work block.`;
+        await this.rocketGoalsAIService.addCheckinConversation(coachQuestion, combinedResponse, coachFollowUp, goal.id);
       }
 
       await this.loadCheckIns(goal.id);

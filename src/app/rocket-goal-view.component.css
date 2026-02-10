@@ -10973,6 +10973,42 @@
   padding: 0.55rem 0.75rem;
 }
 
+.tomorrow-preview-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(139, 92, 246, 0.08));
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.tomorrow-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.tomorrow-preview-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.tomorrow-preview-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #22d3ee, #a78bfa);
+  flex-shrink: 0;
+}
+
+.tomorrow-preview-title {
+  color: #f8fafc;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 /* Coach Section Styles */
 .checkin-coach-section {
   display: flex;
@@ -11469,6 +11505,20 @@
 .light-mode .ignition-burn-timer {
   color: #166534;
   background: rgba(34, 197, 94, 0.1);
+}
+
+.light-mode .tomorrow-preview-card {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(224, 231, 255, 0.75));
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+.light-mode .tomorrow-preview-item {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.light-mode .tomorrow-preview-title {
+  color: #1e293b;
 }
 
 .light-mode .checkin-section-title {
