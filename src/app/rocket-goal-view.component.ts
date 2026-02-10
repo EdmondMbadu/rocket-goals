@@ -2237,11 +2237,17 @@ ${url}`;
         await navigator.clipboard.writeText(message);
       }
       this.ignitionCommitmentMessageSent.set(true);
+      this.checkinModalError.set(null);
     } catch (error) {
       console.warn('Unable to send/share commitment message', error);
       this.ignitionCommitmentMessageSent.set(false);
-      this.checkinModalError.set('Could not open share/copy flow. Please copy the message manually.');
+      this.checkinModalError.set('Could not open share/copy flow. Please send the message manually, then click "I sent it manually."');
     }
+  }
+
+  confirmIgnitionManualMessageSent() {
+    this.ignitionCommitmentMessageSent.set(true);
+    this.checkinModalError.set(null);
   }
 
   startIgnitionBurnWindow() {
@@ -2315,6 +2321,70 @@ ${url}`;
       return a.order - b.order;
     });
     return sorted[0]?.title || 'Untitled milestone';
+  }
+
+  private getPrimaryTodayMilestone(): ActionItem | null {
+    const currentDay = this.getCurrentMissionDay();
+    const todayItems = this.actionItems()
+      .filter(item => item.dayNumber === currentDay)
+      .sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return a.order - b.order;
+      });
+    return todayItems[0] || null;
+  }
+
+  private async syncOneThingToTodayMilestone(oneThingText: string) {
+    const goal = this.goal();
+    if (!goal?.id) return;
+
+    const trimmed = oneThingText.trim();
+    if (!trimmed) return;
+
+    const todayMilestone = this.getPrimaryTodayMilestone();
+    if (!todayMilestone) {
+      const currentDay = this.getCurrentMissionDay();
+      const existingToday = this.getActionItemsForDay(currentDay);
+      const nextOrder = existingToday.length > 0 ? Math.max(...existingToday.map(i => i.order)) + 1 : 0;
+
+      const id = await this.actionItemsService.createActionItem({
+        goalId: goal.id,
+        title: trimmed,
+        dayNumber: currentDay,
+        completed: false,
+        order: nextOrder
+      });
+
+      this.actionItems.update(items => [
+        ...items,
+        {
+          id,
+          goalId: goal.id,
+          title: trimmed,
+          dayNumber: currentDay,
+          completed: false,
+          order: nextOrder,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ]);
+      await this.createCalendarEventForMilestone(goal.id, trimmed, this.getDateFromDayNumber(currentDay));
+      return;
+    }
+    if (todayMilestone.title === trimmed) return;
+
+    const updates = {
+      title: trimmed,
+      dayNumber: todayMilestone.dayNumber,
+      notes: todayMilestone.notes,
+      completed: todayMilestone.completed
+    };
+
+    await this.actionItemsService.updateActionItem(goal.id, todayMilestone.id, { title: trimmed });
+    this.actionItems.update(items =>
+      items.map(item => item.id === todayMilestone.id ? { ...item, title: trimmed } : item)
+    );
+    await this.updateCalendarEventForMilestone(goal.id, todayMilestone, updates);
   }
 
   getSuggestedOneThing(): string {
@@ -2705,6 +2775,10 @@ ${url}`;
     this.checkinsError.set(null);
     this.checkinsNotice.set(null);
     try {
+      if (choice === 'other' && oneThingText) {
+        await this.syncOneThingToTodayMilestone(oneThingText);
+      }
+
       await this.checkInsService.upsertDailyIgnition({
         goalId: goal.id,
         oneThingChoice: choice,
@@ -3249,13 +3323,15 @@ ${url}`;
 
       // Use green for completed, red for incomplete
       const milestoneColor = updates.completed ? '#22c55e' : '#ef4444';
-      const eventUpdates = {
+      const eventUpdates: any = {
         title: `🎯 ${updates.title}`,
         date: this.getDateFromDayNumber(updates.dayNumber),
-        description: updates.notes,
         completed: updates.completed,
         color: milestoneColor
       };
+      if (updates.notes !== undefined) {
+        eventUpdates.description = updates.notes;
+      }
 
       await this.calendarEventsService.updateEvent(goalId, matchingEvent.id, eventUpdates);
       this.calendarEvents.update(events =>

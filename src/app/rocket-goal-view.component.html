@@ -2891,6 +2891,11 @@
             (click)="sendIgnitionCommitmentMessage()">
             Send Commitment Message
           </button>
+          <button type="button" class="checkin-cta ignition-sequence-btn secondary"
+            [disabled]="ignitionBurnTimerActive()"
+            (click)="confirmIgnitionManualMessageSent()">
+            I sent it manually
+          </button>
           <button type="button" class="checkin-cta ignition-sequence-btn"
             [disabled]="!ignitionCommitmentMessageSent() || ignitionBurnTimerActive()"
             (click)="startIgnitionBurnWindow()">

@@ -86,14 +86,21 @@ export class CheckInsService {
     return `${year}-${month}-${day}`;
   }
 
-  private stripUndefined<T extends Record<string, unknown>>(value: T): T {
-    const cleaned = { ...value };
-    Object.keys(cleaned).forEach(key => {
-      if (cleaned[key] === undefined) {
-        delete cleaned[key];
-      }
-    });
-    return cleaned;
+  private stripUndefined<T>(value: T): T {
+    if (Array.isArray(value)) {
+      return value
+        .map(item => this.stripUndefined(item))
+        .filter(item => item !== undefined) as unknown as T;
+    }
+
+    if (value && typeof value === 'object') {
+      const entries = Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, this.stripUndefined(item)]);
+      return Object.fromEntries(entries) as T;
+    }
+
+    return value;
   }
 
   async upsertDailyIgnition(input: DailyIgnitionInput): Promise<string> {
