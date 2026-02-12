@@ -131,6 +131,8 @@ type SyntheticTestResult = {
   }>;
 };
 
+type SyntheticOptionListKey = 'positioning' | 'coreMessage' | 'pricing' | 'audience' | 'channel';
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -255,29 +257,39 @@ export class AdminComponent implements OnInit {
 Busy mom, 3 kids, budget-conscious, needs short home workouts
 Type 2 diabetic, 52, health-first mindset, seeks safe guidance
 Solo founder, 31, erratic schedule, high execution pressure`);
-  syntheticPositioningOptions = signal(`Time-Shifter
-Your Home Workout Strategist
-The 20-Minute Solution
-No-BS Fitness Coach`);
-  syntheticCoreMessageOptions = signal(`Get fit in 20 minutes/day
-Home workouts that actually work
-Your personal trainer, minus the gym
-Science-backed workouts for busy people`);
-  syntheticPricingOptions = signal(`$9.99/month
-$19.99/month
-$29.99/month
-$49.99/month
-$99 one-time`);
-  syntheticTargetAudienceOptions = signal(`Busy professionals
-Stay-at-home parents
-Post-pregnancy moms
-People with chronic conditions
-50+ adults`);
-  syntheticChannelOptions = signal(`Instagram ads
-TikTok organic
-Facebook groups
-Reddit
-Google search ads`);
+  syntheticPositioningOptions = signal<string[]>([
+    'Time-Shifter',
+    'Your Home Workout Strategist',
+    'The 20-Minute Solution',
+    'No-BS Fitness Coach'
+  ]);
+  syntheticCoreMessageOptions = signal<string[]>([
+    'Get fit in 20 minutes/day',
+    'Home workouts that actually work',
+    'Your personal trainer, minus the gym',
+    'Science-backed workouts for busy people'
+  ]);
+  syntheticPricingOptions = signal<string[]>([
+    '$9.99/month',
+    '$19.99/month',
+    '$29.99/month',
+    '$49.99/month',
+    '$99 one-time'
+  ]);
+  syntheticTargetAudienceOptions = signal<string[]>([
+    'Busy professionals',
+    'Stay-at-home parents',
+    'Post-pregnancy moms',
+    'People with chronic conditions',
+    '50+ adults'
+  ]);
+  syntheticChannelOptions = signal<string[]>([
+    'Instagram ads',
+    'TikTok organic',
+    'Facebook groups',
+    'Reddit',
+    'Google search ads'
+  ]);
   syntheticRunning = signal(false);
   syntheticError = signal<string | null>(null);
   syntheticModel = signal<string | null>(null);
@@ -960,11 +972,11 @@ Google search ads`);
   async runSyntheticMarketTest() {
     const productDescription = this.syntheticProductDescription().trim();
     const personas = this.parseLines(this.syntheticPersonaSeeds());
-    const positioning = this.parseLines(this.syntheticPositioningOptions());
-    const coreMessages = this.parseLines(this.syntheticCoreMessageOptions());
-    const pricing = this.parseLines(this.syntheticPricingOptions());
-    const audiences = this.parseLines(this.syntheticTargetAudienceOptions());
-    const channels = this.parseLines(this.syntheticChannelOptions());
+    const positioning = this.cleanOptions(this.syntheticPositioningOptions());
+    const coreMessages = this.cleanOptions(this.syntheticCoreMessageOptions());
+    const pricing = this.cleanOptions(this.syntheticPricingOptions());
+    const audiences = this.cleanOptions(this.syntheticTargetAudienceOptions());
+    const channels = this.cleanOptions(this.syntheticChannelOptions());
 
     if (!productDescription) {
       this.syntheticError.set('Product description is required.');
@@ -973,6 +985,10 @@ Google search ads`);
 
     if (personas.length === 0) {
       this.syntheticError.set('Add at least one persona seed.');
+      return;
+    }
+    if (positioning.length === 0 || coreMessages.length === 0 || pricing.length === 0 || audiences.length === 0 || channels.length === 0) {
+      this.syntheticError.set('Each option list needs at least one item before running the simulation.');
       return;
     }
 
@@ -1046,11 +1062,86 @@ Google search ads`);
     return 'Low';
   }
 
+  syntheticTopCombination() {
+    return this.syntheticResult()?.winningCombinations?.[0] || null;
+  }
+
+  syntheticOtherCombinations() {
+    return this.syntheticResult()?.winningCombinations?.slice(1) || [];
+  }
+
+  addSyntheticOption(list: SyntheticOptionListKey) {
+    const next = '';
+    if (list === 'positioning') {
+      this.syntheticPositioningOptions.update(items => [...items, next]);
+      return;
+    }
+    if (list === 'coreMessage') {
+      this.syntheticCoreMessageOptions.update(items => [...items, next]);
+      return;
+    }
+    if (list === 'pricing') {
+      this.syntheticPricingOptions.update(items => [...items, next]);
+      return;
+    }
+    if (list === 'audience') {
+      this.syntheticTargetAudienceOptions.update(items => [...items, next]);
+      return;
+    }
+    this.syntheticChannelOptions.update(items => [...items, next]);
+  }
+
+  updateSyntheticOption(list: SyntheticOptionListKey, index: number, value: string) {
+    const patch = (items: string[]) => items.map((item, i) => (i === index ? value : item));
+    if (list === 'positioning') {
+      this.syntheticPositioningOptions.update(patch);
+      return;
+    }
+    if (list === 'coreMessage') {
+      this.syntheticCoreMessageOptions.update(patch);
+      return;
+    }
+    if (list === 'pricing') {
+      this.syntheticPricingOptions.update(patch);
+      return;
+    }
+    if (list === 'audience') {
+      this.syntheticTargetAudienceOptions.update(patch);
+      return;
+    }
+    this.syntheticChannelOptions.update(patch);
+  }
+
+  removeSyntheticOption(list: SyntheticOptionListKey, index: number) {
+    const drop = (items: string[]) => items.filter((_item, i) => i !== index);
+    if (list === 'positioning') {
+      this.syntheticPositioningOptions.update(drop);
+      return;
+    }
+    if (list === 'coreMessage') {
+      this.syntheticCoreMessageOptions.update(drop);
+      return;
+    }
+    if (list === 'pricing') {
+      this.syntheticPricingOptions.update(drop);
+      return;
+    }
+    if (list === 'audience') {
+      this.syntheticTargetAudienceOptions.update(drop);
+      return;
+    }
+    this.syntheticChannelOptions.update(drop);
+  }
+
   private parseLines(input: string): string[] {
     return input
-      .split(/\r?\n|,/)
+      .split(/\r?\n/)
       .map(item => item.trim())
       .filter(Boolean);
+  }
+
+  private cleanOptions(items: string[]): string[] {
+    return Array.from(new Set(items.map(item => item.trim()).filter(Boolean)));
   }
 
   formatDate(value: unknown) {
