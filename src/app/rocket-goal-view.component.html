@@ -3183,39 +3183,81 @@
 
 <ng-template #missionLogForm>
   <div class="checkin-form">
-    <div class="checkin-section-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">End of Day Reflection</p>
-        <p class="checkin-section-subtitle">Be specific so tomorrow starts sharper.</p>
-      </div>
-      <div class="checkin-field">
-        <p class="checkin-question">How did you feel about today's work?</p>
-        <textarea
-          class="checkin-coach-response"
-          rows="3"
-          placeholder="Reflect honestly on what went well and what felt hard..."
-          [value]="missionNote()"
-          (input)="missionNote.set($any($event.target).value)"></textarea>
-      </div>
-      <div class="checkin-field">
-        <p class="checkin-question">Anything you will change to make tomorrow better?</p>
-        <textarea
-          class="checkin-coach-response"
-          rows="3"
-          placeholder="Name one concrete change for tomorrow..."
-          [value]="missionCoachResponse()"
-          (input)="missionCoachResponse.set($any($event.target).value)"></textarea>
-      </div>
+    <div class="ignition-wizard-steps">
+      <button
+        type="button"
+        class="ignition-step-pill"
+        [class.current]="missionWizardStep() === 1"
+        [class.complete]="isMissionReflectionComplete()"
+        (click)="goToMissionWizardStep(1)">
+        1. Reflect
+      </button>
+      <button
+        type="button"
+        class="ignition-step-pill"
+        [class.current]="missionWizardStep() === 2"
+        [disabled]="!canMoveToMissionWizardStep(2)"
+        (click)="goToMissionWizardStep(2)">
+        2. Tomorrow Plan
+      </button>
+      <button
+        type="button"
+        class="ignition-step-pill"
+        [class.current]="missionWizardStep() === 3"
+        [disabled]="!canMoveToMissionWizardStep(3)"
+        (click)="goToMissionWizardStep(3)">
+        3. Submit
+      </button>
     </div>
 
-    <div class="checkin-section-card tomorrow-preview-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">Tomorrow's Milestones</p>
-        <p class="checkin-section-subtitle">{{ getTomorrowMilestonesDateLabel() }}</p>
+    <div class="ignition-step-grid ignition-step-shell">
+      @if (missionWizardStep() === 1) {
+      <div class="checkin-section-card">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">End of Day Reflection</p>
+          <p class="checkin-section-subtitle">Be specific so tomorrow starts sharper.</p>
+        </div>
+        <div class="checkin-field">
+          <p class="checkin-question">How did you feel about today's work?</p>
+          <textarea
+            class="checkin-coach-response"
+            rows="3"
+            placeholder="Reflect honestly on what went well and what felt hard..."
+            [value]="missionNote()"
+            (input)="missionNote.set($any($event.target).value)"></textarea>
+        </div>
+        <div class="checkin-field">
+          <p class="checkin-question">Anything you will change to make tomorrow better?</p>
+          <textarea
+            class="checkin-coach-response"
+            rows="3"
+            placeholder="Name one concrete change for tomorrow..."
+            [value]="missionCoachResponse()"
+            (input)="missionCoachResponse.set($any($event.target).value)"></textarea>
+        </div>
       </div>
-      @if (getTomorrowMilestonesPreview().length > 0) {
-        <div class="tomorrow-preview-list">
-          @for (item of getTomorrowMilestonesPreview(); track item.id) {
+      }
+
+      @if (missionWizardStep() === 2) {
+      <div class="checkin-section-card tomorrow-preview-card">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">Tomorrow's Milestones</p>
+          <p class="checkin-section-subtitle">
+            {{ getTomorrowMilestonesDateLabel() }} · Accept each milestone before continuing
+          </p>
+        </div>
+        <div class="tomorrow-acceptance-banner">
+          <div class="tomorrow-acceptance-copy">
+            <p class="tomorrow-acceptance-title">Required: Confirm tomorrow's plan</p>
+            <p class="tomorrow-acceptance-subtitle">Tap <strong>👍 Accept</strong> on every milestone. You can edit first, then accept.</p>
+          </div>
+          <span class="tomorrow-acceptance-progress">
+            {{ getMissionTomorrowAcceptedCount() }}/{{ getMissionTomorrowTotalCount() || 0 }} accepted
+          </span>
+        </div>
+        @if (getTomorrowMilestonesPreview().length > 0) {
+          <div class="tomorrow-preview-list">
+            @for (item of getTomorrowMilestonesPreview(); track item.id) {
             <div class="tomorrow-preview-item">
               <span class="tomorrow-preview-dot"></span>
               @if (missionTomorrowEditingId() === item.id) {
@@ -3226,62 +3268,88 @@
                 <div class="tomorrow-preview-actions">
                   <button
                     type="button"
-                    class="tomorrow-preview-btn save"
+                    class="tomorrow-preview-btn icon save"
                     [disabled]="missionTomorrowSavingId() === item.id"
+                    title="Save and accept edited milestone"
                     (click)="saveTomorrowMilestoneEdit(item)">
-                    Save
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
                   </button>
-                  <button type="button" class="tomorrow-preview-btn" (click)="cancelEditingTomorrowMilestone()">
-                    Cancel
+                  <button type="button" class="tomorrow-preview-btn icon" title="Cancel editing" (click)="cancelEditingTomorrowMilestone()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               } @else {
                 <span class="tomorrow-preview-title">{{ item.title }}</span>
-                <button type="button" class="tomorrow-preview-btn" (click)="startEditingTomorrowMilestone(item)">
-                  Edit
-                </button>
+                <div class="tomorrow-preview-controls">
+                  <button
+                    type="button"
+                    class="tomorrow-preview-btn accept-btn"
+                    [class.accepted]="isMissionTomorrowAccepted(item.id)"
+                    [title]="isMissionTomorrowAccepted(item.id) ? 'Accepted for tomorrow' : 'Accept this milestone for tomorrow'"
+                    (click)="toggleMissionTomorrowAccepted(item.id)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M14 9V5a3 3 0 00-3-3l-1 6v13h9.56a2 2 0 001.97-1.62l1.1-6A2 2 0 0020.67 11H14z" />
+                      <path d="M7 22H3a1 1 0 01-1-1V10a1 1 0 011-1h4" />
+                    </svg>
+                    <span>{{ isMissionTomorrowAccepted(item.id) ? 'Accepted' : 'Accept' }}</span>
+                  </button>
+                  <button type="button" class="tomorrow-preview-btn icon" title="Edit milestone" (click)="startEditingTomorrowMilestone(item)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.1 2.1 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    </svg>
+                  </button>
+                </div>
               }
             </div>
           }
         </div>
-      } @else {
-        <p class="checkin-section-subtitle">No milestones scheduled for tomorrow yet.</p>
-      }
-    </div>
-
-    <div class="checkin-section-card journey-photo-section">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">Capture the Moment</p>
-        <p class="checkin-section-subtitle">Document your journey with a photo (optional).</p>
-      </div>
-      <div class="journey-photo-upload">
-        @if (journeyPhotoPreview()) {
-        <div class="journey-photo-preview-container">
-          <img [src]="journeyPhotoPreview()" alt="Journey photo preview" class="journey-photo-preview" />
-          <button type="button" class="journey-photo-remove" (click)="clearJourneyPhoto()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <input type="text" class="checkin-input journey-photo-caption"
-          placeholder="Add a caption (optional)"
-          [value]="journeyPhotoCaption()"
-          (input)="journeyPhotoCaption.set($any($event.target).value)" />
         } @else {
-        <label class="journey-photo-picker">
-          <input type="file" accept="image/*" capture="environment" (change)="onJourneyPhotoSelected($event)" />
-          <div class="journey-photo-picker-content">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            <span>Add a photo</span>
-          </div>
-        </label>
+          <p class="checkin-section-subtitle">No milestones scheduled for tomorrow yet.</p>
         }
       </div>
+      }
+
+      @if (missionWizardStep() === 3) {
+      <div class="checkin-section-card journey-photo-section">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">Capture the Moment</p>
+          <p class="checkin-section-subtitle">Document your journey with a photo (optional).</p>
+        </div>
+        <div class="journey-photo-upload">
+          @if (journeyPhotoPreview()) {
+          <div class="journey-photo-preview-container">
+            <img [src]="journeyPhotoPreview()" alt="Journey photo preview" class="journey-photo-preview" />
+            <button type="button" class="journey-photo-remove" (click)="clearJourneyPhoto()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <input type="text" class="checkin-input journey-photo-caption"
+            placeholder="Add a caption (optional)"
+            [value]="journeyPhotoCaption()"
+            (input)="journeyPhotoCaption.set($any($event.target).value)" />
+          } @else {
+          <label class="journey-photo-picker">
+            <input type="file" accept="image/*" capture="environment" (change)="onJourneyPhotoSelected($event)" />
+            <div class="journey-photo-picker-content">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+              <span>Add a photo</span>
+            </div>
+          </label>
+          }
+        </div>
+      </div>
+      }
     </div>
 
     @if (checkinModalError()) {
@@ -3295,9 +3363,31 @@
       </div>
     }
 
-    <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog() || uploadingJourneyPhoto()">
-      @if (savingMissionLog() || uploadingJourneyPhoto()) { Saving... } @else { COMPLETE CHECK-IN }
-    </button>
+    <div class="checkin-form-footer">
+      @if (missionWizardStep() > 1) {
+      <button type="button" class="checkin-cta checkin-cta-secondary" (click)="goToPreviousMissionWizardStep()">
+        Back
+      </button>
+      }
+
+      @if (missionWizardStep() < 3) {
+      <button
+        type="button"
+        class="checkin-cta"
+        [disabled]="!canGoToNextMissionWizardStep()"
+        (click)="goToNextMissionWizardStep()">
+        @if (missionWizardStep() === 2 && !canGoToNextMissionWizardStep()) {
+          Accept all milestones to continue
+        } @else {
+          Continue to Step {{ missionWizardStep() + 1 }}
+        }
+      </button>
+      } @else {
+      <button type="button" class="checkin-cta" (click)="submitMissionLog()" [disabled]="savingMissionLog() || uploadingJourneyPhoto()">
+        @if (savingMissionLog() || uploadingJourneyPhoto()) { Saving... } @else { COMPLETE CHECK-IN }
+      </button>
+      }
+    </div>
   </div>
 </ng-template>
 

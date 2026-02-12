@@ -233,11 +233,13 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   missionChallengeLevel = signal<MissionChallengeLevel>('average');
   missionFeeling = signal<MissionFeeling>('positive');
   missionTeamConnection = signal<MissionTeamConnection>('yes');
+  missionWizardStep = signal<1 | 2 | 3>(1);
   missionNote = signal('');
   missionIntendedOneThing = signal('');
   missionTomorrowEditingId = signal<string | null>(null);
   missionTomorrowDraftTitle = signal('');
   missionTomorrowSavingId = signal<string | null>(null);
+  missionTomorrowAcceptedIds = signal<string[]>([]);
   missionCoaching = signal<MissionLogCoaching | null>(null);
   savingMissionLog = signal(false);
 
@@ -2166,6 +2168,9 @@ ${url}`;
     this.checkinModalType.set(type);
     if (type === 'ignition') {
       this.resetIgnitionSequence();
+    } else {
+      this.missionWizardStep.set(1);
+      this.missionTomorrowAcceptedIds.set([]);
     }
     // Reset coach response signals and error
     this.ignitionCoachResponse.set('');
@@ -2173,6 +2178,57 @@ ${url}`;
     this.missionNote.set('');
     this.checkinModalError.set(null);
     this.showCheckinModal.set(true);
+  }
+
+  isMissionReflectionComplete(): boolean {
+    return this.missionNote().trim().length > 0 && this.missionCoachResponse().trim().length > 0;
+  }
+
+  canMoveToMissionWizardStep(step: 1 | 2 | 3): boolean {
+    if (step === 1) return true;
+    if (step === 2) return this.isMissionReflectionComplete();
+    return this.isMissionReflectionComplete() && this.isMissionTomorrowPlanAccepted();
+  }
+
+  goToMissionWizardStep(step: 1 | 2 | 3) {
+    if (this.canMoveToMissionWizardStep(step)) {
+      this.missionWizardStep.set(step);
+      this.checkinModalError.set(null);
+      return;
+    }
+    if (step === 3 && !this.isMissionTomorrowPlanAccepted()) {
+      this.checkinModalError.set('Give each tomorrow milestone a thumbs up before continuing.');
+      return;
+    }
+    this.checkinModalError.set('Please answer both reflection questions before continuing.');
+  }
+
+  canGoToNextMissionWizardStep(): boolean {
+    if (this.missionWizardStep() === 1) return this.canMoveToMissionWizardStep(2);
+    if (this.missionWizardStep() === 2) return this.canMoveToMissionWizardStep(3);
+    return false;
+  }
+
+  goToNextMissionWizardStep() {
+    const currentStep = this.missionWizardStep();
+    if (currentStep === 1) {
+      this.goToMissionWizardStep(2);
+      return;
+    }
+    if (currentStep === 2) {
+      this.goToMissionWizardStep(3);
+    }
+  }
+
+  goToPreviousMissionWizardStep() {
+    const currentStep = this.missionWizardStep();
+    if (currentStep === 3) {
+      this.missionWizardStep.set(2);
+      return;
+    }
+    if (currentStep === 2) {
+      this.missionWizardStep.set(1);
+    }
   }
 
   closeCheckinModal() {
@@ -2830,9 +2886,39 @@ ${url}`;
     return tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   }
 
+  isMissionTomorrowAccepted(itemId: string): boolean {
+    return this.missionTomorrowAcceptedIds().includes(itemId);
+  }
+
+  toggleMissionTomorrowAccepted(itemId: string) {
+    const accepted = this.isMissionTomorrowAccepted(itemId);
+    if (accepted) {
+      this.missionTomorrowAcceptedIds.update(ids => ids.filter(id => id !== itemId));
+      return;
+    }
+    this.missionTomorrowAcceptedIds.update(ids => [...ids, itemId]);
+  }
+
+  private isMissionTomorrowPlanAccepted(): boolean {
+    const items = this.getTomorrowMilestonesPreview();
+    if (items.length === 0) return true;
+    const accepted = this.missionTomorrowAcceptedIds();
+    return items.every(item => accepted.includes(item.id));
+  }
+
+  getMissionTomorrowAcceptedCount(): number {
+    const tomorrowIds = new Set(this.getTomorrowMilestonesPreview().map(item => item.id));
+    return this.missionTomorrowAcceptedIds().filter(id => tomorrowIds.has(id)).length;
+  }
+
+  getMissionTomorrowTotalCount(): number {
+    return this.getTomorrowMilestonesPreview().length;
+  }
+
   startEditingTomorrowMilestone(item: ActionItem) {
     this.missionTomorrowEditingId.set(item.id);
     this.missionTomorrowDraftTitle.set(item.title);
+    this.missionTomorrowAcceptedIds.update(ids => ids.filter(id => id !== item.id));
   }
 
   cancelEditingTomorrowMilestone() {
@@ -2867,6 +2953,7 @@ ${url}`;
         notes: item.notes,
         completed: item.completed
       });
+      this.missionTomorrowAcceptedIds.update(ids => ids.includes(item.id) ? ids : [...ids, item.id]);
       this.cancelEditingTomorrowMilestone();
     } catch (error) {
       console.error('Error updating tomorrow milestone:', error);

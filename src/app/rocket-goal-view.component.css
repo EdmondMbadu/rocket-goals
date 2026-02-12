@@ -11023,6 +11023,47 @@
   gap: 0.55rem;
 }
 
+.tomorrow-acceptance-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+}
+
+.tomorrow-acceptance-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.tomorrow-acceptance-title {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.tomorrow-acceptance-subtitle {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.75rem;
+}
+
+.tomorrow-acceptance-progress {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+}
+
 .tomorrow-preview-item {
   display: flex;
   align-items: flex-start;
@@ -11049,6 +11090,12 @@
   flex: 1;
 }
 
+.tomorrow-preview-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .tomorrow-preview-actions {
   display: flex;
   align-items: center;
@@ -11066,6 +11113,32 @@
   text-transform: uppercase;
   padding: 0.3rem 0.5rem;
   cursor: pointer;
+}
+
+.tomorrow-preview-btn.icon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: none;
+}
+
+.tomorrow-preview-btn.accept-btn {
+  height: 30px;
+  padding: 0 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-transform: none;
+  font-size: 0.72rem;
+}
+
+.tomorrow-preview-btn.accepted {
+  color: #052e16;
+  border-color: rgba(34, 197, 94, 0.82);
+  background: rgba(34, 197, 94, 0.9);
 }
 
 .tomorrow-preview-btn.save {
@@ -11086,6 +11159,34 @@
   color: #334155;
 }
 
+.light-mode .tomorrow-acceptance-banner {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(148, 163, 184, 0.55);
+}
+
+.light-mode .tomorrow-acceptance-title {
+  color: #0f172a;
+}
+
+.light-mode .tomorrow-acceptance-subtitle {
+  color: rgba(51, 65, 85, 0.78);
+}
+
+.light-mode .tomorrow-acceptance-progress {
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.light-mode .tomorrow-preview-btn.icon {
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.light-mode .tomorrow-preview-btn.accepted {
+  color: #14532d;
+  border-color: rgba(34, 197, 94, 0.55);
+  background: rgba(134, 239, 172, 0.72);
+}
+
 .light-mode .tomorrow-preview-card {
   background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(224, 231, 255, 0.75));
   border-color: rgba(167, 139, 250, 0.42);
@@ -11104,6 +11205,13 @@
   background: #ffffff;
   color: #0f172a;
   border-color: rgba(148, 163, 184, 0.45);
+}
+
+@media (max-width: 640px) {
+  .tomorrow-acceptance-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* Coach Section Styles */
