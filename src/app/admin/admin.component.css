@@ -1,5 +1,78 @@
 /* Admin component styles */
 
+.synthetic-shell {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.synthetic-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 220px at -10% -20%, rgba(225, 29, 72, 0.14), transparent 55%),
+    radial-gradient(900px 260px at 110% -10%, rgba(14, 116, 144, 0.13), transparent 56%);
+}
+
+.synthetic-header {
+  background: linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(30, 41, 59, 0.9));
+}
+
+.synthetic-card {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.92));
+}
+
+.synthetic-list-card {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.96));
+}
+
+.synthetic-add-btn {
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  background: rgba(225, 29, 72, 0.08);
+}
+
+.synthetic-winner {
+  border: 1px solid rgba(5, 150, 105, 0.35);
+  background: linear-gradient(140deg, rgba(236, 253, 245, 0.95), rgba(209, 250, 229, 0.78));
+  box-shadow: 0 12px 28px rgba(5, 150, 105, 0.12);
+}
+
+:host-context(.dark) .synthetic-shell {
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: 0 30px 70px rgba(2, 6, 23, 0.65);
+}
+
+:host-context(.dark) .synthetic-shell::before {
+  background:
+    radial-gradient(900px 220px at -10% -20%, rgba(244, 63, 94, 0.18), transparent 55%),
+    radial-gradient(900px 260px at 110% -10%, rgba(56, 189, 248, 0.18), transparent 56%);
+}
+
+:host-context(.dark) .synthetic-header {
+  background: linear-gradient(135deg, rgba(2, 6, 23, 0.96), rgba(30, 41, 59, 0.92));
+}
+
+:host-context(.dark) .synthetic-card,
+:host-context(.dark) .synthetic-list-card {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.8));
+}
+
+:host-context(.dark) .synthetic-add-btn {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.12);
+}
+
+:host-context(.dark) .synthetic-winner {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(140deg, rgba(6, 78, 59, 0.45), rgba(5, 46, 22, 0.35));
+}
+
 :host-context(.dark) .admin-page {
   background-image: linear-gradient(135deg, #020617, #0f172a 40%, #111827 100%);
   color: #f8fafc;
