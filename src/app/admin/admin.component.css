@@ -18,7 +18,8 @@
 }
 
 .synthetic-header {
-  background: linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(30, 41, 59, 0.9));
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.98), rgba(255, 247, 237, 0.98) 45%, rgba(236, 254, 255, 0.98));
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .synthetic-card {
