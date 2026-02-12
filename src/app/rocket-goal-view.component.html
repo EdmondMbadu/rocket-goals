@@ -2880,24 +2880,12 @@
             placeholder="Accountability partner name"
             [value]="ignitionAccountabilityPartner()"
             (input)="ignitionAccountabilityPartner.set($any($event.target).value)" />
-          <textarea class="checkin-coach-response" rows="2" readonly
-            [value]="getIgnitionCommitmentMessage()"></textarea>
         </div>
         <div class="ignition-step-actions">
-          <button type="button" class="checkin-cta ignition-sequence-btn secondary"
-            [disabled]="ignitionSequenceStep() < 2 || ignitionBurnTimerActive()"
-            (click)="sendIgnitionCommitmentMessage()">
-            Open Message Composer
-          </button>
-          <button type="button" class="checkin-cta ignition-sequence-btn secondary"
-            [disabled]="ignitionBurnTimerActive()"
-            (click)="confirmIgnitionManualMessageSent()">
-            I sent it manually
-          </button>
           <button type="button" class="checkin-cta ignition-sequence-btn"
-            [disabled]="!ignitionCommitmentMessageSent() || ignitionBurnTimerActive()"
+            [disabled]="ignitionBurnTimerActive()"
             (click)="startIgnitionBurnWindow()">
-            Message Sent → Start Burn Window
+            Start Burn Window
           </button>
         </div>
         @if (ignitionBurnTimerActive() || ignitionBurnCompleted()) {

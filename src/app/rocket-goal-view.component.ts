@@ -2266,7 +2266,7 @@ ${url}`;
   }
 
   startIgnitionBurnWindow() {
-    if (!this.ignitionCommitmentMessageSent() || this.ignitionBurnTimerActive()) return;
+    if (this.ignitionBurnTimerActive()) return;
     this.checkinModalError.set(null);
     this.ignitionBurnTimerActive.set(true);
     this.ignitionBurnElapsedSeconds.set(0);
