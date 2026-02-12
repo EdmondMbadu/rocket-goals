@@ -922,6 +922,44 @@ function buildAttachmentContext(attachments: any[]): string | null {
     return `User attached files (for reference):\n${combined}`;
 }
 
+function normalizeStringArray(input: unknown, maxItems: number, maxItemLength = 160): string[] {
+    if (!Array.isArray(input)) {
+        return [];
+    }
+
+    const normalized = input
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter(Boolean)
+        .slice(0, maxItems)
+        .map((item) => item.slice(0, maxItemLength));
+
+    return Array.from(new Set(normalized));
+}
+
+function extractJsonPayload(raw: string): any {
+    const clean = (raw || '')
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
+
+    if (!clean) {
+        throw new Error('Model returned an empty response');
+    }
+
+    try {
+        return JSON.parse(clean);
+    } catch (_firstError) {
+        const firstBrace = clean.indexOf('{');
+        const lastBrace = clean.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            const candidate = clean.slice(firstBrace, lastBrace + 1);
+            return JSON.parse(candidate);
+        }
+        throw new Error('Unable to parse JSON response from model');
+    }
+}
+
 /**
  * HTTPS callable function for chat-based AI responses with native function calling
  * Uses Gemini's tool/function calling for reliable calendar operations
@@ -1128,6 +1166,186 @@ export const rocketGoalsAI = onCall({
             "internal",
             error?.message || "Unknown error"
         );
+    }
+});
+
+/**
+ * Admin-only synthetic market simulator for coach-market fit discovery.
+ * Uses Gemini 3 to simulate persona-level responses and return structured output.
+ */
+export const runSyntheticMarketSimulation = onCall({
+    region: "us-central1",
+    secrets: [geminiApiKey],
+    cors: [
+        "https://rocket-goals.web.app",
+        "https://rocket-goals.firebaseapp.com",
+        "https://www.rocketgoals.com",
+        "https://rocketgoals.com",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    ]
+}, async (request: any) => {
+    const startTime = Date.now();
+    try {
+        if (!request.auth?.uid) {
+            throw new HttpsError("unauthenticated", "You must be logged in.");
+        }
+
+        const userDoc = await admin.firestore()
+            .collection('userProfiles')
+            .doc(request.auth.uid)
+            .get();
+        const userData = userDoc.data();
+        if (!userData || (userData.role !== 'admin' && userData.admin !== true)) {
+            throw new HttpsError("permission-denied", "Only administrators can run synthetic market tests.");
+        }
+
+        const apiKey = geminiApiKey.value();
+        if (!apiKey) {
+            throw new HttpsError("failed-precondition", "Google AI API key is not configured.");
+        }
+
+        const data = request?.data || {};
+        const coachName = (data.coachName || 'Unnamed coach').toString().trim().slice(0, 120);
+        const productDescription = (data.productDescription || '').toString().trim().slice(0, 4000);
+        const researchGoal = (data.researchGoal || '').toString().trim().slice(0, 1500);
+        const personaSeeds = normalizeStringArray(data.personaSeeds, 50, 260);
+        const positioningOptions = normalizeStringArray(data.positioningOptions, 20, 120);
+        const coreMessageOptions = normalizeStringArray(data.coreMessageOptions, 20, 120);
+        const pricingOptions = normalizeStringArray(data.pricingOptions, 20, 80);
+        const targetAudienceOptions = normalizeStringArray(data.targetAudienceOptions, 20, 120);
+        const channelOptions = normalizeStringArray(data.channelOptions, 20, 120);
+
+        if (!productDescription) {
+            throw new HttpsError("invalid-argument", "productDescription is required.");
+        }
+        if (personaSeeds.length === 0) {
+            throw new HttpsError("invalid-argument", "At least one persona seed is required.");
+        }
+
+        const modelName = "gemini-3-flash-preview";
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+                temperature: 0.35,
+                topP: 0.9,
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json"
+            }
+        });
+
+        const instruction = `You are a synthetic market testing engine for early-stage coaching products.
+Your job: evaluate market fit and produce precise recommendations.
+
+Scoring:
+- intentScore range is 0 to 3 (0=no intent, 1=low, 2=medium, 3=high)
+- confidence range is 0 to 1
+
+Return strict JSON only with this schema:
+{
+  "summary": {
+    "bestAudience": "string",
+    "bestPositioning": "string",
+    "bestCoreMessage": "string",
+    "bestPricing": "string",
+    "bestChannel": "string",
+    "keyObjection": "string",
+    "confidence": 0.0
+  },
+  "winningCombinations": [
+    {
+      "positioning": "string",
+      "coreMessage": "string",
+      "pricing": "string",
+      "targetAudience": "string",
+      "channel": "string",
+      "intentScore": 0.0,
+      "confidence": 0.0,
+      "rationale": "string"
+    }
+  ],
+  "audienceInsights": [
+    {
+      "audience": "string",
+      "averageIntent": 0.0,
+      "motivators": ["string"],
+      "objections": ["string"]
+    }
+  ],
+  "personaResponses": [
+    {
+      "personaName": "string",
+      "audience": "string",
+      "intentScore": 0.0,
+      "verdict": "yes|maybe|no",
+      "attraction": "string",
+      "repellents": "string",
+      "questions": ["string"],
+      "payTrigger": "string"
+    }
+  ],
+  "nextActions": [
+    {
+      "priority": 1,
+      "action": "string",
+      "why": "string",
+      "owner": "Founder",
+      "timeline": "string"
+    }
+  ]
+}
+
+Rules:
+- Use every provided variable list (positioning, core messages, pricing, audiences, channels).
+- Be concrete and decision-oriented, not generic.
+- Keep winningCombinations length <= 5.
+- Keep personaResponses length <= 20.
+- Keep nextActions length between 3 and 7.
+- Never return markdown, only JSON.`;
+
+        const inputPayload = {
+            coachName,
+            productDescription,
+            researchGoal,
+            personaSeeds,
+            variableMatrix: {
+                positioningOptions,
+                coreMessageOptions,
+                pricingOptions,
+                targetAudienceOptions,
+                channelOptions
+            }
+        };
+
+        const response = await model.generateContent({
+            contents: [{
+                role: "user",
+                parts: [
+                    { text: instruction },
+                    { text: `INPUT_JSON:\n${JSON.stringify(inputPayload, null, 2)}` }
+                ]
+            }]
+        });
+
+        const responseText = response.response?.text?.() || '';
+        const parsed = extractJsonPayload(responseText);
+        const totalTime = Date.now() - startTime;
+
+        console.log(`✅ runSyntheticMarketSimulation completed in ${totalTime}ms for coach "${coachName}"`);
+
+        return {
+            success: true,
+            model: modelName,
+            generatedAt: new Date().toISOString(),
+            result: parsed
+        };
+    } catch (error: any) {
+        console.error("❌ runSyntheticMarketSimulation error:", error);
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        throw new HttpsError("internal", error?.message || "Unable to run synthetic simulation.");
     }
 });
 

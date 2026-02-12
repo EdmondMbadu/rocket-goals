@@ -9,7 +9,7 @@ import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 
-type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
+type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads' | 'syntheticMarket';
 
 type PromoCodeUser = {
   userId: string;
@@ -84,6 +84,51 @@ type AiAnalytics = {
   devices: { device: string; activeUsers: number; views: number }[];
   browsers: { browser: string; activeUsers: number; views: number }[];
   trafficSources: { channel: string; activeUsers: number; views: number }[];
+};
+
+type SyntheticTestResult = {
+  summary?: {
+    bestAudience?: string;
+    bestPositioning?: string;
+    bestCoreMessage?: string;
+    bestPricing?: string;
+    bestChannel?: string;
+    keyObjection?: string;
+    confidence?: number;
+  };
+  winningCombinations?: Array<{
+    positioning: string;
+    coreMessage: string;
+    pricing: string;
+    targetAudience: string;
+    channel: string;
+    intentScore: number;
+    confidence?: number;
+    rationale?: string;
+  }>;
+  audienceInsights?: Array<{
+    audience: string;
+    averageIntent: number;
+    motivators: string[];
+    objections: string[];
+  }>;
+  personaResponses?: Array<{
+    personaName: string;
+    audience: string;
+    intentScore: number;
+    verdict: 'yes' | 'maybe' | 'no';
+    attraction: string;
+    repellents: string;
+    questions: string[];
+    payTrigger: string;
+  }>;
+  nextActions?: Array<{
+    priority: number;
+    action: string;
+    why: string;
+    owner: string;
+    timeline: string;
+  }>;
 };
 
 @Component({
@@ -161,7 +206,8 @@ export class AdminComponent implements OnInit {
     aiAnalytics: false,
     promoCodes: false,
     demoRequests: false,
-    bookDownloads: false
+    bookDownloads: false,
+    syntheticMarket: true
   });
 
   // Demo requests state
@@ -200,6 +246,43 @@ export class AdminComponent implements OnInit {
   promoCodesLoading = signal(false);
   promoCodesSaving = signal(false);
   promoCodesError = signal<string | null>(null);
+
+  // Synthetic market testing
+  syntheticCoachName = signal('Coach Tess');
+  syntheticProductDescription = signal('Home workout & weight loss coaching for busy people. Power-packed 20-30 minute routines with personalized nutrition plans.');
+  syntheticResearchGoal = signal('Find the best audience, positioning, message, pricing, and channel to prioritize for launch.');
+  syntheticPersonaSeeds = signal(`Sarah Chen, 34, marketing manager, Austin, busy schedule, willing to pay for quality
+Busy mom, 3 kids, budget-conscious, needs short home workouts
+Type 2 diabetic, 52, health-first mindset, seeks safe guidance
+Solo founder, 31, erratic schedule, high execution pressure`);
+  syntheticPositioningOptions = signal(`Time-Shifter
+Your Home Workout Strategist
+The 20-Minute Solution
+No-BS Fitness Coach`);
+  syntheticCoreMessageOptions = signal(`Get fit in 20 minutes/day
+Home workouts that actually work
+Your personal trainer, minus the gym
+Science-backed workouts for busy people`);
+  syntheticPricingOptions = signal(`$9.99/month
+$19.99/month
+$29.99/month
+$49.99/month
+$99 one-time`);
+  syntheticTargetAudienceOptions = signal(`Busy professionals
+Stay-at-home parents
+Post-pregnancy moms
+People with chronic conditions
+50+ adults`);
+  syntheticChannelOptions = signal(`Instagram ads
+TikTok organic
+Facebook groups
+Reddit
+Google search ads`);
+  syntheticRunning = signal(false);
+  syntheticError = signal<string | null>(null);
+  syntheticModel = signal<string | null>(null);
+  syntheticGeneratedAt = signal<string | null>(null);
+  syntheticResult = signal<SyntheticTestResult | null>(null);
 
   private firestorePromise?: Promise<import('firebase/firestore').Firestore>;
 
@@ -872,6 +955,102 @@ export class AdminComponent implements OnInit {
 
   toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  async runSyntheticMarketTest() {
+    const productDescription = this.syntheticProductDescription().trim();
+    const personas = this.parseLines(this.syntheticPersonaSeeds());
+    const positioning = this.parseLines(this.syntheticPositioningOptions());
+    const coreMessages = this.parseLines(this.syntheticCoreMessageOptions());
+    const pricing = this.parseLines(this.syntheticPricingOptions());
+    const audiences = this.parseLines(this.syntheticTargetAudienceOptions());
+    const channels = this.parseLines(this.syntheticChannelOptions());
+
+    if (!productDescription) {
+      this.syntheticError.set('Product description is required.');
+      return;
+    }
+
+    if (personas.length === 0) {
+      this.syntheticError.set('Add at least one persona seed.');
+      return;
+    }
+
+    this.syntheticRunning.set(true);
+    this.syntheticError.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+      const functions = getFunctions(getApp());
+      const runSimulation = httpsCallable(functions, 'runSyntheticMarketSimulation');
+
+      const result = await runSimulation({
+        coachName: this.syntheticCoachName().trim(),
+        productDescription,
+        researchGoal: this.syntheticResearchGoal().trim(),
+        personaSeeds: personas,
+        positioningOptions: positioning,
+        coreMessageOptions: coreMessages,
+        pricingOptions: pricing,
+        targetAudienceOptions: audiences,
+        channelOptions: channels,
+      });
+
+      const data = result.data as {
+        success: boolean;
+        model?: string;
+        generatedAt?: string;
+        result?: SyntheticTestResult;
+      };
+
+      if (!data?.success || !data?.result) {
+        throw new Error('No simulation result returned.');
+      }
+
+      this.syntheticResult.set(data.result);
+      this.syntheticModel.set(data.model || null);
+      this.syntheticGeneratedAt.set(data.generatedAt || null);
+    } catch (err: any) {
+      console.error('Failed to run synthetic market test:', err);
+      this.syntheticError.set(err?.message || 'Unable to run simulation.');
+    } finally {
+      this.syntheticRunning.set(false);
+    }
+  }
+
+  syntheticResultJson() {
+    const result = this.syntheticResult();
+    if (!result) return '';
+    return JSON.stringify(result, null, 2);
+  }
+
+  async copySyntheticResultJson() {
+    const value = this.syntheticResultJson();
+    if (!value || typeof navigator === 'undefined' || !navigator.clipboard) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      this.success.set('Synthetic result JSON copied to clipboard.');
+      setTimeout(() => this.success.set(null), 3000);
+    } catch (error) {
+      console.warn('Failed to copy synthetic result JSON:', error);
+    }
+  }
+
+  intentLabel(score: number | undefined) {
+    if (!Number.isFinite(score as number)) return '-';
+    if ((score as number) >= 2.4) return 'High';
+    if ((score as number) >= 1.5) return 'Medium';
+    return 'Low';
+  }
+
+  private parseLines(input: string): string[] {
+    return input
+      .split(/\r?\n|,/)
+      .map(item => item.trim())
+      .filter(Boolean);
   }
 
   formatDate(value: unknown) {
