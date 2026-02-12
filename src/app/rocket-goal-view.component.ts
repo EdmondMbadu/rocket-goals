@@ -209,6 +209,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   ignitionTimeOfDay = signal<IgnitionTimeOfDay>('morning');
   ignitionConfidence = signal<IgnitionConfidence>('medium');
   ignitionSequenceStep = signal<1 | 2 | 3>(1);
+  ignitionWizardStep = signal<1 | 2 | 3>(1);
   ignitionBreathsComplete = signal(false);
   ignitionIdentityStatementComplete = signal(false);
   ignitionEnvironmentalCue = signal('');
@@ -2228,6 +2229,7 @@ ${url}`;
       if (next <= 0) {
         this.clearIgnitionCountdownTimer();
         this.ignitionSequenceStep.set(2);
+        this.ignitionWizardStep.set(2);
       }
     }, 1000);
   }
@@ -2280,6 +2282,7 @@ ${url}`;
     this.clearIgnitionBurnTimer();
     this.ignitionBurnCompleted.set(true);
     this.ignitionSequenceStep.set(3);
+    this.ignitionWizardStep.set(3);
   }
 
   resetIgnitionSequence() {
@@ -2289,6 +2292,7 @@ ${url}`;
     this.ignitionTimeOfDay.set('morning');
     this.ignitionConfidence.set('medium');
     this.ignitionSequenceStep.set(1);
+    this.ignitionWizardStep.set(1);
     this.ignitionBreathsComplete.set(false);
     this.ignitionIdentityStatementComplete.set(false);
     this.ignitionEnvironmentalCue.set('');
@@ -2305,6 +2309,53 @@ ${url}`;
     this.ignitionExecutionChallengeLevel.set('average');
     this.ignitionExecutionFeeling.set('positive');
     this.ignitionExecutionTeamConnection.set('yes');
+  }
+
+  canMoveToIgnitionWizardStep(step: 1 | 2 | 3): boolean {
+    if (step === 1) return true;
+    if (step === 2) return this.ignitionSequenceStep() >= 2;
+    return this.ignitionBurnCompleted();
+  }
+
+  goToIgnitionWizardStep(step: 1 | 2 | 3) {
+    if (this.canMoveToIgnitionWizardStep(step)) {
+      this.ignitionWizardStep.set(step);
+      this.checkinModalError.set(null);
+      return;
+    }
+    if (step === 2) {
+      this.checkinModalError.set('Finish Step 1 to unlock Step 2.');
+      return;
+    }
+    this.checkinModalError.set('Complete Steps 1 and 2 before Step 3.');
+  }
+
+  canGoToNextIgnitionWizardStep(): boolean {
+    if (this.ignitionWizardStep() === 1) return this.canMoveToIgnitionWizardStep(2);
+    if (this.ignitionWizardStep() === 2) return this.canMoveToIgnitionWizardStep(3);
+    return false;
+  }
+
+  goToNextIgnitionWizardStep() {
+    const currentStep = this.ignitionWizardStep();
+    if (currentStep === 1) {
+      this.goToIgnitionWizardStep(2);
+      return;
+    }
+    if (currentStep === 2) {
+      this.goToIgnitionWizardStep(3);
+    }
+  }
+
+  goToPreviousIgnitionWizardStep() {
+    const currentStep = this.ignitionWizardStep();
+    if (currentStep === 3) {
+      this.ignitionWizardStep.set(2);
+      return;
+    }
+    if (currentStep === 2) {
+      this.ignitionWizardStep.set(1);
+    }
   }
 
   private clearIgnitionCountdownTimer() {

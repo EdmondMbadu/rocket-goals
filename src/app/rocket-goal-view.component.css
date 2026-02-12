@@ -10342,6 +10342,14 @@
   gap: 1.25rem;
 }
 
+.checkin-form-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+}
+
 .checkin-field {
   display: flex;
   flex-direction: column;
@@ -10418,6 +10426,12 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.checkin-cta-secondary {
+  background: rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: none;
 }
 
 .light-mode .checkins-tab {
@@ -10801,8 +10815,8 @@
 }
 
 .checkin-modal {
-  width: min(820px, 100%);
-  max-height: 90vh;
+  width: min(920px, 100%);
+  max-height: 92vh;
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 26px;
@@ -10866,6 +10880,43 @@
 .checkin-modal-body {
   padding: 1.6rem;
   overflow-y: auto;
+}
+
+.ignition-wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.ignition-step-pill {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  color: #cbd5e1;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ignition-step-pill.current {
+  border-color: rgba(249, 115, 22, 0.65);
+  background: rgba(249, 115, 22, 0.2);
+  color: #fff;
+}
+
+.ignition-step-pill.complete {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.ignition-step-pill:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ignition-step-shell {
+  min-height: 340px;
 }
 
 .checkin-modal-body .checkin-snapshot {
@@ -11409,6 +11460,47 @@
     width: 100%;
     min-width: 0;
   }
+
+  .checkin-form-footer {
+    flex-direction: column-reverse;
+  }
+
+  .checkin-form-footer .checkin-cta {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .checkin-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .checkin-modal {
+    width: 100%;
+    height: min(100dvh, 100vh);
+    max-height: min(100dvh, 100vh);
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .checkin-modal-header {
+    padding: 1rem 1rem 0.9rem 1rem;
+  }
+
+  .checkin-modal-body {
+    padding: 1rem;
+  }
+
+  .ignition-wizard-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .ignition-step-pill {
+    text-align: left;
+  }
 }
 
 .checkin-section-header {
@@ -11514,6 +11606,38 @@
   background: rgba(148, 163, 184, 0.2);
   color: #0f172a;
   border-color: rgba(148, 163, 184, 0.35);
+}
+
+.light-mode .checkin-cta-secondary {
+  color: #0f172a;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.light-mode .ignition-step-pill {
+  background: rgba(255, 255, 255, 0.96);
+  color: #334155;
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.light-mode .ignition-step-pill.current {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.18), rgba(239, 68, 68, 0.12));
+  color: #7c2d12;
+  border-color: rgba(249, 115, 22, 0.55);
+}
+
+.light-mode .ignition-step-pill.complete {
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.light-mode .ignition-step-pill:disabled {
+  color: rgba(100, 116, 139, 0.8);
+  opacity: 0.85;
+}
+
+.light-mode .checkin-coach-name,
+.light-mode .checkin-coach-output-label {
+  color: #0e7490;
 }
 
 .light-mode .checkin-modal-body .checkin-snapshot {

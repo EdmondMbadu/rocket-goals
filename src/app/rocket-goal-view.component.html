@@ -2786,47 +2786,75 @@
 
 <ng-template #ignitionForm>
   <div class="checkin-form">
-    <div class="checkin-section-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">ONE Thing Focus</p>
-        <p class="checkin-section-subtitle">Use the suggested ONE Thing or set your own.</p>
-      </div>
-      <div class="checkin-field">
-        <p class="checkin-question">Your ONE Thing today</p>
-        <div class="checkin-radio-group">
-          <label class="checkin-radio">
-            <input type="radio" name="oneThingChoice"
-              [checked]="ignitionOneThingChoice() === 'suggested'"
-              (change)="ignitionOneThingChoice.set('suggested')" />
-            Use suggested ONE Thing
-          </label>
-          <label class="checkin-radio">
-            <input type="radio" name="oneThingChoice"
-              [checked]="ignitionOneThingChoice() === 'other'"
-              (change)="ignitionOneThingChoice.set('other')" />
-            Enter my own ONE Thing
-          </label>
-        </div>
-        @if (ignitionOneThingChoice() === 'suggested') {
-          <div class="ignition-one-thing-highlight">
-            {{ getSuggestedOneThing() }}
-          </div>
-        } @else {
-          <input class="checkin-input" type="text" placeholder="Enter your ONE Thing"
-            [value]="ignitionOneThingText()"
-            (input)="ignitionOneThingText.set($any($event.target).value)" />
-          @if (ignitionOneThingText().trim()) {
-            <div class="ignition-one-thing-highlight">
-              {{ ignitionOneThingText().trim() }}
-            </div>
-          }
-        }
-        <p class="checkin-section-subtitle">Suggested: {{ getSuggestedOneThing() }}</p>
-      </div>
+    <div class="ignition-wizard-steps">
+      <button
+        type="button"
+        class="ignition-step-pill"
+        [class.current]="ignitionWizardStep() === 1"
+        [class.complete]="ignitionSequenceStep() > 1"
+        (click)="goToIgnitionWizardStep(1)">
+        1. Visualize
+      </button>
+      <button
+        type="button"
+        class="ignition-step-pill"
+        [class.current]="ignitionWizardStep() === 2"
+        [class.complete]="ignitionBurnCompleted()"
+        [disabled]="!canMoveToIgnitionWizardStep(2)"
+        (click)="goToIgnitionWizardStep(2)">
+        2. Execute
+      </button>
+      <button
+        type="button"
+        class="ignition-step-pill"
+        [class.current]="ignitionWizardStep() === 3"
+        [disabled]="!canMoveToIgnitionWizardStep(3)"
+        (click)="goToIgnitionWizardStep(3)">
+        3. Log + Submit
+      </button>
     </div>
 
-    <div class="ignition-step-grid">
-      <section class="checkin-section-card ignition-step-card" [class.active]="ignitionSequenceStep() === 1">
+    <div class="ignition-step-grid ignition-step-shell">
+      @if (ignitionWizardStep() === 1) {
+      <div class="checkin-section-card">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">ONE Thing Focus</p>
+          <p class="checkin-section-subtitle">Use the suggested ONE Thing or set your own.</p>
+        </div>
+        <div class="checkin-field">
+          <p class="checkin-question">Your ONE Thing today</p>
+          <div class="checkin-radio-group">
+            <label class="checkin-radio">
+              <input type="radio" name="oneThingChoice"
+                [checked]="ignitionOneThingChoice() === 'suggested'"
+                (change)="ignitionOneThingChoice.set('suggested')" />
+              Use suggested ONE Thing
+            </label>
+            <label class="checkin-radio">
+              <input type="radio" name="oneThingChoice"
+                [checked]="ignitionOneThingChoice() === 'other'"
+                (change)="ignitionOneThingChoice.set('other')" />
+              Enter my own ONE Thing
+            </label>
+          </div>
+          @if (ignitionOneThingChoice() === 'suggested') {
+            <div class="ignition-one-thing-highlight">
+              {{ getSuggestedOneThing() }}
+            </div>
+          } @else {
+            <input class="checkin-input" type="text" placeholder="Enter your ONE Thing"
+              [value]="ignitionOneThingText()"
+              (input)="ignitionOneThingText.set($any($event.target).value)" />
+            @if (ignitionOneThingText().trim()) {
+              <div class="ignition-one-thing-highlight">
+                {{ ignitionOneThingText().trim() }}
+              </div>
+            }
+          }
+          <p class="checkin-section-subtitle">Suggested: {{ getSuggestedOneThing() }}</p>
+        </div>
+      </div>
+      <section class="checkin-section-card ignition-step-card active">
         <div class="checkin-section-header">
           <p class="checkin-section-title">STEP 1: VISUALIZE + IGNITE</p>
           <p class="checkin-section-subtitle">Light the fire</p>
@@ -2864,8 +2892,16 @@
           }
         </div>
       </section>
+      }
 
-      <section class="checkin-section-card ignition-step-card" [class.active]="ignitionSequenceStep() === 2">
+      @if (ignitionWizardStep() === 2) {
+      <section class="checkin-section-card ignition-step-card active">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">ONE Thing Locked</p>
+          <p class="checkin-section-subtitle">{{ getIgnitionSelectedTask() }}</p>
+        </div>
+      </section>
+      <section class="checkin-section-card ignition-step-card active">
         <div class="checkin-section-header">
           <p class="checkin-section-title">STEP 2: EXECUTE + AMPLIFY</p>
           <p class="checkin-section-subtitle">Feed the fire</p>
@@ -2900,8 +2936,16 @@
           </button>
         }
       </section>
+      }
 
-      <section class="checkin-section-card ignition-step-card" [class.active]="ignitionSequenceStep() === 3">
+      @if (ignitionWizardStep() === 3) {
+      <section class="checkin-section-card ignition-step-card active">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">ONE Thing Completed</p>
+          <p class="checkin-section-subtitle">{{ getIgnitionSelectedTask() }}</p>
+        </div>
+      </section>
+      <section class="checkin-section-card ignition-step-card active">
         <div class="checkin-section-header">
           <p class="checkin-section-title">STEP 3: CLAIM + LOG</p>
           <p class="checkin-section-subtitle">Bank the fire</p>
@@ -3034,68 +3078,68 @@
           </div>
         </div>
       </section>
-    </div>
 
-    <div class="checkin-section-card checkin-coach-card">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">{{ getCoachName() }}'s Game Plan</p>
-        <p class="checkin-section-subtitle">Personalized guidance based on your input.</p>
-      </div>
-      <div class="checkin-coach-output">
-        <div class="checkin-coach-output-header">
-          <div class="checkin-coach-avatar-wrapper small">
-            @if (getCoachAvatar()) {
-              <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
-            } @else {
-              <div class="checkin-coach-avatar-placeholder small">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-            }
-            <span class="checkin-coach-pulse small"></span>
-          </div>
-          <span class="checkin-coach-output-label">{{ getCoachName() }}</span>
+      <div class="checkin-section-card checkin-coach-card">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">{{ getCoachName() }}'s Game Plan</p>
+          <p class="checkin-section-subtitle">Personalized guidance based on your input.</p>
         </div>
-        <p class="checkin-coach-output-text">{{ getIgnitionCue() }}</p>
-        <p class="checkin-coach-output-tip">{{ getIgnitionTimeBlock() }}</p>
-      </div>
-    </div>
-
-    <div class="checkin-section-card journey-photo-section">
-      <div class="checkin-section-header">
-        <p class="checkin-section-title">Capture the Moment</p>
-        <p class="checkin-section-subtitle">Document your journey with a photo (optional).</p>
-      </div>
-      <div class="journey-photo-upload">
-        @if (journeyPhotoPreview()) {
-        <div class="journey-photo-preview-container">
-          <img [src]="journeyPhotoPreview()" alt="Journey photo preview" class="journey-photo-preview" />
-          <button type="button" class="journey-photo-remove" (click)="clearJourneyPhoto()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <input type="text" class="checkin-input journey-photo-caption"
-          placeholder="Add a caption (optional)"
-          [value]="journeyPhotoCaption()"
-          (input)="journeyPhotoCaption.set($any($event.target).value)" />
-        } @else {
-        <label class="journey-photo-picker">
-          <input type="file" accept="image/*" capture="environment" (change)="onJourneyPhotoSelected($event)" />
-          <div class="journey-photo-picker-content">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            <span>Add a photo</span>
+        <div class="checkin-coach-output">
+          <div class="checkin-coach-output-header">
+            <div class="checkin-coach-avatar-wrapper small">
+              @if (getCoachAvatar()) {
+                <img [src]="getCoachAvatar()" alt="{{ getCoachName() }}" class="checkin-coach-avatar small" />
+              } @else {
+                <div class="checkin-coach-avatar-placeholder small">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+              }
+              <span class="checkin-coach-pulse small"></span>
+            </div>
+            <span class="checkin-coach-output-label">{{ getCoachName() }}</span>
           </div>
-        </label>
-        }
+          <p class="checkin-coach-output-text">{{ getIgnitionCue() }}</p>
+          <p class="checkin-coach-output-tip">{{ getIgnitionTimeBlock() }}</p>
+        </div>
       </div>
+      <div class="checkin-section-card journey-photo-section">
+        <div class="checkin-section-header">
+          <p class="checkin-section-title">Capture the Moment</p>
+          <p class="checkin-section-subtitle">Document your journey with a photo (optional).</p>
+        </div>
+        <div class="journey-photo-upload">
+          @if (journeyPhotoPreview()) {
+          <div class="journey-photo-preview-container">
+            <img [src]="journeyPhotoPreview()" alt="Journey photo preview" class="journey-photo-preview" />
+            <button type="button" class="journey-photo-remove" (click)="clearJourneyPhoto()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <input type="text" class="checkin-input journey-photo-caption"
+            placeholder="Add a caption (optional)"
+            [value]="journeyPhotoCaption()"
+            (input)="journeyPhotoCaption.set($any($event.target).value)" />
+          } @else {
+          <label class="journey-photo-picker">
+            <input type="file" accept="image/*" capture="environment" (change)="onJourneyPhotoSelected($event)" />
+            <div class="journey-photo-picker-content">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+              <span>Add a photo</span>
+            </div>
+          </label>
+          }
+        </div>
+      </div>
+      }
     </div>
 
     @if (checkinModalError()) {
@@ -3109,9 +3153,31 @@
       </div>
     }
 
-    <button type="button" class="checkin-cta" (click)="submitDailyIgnition()" [disabled]="savingIgnition() || uploadingJourneyPhoto() || ignitionSequenceStep() !== 3">
-      @if (savingIgnition() || uploadingJourneyPhoto()) { Saving... } @else { 🔥 IGNITE DAY }
-    </button>
+    <div class="checkin-form-footer">
+      @if (ignitionWizardStep() > 1) {
+      <button type="button" class="checkin-cta checkin-cta-secondary" (click)="goToPreviousIgnitionWizardStep()">
+        Back
+      </button>
+      }
+
+      @if (ignitionWizardStep() < 3) {
+      <button
+        type="button"
+        class="checkin-cta"
+        [disabled]="!canGoToNextIgnitionWizardStep()"
+        (click)="goToNextIgnitionWizardStep()">
+        Continue to Step {{ ignitionWizardStep() + 1 }}
+      </button>
+      } @else {
+      <button
+        type="button"
+        class="checkin-cta"
+        (click)="submitDailyIgnition()"
+        [disabled]="savingIgnition() || uploadingJourneyPhoto() || ignitionSequenceStep() !== 3">
+        @if (savingIgnition() || uploadingJourneyPhoto()) { Saving... } @else { 🔥 IGNITE DAY }
+      </button>
+      }
+    </div>
   </div>
 </ng-template>
 
