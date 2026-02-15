@@ -211,7 +211,7 @@ export class App implements AfterViewInit, OnDestroy {
     this.metaService.updateTag({ name: 'twitter:description', content: seo.description });
     this.metaService.updateTag({ name: 'robots', content: seo.robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' });
 
-    const canonicalUrl = `https://rocketgoals.com${seo.canonicalPath}`;
+    const canonicalUrl = `https://www.rocketgoals.com${seo.canonicalPath}`;
     this.metaService.updateTag({ property: 'og:url', content: canonicalUrl });
     this.updateCanonicalLink(canonicalUrl);
   }
