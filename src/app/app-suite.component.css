@@ -184,25 +184,6 @@
   box-shadow: 0 12px 28px rgba(220, 38, 38, 0.28);
 }
 
-.light-theme .coach-chip {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(15, 23, 42, 0.16);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
-}
-
-.light-theme .coach-avatar-wrap {
-  border-color: rgba(15, 23, 42, 0.08);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
-}
-
-.light-theme .coach-chip-label {
-  color: rgba(15, 23, 42, 0.55);
-}
-
-.light-theme .coach-chip-name {
-  color: #0f172a;
-}
-
 @media (max-width: 640px) {
   .coach-chip {
     max-width: min(92%, 320px);
