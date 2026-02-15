@@ -1037,11 +1037,8 @@ export class AdminComponent implements OnInit {
         const payload = doc.data() as AdminUser;
         return { ...payload, id: doc.id, userId: payload.userId || doc.id };
       });
-      data.sort((a, b) =>
-        (a.firstName || '').localeCompare(b.firstName || '', undefined, { sensitivity: 'base' })
-      );
       const enriched = await this.enrichWithAuthMetadata(data);
-      this.users.set(enriched);
+      this.users.set(this.sortUsersByLatest(enriched));
     } catch (err: any) {
       console.error('Failed to load users', err);
       this.usersError.set('Unable to load users right now.');
@@ -1088,6 +1085,39 @@ export class AdminComponent implements OnInit {
       console.error('Failed to enrich with auth metadata', err);
       return users;
     }
+  }
+
+  private sortUsersByLatest(users: AdminUser[]): AdminUser[] {
+    return [...users].sort((a, b) => {
+      const aTime = this.getTimestampMillis(a.createdAt);
+      const bTime = this.getTimestampMillis(b.createdAt);
+
+      if (aTime !== bTime) return bTime - aTime;
+
+      return (a.firstName || '').localeCompare(b.firstName || '', undefined, { sensitivity: 'base' });
+    });
+  }
+
+  private getTimestampMillis(value: unknown): number {
+    if (!value) return 0;
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? 0 : value.getTime();
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+      const timestamp = new Date(value).getTime();
+      return Number.isNaN(timestamp) ? 0 : timestamp;
+    }
+
+    if (typeof value === 'object' && value !== null && 'seconds' in value) {
+      const ts = value as Timestamp;
+      if (typeof ts.seconds === 'number') {
+        return ts.seconds * 1000;
+      }
+    }
+
+    return 0;
   }
 
   async loadPromoCodes() {
