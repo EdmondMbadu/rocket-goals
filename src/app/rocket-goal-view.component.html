@@ -344,14 +344,10 @@
                     @if (hasVisualization()) {
                     <button
                       type="button"
-                      (click)="toggleVisionBoardPreview()"
+                      (click)="openVisualizationModal()"
                       class="vision-toggle-btn"
                     >
-                      @if (isVisionBoardPreviewVisible()) {
-                        Hide vision ({{ visionBoardPreviewSecondsLeft() }}s)
-                      } @else {
-                        Show vision (1 min)
-                      }
+                      Show vision board
                     </button>
                     }
                     @if (isGoalOwner() && hasVisualization() && canUploadVisualization()) {
@@ -472,18 +468,7 @@
                   </div>
                 </div>
 
-                @if (isVisionBoardPreviewVisible() && hasVisualization()) {
-                <div class="temporary-vision-preview mt-4 relative cursor-pointer" (click)="openVisualizationModal()">
-                  <img
-                    [src]="getVisualizationImageUrl()"
-                    alt="Vision Board"
-                    class="temporary-vision-image"
-                    loading="lazy" />
-                  <div class="temporary-vision-overlay">
-                    <span class="temporary-vision-overlay-label">Tap to expand</span>
-                  </div>
-                </div>
-                } @else if (!hasVisualization() && visualizationLoading()) {
+                @if (!hasVisualization() && visualizationLoading()) {
                 <div class="mission-vision-empty mt-4">
                   <p class="text-red-300 text-sm font-medium">Creating your vision...</p>
                 </div>
