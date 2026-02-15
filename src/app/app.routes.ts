@@ -11,6 +11,7 @@ export const routes: Routes = [
   { path: 'profile', loadComponent: () => import('./profile.component').then(m => m.ProfileComponent) },
   { path: 'link-telegram', loadComponent: () => import('./link-telegram.component').then(m => m.LinkTelegramComponent) },
   { path: 'admin/ai-stats', loadComponent: () => import('./admin/ai-stats.component').then(m => m.AiStatsComponent) },
+  { path: 'admin/synthetic-market-testing', loadComponent: () => import('./admin/synthetic-market-testing.component').then(m => m.SyntheticMarketTestingComponent) },
   { path: 'admin', loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent) },
   { path: 'ai', loadComponent: () => import('./rocket-ai-page.component').then(m => m.RocketAiPageComponent) },
   { path: 'quiz', loadComponent: () => import('./rocket-quiz/rocket-quiz').then(m => m.RocketQuiz) },
