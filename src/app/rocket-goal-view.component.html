@@ -228,7 +228,7 @@
                 </div>
                 <div class="telegram-banner-actions">
                   <button class="telegram-connect-btn" (click)="connectTelegram()" [disabled]="telegramConnecting()">
-                    {{ telegramConnecting() ? 'Opening...' : (telegramLinked() ? 'Open' : 'Connect') }}
+                    {{ telegramConnecting() ? 'Opening...' : (telegramLinked() ? 'Open Telegram' : 'Connect Telegram') }}
                   </button>
                   <button class="telegram-dismiss-btn" (click)="dismissTelegramBanner()" title="Dismiss">
                     ×

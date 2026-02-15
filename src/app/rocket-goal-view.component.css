@@ -14138,6 +14138,7 @@
   border: 1px solid rgba(0, 136, 204, 0.25);
   border-radius: 10px;
   flex-shrink: 0;
+  box-shadow: none;
 }
 
 :host-context(.dark-mode) .telegram-connect-banner {
@@ -14156,6 +14157,7 @@
 .telegram-icon {
   font-size: 1.25rem;
   flex-shrink: 0;
+  filter: none;
 }
 
 .telegram-text {
@@ -14165,10 +14167,24 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 :host-context(.dark-mode) .telegram-text {
-  color: var(--text, #f5f5f5);
+  color: #f8fafc;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.55);
+}
+
+:host-context(.dark-mode) .telegram-banner-content {
+  color: #f8fafc;
+}
+
+:host-context(.dark-mode) .telegram-banner-actions {
+  color: #f8fafc;
+}
+
+:host-context(.dark-mode) .telegram-dismiss-btn {
+  color: #e2e8f0;
 }
 
 .telegram-banner-actions {
@@ -14185,6 +14201,7 @@
   padding: 6px 14px;
   font-size: 0.8125rem;
   font-weight: 600;
+  letter-spacing: 0;
   color: white;
   background: #0088cc;
   border: none;
@@ -14192,6 +14209,7 @@
   text-decoration: none;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.1s ease;
+  box-shadow: none;
 }
 
 .telegram-connect-btn:hover {
