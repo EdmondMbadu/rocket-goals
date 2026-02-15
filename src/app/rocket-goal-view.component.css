@@ -6210,6 +6210,123 @@
   color: #1e293b;
 }
 
+/* ===== MISSION HEADER CARD ===== */
+.mission-header-card {
+  border-radius: 20px;
+}
+
+.dark-mode .mission-header-card {
+  background: linear-gradient(135deg, rgba(20, 20, 35, 0.95) 0%, rgba(10, 10, 20, 0.98) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-left: 5px solid rgba(220, 38, 38, 0.9);
+}
+
+.light-mode .mission-header-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-left: 5px solid rgba(220, 38, 38, 0.7);
+}
+
+.mission-title {
+  max-width: 100%;
+}
+
+.dark-mode .mission-title {
+  color: #f8fafc;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.65);
+}
+
+.light-mode .mission-title {
+  color: #0f172a;
+}
+
+.vision-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  transition: all 0.2s ease;
+}
+
+.dark-mode .vision-toggle-btn {
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.light-mode .vision-toggle-btn {
+  color: #7f1d1d;
+  background: rgba(254, 242, 242, 0.9);
+}
+
+.vision-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(127, 29, 29, 0.22);
+}
+
+.temporary-vision-preview {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  max-height: 320px;
+}
+
+.temporary-vision-image {
+  width: 100%;
+  height: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  display: block;
+}
+
+.temporary-vision-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.12) 0%, rgba(2, 6, 23, 0.65) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 12px;
+}
+
+.temporary-vision-overlay-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.mission-vision-empty {
+  border-radius: 12px;
+  border: 1px dashed rgba(220, 38, 38, 0.35);
+  padding: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.mission-title-input {
+  background: transparent;
+}
+
+.dark-mode .mission-title-input {
+  color: #fff !important;
+  border-color: rgba(148, 163, 184, 0.4);
+  caret-color: #fff;
+}
+
+.light-mode .mission-title-input {
+  color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.5);
+  caret-color: #0f172a;
+}
+
 /* ===== VISION BOARD CARD ===== */
 .vision-board-card {
   border-radius: 20px;
@@ -6276,6 +6393,26 @@
 
 .vision-board-card:hover .edit-title-btn {
   opacity: 1;
+}
+
+.mission-header-card .edit-title-btn {
+  opacity: 1;
+}
+
+.dark-mode .mission-header-card .edit-title-btn {
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.dark-mode .mission-header-card .edit-title-btn:hover {
+  color: rgba(248, 250, 252, 1);
+}
+
+.light-mode .mission-header-card .edit-title-btn {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.light-mode .mission-header-card .edit-title-btn:hover {
+  color: rgba(15, 23, 42, 1);
 }
 
 /* ===== MISSION STATS PANEL ===== */

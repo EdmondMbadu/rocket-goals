@@ -108,12 +108,16 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   calendarEvents = signal<CalendarEvent[]>([]);
   visualizationLoading = signal(false);
   showVisualizationModal = signal(false);
+  isVisionBoardPreviewVisible = signal(false);
+  visionBoardPreviewSecondsLeft = signal(0);
   selectedEvent = signal<CalendarEvent | null>(null);
   showEventModal = signal(false);
   eventModalDate = signal<Date>(new Date());
   private countdownInterval: any;
   private fanInviteSearchTimeout?: any;
   private visualizationPollInterval?: any;
+  private visionBoardPreviewTimeout?: any;
+  private visionBoardPreviewCountdownInterval?: any;
   private ignitionCountdownInterval?: any;
   private ignitionBurnTimerInterval?: any;
   private storage: any = null;
@@ -359,6 +363,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
     if (this.visualizationPollInterval) {
       clearInterval(this.visualizationPollInterval);
     }
+    this.clearVisionBoardPreviewTimers();
   }
 
   // Get the timeframe duration in days from the goal
@@ -4505,6 +4510,53 @@ Generate the milestones now (JSON array only, no other text):`;
 
   closeVisualizationModal(): void {
     this.showVisualizationModal.set(false);
+  }
+
+  toggleVisionBoardPreview(): void {
+    if (!this.hasVisualization()) {
+      return;
+    }
+
+    if (this.isVisionBoardPreviewVisible()) {
+      this.hideVisionBoardPreview();
+      return;
+    }
+
+    const previewDurationSeconds = 60;
+    this.clearVisionBoardPreviewTimers();
+    this.isVisionBoardPreviewVisible.set(true);
+    this.visionBoardPreviewSecondsLeft.set(previewDurationSeconds);
+
+    this.visionBoardPreviewTimeout = setTimeout(() => {
+      this.hideVisionBoardPreview();
+    }, previewDurationSeconds * 1000);
+
+    this.visionBoardPreviewCountdownInterval = setInterval(() => {
+      const nextSeconds = this.visionBoardPreviewSecondsLeft() - 1;
+      if (nextSeconds <= 0) {
+        this.hideVisionBoardPreview();
+        return;
+      }
+      this.visionBoardPreviewSecondsLeft.set(nextSeconds);
+    }, 1000);
+  }
+
+  hideVisionBoardPreview(): void {
+    this.clearVisionBoardPreviewTimers();
+    this.isVisionBoardPreviewVisible.set(false);
+    this.visionBoardPreviewSecondsLeft.set(0);
+  }
+
+  private clearVisionBoardPreviewTimers(): void {
+    if (this.visionBoardPreviewTimeout) {
+      clearTimeout(this.visionBoardPreviewTimeout);
+      this.visionBoardPreviewTimeout = undefined;
+    }
+
+    if (this.visionBoardPreviewCountdownInterval) {
+      clearInterval(this.visionBoardPreviewCountdownInterval);
+      this.visionBoardPreviewCountdownInterval = undefined;
+    }
   }
 
   // Check if goal is newly created (within last 2 minutes) and doesn't have visualization
