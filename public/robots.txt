@@ -1,11 +1,11 @@
 # robots.txt for RocketGoals
-# https://rocket-goals.web.app
+# https://rocketgoals.com
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://rocket-goals.web.app/sitemap.xml
+Sitemap: https://rocketgoals.com/sitemap.xml
 
 # Allow all major search engines
 User-agent: Googlebot
@@ -22,3 +22,5 @@ Disallow: /goals
 Disallow: /profile
 Disallow: /admin
 Disallow: /welcome
+Disallow: /login
+Disallow: /signup
