@@ -18,9 +18,9 @@ User-agent: DuckDuckBot
 Allow: /
 
 # Disallow private/auth routes from indexing
+Disallow: /api/
+Disallow: /admin/
 Disallow: /goals
 Disallow: /profile
-Disallow: /admin
 Disallow: /welcome
 Disallow: /login
-Disallow: /signup

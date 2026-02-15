@@ -1,7 +1,8 @@
 import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone, HostListener, effect } from '@angular/core';
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
 import { ElevenLabsService } from './elevenlabs.service';
 import { SpeechRecognitionService } from './speech-recognition.service';
 import { FirestoreAIService } from './firestore-ai.service';
@@ -16,6 +17,12 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 type ChallengeAuthStage = 'email' | 'existing-login' | 'new-profile' | 'verify' | 'saving';
+type SeoConfig = {
+  title: string;
+  description: string;
+  canonicalPath: string;
+  robots?: string;
+};
 
 @Component({
   selector: 'app-root',
@@ -100,6 +107,9 @@ export class App implements AfterViewInit, OnDestroy {
   protected blogService = inject(BlogService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
   private router = inject(Router);
+  private titleService = inject(Title);
+  private metaService = inject(Meta);
+  private document = inject(DOCUMENT);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
   private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book']);
@@ -141,6 +151,7 @@ export class App implements AfterViewInit, OnDestroy {
 
     // Check initial URL for startChallenge param
     this.checkAndStartChallenge(this.router.url);
+    this.updateSeo(this.router.url);
 
     // Listen for custom startChallenge event (for same-route navigation)
     window.addEventListener('startChallenge', (event: any) => {
@@ -160,6 +171,7 @@ export class App implements AfterViewInit, OnDestroy {
         this.mobileNavOpen.set(false);
         // Auto-start challenge if query param is present (works on any route)
         const urlString = event.urlAfterRedirects || event.url;
+        this.updateSeo(urlString);
         this.checkAndStartChallenge(urlString);
       });
 
@@ -185,6 +197,90 @@ export class App implements AfterViewInit, OnDestroy {
         }
       }
     });
+  }
+
+  private updateSeo(urlString: string): void {
+    const routePath = (urlString || '/').split('?')[0] || '/';
+    const seo = this.getSeoConfig(routePath);
+
+    this.titleService.setTitle(seo.title);
+    this.metaService.updateTag({ name: 'description', content: seo.description });
+    this.metaService.updateTag({ property: 'og:title', content: seo.title });
+    this.metaService.updateTag({ property: 'og:description', content: seo.description });
+    this.metaService.updateTag({ name: 'twitter:title', content: seo.title });
+    this.metaService.updateTag({ name: 'twitter:description', content: seo.description });
+    this.metaService.updateTag({ name: 'robots', content: seo.robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' });
+
+    const canonicalUrl = `https://rocketgoals.com${seo.canonicalPath}`;
+    this.metaService.updateTag({ property: 'og:url', content: canonicalUrl });
+    this.updateCanonicalLink(canonicalUrl);
+  }
+
+  private updateCanonicalLink(canonicalUrl: string): void {
+    let canonical = this.document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = this.document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      this.document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', canonicalUrl);
+  }
+
+  private getSeoConfig(routePath: string): SeoConfig {
+    if (routePath === '/signup') {
+      return {
+        title: 'Sign Up Free | RocketGoals Goal and Habit Tracker',
+        description: 'Create your free RocketGoals account. Start setting goals, tracking habits, and getting AI coaching in minutes.',
+        canonicalPath: '/signup'
+      };
+    }
+
+    if (routePath === '/about') {
+      return {
+        title: 'About RocketGoals | The ROCKET Framework for Goal Achievement',
+        description: 'Learn how RocketGoals combines the ROCKET framework, habit tracking, and AI coaching to help you achieve ambitious goals.',
+        canonicalPath: '/about'
+      };
+    }
+
+    if (routePath === '/schedule') {
+      return {
+        title: 'Schedule a Demo | See RocketGoals in Action',
+        description: 'Book a quick demo to see how RocketGoals helps teams and individuals set, track, and achieve goals with AI coaching.',
+        canonicalPath: '/schedule'
+      };
+    }
+
+    if (routePath === '/app-suite') {
+      return {
+        title: 'RocketGoals App Suite | AI-Powered Productivity Tools',
+        description: 'Explore the RocketGoals app suite for planning, execution, and accountability across your goals and habits.',
+        canonicalPath: '/app-suite'
+      };
+    }
+
+    if (routePath === '/contact') {
+      return {
+        title: 'Contact RocketGoals',
+        description: 'Contact the RocketGoals team for support, partnerships, and product questions.',
+        canonicalPath: '/contact'
+      };
+    }
+
+    if (routePath === '/login' || routePath === '/welcome' || routePath.startsWith('/admin')) {
+      return {
+        title: 'RocketGoals',
+        description: 'RocketGoals goal setting and habit tracking platform.',
+        canonicalPath: routePath,
+        robots: 'noindex, nofollow'
+      };
+    }
+
+    return {
+      title: 'RocketGoals | Goal Setting and Habit Tracking App with AI Coaching',
+      description: 'Set goals, build daily habits, and stay on track with AI coaching. RocketGoals helps turn ambition into daily execution.',
+      canonicalPath: routePath === '/' ? '/' : routePath
+    };
   }
 
   toggleMobileNav(): void {
