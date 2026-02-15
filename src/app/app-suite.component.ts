@@ -14,6 +14,8 @@ export interface PrebuiltTemplate {
   description: string;
   icon: string; // Emoji kept for fallback/simple UI
   imageUrl: string; // Premium image path
+  coPilotAvatar: string;
+  coPilotName: string;
   color: string; // Gradient colors for the card
   category: string;
   defaultGoals: {
@@ -53,6 +55,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Build your indie empire with focused execution. Track product launches, customer acquisition, and revenue milestones.',
       icon: '🚀',
       imageUrl: '/assets/app-suite/hustle-orbit.png',
+      coPilotAvatar: '/assets/ogilvy.jpg',
+      coPilotName: 'Marcus Chen',
       color: 'from-slate-900 via-slate-800 to-slate-900',
       category: 'Business',
       defaultGoals: {
@@ -69,6 +73,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Optimize your biology for peak performance. Track sleep, nutrition, exercise, and cognitive enhancement protocols.',
       icon: '🧬',
       imageUrl: '/assets/app-suite/opti-human.png',
+      coPilotAvatar: '/assets/a-2.jpg',
+      coPilotName: 'Dr. Elena Vance',
       color: 'from-indigo-950 via-purple-900 to-indigo-900',
       category: 'Health',
       defaultGoals: {
@@ -85,6 +91,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Plan sharper marketing moves after hours. Track experiments, conversions, and brand momentum without burning out.',
       icon: '🌙',
       imageUrl: '/assets/app-suite/moonlight-maker.png',
+      coPilotAvatar: '/assets/sarah-jenkins.jpg',
+      coPilotName: 'Sarah Jenkins',
       color: 'from-blue-950 via-indigo-950 to-slate-900',
       category: 'Business',
       defaultGoals: {
@@ -101,6 +109,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Close more deals and grow your pipeline. Track leads, follow-ups, and revenue targets with precision.',
       icon: '📈',
       imageUrl: '/assets/app-suite/pipeline-pilot.png',
+      coPilotAvatar: '/assets/jordan-blake.jpg',
+      coPilotName: 'Jordan Blake',
       color: 'from-emerald-950 via-teal-900 to-cyan-950',
       category: 'Sales',
       defaultGoals: {
@@ -117,6 +127,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Advance your corporate career with strategic moves. Track promotions, skill building, and leadership development.',
       icon: '⛰️',
       imageUrl: '/assets/app-suite/apex-ascend.png',
+      coPilotAvatar: '/assets/a-5.jpg',
+      coPilotName: 'Robert Sterling',
       color: 'from-slate-900 via-blue-950 to-indigo-950',
       category: 'Career',
       defaultGoals: {
@@ -133,6 +145,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Ship creative projects on time. Track client work, personal projects, and portfolio building.',
       icon: '🎨',
       imageUrl: '/assets/app-suite/creator-craft.png',
+      coPilotAvatar: '/assets/a-6.jpg',
+      coPilotName: 'Maya Rivera',
       color: 'from-orange-950 via-amber-900 to-yellow-950',
       category: 'Creative',
       defaultGoals: {
@@ -149,6 +163,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Master AI tools and stay ahead of the curve. Track learning, experiments, and AI project implementations.',
       icon: '🧠',
       imageUrl: '/assets/app-suite/opti-human.png', // Reusing opti-human for technical vibe
+      coPilotAvatar: '/assets/a-7.jpg',
+      coPilotName: 'Alex Tech',
       color: 'from-cyan-950 via-teal-900 to-emerald-950',
       category: 'Learning',
       defaultGoals: {
@@ -165,6 +181,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Scale your vision with confidence. Track fundraising, team building, and company milestones.',
       icon: '👑',
       imageUrl: '/assets/app-suite/pipeline-pilot.png', // Reusing pipeline-pilot for office vibe
+      coPilotAvatar: '/assets/a-8.jpg',
+      coPilotName: 'Claire Beaumont',
       color: 'from-fuchsia-950 via-pink-900 to-rose-950',
       category: 'Founder',
       defaultGoals: {
@@ -181,6 +199,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Transform your relationship with food and energy. Track nutrition, blood sugar, and wellness habits.',
       icon: '🍎',
       imageUrl: '/assets/app-suite/opti-human.png', // Reusing opti-human for lab/health vibe
+      coPilotAvatar: '/assets/a-9.jpg',
+      coPilotName: 'Lucille Grant',
       color: 'from-lime-950 via-green-900 to-emerald-950',
       category: 'Health',
       defaultGoals: {
@@ -197,6 +217,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Conquer long-distance cycling goals. Track mileage, routes, and training progress.',
       icon: '🚴',
       imageUrl: '/assets/app-suite/moonlight-maker.png', // Reusing moonlight-maker for atmospheric vibe
+      coPilotAvatar: '/assets/a-10.jpg',
+      coPilotName: 'Tom Wheeler',
       color: 'from-orange-950 via-red-900 to-rose-950',
       category: 'Fitness',
       defaultGoals: {
@@ -213,6 +235,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Train for your marathon with precision. Track runs, pacing strategies, and race preparation.',
       icon: '🏃',
       imageUrl: '/assets/app-suite/apex-ascend.png', // Reusing apex-ascend for goal-oriented vibe
+      coPilotAvatar: '/assets/gym-coach.jpg',
+      coPilotName: 'Coach Alina Park',
       color: 'from-amber-950 via-orange-900 to-red-950',
       category: 'Fitness',
       defaultGoals: {
@@ -229,6 +253,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Land your dream job with organized tracking. Manage applications, interviews, and networking.',
       icon: '💼',
       imageUrl: '/assets/app-suite/pipeline-pilot.png', // Reusing pipeline-pilot for corporate vibe
+      coPilotAvatar: '/assets/career.jpg',
+      coPilotName: 'Maya Ellis',
       color: 'from-slate-900 via-zinc-900 to-neutral-800',
       category: 'Career',
       defaultGoals: {
@@ -245,6 +271,8 @@ export class AppSuiteComponent implements OnInit {
       description: 'Home Workout & Weight Loss Coach. Tess the "Time-Shifter" is a sharp, no-nonsense coach backed by the latest training and nutrition innovations. She can help you create power-packed 20-30 minute home workouts routines tailored to your schedule and goals, while also building a personalized diet and weight loss plan.\n\n"I\'ll be your lead strategist for this mission. Our objective is to optimize your health trajectory through focused execution and high-performance protocols."',
       icon: '⚖️',
       imageUrl: '/assets/app-suite/lean-launch.png',
+      coPilotAvatar: '/assets/tess.png',
+      coPilotName: 'Coach Tess',
       color: 'from-emerald-950 via-slate-900 to-black',
       category: 'Health',
       defaultGoals: {

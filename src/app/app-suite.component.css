@@ -121,6 +121,106 @@
   flex-direction: column;
 }
 
+/* Coach identity chip on app cards */
+.coach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  max-width: min(84%, 360px);
+}
+
+.coach-avatar-wrap {
+  width: 92px;
+  height: 92px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.38);
+  flex-shrink: 0;
+}
+
+.coach-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.coach-chip-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.coach-chip-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.coach-chip-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+  max-width: 210px;
+}
+
+.group:hover .coach-chip {
+  border-color: rgba(248, 250, 252, 0.52);
+  box-shadow: 0 12px 28px rgba(220, 38, 38, 0.28);
+}
+
+.light-theme .coach-chip {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.16);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+}
+
+.light-theme .coach-avatar-wrap {
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
+}
+
+.light-theme .coach-chip-label {
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.light-theme .coach-chip-name {
+  color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .coach-chip {
+    max-width: min(92%, 320px);
+    padding: 7px 10px 7px 7px;
+    gap: 10px;
+  }
+
+  .coach-avatar-wrap {
+    width: 74px;
+    height: 74px;
+  }
+
+  .coach-chip-name {
+    font-size: 13px;
+    max-width: 180px;
+  }
+}
+
 .app-card::before {
   content: '';
   position: absolute;

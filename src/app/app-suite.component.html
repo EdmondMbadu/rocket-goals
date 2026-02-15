@@ -195,9 +195,20 @@
 
           <!-- Content Overlay -->
           <div class="relative z-10 flex flex-col h-[420px] p-8 justify-end">
+            <!-- Coach Badge -->
+            <div class="coach-chip absolute top-6 left-6">
+              <div class="coach-avatar-wrap">
+                <img [src]="template.coPilotAvatar" [alt]="template.coPilotName" class="coach-avatar">
+              </div>
+              <div class="coach-chip-copy">
+                <span class="coach-chip-label">AI Coach</span>
+                <span class="coach-chip-name">{{ template.coPilotName }}</span>
+              </div>
+            </div>
+
             <!-- Premium Badge -->
             <div
-              class="absolute top-6 left-6 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              class="absolute top-6 right-6 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
               <span class="text-[10px] font-black text-white/90 uppercase tracking-[0.2em]">Billion Dollar Suite</span>
             </div>
 
