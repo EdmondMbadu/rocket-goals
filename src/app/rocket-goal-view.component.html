@@ -413,31 +413,7 @@
                 </div>
 
                 <div class="mission-command-strip mt-2">
-                  <div class="mission-command-row">
-                    <div class="mission-target-block">
-                      @if (getTargetMetricDisplay(); as targetMetric) {
-                        <h3 class="mission-command-label">Target</h3>
-                        <div class="mission-target-value-row">
-                          <span class="mission-target-value">{{ targetMetric.formattedValue }}</span>
-                          @if (targetMetric.unit) {
-                            <span class="mission-target-unit">{{ targetMetric.unit }}</span>
-                          }
-                        </div>
-                        <p class="mission-target-caption">{{ targetMetric.label }}</p>
-                      } @else {
-                        <h3 class="mission-command-label">Mission Progress</h3>
-                        <p class="mission-target-caption">
-                          {{ getGoalDescription() || getGoalThemeDisplay() || 'Stay focused on your mission.' }}
-                        </p>
-                      }
-                    </div>
-                    <div class="mission-completion-block">
-                      <span class="mission-completion-value">{{ getCompletionPercentage() }}%</span>
-                      <span class="mission-completion-label">COMPLETE</span>
-                    </div>
-                  </div>
-
-                  <div class="mission-timer-wrap">
+                  <div class="mission-timer-wrap mission-timer-top">
                     <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-2" style="font-family: 'Orbitron', monospace;">
                       <span class="text-gray-400">TIME TO REACH THE GOAL</span>
                     </h3>
@@ -464,6 +440,30 @@
                     </div>
                     <div class="countdown-progress-bar mt-3">
                       <div class="countdown-progress-fill" [style.width.%]="getTimelineProgress()"></div>
+                    </div>
+                  </div>
+
+                  <div class="mission-command-row">
+                    <div class="mission-target-block">
+                      @if (getTargetMetricDisplay(); as targetMetric) {
+                        <h3 class="mission-command-label">Target</h3>
+                        <div class="mission-target-value-row">
+                          <span class="mission-target-value">{{ targetMetric.formattedValue }}</span>
+                          @if (targetMetric.unit) {
+                            <span class="mission-target-unit">{{ targetMetric.unit }}</span>
+                          }
+                        </div>
+                        <p class="mission-target-caption">{{ targetMetric.label }}</p>
+                      } @else {
+                        <h3 class="mission-command-label">Mission Progress</h3>
+                        <p class="mission-target-caption">
+                          {{ getGoalDescription() || getGoalThemeDisplay() || 'Stay focused on your mission.' }}
+                        </p>
+                      }
+                    </div>
+                    <div class="mission-completion-block">
+                      <span class="mission-completion-value">{{ getCompletionPercentage() }}%</span>
+                      <span class="mission-completion-label">COMPLETE</span>
                     </div>
                   </div>
                 </div>

@@ -6315,7 +6315,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-top: 8px;
 }
 
 .mission-target-block {
@@ -6419,12 +6419,28 @@
   padding-top: 7px;
 }
 
+.mission-timer-top {
+  border-top: none;
+  padding-top: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed;
+  margin-bottom: 4px;
+}
+
 .dark-mode .mission-timer-wrap {
   border-top-color: rgba(248, 113, 113, 0.25);
 }
 
 .light-mode .mission-timer-wrap {
   border-top-color: rgba(220, 38, 38, 0.22);
+}
+
+.dark-mode .mission-timer-top {
+  border-bottom-color: rgba(248, 113, 113, 0.25);
+}
+
+.light-mode .mission-timer-top {
+  border-bottom-color: rgba(220, 38, 38, 0.22);
 }
 
 .mission-countdown-boxes {
@@ -6438,7 +6454,7 @@
 }
 
 .mission-countdown-box .countdown-box-value {
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1;
   letter-spacing: 0.01em;
   display: inline-block;
@@ -6447,9 +6463,20 @@
 }
 
 .mission-countdown-box .countdown-box-label {
-  font-size: 6px;
+  font-size: 8px;
   margin-top: 2px;
   line-height: 1;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  opacity: 1;
+}
+
+.dark-mode .mission-countdown-box .countdown-box-label {
+  color: #cbd5e1;
+}
+
+.light-mode .mission-countdown-box .countdown-box-label {
+  color: #475569;
 }
 
 .mission-timer-wrap .countdown-separator {
@@ -8204,6 +8231,11 @@
   .mission-completion-value {
     font-size: 1.35rem;
   }
+
+  .mission-timer-top {
+    margin-bottom: 2px;
+    padding-bottom: 5px;
+  }
   
   .timeline-days-container {
     gap: 4px;
@@ -8278,6 +8310,10 @@
 
   .mission-target-caption {
     font-size: 0.64rem;
+  }
+
+  .mission-countdown-box .countdown-box-label {
+    font-size: 7px;
   }
   
   .timeline-day-column {
