@@ -6157,8 +6157,8 @@
 }
 
 .owner-avatar {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -6197,7 +6197,7 @@
 .owner-goal-title {
   font-family: 'Exo 2', sans-serif;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13px;
   letter-spacing: 0.02em;
 }
 
@@ -6229,6 +6229,7 @@
 
 .mission-title {
   max-width: 100%;
+  line-height: 1.15;
 }
 
 .dark-mode .mission-title {
@@ -6274,13 +6275,13 @@
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(220, 38, 38, 0.35);
-  max-height: 320px;
+  max-height: 170px;
 }
 
 .temporary-vision-image {
   width: 100%;
   height: 100%;
-  max-height: 320px;
+  max-height: 170px;
   object-fit: cover;
   display: block;
 }
@@ -6325,6 +6326,171 @@
   color: #0f172a !important;
   border-color: rgba(148, 163, 184, 0.5);
   caret-color: #0f172a;
+}
+
+.mission-command-strip {
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+
+.dark-mode .mission-command-strip {
+  background: linear-gradient(140deg, rgba(15, 23, 42, 0.72), rgba(30, 41, 59, 0.5));
+  border: 1px solid rgba(248, 113, 113, 0.22);
+}
+
+.light-mode .mission-command-strip {
+  background: linear-gradient(140deg, rgba(254, 242, 242, 0.9), rgba(241, 245, 249, 0.95));
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.mission-command-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mission-target-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.mission-command-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.dark-mode .mission-command-label {
+  color: #67e8f9;
+}
+
+.light-mode .mission-command-label {
+  color: #0891b2;
+}
+
+.mission-target-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.mission-target-value {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.dark-mode .mission-target-value {
+  color: #f8fafc;
+  text-shadow: 0 0 18px rgba(103, 232, 249, 0.24);
+}
+
+.light-mode .mission-target-value {
+  color: #0f172a;
+}
+
+.mission-target-unit {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.dark-mode .mission-target-unit {
+  color: #cbd5e1;
+}
+
+.light-mode .mission-target-unit {
+  color: #475569;
+}
+
+.mission-target-caption {
+  margin-top: 2px;
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+
+.dark-mode .mission-target-caption {
+  color: #94a3b8;
+}
+
+.light-mode .mission-target-caption {
+  color: #475569;
+}
+
+.mission-completion-block {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.mission-completion-value {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.15rem, 2.8vw, 1.65rem);
+  font-weight: 900;
+  line-height: 1;
+  color: #34d399;
+  text-shadow: 0 0 16px rgba(52, 211, 153, 0.25);
+}
+
+.mission-completion-label {
+  display: block;
+  margin-top: 2px;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.mission-timer-wrap {
+  border-top: 1px dashed;
+  padding-top: 7px;
+}
+
+.dark-mode .mission-timer-wrap {
+  border-top-color: rgba(248, 113, 113, 0.25);
+}
+
+.light-mode .mission-timer-wrap {
+  border-top-color: rgba(220, 38, 38, 0.22);
+}
+
+.mission-countdown-boxes {
+  gap: 3px;
+}
+
+.mission-countdown-box {
+  min-width: 44px;
+  padding: 4px 5px;
+  border-radius: 9px;
+}
+
+.mission-countdown-box .countdown-box-value {
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  display: inline-block;
+  transform: scale(1.45);
+  transform-origin: center center;
+}
+
+.mission-countdown-box .countdown-box-label {
+  font-size: 6px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.mission-timer-wrap .countdown-separator {
+  font-size: 12px;
+}
+
+.mission-timer-wrap .countdown-progress-bar {
+  height: 3px;
 }
 
 /* ===== VISION BOARD CARD ===== */
@@ -8058,6 +8224,19 @@
   .countdown-separator {
     font-size: 18px;
   }
+
+  .mission-command-row {
+    align-items: flex-start;
+  }
+
+  .mission-countdown-box {
+    min-width: 40px;
+    padding: 4px 4px;
+  }
+
+  .mission-completion-value {
+    font-size: 1.35rem;
+  }
   
   .timeline-days-container {
     gap: 4px;
@@ -8114,6 +8293,24 @@
   .countdown-separator {
     font-size: 16px;
     margin: 0;
+  }
+
+  .mission-command-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .mission-completion-block {
+    text-align: left;
+  }
+
+  .mission-title {
+    font-size: 1.05rem;
+  }
+
+  .mission-target-caption {
+    font-size: 0.64rem;
   }
   
   .timeline-day-column {
