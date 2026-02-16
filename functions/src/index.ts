@@ -1357,6 +1357,135 @@ Rules:
 });
 
 /**
+ * Admin-only persona seed generator for synthetic market testing.
+ * Builds persona lines from product + strategy configuration.
+ */
+export const generateSyntheticPersonaSeeds = onCall({
+    region: "us-central1",
+    secrets: [geminiApiKey],
+    cors: [
+        "https://rocket-goals.web.app",
+        "https://rocket-goals.firebaseapp.com",
+        "https://www.rocketgoals.com",
+        "https://rocketgoals.com",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    ]
+}, async (request: any) => {
+    const startTime = Date.now();
+    try {
+        if (!request.auth?.uid) {
+            throw new HttpsError("unauthenticated", "You must be logged in.");
+        }
+
+        const userDoc = await admin.firestore()
+            .collection('userProfiles')
+            .doc(request.auth.uid)
+            .get();
+        const userData = userDoc.data();
+        if (!userData || (userData.role !== 'admin' && userData.admin !== true)) {
+            throw new HttpsError("permission-denied", "Only administrators can generate persona seeds.");
+        }
+
+        const apiKey = geminiApiKey.value();
+        if (!apiKey) {
+            throw new HttpsError("failed-precondition", "Google AI API key is not configured.");
+        }
+
+        const data = request?.data || {};
+        const coachName = (data.coachName || 'Unnamed coach').toString().trim().slice(0, 120);
+        const productDescription = (data.productDescription || '').toString().trim().slice(0, 4000);
+        const researchGoal = (data.researchGoal || '').toString().trim().slice(0, 1500);
+        const positioningOptions = normalizeStringArray(data.positioningOptions, 20, 120);
+        const coreMessageOptions = normalizeStringArray(data.coreMessageOptions, 20, 120);
+        const pricingOptions = normalizeStringArray(data.pricingOptions, 20, 80);
+        const targetAudienceOptions = normalizeStringArray(data.targetAudienceOptions, 20, 120);
+        const channelOptions = normalizeStringArray(data.channelOptions, 20, 120);
+        const existingPersonaSeeds = normalizeStringArray(data.existingPersonaSeeds, 30, 260);
+
+        if (!productDescription) {
+            throw new HttpsError("invalid-argument", "productDescription is required.");
+        }
+
+        const modelName = "gemini-3-flash-preview";
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+                temperature: 0.45,
+                topP: 0.9,
+                maxOutputTokens: 4096,
+                responseMimeType: "application/json"
+            }
+        });
+
+        const instruction = `You generate realistic synthetic persona seeds for product-market simulation.
+Return strict JSON only with this schema:
+{
+  "personaSeeds": ["string"]
+}
+
+Persona seed format (one line each):
+"Name, age, role/life context, location, constraints, buying mindset"
+
+Rules:
+- Return between 8 and 14 persona seeds.
+- Keep each line under 240 characters.
+- Make personas diverse across motivation, budget, risk tolerance, life stage, and urgency.
+- Incorporate the provided strategy options (positioning, messaging, pricing, audiences, channels) in believable ways.
+- Avoid duplicates and generic labels like "Persona 1".
+- If existingPersonaSeeds are provided, improve and diversify beyond them instead of repeating them.
+- Never return markdown, only JSON.`;
+
+        const inputPayload = {
+            coachName,
+            productDescription,
+            researchGoal,
+            positioningOptions,
+            coreMessageOptions,
+            pricingOptions,
+            targetAudienceOptions,
+            channelOptions,
+            existingPersonaSeeds
+        };
+
+        const response = await model.generateContent({
+            contents: [{
+                role: "user",
+                parts: [
+                    { text: instruction },
+                    { text: `INPUT_JSON:\n${JSON.stringify(inputPayload, null, 2)}` }
+                ]
+            }]
+        });
+
+        const responseText = response.response?.text?.() || '';
+        const parsed = extractJsonPayload(responseText);
+        const personaSeeds = normalizeStringArray(parsed?.personaSeeds, 14, 260);
+
+        if (personaSeeds.length === 0) {
+            throw new Error("Model returned no persona seeds.");
+        }
+
+        const totalTime = Date.now() - startTime;
+        console.log(`✅ generateSyntheticPersonaSeeds completed in ${totalTime}ms for coach "${coachName}"`);
+
+        return {
+            success: true,
+            model: modelName,
+            generatedAt: new Date().toISOString(),
+            personaSeeds
+        };
+    } catch (error: any) {
+        console.error("❌ generateSyntheticPersonaSeeds error:", error);
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        throw new HttpsError("internal", error?.message || "Unable to generate persona seeds.");
+    }
+});
+
+/**
  * Cloud Function to fetch GA4 metrics for the /ai path
  */
 export const getAiAnalytics = functions.runWith({

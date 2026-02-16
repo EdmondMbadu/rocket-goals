@@ -213,6 +213,42 @@
   transition: all 0.2s ease;
 }
 
+:host .generate-personas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgb(190, 24, 93);
+  background: rgba(244, 114, 182, 0.1);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+:host .generate-personas-btn:hover:not(:disabled) {
+  background: rgba(244, 114, 182, 0.18);
+  border-color: rgba(244, 114, 182, 0.45);
+}
+
+:host .generate-personas-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+:host-context(.dark) .generate-personas-btn {
+  color: rgb(253, 164, 175);
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(251, 113, 133, 0.35);
+}
+
+:host-context(.dark) .generate-personas-btn:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.26);
+  border-color: rgba(251, 113, 133, 0.5);
+}
+
 .add-option-btn-sm:hover {
   background: rgba(225, 29, 72, 0.15);
   transform: scale(1.05);

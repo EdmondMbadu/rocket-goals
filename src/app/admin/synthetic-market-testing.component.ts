@@ -111,6 +111,7 @@ Solo founder, 31, erratic schedule, high execution pressure`);
     'Google search ads'
   ]);
   syntheticRunning = signal(false);
+  syntheticGeneratingPersonas = signal(false);
   syntheticError = signal<string | null>(null);
   syntheticModel = signal<string | null>(null);
   syntheticGeneratedAt = signal<string | null>(null);
@@ -221,6 +222,67 @@ Solo founder, 31, erratic schedule, high execution pressure`);
       this.syntheticError.set(err?.message || 'Unable to run simulation.');
     } finally {
       this.syntheticRunning.set(false);
+    }
+  }
+
+  async generateSyntheticPersonaSeeds() {
+    const productDescription = this.syntheticProductDescription().trim();
+    const positioning = this.cleanOptions(this.syntheticPositioningOptions());
+    const coreMessages = this.cleanOptions(this.syntheticCoreMessageOptions());
+    const pricing = this.cleanOptions(this.syntheticPricingOptions());
+    const audiences = this.cleanOptions(this.syntheticTargetAudienceOptions());
+    const channels = this.cleanOptions(this.syntheticChannelOptions());
+    const existingPersonaSeeds = this.parseLines(this.syntheticPersonaSeeds());
+
+    if (!productDescription) {
+      this.syntheticError.set('Product description is required to generate personas.');
+      return;
+    }
+
+    this.syntheticGeneratingPersonas.set(true);
+    this.syntheticError.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+      const functions = getFunctions(getApp());
+      const generatePersonas = httpsCallable(functions, 'generateSyntheticPersonaSeeds');
+
+      const result = await generatePersonas({
+        coachName: this.syntheticCoachName().trim(),
+        productDescription,
+        researchGoal: this.syntheticResearchGoal().trim(),
+        positioningOptions: positioning,
+        coreMessageOptions: coreMessages,
+        pricingOptions: pricing,
+        targetAudienceOptions: audiences,
+        channelOptions: channels,
+        existingPersonaSeeds
+      });
+
+      const data = result.data as {
+        success: boolean;
+        model?: string;
+        generatedAt?: string;
+        personaSeeds?: string[];
+      };
+
+      const personaSeeds = Array.isArray(data?.personaSeeds)
+        ? data.personaSeeds.map((item: unknown) => (item || '').toString().trim()).filter(Boolean)
+        : [];
+
+      if (!data?.success || personaSeeds.length === 0) {
+        throw new Error('No personas were generated.');
+      }
+
+      this.syntheticPersonaSeeds.set(personaSeeds.join('\n'));
+      this.success.set(`Generated ${personaSeeds.length} persona seeds.`);
+      setTimeout(() => this.success.set(null), 3000);
+    } catch (err: any) {
+      console.error('Failed to generate persona seeds:', err);
+      this.syntheticError.set(err?.message || 'Unable to generate persona seeds.');
+    } finally {
+      this.syntheticGeneratingPersonas.set(false);
     }
   }
 
