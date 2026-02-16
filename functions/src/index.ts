@@ -742,9 +742,9 @@ This blueprint embodies your unique approach to achieving opulence through both 
     });
 
 /**
- * Build system prompt for the AI with calendar context
+ * Build system prompt for the AI with calendar + progress context
  */
-function buildSystemPrompt(goalContext: any, calendarEvents: any[]): string {
+function buildSystemPrompt(goalContext: any, calendarEvents: any[], actionItems: any[], latestMissionLog: any): string {
     // Get current date information for AI awareness
     const now = new Date();
     const currentDateStr = now.toLocaleDateString('en-US', {
@@ -786,15 +786,21 @@ Use this information when users ask about dates, scheduling, or time-related que
     const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES:
 - Be helpful, concise, and action-oriented
 - When users want to manage their calendar (add, edit, delete events), USE THE PROVIDED TOOLS IMMEDIATELY
+- When users ask to update/edit milestones or tasks, USE milestone tools (update_milestone / create_milestone), not calendar tools.
+- When users ask to "log for me" or submit a mission check-in, USE log_mission_progress.
 - For creating events: use create_calendar_event with title and date
 - For updating events: use update_calendar_event with the event's ID from the calendar list
 - For deleting events: use delete_calendar_event with the event's ID. Match event names to IDs from the calendar list above.
+- For updating milestones: use update_milestone with the milestone ID from the milestone list below.
+- For creating milestones: use create_milestone with title and dayNumber.
+- For mission log entry: use log_mission_progress.
+- If user says "log for me" with no extra detail, still call log_mission_progress with sensible defaults.
 - When the user says "delete X" or "remove X" or "cancel X", find the matching event by title and call delete_calendar_event with its ID
 - Be conversational and natural - don't be robotic
 - If there are multiple events with similar names and it's ambiguous, ask which one
 - After taking an action, briefly confirm what was done
 
-IMPORTANT FOR DELETE/UPDATE: You MUST use the event ID (like "abc123xyz") from the CALENDAR EVENTS section above, not the event title.`;
+IMPORTANT FOR DELETE/UPDATE: You MUST use IDs from the context lists (event IDs for calendar, item IDs for milestones), not titles.`;
 
     let contextualPrompt = `${baseIdentity}\n\n${conversationGuidelines}`;
 
@@ -890,6 +896,41 @@ ${answers.daily_effort ? `Daily Effort: ${answers.daily_effort}` : ''}`;
 - ALWAYS use the exact ID string from the calendar list - do not make up IDs`;
     } else {
         contextualPrompt += `\n\nCALENDAR: No events scheduled yet. The user can ask you to add events to help track their goal progress.`;
+    }
+
+    // Add milestone context
+    if (actionItems && actionItems.length > 0) {
+        const sortedItems = [...actionItems].sort((a: any, b: any) => {
+            const dayDelta = Number(a?.dayNumber || 0) - Number(b?.dayNumber || 0);
+            if (dayDelta !== 0) return dayDelta;
+            return Number(a?.order || 0) - Number(b?.order || 0);
+        });
+        contextualPrompt += `\n\nMILESTONES (ACTION ITEMS):`;
+        sortedItems.slice(0, 40).forEach((item: any) => {
+            contextualPrompt += `\n- "${item.title || 'Untitled milestone'}" (ID: ${item.id}) [Day ${item.dayNumber || '?'}]${item.completed ? ' ✓ completed' : ''}${item.postponed ? ' ⏸ postponed' : ''}`;
+        });
+        if (sortedItems.length > 40) {
+            contextualPrompt += `\n... and ${sortedItems.length - 40} more milestones`;
+        }
+        contextualPrompt += `\n\nMILESTONE TOOL INSTRUCTIONS:
+- To UPDATE a milestone: call update_milestone with itemId from the list above and changed fields.
+- To CREATE a new milestone: call create_milestone with title and dayNumber.
+- Prefer milestone tools when user says "milestone", "task", "plan item", or "update my milestones".`;
+    } else {
+        contextualPrompt += `\n\nMILESTONES: No milestones listed. If user asks to add one, call create_milestone.`;
+    }
+
+    // Add latest mission log snapshot for better defaults
+    if (latestMissionLog) {
+        contextualPrompt += `\n\nLATEST MISSION LOG SNAPSHOT:
+- actionTaken: ${latestMissionLog.actionTaken || 'unknown'}
+- focusLevel: ${latestMissionLog.focusLevel || 'unknown'}
+- challengeLevel: ${latestMissionLog.challengeLevel || 'unknown'}
+- feeling: ${latestMissionLog.feeling || 'unknown'}
+- teamConnection: ${latestMissionLog.teamConnection || 'unknown'}
+- note: ${latestMissionLog.note || 'none'}`;
+    } else {
+        contextualPrompt += `\n\nMISSION LOG: No previous mission log found for this goal yet.`;
     }
 
     return contextualPrompt;
@@ -993,6 +1034,10 @@ export const rocketGoalsAI = onCall({
         const attachments = Array.isArray(data?.attachments) ? data.attachments : [];
         const goalContext = data?.goalContext;
         const calendarEvents = Array.isArray(data?.calendarEvents) ? data.calendarEvents : [];
+        const actionItems = Array.isArray(data?.actionItems) ? data.actionItems : [];
+        const latestMissionLog = data?.latestMissionLog && typeof data.latestMissionLog === 'object'
+            ? data.latestMissionLog
+            : null;
 
         if (!userMessage) {
             throw new HttpsError(
@@ -1002,7 +1047,7 @@ export const rocketGoalsAI = onCall({
         }
 
         console.log(`🚀 rocketGoalsAI called with message: "${userMessage.substring(0, 50)}..."`);
-        console.log(`📅 Calendar events: ${calendarEvents.length}, Goal ID: ${goalContext?.id || 'none'}`);
+        console.log(`📅 Calendar events: ${calendarEvents.length}, milestones: ${actionItems.length}, Goal ID: ${goalContext?.id || 'none'}`);
 
         // Get tool registry
         const toolRegistry = getToolRegistry();
@@ -1010,7 +1055,7 @@ export const rocketGoalsAI = onCall({
         console.log(`🔧 Available tools: ${toolRegistry.getToolNames().join(', ')}`);
 
         // Build system prompt with context
-        const systemInstruction = buildSystemPrompt(goalContext, calendarEvents);
+        const systemInstruction = buildSystemPrompt(goalContext, calendarEvents, actionItems, latestMissionLog);
 
         // Initialize Gemini with function calling
         const genAI = new GoogleGenerativeAI(apiKey);

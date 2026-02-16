@@ -1438,14 +1438,18 @@ ${url}`;
   }
 
   async onAICalendarAction() {
-    // Refresh calendar events when AI performs an action
-    console.log('Refreshing calendar after AI action...');
+    // Refresh calendar + milestones + check-ins when AI performs tool actions
+    console.log('Refreshing goal data after AI action...');
     const goal = this.goal();
     if (goal?.id) {
       // Add a small delay to ensure Firestore has propagated the changes
       await new Promise(resolve => setTimeout(resolve, 300));
-      await this.loadCalendarEvents(goal.id);
-      console.log('Calendar refreshed');
+      await Promise.all([
+        this.loadCalendarEvents(goal.id),
+        this.loadActionItems(goal.id),
+        this.loadCheckIns(goal.id)
+      ]);
+      console.log('Goal data refreshed');
     }
   }
 

@@ -9,6 +9,7 @@
 import type { FunctionDeclaration } from '@google/generative-ai';
 import type { RegisteredTool, ToolResult, ToolExecutionContext } from './types';
 import { calendarTools } from './calendar.tools';
+import { progressTools } from './progress.tools';
 
 // Future tool imports will go here:
 // import { emailTools } from './email.tools';
@@ -21,6 +22,7 @@ export class ToolRegistry {
   constructor() {
     // Register all tools
     this.registerTools(calendarTools);
+    this.registerTools(progressTools);
     
     // Future tools:
     // this.registerTools(emailTools);
@@ -114,4 +116,3 @@ export function getToolRegistry(): ToolRegistry {
   }
   return registryInstance;
 }
-

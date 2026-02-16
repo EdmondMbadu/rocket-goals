@@ -5,6 +5,9 @@ import { getApp } from 'firebase/app';
 import { AuthService } from './auth.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import { CalendarEventsService, type CalendarEventData } from './calendar-events.service';
+import { ActionItemsService, type ActionItem } from './action-items.service';
+import { CheckInsService } from './check-ins.service';
+import type { MissionLog } from './models/check-ins';
 import type { RocketGoal } from './models/rocket-goal';
 
 export interface ChatMessage {
@@ -62,6 +65,25 @@ interface AIRequest {
     completed?: boolean;
     description?: string;
   }>;
+  actionItems?: Array<{
+    id: string;
+    title: string;
+    dayNumber: number;
+    order: number;
+    completed: boolean;
+    postponed?: boolean;
+    notes?: string;
+  }>;
+  latestMissionLog?: {
+    id: string;
+    actionTaken?: string;
+    focusLevel?: string;
+    challengeLevel?: string;
+    feeling?: string;
+    teamConnection?: string;
+    note?: string;
+    intendedOneThing?: string;
+  };
 }
 
 /**
@@ -71,6 +93,9 @@ type SideEffect =
   | { type: 'event_created'; eventId: string; title: string }
   | { type: 'event_updated'; eventId: string; title?: string }
   | { type: 'event_deleted'; eventId: string }
+  | { type: 'milestone_created'; itemId: string; title: string }
+  | { type: 'milestone_updated'; itemId: string; title?: string }
+  | { type: 'mission_log_created'; missionLogId: string; dateId: string }
   | { type: 'email_sent'; to: string; subject: string }
   | { type: 'sms_sent'; to: string }
   | { type: 'reminder_scheduled'; reminderId: string; scheduledFor: string }
@@ -107,6 +132,8 @@ export class RocketGoalsAIService {
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);
   private readonly calendarEventsService = inject(CalendarEventsService);
+  private readonly actionItemsService = inject(ActionItemsService);
+  private readonly checkInsService = inject(CheckInsService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly messages = signal<ChatMessage[]>([]);
@@ -679,6 +706,38 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
     }
   }
 
+  private async loadAiGoalRuntimeContext(goalId?: string | null): Promise<{
+    calendarEvents: CalendarEventData[];
+    actionItems: ActionItem[];
+    latestMissionLog: MissionLog | null;
+  }> {
+    if (!goalId) {
+      return { calendarEvents: [], actionItems: [], latestMissionLog: null };
+    }
+
+    const [calendarResult, actionItemsResult, missionLogResult] = await Promise.allSettled([
+      this.calendarEventsService.getEventsByGoalId(goalId),
+      this.actionItemsService.getActionItemsByGoalId(goalId),
+      this.checkInsService.getLatestMissionLog(goalId)
+    ]);
+
+    const calendarEvents = calendarResult.status === 'fulfilled' ? calendarResult.value : [];
+    const actionItems = actionItemsResult.status === 'fulfilled' ? actionItemsResult.value : [];
+    const latestMissionLog = missionLogResult.status === 'fulfilled' ? missionLogResult.value : null;
+
+    if (calendarResult.status === 'rejected') {
+      console.warn('Failed to fetch calendar events:', calendarResult.reason);
+    }
+    if (actionItemsResult.status === 'rejected') {
+      console.warn('Failed to fetch milestones:', actionItemsResult.reason);
+    }
+    if (missionLogResult.status === 'rejected') {
+      console.warn('Failed to fetch latest mission log:', missionLogResult.reason);
+    }
+
+    return { calendarEvents, actionItems, latestMissionLog };
+  }
+
   async sendMessage(
     userMessage: string,
     goalContext?: RocketGoal | null,
@@ -711,16 +770,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           content: msg.content
         }));
 
-      // Fetch calendar events if goal context is provided
-      let calendarEvents: CalendarEventData[] = [];
-      if (goalContext?.id) {
-        try {
-          calendarEvents = await this.calendarEventsService.getEventsByGoalId(goalContext.id);
-        } catch (error) {
-          console.warn('Failed to fetch calendar events:', error);
-          // Continue without calendar events if fetch fails
-        }
-      }
+      const runtimeContext = await this.loadAiGoalRuntimeContext(goalContext?.id);
 
       // Call the Cloud Function
       const callable = httpsCallable<AIRequest, AIResponse>(
@@ -741,7 +791,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           // Include copilot data for app-suite launched goals
           copilot: goalContext.copilot || undefined
         } : undefined,
-        calendarEvents: calendarEvents.length > 0 ? calendarEvents.map(event => ({
+        calendarEvents: runtimeContext.calendarEvents.length > 0 ? runtimeContext.calendarEvents.map(event => ({
           id: event.id,
           title: event.title,
           date: event.date.toISOString(),
@@ -750,7 +800,26 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           color: event.color,
           completed: event.completed,
           description: event.description
-        })) : undefined
+        })) : undefined,
+        actionItems: runtimeContext.actionItems.length > 0 ? runtimeContext.actionItems.map(item => ({
+          id: item.id,
+          title: item.title,
+          dayNumber: item.dayNumber,
+          order: item.order,
+          completed: item.completed,
+          postponed: item.postponed,
+          notes: item.notes
+        })) : undefined,
+        latestMissionLog: runtimeContext.latestMissionLog ? {
+          id: runtimeContext.latestMissionLog.id,
+          actionTaken: runtimeContext.latestMissionLog.actionTaken,
+          focusLevel: runtimeContext.latestMissionLog.focusLevel,
+          challengeLevel: runtimeContext.latestMissionLog.challengeLevel,
+          feeling: runtimeContext.latestMissionLog.feeling,
+          teamConnection: runtimeContext.latestMissionLog.teamConnection,
+          note: runtimeContext.latestMissionLog.note,
+          intendedOneThing: runtimeContext.latestMissionLog.intendedOneThing
+        } : undefined
       });
 
       // Add AI response to conversation
@@ -899,16 +968,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           content: msg.content
         }));
 
-      // Fetch calendar events if goal context is provided
-      let calendarEvents: CalendarEventData[] = [];
-      if (goalContext?.id) {
-        try {
-          calendarEvents = await this.calendarEventsService.getEventsByGoalId(goalContext.id);
-        } catch (error) {
-          console.warn('Failed to fetch calendar events:', error);
-          // Continue without calendar events if fetch fails
-        }
-      }
+      const runtimeContext = await this.loadAiGoalRuntimeContext(goalContext?.id);
 
       // Call the Cloud Function
       const callable = httpsCallable<AIRequest, AIResponse>(
@@ -929,7 +989,7 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           // Include copilot data for app-suite launched goals
           copilot: goalContext.copilot || undefined
         } : undefined,
-        calendarEvents: calendarEvents.length > 0 ? calendarEvents.map(event => ({
+        calendarEvents: runtimeContext.calendarEvents.length > 0 ? runtimeContext.calendarEvents.map(event => ({
           id: event.id,
           title: event.title,
           date: event.date.toISOString(),
@@ -938,7 +998,26 @@ Remember: Users are on a 7-day journey to transform their goals into reality. He
           color: event.color,
           completed: event.completed,
           description: event.description
-        })) : undefined
+        })) : undefined,
+        actionItems: runtimeContext.actionItems.length > 0 ? runtimeContext.actionItems.map(item => ({
+          id: item.id,
+          title: item.title,
+          dayNumber: item.dayNumber,
+          order: item.order,
+          completed: item.completed,
+          postponed: item.postponed,
+          notes: item.notes
+        })) : undefined,
+        latestMissionLog: runtimeContext.latestMissionLog ? {
+          id: runtimeContext.latestMissionLog.id,
+          actionTaken: runtimeContext.latestMissionLog.actionTaken,
+          focusLevel: runtimeContext.latestMissionLog.focusLevel,
+          challengeLevel: runtimeContext.latestMissionLog.challengeLevel,
+          feeling: runtimeContext.latestMissionLog.feeling,
+          teamConnection: runtimeContext.latestMissionLog.teamConnection,
+          note: runtimeContext.latestMissionLog.note,
+          intendedOneThing: runtimeContext.latestMissionLog.intendedOneThing
+        } : undefined
       });
 
       // Add user message to conversation history (AI will be added when typewriter finishes)

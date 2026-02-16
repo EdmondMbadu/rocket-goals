@@ -27,6 +27,9 @@ export type SideEffect =
   | { type: 'event_created'; eventId: string; title: string }
   | { type: 'event_updated'; eventId: string; title?: string }
   | { type: 'event_deleted'; eventId: string }
+  | { type: 'milestone_created'; itemId: string; title: string }
+  | { type: 'milestone_updated'; itemId: string; title?: string }
+  | { type: 'mission_log_created'; missionLogId: string; dateId: string }
   | { type: 'email_sent'; to: string; subject: string }
   | { type: 'sms_sent'; to: string }
   | { type: 'reminder_scheduled'; reminderId: string; scheduledFor: string }
@@ -74,4 +77,3 @@ export interface AgentResponse {
   /** Aggregate of all side effects from tool calls */
   sideEffects: SideEffect[];
 }
-
