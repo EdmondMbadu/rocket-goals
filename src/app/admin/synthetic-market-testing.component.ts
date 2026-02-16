@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AvatarDropdownComponent } from '../avatar-dropdown.component';
@@ -60,7 +60,7 @@ type SyntheticOptionListKey = 'positioning' | 'coreMessage' | 'pricing' | 'audie
   templateUrl: './synthetic-market-testing.component.html',
   styleUrl: './synthetic-market-testing.component.css'
 })
-export class SyntheticMarketTestingComponent implements OnInit {
+export class SyntheticMarketTestingComponent implements OnInit, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly theme = inject(ThemeService);
@@ -116,6 +116,7 @@ Solo founder, 31, erratic schedule, high execution pressure`);
   syntheticModel = signal<string | null>(null);
   syntheticGeneratedAt = signal<string | null>(null);
   syntheticResult = signal<SyntheticTestResult | null>(null);
+  @ViewChild('personaSeedsTextarea') personaSeedsTextarea?: ElementRef<HTMLTextAreaElement>;
 
   async ngOnInit() {
     // Scroll to top when page opens
@@ -142,6 +143,11 @@ Solo founder, 31, erratic schedule, high execution pressure`);
     }
 
     this.checkingAuth.set(false);
+    this.schedulePersonaTextareaResize();
+  }
+
+  ngAfterViewInit() {
+    this.schedulePersonaTextareaResize();
   }
 
   toggleSection(section: string) {
@@ -276,6 +282,7 @@ Solo founder, 31, erratic schedule, high execution pressure`);
       }
 
       this.syntheticPersonaSeeds.set(personaSeeds.join('\n'));
+      this.schedulePersonaTextareaResize();
       this.success.set(`Generated ${personaSeeds.length} persona seeds.`);
       setTimeout(() => this.success.set(null), 3000);
     } catch (err: any) {
@@ -283,6 +290,25 @@ Solo founder, 31, erratic schedule, high execution pressure`);
       this.syntheticError.set(err?.message || 'Unable to generate persona seeds.');
     } finally {
       this.syntheticGeneratingPersonas.set(false);
+    }
+  }
+
+  onPersonaSeedsInput(value: string, element: HTMLTextAreaElement) {
+    this.syntheticPersonaSeeds.set(value);
+    this.resizeTextarea(element);
+  }
+
+  async copyPersonaSeeds() {
+    const value = this.syntheticPersonaSeeds().trim();
+    if (!value || typeof navigator === 'undefined' || !navigator.clipboard) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      this.success.set('Persona seeds copied to clipboard.');
+      setTimeout(() => this.success.set(null), 3000);
+    } catch (error) {
+      console.warn('Failed to copy persona seeds:', error);
     }
   }
 
@@ -393,5 +419,18 @@ Solo founder, 31, erratic schedule, high execution pressure`);
 
   private cleanOptions(items: string[]): string[] {
     return Array.from(new Set(items.map(item => item.trim()).filter(Boolean)));
+  }
+
+  private schedulePersonaTextareaResize() {
+    if (typeof window === 'undefined') return;
+    setTimeout(() => {
+      const textarea = this.personaSeedsTextarea?.nativeElement;
+      if (textarea) this.resizeTextarea(textarea);
+    });
+  }
+
+  private resizeTextarea(textarea: HTMLTextAreaElement) {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
   }
 }

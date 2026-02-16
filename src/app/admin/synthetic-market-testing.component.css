@@ -228,6 +228,39 @@
   white-space: nowrap;
 }
 
+:host .persona-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+:host .copy-personas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgb(100, 116, 139);
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+:host .copy-personas-btn:hover:not(:disabled) {
+  color: rgb(15, 23, 42);
+  background: rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.16);
+}
+
+:host .copy-personas-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 :host .generate-personas-btn:hover:not(:disabled) {
   background: rgba(244, 114, 182, 0.18);
   border-color: rgba(244, 114, 182, 0.45);
@@ -247,6 +280,23 @@
 :host-context(.dark) .generate-personas-btn:hover:not(:disabled) {
   background: rgba(244, 63, 94, 0.26);
   border-color: rgba(251, 113, 133, 0.5);
+}
+
+:host .persona-seeds-textarea {
+  overflow: hidden;
+  min-height: 9.5rem;
+}
+
+:host-context(.dark) .copy-personas-btn {
+  color: rgb(148, 163, 184);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:host-context(.dark) .copy-personas-btn:hover:not(:disabled) {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .add-option-btn-sm:hover {
