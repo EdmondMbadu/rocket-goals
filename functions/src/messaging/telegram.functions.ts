@@ -67,19 +67,24 @@ function escapeMarkdown(text: string): string {
 async function sendTelegramMessage(
   chatId: number,
   text: string,
-  botToken: string
+  botToken: string,
+  parseMode: 'Markdown' | 'MarkdownV2' | 'HTML' | null = 'Markdown'
 ): Promise<boolean> {
   try {
+    const payload: Record<string, any> = {
+      chat_id: chatId,
+      text: text
+    };
+    if (parseMode) {
+      payload.parse_mode = parseMode;
+    }
+
     const response = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: text,
-          parse_mode: 'Markdown'
-        })
+        body: JSON.stringify(payload)
       }
     );
 
@@ -350,29 +355,26 @@ async function getGoalMilestones(goalId: string): Promise<Array<{
         postponed: data?.postponed === true
       };
     });
-  } catch (error: any) {
-    // Fallback without ordering in case index isn't available.
-    if (error?.code === "failed-precondition") {
-      const snapshot = await collectionRef.get();
-      return snapshot.docs
-        .map((doc) => {
-          const data = doc.data() as any;
-          return {
-            id: doc.id,
-            title: data?.title || "Untitled milestone",
-            dayNumber: Number(data?.dayNumber || 1),
-            order: Number(data?.order || 0),
-            completed: data?.completed === true,
-            postponed: data?.postponed === true
-          };
-        })
-        .sort((a, b) => {
-          const dayDiff = a.dayNumber - b.dayNumber;
-          if (dayDiff !== 0) return dayDiff;
-          return a.order - b.order;
-        });
-    }
-    throw error;
+  } catch (_error: any) {
+    // Fallback without ordering (works even when index/order constraints fail).
+    const snapshot = await collectionRef.get();
+    return snapshot.docs
+      .map((doc) => {
+        const data = doc.data() as any;
+        return {
+          id: doc.id,
+          title: data?.title || "Untitled milestone",
+          dayNumber: Number(data?.dayNumber || 1),
+          order: Number(data?.order || 0),
+          completed: data?.completed === true,
+          postponed: data?.postponed === true
+        };
+      })
+      .sort((a, b) => {
+        const dayDiff = a.dayNumber - b.dayNumber;
+        if (dayDiff !== 0) return dayDiff;
+        return a.order - b.order;
+      });
   }
 }
 
@@ -390,20 +392,20 @@ function buildMilestonesWindowMessage(goalContext: any, milestones: Array<{
   const selected = milestones.filter((item) => item.dayNumber >= currentDay && item.dayNumber <= maxDay);
 
   if (selected.length === 0) {
-    return `*Milestones (Today + Next 5 Days)*\n\nNo milestones found for today through day ${maxDay}.`;
+    return `Milestones (Today + Next 5 Days)\n\nNo milestones found for today through day ${maxDay}.`;
   }
 
   const lines: string[] = [];
-  lines.push(`*Milestones (Today + Next 5 Days)*`);
-  lines.push(`Goal: *${escapeMarkdown(goalContext?.title || "Your Goal")}*`);
+  lines.push(`Milestones (Today + Next 5 Days)`);
+  lines.push(`Goal: ${goalContext?.title || "Your Goal"}`);
   lines.push("");
 
   selected.forEach((item) => {
     const done = item.completed ? "✅" : "⬜️";
-    const todayTag = item.dayNumber === currentDay ? " *(today)*" : "";
+    const todayTag = item.dayNumber === currentDay ? " (today)" : "";
     const postponedTag = item.postponed ? " ⏸" : "";
     lines.push(`${done} Day ${item.dayNumber}${todayTag} · ${formatMilestoneDate(startTimeMs, item.dayNumber)}`);
-    lines.push(`   ${escapeMarkdown(item.title)}${postponedTag}`);
+    lines.push(`   ${item.title}${postponedTag}`);
   });
 
   return lines.join("\n");
@@ -418,15 +420,15 @@ function buildAllMilestonesMessage(goalContext: any, milestones: Array<{
   postponed?: boolean;
 }>): string {
   if (milestones.length === 0) {
-    return `*All Milestones*\n\nNo milestones found yet for this goal.`;
+    return `All Milestones\n\nNo milestones found yet for this goal.`;
   }
 
   const startTimeMs = goalContext?.startTimeMs || null;
   const currentDay = getCurrentMissionDay(startTimeMs);
   const doneCount = milestones.filter((m) => m.completed).length;
   const lines: string[] = [];
-  lines.push(`*All Milestones*`);
-  lines.push(`Goal: *${escapeMarkdown(goalContext?.title || "Your Goal")}*`);
+  lines.push(`All Milestones`);
+  lines.push(`Goal: ${goalContext?.title || "Your Goal"}`);
   lines.push(`Completed: ${doneCount}/${milestones.length}`);
   lines.push("");
 
@@ -435,7 +437,7 @@ function buildAllMilestonesMessage(goalContext: any, milestones: Array<{
     const dayPosition = item.dayNumber < currentDay ? "past" : item.dayNumber === currentDay ? "today" : "upcoming";
     const postponedTag = item.postponed ? " ⏸" : "";
     lines.push(`${marker} · Day ${item.dayNumber} (${dayPosition}) · ${formatMilestoneDate(startTimeMs, item.dayNumber)}`);
-    lines.push(`   ${escapeMarkdown(item.title)}${postponedTag}`);
+    lines.push(`   ${item.title}${postponedTag}`);
   });
 
   return lines.join("\n");
@@ -931,7 +933,7 @@ export const telegramWebhook = onRequest({
     }
 
     // Handle /milestones command - deterministic milestone window
-    if (userMessage === '/milestones') {
+    if (userMessage === '/milestones' || userMessage === '?milestones') {
       const selectedGoalId = await getSelectedGoalId(telegramId);
       const goalContext = await getActiveGoalContext(userId, selectedGoalId);
 
@@ -947,13 +949,13 @@ export const telegramWebhook = onRequest({
 
       const milestones = await getGoalMilestones(goalContext.id);
       const message = buildMilestonesWindowMessage(goalContext, milestones);
-      await sendTelegramMessage(chatId, message, botToken);
+      await sendTelegramMessage(chatId, message, botToken, null);
       res.sendStatus(200);
       return;
     }
 
     // Handle /milestones-all command - deterministic full milestone list
-    if (userMessage === '/milestones-all') {
+    if (userMessage === '/milestones-all' || userMessage === '?milestones-all') {
       const selectedGoalId = await getSelectedGoalId(telegramId);
       const goalContext = await getActiveGoalContext(userId, selectedGoalId);
 
@@ -969,7 +971,7 @@ export const telegramWebhook = onRequest({
 
       const milestones = await getGoalMilestones(goalContext.id);
       const message = buildAllMilestonesMessage(goalContext, milestones);
-      await sendTelegramMessage(chatId, message, botToken);
+      await sendTelegramMessage(chatId, message, botToken, null);
       res.sendStatus(200);
       return;
     }
