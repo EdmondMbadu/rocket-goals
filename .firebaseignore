@@ -1,0 +1,5 @@
+# Prevent accidental deployment of local Firebase/emulator debug logs
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log

@@ -51,3 +51,9 @@ environments/
 # npm cache
 .npm-cache/
 /.npm-cache/
+
+# Firebase local/debug logs
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
