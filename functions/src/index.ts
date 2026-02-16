@@ -1112,10 +1112,17 @@ export const rocketGoalsAI = onCall({
                 });
             }
 
-            // Send function results back to model
+            // Send function results back to model.
+            // IMPORTANT: preserve the original functionCall parts from the model response
+            // (including thought_signature) instead of reconstructing them from response.functionCalls().
+            const originalFunctionCallParts =
+                response?.candidates?.[0]?.content?.parts?.filter((part: any) => part?.functionCall) || [];
+
             history.push({
                 role: "model",
-                parts: functionCalls.map(fc => ({ functionCall: fc })) as any
+                parts: (originalFunctionCallParts.length > 0
+                    ? originalFunctionCallParts
+                    : functionCalls.map(fc => ({ functionCall: fc }))) as any
             });
 
             history.push({
