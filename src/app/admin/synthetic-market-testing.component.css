@@ -250,6 +250,26 @@
   white-space: nowrap;
 }
 
+:host .reset-personas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgb(14, 116, 144);
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.28);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+:host .reset-personas-btn:hover:not(:disabled) {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.45);
+}
+
 :host .copy-personas-btn:hover:not(:disabled) {
   color: rgb(15, 23, 42);
   background: rgba(15, 23, 42, 0.08);
@@ -297,6 +317,17 @@
   color: white;
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.14);
+}
+
+:host-context(.dark) .reset-personas-btn {
+  color: rgb(103, 232, 249);
+  background: rgba(6, 182, 212, 0.16);
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+:host-context(.dark) .reset-personas-btn:hover:not(:disabled) {
+  background: rgba(6, 182, 212, 0.26);
+  border-color: rgba(34, 211, 238, 0.5);
 }
 
 .add-option-btn-sm:hover {

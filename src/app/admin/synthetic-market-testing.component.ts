@@ -70,13 +70,14 @@ export class SyntheticMarketTestingComponent implements OnInit, AfterViewInit {
   success = signal<string | null>(null);
   activeSection = signal<string | null>(null);
 
+  private readonly initialSyntheticPersonaSeeds = `Sarah Chen, 34, marketing manager, Austin, busy schedule, willing to pay for quality
+Busy mom, 3 kids, budget-conscious, needs short home workouts
+Type 2 diabetic, 52, health-first mindset, seeks safe guidance
+Solo founder, 31, erratic schedule, high execution pressure`;
   syntheticCoachName = signal('Coach Tess');
   syntheticProductDescription = signal('Home workout & weight loss coaching for busy people. Power-packed 20-30 minute routines with personalized nutrition plans.');
   syntheticResearchGoal = signal('Find the best audience, positioning, message, pricing, and channel to prioritize for launch.');
-  syntheticPersonaSeeds = signal(`Sarah Chen, 34, marketing manager, Austin, busy schedule, willing to pay for quality
-Busy mom, 3 kids, budget-conscious, needs short home workouts
-Type 2 diabetic, 52, health-first mindset, seeks safe guidance
-Solo founder, 31, erratic schedule, high execution pressure`);
+  syntheticPersonaSeeds = signal(this.initialSyntheticPersonaSeeds);
   syntheticPositioningOptions = signal<string[]>([
     'Time-Shifter',
     'Your Home Workout Strategist',
@@ -112,11 +113,13 @@ Solo founder, 31, erratic schedule, high execution pressure`);
   ]);
   syntheticRunning = signal(false);
   syntheticGeneratingPersonas = signal(false);
+  personaSeedsCopied = signal(false);
   syntheticError = signal<string | null>(null);
   syntheticModel = signal<string | null>(null);
   syntheticGeneratedAt = signal<string | null>(null);
   syntheticResult = signal<SyntheticTestResult | null>(null);
   @ViewChild('personaSeedsTextarea') personaSeedsTextarea?: ElementRef<HTMLTextAreaElement>;
+  private personaCopiedResetTimeout: ReturnType<typeof setTimeout> | null = null;
 
   async ngOnInit() {
     // Scroll to top when page opens
@@ -305,11 +308,29 @@ Solo founder, 31, erratic schedule, high execution pressure`);
     }
     try {
       await navigator.clipboard.writeText(value);
+      this.personaSeedsCopied.set(true);
+      if (this.personaCopiedResetTimeout) {
+        clearTimeout(this.personaCopiedResetTimeout);
+      }
+      this.personaCopiedResetTimeout = setTimeout(() => {
+        this.personaSeedsCopied.set(false);
+        this.personaCopiedResetTimeout = null;
+      }, 2500);
       this.success.set('Persona seeds copied to clipboard.');
       setTimeout(() => this.success.set(null), 3000);
     } catch (error) {
       console.warn('Failed to copy persona seeds:', error);
     }
+  }
+
+  resetPersonaSeeds() {
+    this.syntheticPersonaSeeds.set(this.initialSyntheticPersonaSeeds);
+    this.personaSeedsCopied.set(false);
+    if (this.personaCopiedResetTimeout) {
+      clearTimeout(this.personaCopiedResetTimeout);
+      this.personaCopiedResetTimeout = null;
+    }
+    this.schedulePersonaTextareaResize();
   }
 
   syntheticResultJson() {
