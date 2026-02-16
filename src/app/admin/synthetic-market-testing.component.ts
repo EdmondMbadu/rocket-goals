@@ -68,6 +68,7 @@ export class SyntheticMarketTestingComponent implements OnInit {
 
   checkingAuth = signal(true);
   success = signal<string | null>(null);
+  activeSection = signal<string | null>(null);
 
   syntheticCoachName = signal('Coach Tess');
   syntheticProductDescription = signal('Home workout & weight loss coaching for busy people. Power-packed 20-30 minute routines with personalized nutrition plans.');
@@ -116,6 +117,11 @@ Solo founder, 31, erratic schedule, high execution pressure`);
   syntheticResult = signal<SyntheticTestResult | null>(null);
 
   async ngOnInit() {
+    // Scroll to top when page opens
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
     let attempts = 0;
     while (!this.authService.profile() && attempts < 20) {
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -135,6 +141,17 @@ Solo founder, 31, erratic schedule, high execution pressure`);
     }
 
     this.checkingAuth.set(false);
+  }
+
+  toggleSection(section: string) {
+    this.activeSection.update(current => current === section ? null : section);
+  }
+
+  getPersonaCount(): number {
+    return this.syntheticPersonaSeeds()
+      .split('\n')
+      .filter(line => line.trim().length > 0)
+      .length;
   }
 
   toggleDarkMode() {

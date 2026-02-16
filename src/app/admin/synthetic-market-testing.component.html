@@ -1,44 +1,58 @@
-<div class="admin-page min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
+<div class="synthetic-page min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0a0a0f] dark:text-slate-100 transition-colors">
   @if (checkingAuth()) {
-  <div class="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+  <div class="min-h-screen flex items-center justify-center">
     <div class="flex flex-col items-center gap-4">
-      <div
-        class="w-16 h-16 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin dark:border-rose-500/30 dark:border-t-rose-400">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 animate-spin opacity-30"></div>
+        <div class="absolute inset-2 w-16 h-16 rounded-full bg-slate-50 dark:bg-[#0a0a0f]"></div>
+        <div class="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-rose-500 rounded-full animate-spin"></div>
       </div>
-      <p class="text-slate-500 font-medium dark:text-slate-300">Verifying admin access...</p>
+      <p class="text-slate-500 font-medium dark:text-slate-400">Verifying admin access...</p>
     </div>
   </div>
   } @else {
-  <header
-    class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200 dark:bg-slate-900/80 dark:border-white/5">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+
+  <!-- Animated Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] rounded-full bg-gradient-to-br from-rose-500/8 via-purple-500/5 to-transparent blur-3xl animate-pulse-slow"></div>
+    <div class="absolute -bottom-[30%] -right-[20%] w-[70%] h-[70%] rounded-full bg-gradient-to-tl from-cyan-500/8 via-blue-500/5 to-transparent blur-3xl animate-pulse-slow animation-delay-2000"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] rounded-full bg-gradient-to-r from-orange-500/5 to-pink-500/5 blur-3xl animate-pulse-slow animation-delay-4000"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur-2xl bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
           <a routerLink="/admin"
-            class="flex items-center justify-center w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all border border-slate-200 dark:bg-slate-800 dark:border-white/10 dark:hover:bg-slate-700">
-            <svg class="w-5 h-5 text-slate-700 dark:text-slate-200" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
+            class="group flex items-center justify-center w-11 h-11 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md hover:border-rose-300 dark:hover:border-rose-500/30 transition-all duration-300">
+            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </a>
           <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight dark:text-white">Synthetic Market Testing</h1>
-            <p class="text-slate-500 text-sm dark:text-slate-400">Dedicated market-fit simulation workspace</p>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 animate-pulse"></div>
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">AI Strategy Lab</span>
+              </div>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
+              Synthetic Market Testing
+            </h1>
           </div>
         </div>
         <div class="flex items-center gap-3">
           <button type="button" (click)="toggleDarkMode()" [attr.aria-pressed]="isDarkMode()"
-            class="p-2.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+            class="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-rose-300 dark:hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-300 shadow-sm hover:shadow-md"
             title="Toggle appearance">
             @if (isDarkMode()) {
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
             </svg>
             } @else {
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0-1.414 1.414M7.05 16.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0-1.414 1.414M7.05 16.95l-1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
             </svg>
             }
           </button>
@@ -48,293 +62,592 @@
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Success Toast -->
     @if (success()) {
-    <div
-      class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl dark:bg-emerald-500/10 dark:border-emerald-400/30">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
-          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-8 animate-slide-down">
+      <div class="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25">
+        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <p class="text-emerald-800 font-medium">{{ success() }}</p>
+        <p class="font-semibold">{{ success() }}</p>
       </div>
     </div>
     }
 
-    <section class="synthetic-shell rounded-2xl border bg-white shadow-sm dark:bg-slate-900/80">
-      <div class="synthetic-header relative z-10 flex items-start justify-between px-6 py-5">
-        <div class="space-y-1">
-          <p class="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-rose-700 ring-1 ring-rose-200 dark:bg-white/15 dark:text-white/90 dark:ring-white/20">AI Strategy Lab</p>
-          <h2 class="text-xl font-black text-slate-900 dark:text-white">Synthetic Market Testing</h2>
-          <p class="text-sm text-slate-600 dark:text-slate-200">Run market-fit simulations across personas, messaging, pricing, audience, and channels.</p>
+    <!-- Hero Section -->
+    <section class="mb-10">
+      <div class="hero-card relative overflow-hidden rounded-3xl p-8 sm:p-10">
+        <!-- Decorative Elements -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-500/20 via-purple-500/10 to-transparent rounded-full blur-2xl"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-cyan-500/15 via-blue-500/10 to-transparent rounded-full blur-2xl"></div>
+
+        <!-- Grid Pattern -->
+        <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23000&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"></div>
+
+        <div class="relative z-10">
+          <div class="flex flex-wrap items-center gap-3 mb-4">
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-rose-500/10 to-orange-500/10 border border-rose-500/20 dark:border-rose-400/20">
+              <svg class="w-4 h-4 text-rose-500 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="text-sm font-bold text-rose-600 dark:text-rose-400">AI-Powered</span>
+            </span>
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20 dark:border-purple-400/20">
+              <svg class="w-4 h-4 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              <span class="text-sm font-bold text-purple-600 dark:text-purple-400">Market Fit</span>
+            </span>
+          </div>
+
+          <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-3">
+            Discover Your Winning
+            <span class="bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent"> Market Strategy</span>
+          </h2>
+          <p class="text-lg text-slate-600 dark:text-slate-300 max-w-2xl">
+            Run powerful simulations across personas, messaging, pricing, audiences, and channels. Let AI analyze thousands of combinations to find your best go-to-market approach.
+          </p>
+
+          <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-slate-200/50 dark:border-white/5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-lg shadow-rose-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">Synthetic Personas</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">AI-generated market reactions</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">Intent Scoring</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Data-driven insights</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">Action Plans</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Ready-to-execute steps</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="relative z-10 border-t border-slate-200/80 px-6 py-5 space-y-5 dark:border-white/10">
-        <div class="synthetic-card rounded-xl px-4 py-3">
-          <p class="text-sm font-semibold text-slate-900 dark:text-white">How This Strengthens Strategy</p>
-          <p class="text-xs text-slate-600 mt-1 dark:text-slate-300">Each box controls one lever of market fit. Build hypotheses as option lists, simulate outcomes, and prioritize your go-to-market bets with confidence.</p>
+    </section>
+
+    <!-- Configuration Section -->
+    <section class="space-y-6">
+
+      <!-- Product Info Card -->
+      <div class="config-card rounded-3xl p-6 sm:p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center">
+            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Product Foundation</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Define your product and research objectives</p>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="synthetic-card rounded-xl p-3">
-            <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2 dark:text-slate-400">Coach / Product Name</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="input-group">
+            <label class="input-label">Coach / Product Name</label>
             <input type="text" [value]="syntheticCoachName()"
               (input)="syntheticCoachName.set($any($event.target).value)"
-              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white" />
+              placeholder="e.g., Coach Tess"
+              class="input-field" />
           </div>
-          <div class="synthetic-card rounded-xl p-3">
-            <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2 dark:text-slate-400">Research Goal</label>
-            <textarea rows="3" [value]="syntheticResearchGoal()"
+          <div class="input-group">
+            <label class="input-label">Research Goal</label>
+            <textarea rows="2" [value]="syntheticResearchGoal()"
               (input)="syntheticResearchGoal.set($any($event.target).value)"
-              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white"></textarea>
+              placeholder="What do you want to learn from this simulation?"
+              class="input-field resize-none"></textarea>
           </div>
         </div>
 
-        <div class="synthetic-card rounded-xl p-3">
-          <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2 dark:text-slate-400">Product Description</label>
-          <textarea rows="4" [value]="syntheticProductDescription()"
-            (input)="syntheticProductDescription.set($any($event.target).value)"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white"></textarea>
+        <div class="mt-5">
+          <div class="input-group">
+            <label class="input-label">Product Description</label>
+            <textarea rows="3" [value]="syntheticProductDescription()"
+              (input)="syntheticProductDescription.set($any($event.target).value)"
+              placeholder="Describe your product, its key features, and value proposition..."
+              class="input-field resize-none"></textarea>
+          </div>
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Personas Card -->
+      <div class="config-card rounded-3xl p-6 sm:p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-100 to-rose-200 dark:from-rose-900/30 dark:to-rose-800/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2 dark:text-slate-400">Persona Seeds (one per line)</label>
-            <p class="text-xs text-slate-500 mb-2 dark:text-slate-400">Who are we simulating? Add real-world constraints and motivations.</p>
-            <textarea rows="7" [value]="syntheticPersonaSeeds()"
-              (input)="syntheticPersonaSeeds.set($any($event.target).value)"
-              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white"></textarea>
-          </div>
-          <div class="grid grid-cols-1 gap-4">
-            <div class="synthetic-list-card rounded-xl p-3">
-              <div class="flex items-center justify-between gap-2 mb-2">
-                <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Positioning Options</label>
-                <button type="button" (click)="addSyntheticOption('positioning')"
-                  class="synthetic-add-btn rounded-lg px-2 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 dark:text-rose-200">+ Add</button>
-              </div>
-              <p class="text-xs text-slate-500 mb-2 dark:text-slate-400">How the product is framed in the market.</p>
-              <div class="space-y-2">
-                @for (option of syntheticPositioningOptions(); track $index) {
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-semibold text-slate-500 w-6">{{ $index + 1 }}.</span>
-                  <input type="text" [value]="option"
-                    (input)="updateSyntheticOption('positioning', $index, $any($event.target).value)"
-                    class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white" />
-                  <button type="button" (click)="removeSyntheticOption('positioning', $index)"
-                    class="px-2.5 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">Remove</button>
-                </div>
-                }
-              </div>
-            </div>
-
-            <div class="synthetic-list-card rounded-xl p-3">
-              <div class="flex items-center justify-between gap-2 mb-2">
-                <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Core Message Options</label>
-                <button type="button" (click)="addSyntheticOption('coreMessage')"
-                  class="synthetic-add-btn rounded-lg px-2 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 dark:text-rose-200">+ Add</button>
-              </div>
-              <p class="text-xs text-slate-500 mb-2 dark:text-slate-400">The specific claim or promise users react to.</p>
-              <div class="space-y-2">
-                @for (option of syntheticCoreMessageOptions(); track $index) {
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-semibold text-slate-500 w-6">{{ $index + 1 }}.</span>
-                  <input type="text" [value]="option"
-                    (input)="updateSyntheticOption('coreMessage', $index, $any($event.target).value)"
-                    class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white" />
-                  <button type="button" (click)="removeSyntheticOption('coreMessage', $index)"
-                    class="px-2.5 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">Remove</button>
-                </div>
-                }
-              </div>
-            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Persona Seeds</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Define the synthetic personas to simulate (one per line)</p>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="synthetic-list-card rounded-xl p-3">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Pricing Options</label>
-              <button type="button" (click)="addSyntheticOption('pricing')"
-                class="synthetic-add-btn rounded-lg px-2 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 dark:text-rose-200">+ Add</button>
-            </div>
-            <p class="text-xs text-slate-500 mb-2 dark:text-slate-400">Price points to pressure-test willingness to pay.</p>
-            <div class="space-y-2">
-              @for (option of syntheticPricingOptions(); track $index) {
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-slate-500 w-6">{{ $index + 1 }}.</span>
-                <input type="text" [value]="option"
-                  (input)="updateSyntheticOption('pricing', $index, $any($event.target).value)"
-                  class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white" />
-                <button type="button" (click)="removeSyntheticOption('pricing', $index)"
-                  class="px-2.5 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">Remove</button>
-              </div>
-              }
-            </div>
+        <div class="relative">
+          <textarea rows="6" [value]="syntheticPersonaSeeds()"
+            (input)="syntheticPersonaSeeds.set($any($event.target).value)"
+            placeholder="Sarah Chen, 34, marketing manager, Austin, busy schedule, willing to pay for quality&#10;Busy mom, 3 kids, budget-conscious, needs short home workouts&#10;Type 2 diabetic, 52, health-first mindset, seeks safe guidance"
+            class="input-field resize-none font-mono text-sm"></textarea>
+          <div class="absolute bottom-3 right-3 text-xs text-slate-400 dark:text-slate-500">
+            {{ getPersonaCount() }} personas
           </div>
+        </div>
+      </div>
 
-          <div class="synthetic-list-card rounded-xl p-3">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Target Audiences</label>
-              <button type="button" (click)="addSyntheticOption('audience')"
-                class="synthetic-add-btn rounded-lg px-2 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 dark:text-rose-200">+ Add</button>
-            </div>
-            <p class="text-xs text-slate-500 mb-2 dark:text-slate-400">Who to prioritize first for strongest initial traction.</p>
-            <div class="space-y-2">
-              @for (option of syntheticTargetAudienceOptions(); track $index) {
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-slate-500 w-6">{{ $index + 1 }}.</span>
-                <input type="text" [value]="option"
-                  (input)="updateSyntheticOption('audience', $index, $any($event.target).value)"
-                  class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white" />
-                <button type="button" (click)="removeSyntheticOption('audience', $index)"
-                  class="px-2.5 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">Remove</button>
+      <!-- Strategy Options Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Positioning Options -->
+        <div class="config-card rounded-3xl p-6">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900/30 dark:to-violet-800/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
               </div>
-              }
+              <div>
+                <h4 class="font-bold text-slate-900 dark:text-white">Positioning</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">How you frame the product</p>
+              </div>
             </div>
+            <button type="button" (click)="addSyntheticOption('positioning')"
+              class="add-option-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add
+            </button>
           </div>
-
-          <div class="synthetic-list-card rounded-xl p-3">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Channels</label>
-              <button type="button" (click)="addSyntheticOption('channel')"
-                class="synthetic-add-btn rounded-lg px-2 py-1 text-xs font-semibold text-rose-700 hover:text-rose-800 dark:text-rose-200">+ Add</button>
+          <div class="space-y-2">
+            @for (option of syntheticPositioningOptions(); track $index) {
+            <div class="option-row group">
+              <span class="option-number">{{ $index + 1 }}</span>
+              <input type="text" [value]="option"
+                (input)="updateSyntheticOption('positioning', $index, $any($event.target).value)"
+                class="option-input" placeholder="Enter positioning..." />
+              <button type="button" (click)="removeSyntheticOption('positioning', $index)"
+                class="option-remove">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
             </div>
-            <p class="text-xs text-slate-500 mb-2 dark:text-slate-400">Where this audience is most likely to discover and convert.</p>
-            <div class="space-y-2">
-              @for (option of syntheticChannelOptions(); track $index) {
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-slate-500 w-6">{{ $index + 1 }}.</span>
-                <input type="text" [value]="option"
-                  (input)="updateSyntheticOption('channel', $index, $any($event.target).value)"
-                  class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:border-white/10 dark:text-white" />
-                <button type="button" (click)="removeSyntheticOption('channel', $index)"
-                  class="px-2.5 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">Remove</button>
-              </div>
-              }
-            </div>
+            }
           </div>
         </div>
 
-        <div class="flex items-center justify-between gap-3 flex-wrap">
-          <div class="text-xs text-slate-500 dark:text-slate-400">
-            @if (syntheticModel()) { Model: {{ syntheticModel() }} · }
-            @if (syntheticGeneratedAt()) { Generated: {{ syntheticGeneratedAt() }} }
+        <!-- Core Message Options -->
+        <div class="config-card rounded-3xl p-6">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 dark:text-white">Core Messages</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">The promise to users</p>
+              </div>
+            </div>
+            <button type="button" (click)="addSyntheticOption('coreMessage')"
+              class="add-option-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add
+            </button>
+          </div>
+          <div class="space-y-2">
+            @for (option of syntheticCoreMessageOptions(); track $index) {
+            <div class="option-row group">
+              <span class="option-number">{{ $index + 1 }}</span>
+              <input type="text" [value]="option"
+                (input)="updateSyntheticOption('coreMessage', $index, $any($event.target).value)"
+                class="option-input" placeholder="Enter core message..." />
+              <button type="button" (click)="removeSyntheticOption('coreMessage', $index)"
+                class="option-remove">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Three Column Options -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Pricing Options -->
+        <div class="config-card rounded-3xl p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/30 dark:to-emerald-800/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-sm">Pricing</h4>
+            </div>
+            <button type="button" (click)="addSyntheticOption('pricing')"
+              class="add-option-btn-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-2">
+            @for (option of syntheticPricingOptions(); track $index) {
+            <div class="option-row-compact group">
+              <span class="option-number-sm">{{ $index + 1 }}</span>
+              <input type="text" [value]="option"
+                (input)="updateSyntheticOption('pricing', $index, $any($event.target).value)"
+                class="option-input-sm" placeholder="$XX/mo" />
+              <button type="button" (click)="removeSyntheticOption('pricing', $index)"
+                class="option-remove-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Audience Options -->
+        <div class="config-card rounded-3xl p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-sm">Audiences</h4>
+            </div>
+            <button type="button" (click)="addSyntheticOption('audience')"
+              class="add-option-btn-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-2">
+            @for (option of syntheticTargetAudienceOptions(); track $index) {
+            <div class="option-row-compact group">
+              <span class="option-number-sm">{{ $index + 1 }}</span>
+              <input type="text" [value]="option"
+                (input)="updateSyntheticOption('audience', $index, $any($event.target).value)"
+                class="option-input-sm" placeholder="Target audience" />
+              <button type="button" (click)="removeSyntheticOption('audience', $index)"
+                class="option-remove-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Channel Options -->
+        <div class="config-card rounded-3xl p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                </svg>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-sm">Channels</h4>
+            </div>
+            <button type="button" (click)="addSyntheticOption('channel')"
+              class="add-option-btn-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-2">
+            @for (option of syntheticChannelOptions(); track $index) {
+            <div class="option-row-compact group">
+              <span class="option-number-sm">{{ $index + 1 }}</span>
+              <input type="text" [value]="option"
+                (input)="updateSyntheticOption('channel', $index, $any($event.target).value)"
+                class="option-input-sm" placeholder="Marketing channel" />
+              <button type="button" (click)="removeSyntheticOption('channel', $index)"
+                class="option-remove-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Run Simulation -->
+      <div class="config-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            @if (syntheticModel()) {
+            <div class="text-sm text-slate-500 dark:text-slate-400">
+              <span class="font-medium">Model:</span> {{ syntheticModel() }}
+            </div>
+            }
+            @if (syntheticGeneratedAt()) {
+            <div class="text-sm text-slate-500 dark:text-slate-400">
+              <span class="font-medium">Generated:</span> {{ syntheticGeneratedAt() }}
+            </div>
+            }
           </div>
           <button type="button" (click)="runSyntheticMarketTest()" [disabled]="syntheticRunning()"
-            class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-900/25 hover:from-rose-700 hover:to-orange-600 transition disabled:opacity-60 disabled:cursor-not-allowed">
+            class="run-simulation-btn group">
             @if (syntheticRunning()) {
-            <span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-            Running simulation...
+            <div class="flex items-center gap-3">
+              <div class="relative w-5 h-5">
+                <div class="absolute inset-0 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+              </div>
+              <span>Running simulation...</span>
+            </div>
             } @else {
-            Run Synthetic Simulation
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span>Run Synthetic Simulation</span>
+            </div>
             }
           </button>
         </div>
+      </div>
 
-        @if (syntheticError()) {
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:border-rose-400/30 dark:text-rose-200">
-          {{ syntheticError() }}
+      <!-- Error Message -->
+      @if (syntheticError()) {
+      <div class="animate-shake rounded-2xl border-2 border-rose-300 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 px-6 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <p class="text-rose-800 dark:text-rose-200 font-medium">{{ syntheticError() }}</p>
         </div>
-        }
+      </div>
+      }
 
-        @if (syntheticResult()) {
-        <div class="space-y-5 border-t border-slate-200 pt-5 dark:border-white/10">
-          <div class="synthetic-card rounded-xl px-4 py-3">
-            <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Simulation Results</p>
-            <p class="text-xs text-emerald-700 mt-1 dark:text-emerald-300">Intent scores are measured on a 0 to 3 scale. Example: 2.9 means 2.9/3.</p>
-          </div>
+      <!-- Results Section -->
+      @if (syntheticResult()) {
+      <div class="results-section space-y-6 animate-fade-in-up">
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Best Audience</p>
-              <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ syntheticResult()?.summary?.bestAudience || '-' }}</p>
+        <!-- Results Header -->
+        <div class="results-header rounded-3xl p-6 sm:p-8">
+          <div class="flex items-center gap-4 mb-2">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Best Positioning</p>
-              <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ syntheticResult()?.summary?.bestPositioning || '-' }}</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Best Core Message</p>
-              <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ syntheticResult()?.summary?.bestCoreMessage || '-' }}</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Best Pricing</p>
-              <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ syntheticResult()?.summary?.bestPricing || '-' }}</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Best Channel</p>
-              <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ syntheticResult()?.summary?.bestChannel || '-' }}</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-              <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Key Objection</p>
-              <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ syntheticResult()?.summary?.keyObjection || '-' }}</p>
+            <div>
+              <h3 class="text-2xl font-black text-slate-900 dark:text-white">Simulation Results</h3>
+              <p class="text-slate-500 dark:text-slate-400">Intent scores measured on a 0-3 scale</p>
             </div>
           </div>
+        </div>
 
-          @if (syntheticTopCombination()) {
-          <div class="synthetic-winner rounded-xl p-4">
-            <div class="flex items-center justify-between gap-3 flex-wrap">
-              <p class="text-sm font-bold text-emerald-800 dark:text-emerald-200">Winner</p>
-              <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                {{ syntheticTopCombination()?.intentScore | number:'1.1-2' }}/3 ({{ intentLabel(syntheticTopCombination()?.intentScore) }})
-              </p>
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div class="stat-card">
+            <p class="stat-label">Best Audience</p>
+            <p class="stat-value">{{ syntheticResult()?.summary?.bestAudience || '-' }}</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Best Positioning</p>
+            <p class="stat-value">{{ syntheticResult()?.summary?.bestPositioning || '-' }}</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Best Message</p>
+            <p class="stat-value">{{ syntheticResult()?.summary?.bestCoreMessage || '-' }}</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Best Pricing</p>
+            <p class="stat-value">{{ syntheticResult()?.summary?.bestPricing || '-' }}</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Best Channel</p>
+            <p class="stat-value">{{ syntheticResult()?.summary?.bestChannel || '-' }}</p>
+          </div>
+          <div class="stat-card stat-card-warning">
+            <p class="stat-label">Key Objection</p>
+            <p class="stat-value text-amber-600 dark:text-amber-400">{{ syntheticResult()?.summary?.keyObjection || '-' }}</p>
+          </div>
+        </div>
+
+        <!-- Winner Card -->
+        @if (syntheticTopCombination()) {
+        <div class="winner-card rounded-3xl p-6 sm:p-8">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-4">
+              <div class="relative">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/40">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                  </svg>
+                </div>
+                <div class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-lg">#1</div>
+              </div>
+              <div>
+                <h4 class="text-xl font-black text-emerald-800 dark:text-emerald-200">Winning Combination</h4>
+                <p class="text-emerald-600 dark:text-emerald-400">Highest scoring strategy</p>
+              </div>
             </div>
-            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-              <p><span class="font-semibold text-slate-700 dark:text-slate-200">Positioning:</span> {{ syntheticTopCombination()?.positioning }}</p>
-              <p><span class="font-semibold text-slate-700 dark:text-slate-200">Core Message:</span> {{ syntheticTopCombination()?.coreMessage }}</p>
-              <p><span class="font-semibold text-slate-700 dark:text-slate-200">Audience:</span> {{ syntheticTopCombination()?.targetAudience }}</p>
-              <p><span class="font-semibold text-slate-700 dark:text-slate-200">Pricing:</span> {{ syntheticTopCombination()?.pricing }}</p>
-              <p><span class="font-semibold text-slate-700 dark:text-slate-200">Channel:</span> {{ syntheticTopCombination()?.channel }}</p>
+            <div class="flex items-center gap-2">
+              <div class="score-badge">
+                <span class="text-2xl font-black">{{ syntheticTopCombination()?.intentScore | number:'1.1-2' }}</span>
+                <span class="text-sm opacity-70">/3</span>
+              </div>
+              <span class="px-3 py-1 rounded-full text-sm font-bold" [class]="syntheticTopCombination()?.intentScore! >= 2.4 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : syntheticTopCombination()?.intentScore! >= 1.5 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'">
+                {{ intentLabel(syntheticTopCombination()?.intentScore) }}
+              </span>
             </div>
-            @if (syntheticTopCombination()?.rationale) {
-            <p class="mt-3 text-sm text-slate-700 dark:text-slate-300">{{ syntheticTopCombination()?.rationale }}</p>
-            }
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="winner-detail">
+              <span class="winner-detail-label">Positioning</span>
+              <span class="winner-detail-value">{{ syntheticTopCombination()?.positioning }}</span>
+            </div>
+            <div class="winner-detail">
+              <span class="winner-detail-label">Core Message</span>
+              <span class="winner-detail-value">{{ syntheticTopCombination()?.coreMessage }}</span>
+            </div>
+            <div class="winner-detail">
+              <span class="winner-detail-label">Audience</span>
+              <span class="winner-detail-value">{{ syntheticTopCombination()?.targetAudience }}</span>
+            </div>
+            <div class="winner-detail">
+              <span class="winner-detail-label">Pricing</span>
+              <span class="winner-detail-value">{{ syntheticTopCombination()?.pricing }}</span>
+            </div>
+            <div class="winner-detail">
+              <span class="winner-detail-label">Channel</span>
+              <span class="winner-detail-value">{{ syntheticTopCombination()?.channel }}</span>
+            </div>
+          </div>
+
+          @if (syntheticTopCombination()?.rationale) {
+          <div class="mt-6 pt-6 border-t border-emerald-200 dark:border-emerald-500/20">
+            <p class="text-emerald-800 dark:text-emerald-200 leading-relaxed">{{ syntheticTopCombination()?.rationale }}</p>
           </div>
           }
+        </div>
+        }
 
-          <div>
-            <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-2">Other Ranked Combinations</h4>
-            <div class="space-y-2">
-              @for (combo of syntheticOtherCombinations(); track $index) {
-              <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-                <div class="flex items-center justify-between gap-3">
-                  <p class="text-sm font-semibold text-slate-900 dark:text-white">#{{ $index + 2 }} {{ combo.positioning }}</p>
-                  <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ combo.intentScore | number:'1.1-2' }}/3</p>
+        <!-- Other Combinations -->
+        @if (syntheticOtherCombinations().length > 0) {
+        <div class="config-card rounded-3xl p-6 sm:p-8">
+          <h4 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Other Ranked Combinations</h4>
+          <div class="space-y-3">
+            @for (combo of syntheticOtherCombinations(); track $index) {
+            <div class="other-combo-card">
+              <div class="flex items-center justify-between gap-4 mb-2">
+                <div class="flex items-center gap-3">
+                  <span class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300">#{{ $index + 2 }}</span>
+                  <span class="font-semibold text-slate-900 dark:text-white">{{ combo.positioning }}</span>
                 </div>
-                <p class="text-sm text-slate-600 mt-1 dark:text-slate-300">{{ combo.coreMessage }} · {{ combo.targetAudience }} · {{ combo.pricing }} · {{ combo.channel }}</p>
+                <span class="text-sm font-bold text-slate-600 dark:text-slate-300">{{ combo.intentScore | number:'1.1-2' }}/3</span>
               </div>
-              } @empty {
-              <p class="text-sm text-slate-500 dark:text-slate-400">No additional combinations returned.</p>
-              }
+              <p class="text-sm text-slate-600 dark:text-slate-400 pl-10">{{ combo.coreMessage }} · {{ combo.targetAudience }} · {{ combo.pricing }} · {{ combo.channel }}</p>
             </div>
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between gap-3 mb-2">
-              <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Next Actions</h4>
-              <button type="button" (click)="copySyntheticResultJson()"
-                class="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200">
-                Copy JSON
-              </button>
-            </div>
-            <div class="space-y-2">
-              @for (next of syntheticResult()?.nextActions || []; track $index) {
-              <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-900/70 dark:border-white/10">
-                <p class="text-sm font-semibold text-slate-900 dark:text-white">[P{{ next.priority }}] {{ next.action }}</p>
-                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">{{ next.why }}</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Owner: {{ next.owner }} · Timeline: {{ next.timeline }}</p>
-              </div>
-              } @empty {
-              <p class="text-sm text-slate-500 dark:text-slate-400">No next actions returned.</p>
-              }
-            </div>
+            }
           </div>
         </div>
         }
+
+        <!-- Next Actions -->
+        @if (syntheticResult()?.nextActions?.length) {
+        <div class="config-card rounded-3xl p-6 sm:p-8">
+          <div class="flex items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30 flex items-center justify-center">
+                <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+              </div>
+              <h4 class="text-lg font-bold text-slate-900 dark:text-white">Next Actions</h4>
+            </div>
+            <button type="button" (click)="copySyntheticResultJson()"
+              class="copy-json-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              Copy JSON
+            </button>
+          </div>
+          <div class="space-y-3">
+            @for (next of syntheticResult()?.nextActions || []; track $index) {
+            <div class="action-card">
+              <div class="flex items-start gap-4">
+                <div class="priority-badge" [class]="next.priority === 1 ? 'priority-1' : next.priority === 2 ? 'priority-2' : 'priority-3'">
+                  P{{ next.priority }}
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-slate-900 dark:text-white mb-1">{{ next.action }}</p>
+                  <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">{{ next.why }}</p>
+                  <div class="flex flex-wrap items-center gap-3 text-xs">
+                    <span class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                      <span class="font-medium">Owner:</span> {{ next.owner }}
+                    </span>
+                    <span class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                      <span class="font-medium">Timeline:</span> {{ next.timeline }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
       </div>
+      }
+
     </section>
+
   </main>
   }
 </div>
