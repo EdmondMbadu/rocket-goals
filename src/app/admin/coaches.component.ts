@@ -40,6 +40,9 @@ export class CoachesComponent implements OnInit {
   checkingAuth = signal(true);
   loading = signal(true);
   loadError = signal<string | null>(null);
+  searchQuery = signal('');
+  searchFeedback = signal<string | null>(null);
+  highlightedTemplateId = signal<string | null>(null);
 
   private readonly defaultTemplates: LaunchpadTemplate[] = Object.values(LAUNCHPAD_TEMPLATES);
 
@@ -70,6 +73,55 @@ export class CoachesComponent implements OnInit {
 
   toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  getSearchOptions(): string[] {
+    return this.coachPrompts().flatMap((item) => [
+      item.coachName,
+      item.appName,
+      `${item.appName} - ${item.coachName}`
+    ]);
+  }
+
+  jumpToCoachFromSearch() {
+    const query = this.searchQuery().trim().toLowerCase();
+    if (!query) {
+      this.searchFeedback.set('Type a coach or app-suite name.');
+      return;
+    }
+
+    const candidates = this.coachPrompts();
+    const exact = candidates.find((item) =>
+      item.coachName.toLowerCase() === query ||
+      item.appName.toLowerCase() === query ||
+      `${item.appName} - ${item.coachName}`.toLowerCase() === query
+    );
+
+    const partial = candidates.find((item) =>
+      item.coachName.toLowerCase().includes(query) ||
+      item.appName.toLowerCase().includes(query)
+    );
+
+    const match = exact || partial;
+    if (!match) {
+      this.searchFeedback.set('No coach found for that search.');
+      this.highlightedTemplateId.set(null);
+      return;
+    }
+
+    const element = document.getElementById(this.getCoachCardId(match.templateId));
+    if (!element) {
+      this.searchFeedback.set('Coach found, but section is not available yet.');
+      return;
+    }
+
+    this.searchFeedback.set(`Jumped to ${match.coachName}`);
+    this.highlightedTemplateId.set(match.templateId);
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  getCoachCardId(templateId: string): string {
+    return `coach-card-${templateId}`;
   }
 
   private async loadCoachPrompts() {
