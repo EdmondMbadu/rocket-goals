@@ -100,7 +100,6 @@ export class AdminComponent implements OnInit {
   private readonly theme = inject(ThemeService);
   protected readonly isDarkMode = this.theme.isDarkMode;
   readonly coachNames = Object.values(LAUNCHPAD_TEMPLATES)
-    .filter((template) => template.id !== 'lean-launch')
     .map((template) => template.coPilotName);
 
   // Email form state

@@ -3,14 +3,24 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AvatarDropdownComponent } from '../avatar-dropdown.component';
 import { AuthService } from '../auth.service';
+import { CoachPromptsService } from '../coach-prompts.service';
+import { LaunchpadTemplate, LAUNCHPAD_TEMPLATES } from '../launchpad/launchpad.types';
 import { ThemeService } from '../theme.service';
-import { LAUNCHPAD_TEMPLATES } from '../launchpad/launchpad.types';
 
-type CoachPromptItem = {
-  id: string;
+type EditableCoachPrompt = {
+  templateId: string;
   appName: string;
   coachName: string;
-  systemPrompt: string;
+  avatar: string;
+  soulFilet: string;
+  defaultCoachName: string;
+  defaultAvatar: string;
+  defaultSoulFilet: string;
+  isSaving: boolean;
+  isDirty: boolean;
+  saveMessage: string | null;
+  saveError: string | null;
+  updatedGoals: number;
 };
 
 @Component({
@@ -23,19 +33,17 @@ type CoachPromptItem = {
 export class CoachesComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly coachPromptsService = inject(CoachPromptsService);
   private readonly theme = inject(ThemeService);
   protected readonly isDarkMode = this.theme.isDarkMode;
 
   checkingAuth = signal(true);
+  loading = signal(true);
+  loadError = signal<string | null>(null);
 
-  readonly coachPrompts: CoachPromptItem[] = Object.values(LAUNCHPAD_TEMPLATES)
-    .filter((template) => template.id !== 'lean-launch')
-    .map((template) => ({
-      id: template.id,
-      appName: template.name,
-      coachName: template.coPilotName,
-      systemPrompt: `You are ${template.coPilotName}, ${template.coPilotRole}`
-    }));
+  private readonly defaultTemplates: LaunchpadTemplate[] = Object.values(LAUNCHPAD_TEMPLATES);
+
+  readonly coachPrompts = signal<EditableCoachPrompt[]>([]);
 
   async ngOnInit() {
     let attempts = 0;
@@ -57,9 +65,185 @@ export class CoachesComponent implements OnInit {
     }
 
     this.checkingAuth.set(false);
+    await this.loadCoachPrompts();
   }
 
   toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  private async loadCoachPrompts() {
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      const stored = await this.coachPromptsService.getAllConfigs();
+      const merged: EditableCoachPrompt[] = this.defaultTemplates.map((template) => {
+        const fallbackPrompt = template.coPilotRole;
+        const saved = stored[template.id];
+        return {
+          templateId: template.id,
+          appName: saved?.appName || template.name,
+          coachName: saved?.coachName || template.coPilotName,
+          avatar: saved?.avatar || template.coPilotAvatar,
+          soulFilet: saved?.soulFilet || fallbackPrompt,
+          defaultCoachName: template.coPilotName,
+          defaultAvatar: template.coPilotAvatar,
+          defaultSoulFilet: fallbackPrompt,
+          isSaving: false,
+          isDirty: false,
+          saveMessage: null,
+          saveError: null,
+          updatedGoals: 0
+        };
+      });
+
+      this.coachPrompts.set(merged);
+    } catch (error: any) {
+      console.error('Failed to load coach prompts:', error);
+      this.loadError.set(error?.message || 'Unable to load coach prompts.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  isPromptExactlyDefault(item: EditableCoachPrompt): boolean {
+    return item.soulFilet.trim() === item.defaultSoulFilet.trim()
+      && item.coachName.trim() === item.defaultCoachName.trim()
+      && item.avatar.trim() === item.defaultAvatar.trim();
+  }
+
+  updateCoachName(templateId: string, value: string) {
+    this.patchItem(templateId, { coachName: value, isDirty: true, saveMessage: null, saveError: null });
+  }
+
+  updateSoulFilet(templateId: string, value: string) {
+    this.patchItem(templateId, { soulFilet: value, isDirty: true, saveMessage: null, saveError: null });
+  }
+
+  updateAvatar(templateId: string, value: string) {
+    this.patchItem(templateId, { avatar: value, isDirty: true, saveMessage: null, saveError: null });
+  }
+
+  resetToDefaults(templateId: string) {
+    this.coachPrompts.update((items) => items.map((item) => {
+      if (item.templateId !== templateId) return item;
+      return {
+        ...item,
+        coachName: item.defaultCoachName,
+        avatar: item.defaultAvatar,
+        soulFilet: item.defaultSoulFilet,
+        isDirty: true,
+        saveMessage: null,
+        saveError: null
+      };
+    }));
+  }
+
+  async saveCoachPrompt(item: EditableCoachPrompt) {
+    const coachName = item.coachName.trim();
+    const soulFilet = item.soulFilet.trim();
+    const avatar = item.avatar.trim();
+
+    if (!coachName || !soulFilet) {
+      this.patchItem(item.templateId, {
+        saveError: 'Coach name and Soul Filet are required.',
+        saveMessage: null
+      });
+      return;
+    }
+
+    this.patchItem(item.templateId, { isSaving: true, saveError: null, saveMessage: null });
+
+    try {
+      const response = await this.coachPromptsService.saveConfig({
+        templateId: item.templateId,
+        appName: item.appName,
+        coachName,
+        avatar,
+        soulFilet,
+        applyToExistingGoals: true
+      });
+
+      this.patchItem(item.templateId, {
+        isSaving: false,
+        isDirty: false,
+        saveMessage: 'Saved. Prompt is now live.',
+        saveError: null,
+        updatedGoals: response.updatedGoals || 0
+      });
+    } catch (error: any) {
+      console.error('Failed to save coach prompt:', error);
+      this.patchItem(item.templateId, {
+        isSaving: false,
+        saveError: error?.message || 'Failed to save coach prompt.',
+        saveMessage: null
+      });
+    }
+  }
+
+  async handleMdUpload(templateId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      this.updateSoulFilet(templateId, text);
+    } catch (error: any) {
+      this.patchItem(templateId, { saveError: error?.message || 'Unable to read markdown file.' });
+    } finally {
+      input.value = '';
+    }
+  }
+
+  downloadMd(item: EditableCoachPrompt) {
+    const content = item.soulFilet || '';
+    const safeId = item.templateId.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${safeId}-soul-filet.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  async handleImageUpload(templateId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.patchItem(templateId, { saveError: 'Please upload an image file.' });
+      input.value = '';
+      return;
+    }
+
+    try {
+      const dataUrl = await this.readFileAsDataUrl(file);
+      this.updateAvatar(templateId, dataUrl);
+    } catch (error: any) {
+      this.patchItem(templateId, { saveError: error?.message || 'Unable to read image file.' });
+    } finally {
+      input.value = '';
+    }
+  }
+
+  private readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result || '').toString());
+      reader.onerror = () => reject(new Error('File read failed.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private patchItem(templateId: string, patch: Partial<EditableCoachPrompt>) {
+    this.coachPrompts.update((items) => items.map((item) => {
+      if (item.templateId !== templateId) return item;
+      return { ...item, ...patch };
+    }));
   }
 }

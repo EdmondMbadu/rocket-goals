@@ -6,6 +6,7 @@ import { VisualizationService } from '../visualization.service';
 import { ActionItemsService } from '../action-items.service';
 import { RocketGoalsAIService } from '../rocket-goals-ai.service';
 import { CalendarEventsService } from '../calendar-events.service';
+import { CoachPromptsService } from '../coach-prompts.service';
 import { LaunchpadTemplate, LAUNCHPAD_TEMPLATES, MissionOnboardingData } from './launchpad.types';
 
 @Injectable({
@@ -19,6 +20,7 @@ export class LaunchpadService {
   private readonly actionItemsService = inject(ActionItemsService);
   private readonly rocketGoalsAIService = inject(RocketGoalsAIService);
   private readonly calendarEventsService = inject(CalendarEventsService);
+  private readonly coachPromptsService = inject(CoachPromptsService);
 
   getTemplate(id: string): LaunchpadTemplate | undefined {
     return LAUNCHPAD_TEMPLATES[id];
@@ -47,6 +49,7 @@ export class LaunchpadService {
     }
 
     const now = Date.now();
+    const copilot = await this.resolveCopilot(template);
 
     try {
       // Create the goal with launchpad template data
@@ -75,12 +78,8 @@ export class LaunchpadService {
         status: 'active',
         entryPoint: 'launch_challenge',
         startTime: now,
-        // Include copilot data from the template for personalized AI experience
-        copilot: {
-          avatar: template.coPilotAvatar,
-          name: template.coPilotName,
-          role: template.coPilotRole
-        }
+        // Include copilot data for personalized AI experience
+        copilot
       });
 
       // Generate visualization image
@@ -142,6 +141,7 @@ export class LaunchpadService {
     const endDate = new Date(onboardingData.endDate);
     const startTime = startDate.getTime();
     const totalDays = Math.ceil((endDate.getTime() - startTime) / (1000 * 60 * 60 * 24));
+    const copilot = await this.resolveCopilot(template);
 
     // Determine timeframe label
     let timeframe: 'week' | 'month' | '3months' | '6months' = 'month';
@@ -186,11 +186,7 @@ export class LaunchpadService {
         status: 'active',
         entryPoint: 'launch_challenge',
         startTime,
-        copilot: {
-          avatar: template.coPilotAvatar,
-          name: template.coPilotName,
-          role: template.coPilotRole
-        }
+        copilot
       });
 
       // Generate visualization image (async, don't wait)
@@ -538,5 +534,26 @@ Generate ${milestoneCount} milestones now (JSON array only, no other text):`;
       console.error('Error converting image URL to base64:', error);
       return null;
     }
+  }
+
+  private async resolveCopilot(template: LaunchpadTemplate): Promise<{ avatar: string; name: string; role: string }> {
+    try {
+      const config = await this.coachPromptsService.getConfig(template.id);
+      if (config?.coachName && config?.soulFilet) {
+        return {
+          avatar: config.avatar || template.coPilotAvatar,
+          name: config.coachName,
+          role: config.soulFilet
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to load dynamic coach prompt config, using defaults:', error);
+    }
+
+    return {
+      avatar: template.coPilotAvatar,
+      name: template.coPilotName,
+      role: template.coPilotRole
+    };
   }
 }

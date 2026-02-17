@@ -5448,6 +5448,95 @@ export const getDefaultEmailTemplate = functions.runWith({
 });
 
 /**
+ * Admin-only coach prompt manager.
+ * Persists editable "soulFilet" prompt and applies updates to existing launchpad goals.
+ */
+export const saveCoachPromptConfig = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: {
+    templateId: string;
+    appName: string;
+    coachName: string;
+    avatar?: string;
+    soulFilet: string;
+    applyToExistingGoals?: boolean;
+}, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can edit coach prompts.');
+    }
+
+    const templateId = (data?.templateId || '').toString().trim();
+    const appName = (data?.appName || '').toString().trim();
+    const coachName = (data?.coachName || '').toString().trim();
+    const avatar = (data?.avatar || '').toString().trim();
+    const soulFilet = (data?.soulFilet || '').toString().trim();
+    const applyToExistingGoals = data?.applyToExistingGoals !== false;
+
+    if (!templateId || !coachName || !soulFilet) {
+        throw new functions.https.HttpsError('invalid-argument', 'templateId, coachName, and soulFilet are required.');
+    }
+
+    const coachRef = admin.firestore().collection('coachPrompts').doc(templateId);
+    await coachRef.set({
+        templateId,
+        appName,
+        coachName,
+        avatar,
+        soulFilet,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: context.auth.uid
+    }, { merge: true });
+
+    let updatedGoals = 0;
+    if (applyToExistingGoals) {
+        const querySnapshot = await admin.firestore()
+            .collection('rocketGoals')
+            .where('answers.launchpad_template_id', '==', templateId)
+            .get();
+
+        if (!querySnapshot.empty) {
+            let batch = admin.firestore().batch();
+            let opCount = 0;
+
+            for (const goalDoc of querySnapshot.docs) {
+                const goalData = goalDoc.data() as any;
+                const existingCopilot = goalData.copilot || {};
+
+                batch.update(goalDoc.ref, {
+                    copilot: {
+                        ...existingCopilot,
+                        name: coachName,
+                        role: soulFilet,
+                        avatar: avatar || existingCopilot.avatar || ''
+                    }
+                });
+
+                opCount++;
+                updatedGoals++;
+
+                if (opCount >= 400) {
+                    await batch.commit();
+                    batch = admin.firestore().batch();
+                    opCount = 0;
+                }
+            }
+
+            if (opCount > 0) {
+                await batch.commit();
+            }
+        }
+    }
+
+    return { success: true, updatedGoals };
+});
+
+/**
  * Scheduled Cloud Function that runs every hour to check for scheduled reminders
  * This checks all enabled reminders and sends emails if the current time matches
  */
