@@ -8,6 +8,7 @@ import { UserProfile } from '../models/user-profile';
 import { firebaseConfig } from '../../../environments/environment';
 import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
+import { LAUNCHPAD_TEMPLATES } from '../launchpad/launchpad.types';
 
 type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
 
@@ -98,6 +99,9 @@ export class AdminComponent implements OnInit {
   private router = inject(Router);
   private readonly theme = inject(ThemeService);
   protected readonly isDarkMode = this.theme.isDarkMode;
+  readonly coachNames = Object.values(LAUNCHPAD_TEMPLATES)
+    .filter((template) => template.id !== 'lean-launch')
+    .map((template) => template.coPilotName);
 
   // Email form state
   emailTo = signal('');
