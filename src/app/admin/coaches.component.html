@@ -1,34 +1,50 @@
-<div class="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
+<div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0a0a0f] dark:text-slate-100 transition-colors">
   @if (checkingAuth()) {
-  <div class="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+  <div class="min-h-screen flex items-center justify-center">
     <div class="flex flex-col items-center gap-4">
-      <div
-        class="w-16 h-16 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin dark:border-rose-500/30 dark:border-t-rose-400">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 animate-spin opacity-30"></div>
+        <div class="absolute inset-2 w-16 h-16 rounded-full bg-slate-50 dark:bg-[#0a0a0f]"></div>
+        <div class="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-rose-500 rounded-full animate-spin"></div>
       </div>
-      <p class="text-slate-500 font-medium dark:text-slate-300">Verifying admin access...</p>
+      <p class="text-slate-500 font-medium dark:text-slate-400">Verifying admin access...</p>
     </div>
   </div>
   } @else {
-  <header
-    class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200 dark:bg-slate-900/80 dark:border-white/5">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+
+  <!-- Animated Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] rounded-full bg-gradient-to-br from-rose-500/8 via-purple-500/5 to-transparent blur-3xl animate-pulse-slow"></div>
+    <div class="absolute -bottom-[30%] -right-[20%] w-[70%] h-[70%] rounded-full bg-gradient-to-tl from-cyan-500/8 via-blue-500/5 to-transparent blur-3xl animate-pulse-slow animation-delay-2000"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] rounded-full bg-gradient-to-r from-violet-500/5 to-pink-500/5 blur-3xl animate-pulse-slow animation-delay-4000"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur-2xl bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
           <a routerLink="/admin"
-            class="flex items-center justify-center w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all border border-slate-200 dark:bg-slate-800 dark:border-white/10 dark:hover:bg-slate-700">
-            <svg class="w-5 h-5 text-slate-700 dark:text-slate-200" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
+            class="group flex items-center justify-center w-11 h-11 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md hover:border-rose-300 dark:hover:border-rose-500/30 transition-all duration-300">
+            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </a>
           <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight dark:text-white">Coaches</h1>
-            <p class="text-slate-500 text-sm dark:text-slate-400">Launchpad coach system prompts</p>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 animate-pulse"></div>
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">AI Configuration</span>
+              </div>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
+              Coach Directory
+            </h1>
           </div>
         </div>
         <div class="flex items-center gap-3">
           <button type="button" (click)="toggleDarkMode()" [attr.aria-pressed]="isDarkMode()"
-            class="p-2.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+            class="p-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-rose-300 dark:hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-300 shadow-sm hover:shadow-md"
             title="Toggle appearance">
             @if (isDarkMode()) {
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,111 +64,265 @@
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900/80 dark:border-white/10">
-      <div class="px-6 py-5 border-b border-slate-200 dark:border-white/10">
-        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Coach Directory</p>
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white">All Coaches ({{ coachPrompts().length }})</h2>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-300">
-          Edit each coach's <strong>Soul Filet</strong> (system prompt), upload/download markdown, and update avatar. Save pushes changes to backend and existing goals for that coach.
-        </p>
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Hero Section -->
+    <section class="mb-10">
+      <div class="hero-card relative overflow-hidden rounded-3xl p-8 sm:p-10">
+        <!-- Decorative Elements -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-500/20 via-purple-500/10 to-transparent rounded-full blur-2xl"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-violet-500/15 via-blue-500/10 to-transparent rounded-full blur-2xl"></div>
+
+        <!-- Grid Pattern -->
+        <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23000&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"></div>
+
+        <div class="relative z-10">
+          <div class="flex flex-wrap items-center gap-3 mb-4">
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-rose-500/10 to-orange-500/10 border border-rose-500/20 dark:border-rose-400/20">
+              <svg class="w-4 h-4 text-rose-500 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="text-sm font-bold text-rose-600 dark:text-rose-400">System Prompts</span>
+            </span>
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-500/20 dark:border-violet-400/20">
+              <svg class="w-4 h-4 text-violet-500 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              <span class="text-sm font-bold text-violet-600 dark:text-violet-400">{{ coachPrompts().length }} Coaches</span>
+            </span>
+          </div>
+
+          <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-3">
+            Manage Your AI
+            <span class="bg-gradient-to-r from-rose-500 via-violet-500 to-cyan-500 bg-clip-text text-transparent"> Coaching Squad</span>
+          </h2>
+          <p class="text-lg text-slate-600 dark:text-slate-300 max-w-2xl">
+            Edit each coach's <strong>Soul Filet</strong> (system prompt), upload or download markdown, and update avatars. Changes are pushed live to backend and all existing goals.
+          </p>
+
+          <div class="flex flex-wrap gap-6 mt-6 pt-6 border-t border-slate-200/50 dark:border-white/5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-lg shadow-rose-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">Edit Prompts</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Fine-tune soul filets</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">Upload / Export</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Markdown file support</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">Live Deploy</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Instant updates to goals</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </section>
+
+    <!-- Coach List -->
+    <section class="space-y-6">
+
       @if (loading()) {
-      <div class="p-10 text-center text-slate-500 dark:text-slate-300">Loading coaches...</div>
+      <div class="coach-card rounded-3xl p-10 text-center">
+        <div class="flex flex-col items-center gap-4">
+          <div class="relative">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-rose-500/20 via-violet-500/20 to-cyan-500/20 animate-spin"></div>
+            <div class="absolute inset-1.5 rounded-full bg-white dark:bg-slate-900"></div>
+            <div class="absolute inset-0 w-14 h-14 border-3 border-transparent border-t-rose-500 rounded-full animate-spin"></div>
+          </div>
+          <p class="text-slate-500 dark:text-slate-400 font-medium">Loading coaches...</p>
+        </div>
+      </div>
       } @else if (loadError()) {
-      <div class="p-6 text-rose-700 dark:text-rose-300">{{ loadError() }}</div>
+      <div class="error-toast rounded-2xl px-6 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <p class="text-rose-800 dark:text-rose-200 font-medium">{{ loadError() }}</p>
+        </div>
+      </div>
       } @else {
-      <div class="divide-y divide-slate-200 dark:divide-white/10">
-        @for (coach of coachPrompts(); track coach.templateId) {
-        <article class="p-6 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
+      @for (coach of coachPrompts(); track coach.templateId; let i = $index) {
+      <article class="coach-card rounded-3xl overflow-hidden animate-fade-in-up" [style.animation-delay]="(i * 80) + 'ms'">
+
+        <!-- Coach Card Header -->
+        <div class="px-6 sm:px-8 py-5 border-b border-slate-100 dark:border-white/5 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="coach-number">{{ i + 1 }}</span>
             <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <span class="badge-app">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
                 {{ coach.appName }}
               </span>
               @if (isPromptExactlyDefault(coach)) {
-              <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                Matches current system
+              <span class="badge-default">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Matches system default
               </span>
               } @else {
-              <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                Edited
+              <span class="badge-edited">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+                Customized
               </span>
               }
             </div>
-            <div class="flex items-center gap-2">
-              <button type="button" (click)="downloadMd(coach)"
-                class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-white/20 dark:text-slate-200 dark:hover:bg-slate-800">
-                Download .md
-              </button>
-              <label class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer dark:border-white/20 dark:text-slate-200 dark:hover:bg-slate-800">
-                Upload .md
-                <input type="file" accept=".md,text/markdown" class="hidden" (change)="handleMdUpload(coach.templateId, $event)" />
-              </label>
-              <button type="button" (click)="resetToDefaults(coach.templateId)"
-                class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-white/20 dark:text-slate-200 dark:hover:bg-slate-800">
-                Reset to default
-              </button>
-            </div>
           </div>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="downloadMd(coach)" class="action-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Download .md
+            </button>
+            <label class="action-btn cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              Upload .md
+              <input type="file" accept=".md,text/markdown" class="hidden" (change)="handleMdUpload(coach.templateId, $event)" />
+            </label>
+            <button type="button" (click)="resetToDefaults(coach.templateId)" class="action-btn-cyan action-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582M20 20v-5h-.581M5.08 15A7.999 7.999 0 0018.92 9M18.92 15A7.999 7.999 0 005.08 9"/>
+              </svg>
+              Reset
+            </button>
+          </div>
+        </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-[160px,1fr] gap-4">
-            <div class="space-y-2">
-              <img [src]="coach.avatar || coach.defaultAvatar" alt="{{ coach.coachName }}"
-                class="w-36 h-36 object-cover rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800" />
-              <label class="inline-flex rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer dark:border-white/20 dark:text-slate-200 dark:hover:bg-slate-800">
+        <!-- Coach Card Body -->
+        <div class="p-6 sm:p-8">
+          <div class="grid grid-cols-1 md:grid-cols-[180px,1fr] gap-6">
+
+            <!-- Avatar Column -->
+            <div class="flex flex-col items-center gap-3">
+              <div class="relative group">
+                <div class="absolute -inset-1 bg-gradient-to-br from-rose-500/30 via-violet-500/20 to-cyan-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <img [src]="coach.avatar || coach.defaultAvatar" [alt]="coach.coachName"
+                  class="relative coach-avatar w-40 h-40 bg-slate-100 dark:bg-slate-800" />
+              </div>
+              <label class="upload-btn">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
                 Upload Image
                 <input type="file" accept="image/*" class="hidden" (change)="handleImageUpload(coach.templateId, $event)" />
               </label>
             </div>
 
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-1">
-                  Coach Name
-                </label>
+            <!-- Fields Column -->
+            <div class="space-y-5">
+
+              <!-- Coach Name -->
+              <div class="space-y-1.5">
+                <label class="input-label">Coach Name</label>
                 <input type="text" [value]="coach.coachName" (input)="updateCoachName(coach.templateId, $any($event.target).value)"
-                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-slate-900" />
+                  class="input-field" placeholder="Enter coach name..." />
               </div>
 
-              <div>
-                <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-1">
-                  Avatar URL / Data URL
-                </label>
+              <!-- Avatar URL -->
+              <div class="space-y-1.5">
+                <label class="input-label">Avatar URL / Data URL</label>
                 <input type="text" [value]="coach.avatar" (input)="updateAvatar(coach.templateId, $any($event.target).value)"
-                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-slate-900" />
+                  class="input-field" placeholder="https://... or data:image/..." />
               </div>
 
-              <div>
-                <label class="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-1">
-                  Soul Filet (System Prompt Field)
-                </label>
+              <!-- Soul Filet -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="input-label">Soul Filet (System Prompt)</label>
+                  <span class="text-[11px] font-medium text-slate-400 dark:text-slate-500">Markdown supported</span>
+                </div>
                 <textarea [value]="coach.soulFilet" (input)="updateSoulFilet(coach.templateId, $any($event.target).value)"
                   rows="10"
-                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-slate-900"></textarea>
+                  class="textarea-field" placeholder="Enter the coach's system prompt..."></textarea>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2">
+              <!-- Save Row -->
+              <div class="flex flex-wrap items-center gap-3 pt-2">
                 <button type="button" [disabled]="coach.isSaving || !coach.isDirty" (click)="saveCoachPrompt(coach)"
-                  class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-slate-900">
-                  @if (coach.isSaving) { Saving... } @else { Save & Apply Live }
+                  class="save-btn">
+                  @if (coach.isSaving) {
+                  <div class="relative w-4 h-4">
+                    <div class="absolute inset-0 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                  </div>
+                  <span>Saving...</span>
+                  } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                  </svg>
+                  <span>Save & Apply Live</span>
+                  }
                 </button>
                 @if (coach.updatedGoals > 0) {
-                <span class="text-xs text-emerald-700 dark:text-emerald-300">Updated {{ coach.updatedGoals }} existing goals</span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Updated {{ coach.updatedGoals }} existing goals
+                </span>
                 }
               </div>
+
+              <!-- Messages -->
               @if (coach.saveMessage) {
-              <p class="text-sm text-emerald-700 dark:text-emerald-300">{{ coach.saveMessage }}</p>
+              <div class="animate-slide-down flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{{ coach.saveMessage }}</p>
+              </div>
               }
               @if (coach.saveError) {
-              <p class="text-sm text-rose-700 dark:text-rose-300">{{ coach.saveError }}</p>
+              <div class="error-toast rounded-xl px-4 py-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </div>
+                  <p class="text-sm font-semibold text-rose-700 dark:text-rose-300">{{ coach.saveError }}</p>
+                </div>
+              </div>
               }
             </div>
           </div>
-        </article>
-        }
-      </div>
+        </div>
+      </article>
       }
+      }
+
     </section>
   </main>
   }

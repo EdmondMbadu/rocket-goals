@@ -1,3 +1,500 @@
+/* =====================================================
+   COACHES - PREMIUM UI STYLES
+   ===================================================== */
+
 :host {
   display: block;
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+/* Hero Card */
+.hero-card {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 241, 242, 0.9) 35%,
+    rgba(237, 233, 254, 0.9) 65%,
+    rgba(236, 254, 255, 0.9) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 20px 40px -15px rgba(225, 29, 72, 0.1),
+    0 20px 40px -15px rgba(139, 92, 246, 0.08);
+}
+
+:host-context(.dark) .hero-card {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 20, 30, 0.9) 35%,
+    rgba(25, 20, 40, 0.9) 65%,
+    rgba(20, 30, 35, 0.9) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 25px 50px -15px rgba(244, 63, 94, 0.15),
+    0 25px 50px -15px rgba(139, 92, 246, 0.1);
+}
+
+/* Coach Cards */
+.coach-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.coach-card:hover {
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .coach-card {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:host-context(.dark) .coach-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.3),
+    0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Input Styles */
+.input-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(100, 116, 139);
+}
+
+:host-context(.dark) .input-label {
+  color: rgb(148, 163, 184);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  color: rgb(15, 23, 42);
+  transition: all 0.2s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: rgb(244, 63, 94);
+  box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.1);
+}
+
+.input-field::placeholder {
+  color: rgb(148, 163, 184);
+}
+
+:host-context(.dark) .input-field {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+:host-context(.dark) .input-field:focus {
+  border-color: rgb(251, 113, 133);
+  box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.15);
+}
+
+:host-context(.dark) .input-field::placeholder {
+  color: rgb(100, 116, 139);
+}
+
+.textarea-field {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 0.8125rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: rgb(15, 23, 42);
+  transition: all 0.2s ease;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.textarea-field:focus {
+  outline: none;
+  border-color: rgb(139, 92, 246);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+:host-context(.dark) .textarea-field {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+:host-context(.dark) .textarea-field:focus {
+  border-color: rgb(167, 139, 250);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+}
+
+/* Coach Avatar */
+.coach-avatar {
+  border-radius: 1.25rem;
+  border: 2px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  object-fit: cover;
+}
+
+.coach-avatar:hover {
+  transform: scale(1.03);
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+:host-context(.dark) .coach-avatar {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Action Buttons */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(100, 116, 139);
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  color: rgb(15, 23, 42);
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:host-context(.dark) .action-btn {
+  color: rgb(148, 163, 184);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.dark) .action-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.action-btn-rose {
+  color: rgb(225, 29, 72);
+  background: rgba(225, 29, 72, 0.06);
+  border-color: rgba(225, 29, 72, 0.15);
+}
+
+.action-btn-rose:hover {
+  color: rgb(190, 18, 60);
+  background: rgba(225, 29, 72, 0.12);
+  border-color: rgba(225, 29, 72, 0.25);
+}
+
+:host-context(.dark) .action-btn-rose {
+  color: rgb(251, 113, 133);
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+
+:host-context(.dark) .action-btn-rose:hover {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.action-btn-cyan {
+  color: rgb(14, 116, 144);
+  background: rgba(6, 182, 212, 0.06);
+  border-color: rgba(6, 182, 212, 0.15);
+}
+
+.action-btn-cyan:hover {
+  color: rgb(8, 145, 178);
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+:host-context(.dark) .action-btn-cyan {
+  color: rgb(103, 232, 249);
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(34, 211, 238, 0.2);
+}
+
+:host-context(.dark) .action-btn-cyan:hover {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+/* Save Button */
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, rgb(225, 29, 72), rgb(249, 115, 22));
+  box-shadow: 
+    0 4px 14px rgba(225, 29, 72, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.save-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.save-btn:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(225, 29, 72, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, rgb(148, 163, 184), rgb(100, 116, 139));
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.2);
+}
+
+/* Upload Image Button */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(139, 92, 246);
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.upload-btn:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+:host-context(.dark) .upload-btn {
+  color: rgb(196, 181, 253);
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
+:host-context(.dark) .upload-btn:hover {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+/* Status Badges */
+.badge-default {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(52, 211, 153, 0.08));
+  color: rgb(5, 150, 105);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+:host-context(.dark) .badge-default {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.08));
+  color: rgb(110, 231, 183);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.badge-edited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 191, 36, 0.08));
+  color: rgb(180, 83, 9);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+:host-context(.dark) .badge-edited {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.08));
+  color: rgb(253, 224, 71);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.badge-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+  color: rgb(79, 70, 229);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+:host-context(.dark) .badge-app {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08));
+  color: rgb(196, 181, 253);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* Coach Card Number */
+.coach-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgb(241, 245, 249), rgb(226, 232, 240));
+  color: rgb(100, 116, 139);
+}
+
+:host-context(.dark) .coach-number {
+  background: linear-gradient(135deg, rgb(51, 65, 85), rgb(30, 41, 59));
+  color: rgb(148, 163, 184);
+}
+
+/* Section Header Card */
+.section-header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+:host-context(.dark) .section-header {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Success Message */
+.success-toast {
+  background: linear-gradient(135deg, rgb(16, 185, 129), rgb(20, 184, 166));
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+/* Error Message */
+.error-toast {
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(254, 226, 226, 0.9));
+  border: 1.5px solid rgba(225, 29, 72, 0.2);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);
+}
+
+:host-context(.dark) .error-toast {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.2), rgba(153, 27, 27, 0.15));
+  border-color: rgba(244, 63, 94, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hero-card {
+    padding: 1.5rem;
+  }
+
+  .save-btn {
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+  }
 }
