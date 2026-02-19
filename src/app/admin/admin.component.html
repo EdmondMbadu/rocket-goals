@@ -709,9 +709,29 @@
             <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Users</p>
             <h2 class="text-xl font-bold text-slate-900">All users</h2>
             <p class="text-sm text-slate-500">
-              @if (usersLoading()) { Loading users... } @else { {{ users().length }} total }
+              @if (usersLoading()) { Loading users... } @else { {{ filteredUsers().length }} shown &middot; {{ realUserCount() }} real &middot; {{ botUserCount() }} bots }
             </p>
           </div>
+          <div class="flex items-center gap-3">
+            @if (!usersLoading() && users().length > 0) {
+            <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+              <button type="button" (click)="userFilter.set('all')"
+                [class]="userFilter() === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                class="px-3 py-1 text-xs font-semibold rounded-md transition-all">
+                All
+              </button>
+              <button type="button" (click)="userFilter.set('real')"
+                [class]="userFilter() === 'real' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                class="px-3 py-1 text-xs font-semibold rounded-md transition-all">
+                Real
+              </button>
+              <button type="button" (click)="userFilter.set('bots')"
+                [class]="userFilter() === 'bots' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                class="px-3 py-1 text-xs font-semibold rounded-md transition-all">
+                Bots
+              </button>
+            </div>
+            }
           <button type="button" (click)="toggleSection('users')"
             class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
             <span>@if (sectionOpen('users')) { Collapse } @else { Expand }</span>
@@ -725,6 +745,7 @@
             </svg>
             }
           </button>
+          </div>
         </div>
         @if (sectionOpen('users')) {
         <div class="border-t border-slate-200">
@@ -739,6 +760,8 @@
           </div>
           } @else if (users().length === 0) {
           <div class="px-6 py-5 text-slate-500">No users found.</div>
+          } @else if (filteredUsers().length === 0) {
+          <div class="px-6 py-5 text-slate-500">No {{ userFilter() === 'bots' ? 'bot' : 'real' }} users found.</div>
           } @else {
           <div class="divide-y divide-slate-200">
             <div
@@ -749,18 +772,25 @@
               <span>Signed up</span>
               <span>Last sign-in</span>
             </div>
-            @for (user of users(); track user.id) {
+            @for (user of filteredUsers(); track user.id) {
             <div
-              class="px-6 py-4 grid grid-cols-1 md:grid-cols-[1.2fr,1.2fr,0.6fr,0.8fr,0.9fr] gap-3 md:gap-4 items-center">
+              class="px-6 py-4 grid grid-cols-1 md:grid-cols-[1.2fr,1.2fr,0.6fr,0.8fr,0.9fr] gap-3 md:gap-4 items-center"
+              [class.bg-rose-50]="isLikelyBot(user)" [class.bg-rose-50/40]="isLikelyBot(user)">
               <div class="flex items-center gap-3 min-w-0">
                 <div
-                  class="h-11 w-11 rounded-full bg-slate-100 text-slate-700 font-semibold flex items-center justify-center">
+                  class="h-11 w-11 rounded-full font-semibold flex items-center justify-center"
+                  [class]="isLikelyBot(user) ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-700'">
                   {{ (user.firstName || user.lastName || user.email || 'U').charAt(0).toUpperCase() }}
                 </div>
                 <div class="min-w-0">
-                  <p class="text-sm font-semibold text-slate-900 truncate">
-                    {{ (user.firstName + ' ' + user.lastName).trim() || 'Unnamed user' }}
-                  </p>
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-semibold text-slate-900 truncate">
+                      {{ (user.firstName + ' ' + user.lastName).trim() || 'Unnamed user' }}
+                    </p>
+                    @if (isLikelyBot(user)) {
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">Bot</span>
+                    }
+                  </div>
                   <p class="text-xs text-slate-500 truncate md:hidden">
                     {{ user.email || 'No email on file' }}
                   </p>

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -155,6 +155,17 @@ export class AdminComponent implements OnInit {
   users = signal<AdminUser[]>([]);
   usersLoading = signal(false);
   usersError = signal<string | null>(null);
+  userFilter = signal<'all' | 'real' | 'bots'>('all');
+  filteredUsers = computed(() => {
+    const all = this.users();
+    const filter = this.userFilter();
+    if (filter === 'all') return all;
+    return all.filter((u) =>
+      filter === 'bots' ? this.isLikelyBot(u) : !this.isLikelyBot(u)
+    );
+  });
+  realUserCount = computed(() => this.users().filter((u) => !this.isLikelyBot(u)).length);
+  botUserCount = computed(() => this.users().filter((u) => this.isLikelyBot(u)).length);
   sections = signal<Record<SectionKey, boolean>>({
     users: false,
     email: false,
@@ -1088,6 +1099,29 @@ export class AdminComponent implements OnInit {
       console.error('Failed to enrich with auth metadata', err);
       return users;
     }
+  }
+
+  isLikelyBot(user: AdminUser): boolean {
+    const firstName = (user.firstName || '').trim();
+    const lastName = (user.lastName || '').trim();
+
+    if (!firstName && !lastName) return false;
+
+    for (const part of [firstName, lastName]) {
+      if (!part || part.length < 3) continue;
+
+      if (part.length > 15) return true;
+
+      const inner = part.slice(1);
+      const midUpperCount = [...inner].filter((c) => c >= 'A' && c <= 'Z').length;
+      if (inner.length > 2 && midUpperCount / inner.length > 0.2) return true;
+
+      const vowels = [...part.toLowerCase()].filter((c) => 'aeiou'.includes(c)).length;
+      const vowelRatio = vowels / part.length;
+      if (part.length > 5 && vowelRatio < 0.15) return true;
+    }
+
+    return false;
   }
 
   private sortUsersByLatest(users: AdminUser[]): AdminUser[] {
