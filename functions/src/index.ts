@@ -2156,13 +2156,23 @@ function buildGroupedGoalBlocks(
         let imageBlock = '';
         if (goal.coachAvatarUrl && goal.coachName) {
             imageBlock = `
-                <div style="margin: 12px 0 10px 0; display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <img src="${goal.coachAvatarUrl}" alt="${goal.coachName}" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #dc2626; flex-shrink: 0;" />
-                    <div>
-                        <p style="margin: 0 0 2px 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; font-weight: 700;">Your AI Coach</p>
-                        <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111827;">${goal.coachName}</p>
-                    </div>
-                </div>`;
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 14px 0 12px 0;">
+                    <tr>
+                        <td style="padding: 14px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td width="56" valign="middle" style="padding-right: 14px;">
+                                        <img src="${goal.coachAvatarUrl}" alt="${goal.coachName}" width="52" height="52" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #dc2626; display: block;" />
+                                    </td>
+                                    <td valign="middle">
+                                        <p style="margin: 0 0 2px 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; font-weight: 700; line-height: 1.4;">Your AI Coach</p>
+                                        <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111827; line-height: 1.3;">${goal.coachName}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>`;
         } else if (goal.imageUrl) {
             imageBlock = `<div style="margin: 12px 0 10px 0; border-radius: 12px; overflow: hidden; border: 1px solid #f3f4f6;">
                     <img src="${goal.imageUrl}" alt="${goal.title}" style="width: 100%; height: 150px; object-fit: cover; display: block;" />
