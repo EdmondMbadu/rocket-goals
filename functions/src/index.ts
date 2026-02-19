@@ -1991,7 +1991,45 @@ type GroupedGoalReminderItem = {
     imageUrl?: string;
     isMyOneThing?: boolean;
     createdAtMs?: number;
+    coachName?: string;
+    coachAvatarUrl?: string;
 };
+
+const APP_SUITE_COACHES: Record<string, { name: string; avatar: string }> = {
+    'hustle-orbit': { name: 'Marcus Chen', avatar: '/assets/ogilvy.jpg' },
+    'opti-human': { name: 'Dr. Elena Vance', avatar: '/assets/a-2.jpg' },
+    'marketing-maven': { name: 'Sarah Jenkins', avatar: '/assets/sarah-jenkins.jpg' },
+    'pipeline-pilot': { name: 'David Ross', avatar: '/assets/a-4.jpg' },
+    'apex-ascend': { name: 'Robert Sterling', avatar: '/assets/a-5.jpg' },
+    'creator-craft': { name: 'Maya Rivera', avatar: '/assets/a-6.jpg' },
+    'neuro-nexus': { name: 'Alex Tech', avatar: '/assets/a-7.jpg' },
+    'boss-beam': { name: 'Claire Beaumont', avatar: '/assets/a-8.jpg' },
+    'my-sugar-shift': { name: 'Lucille Grant', avatar: '/assets/a-9.jpg' },
+    'my-rocket-ride': { name: 'Tom Wheeler', avatar: '/assets/a-10.jpg' },
+    'marathon-mover': { name: 'Coach Alina Park', avatar: '/assets/gym-coach.jpg' },
+    'career-quest': { name: 'Maya Ellis', avatar: '/assets/career.jpg' },
+    'lean-launch': { name: 'Coach Tess', avatar: '/assets/tess.png' }
+};
+
+const BASE_URL = 'https://www.rocketgoals.com';
+
+function getCoachInfoFromGoalData(goalData: FirebaseFirestore.DocumentData): { coachName: string; coachAvatarUrl: string } | null {
+    const templateId = goalData.answers?.launchpad_template_id
+        || goalData.answers?.prebuilt_template_id
+        || goalData.answers?.source_template_id;
+    if (templateId) {
+        const coach = APP_SUITE_COACHES[templateId];
+        if (coach) {
+            return { coachName: coach.name, coachAvatarUrl: `${BASE_URL}${coach.avatar}` };
+        }
+    }
+    if (goalData.copilot?.name && goalData.copilot?.avatar) {
+        const avatar = goalData.copilot.avatar as string;
+        const avatarUrl = avatar.startsWith('http') ? avatar : `${BASE_URL}${avatar}`;
+        return { coachName: goalData.copilot.name, coachAvatarUrl: avatarUrl };
+    }
+    return null;
+}
 
 type GroupedGoalEmailOptions = {
     subject: string;
@@ -2084,6 +2122,9 @@ function buildGroupedGoalBlocks(
         const oneThingTag = goal.isMyOneThing ? ' [MY ONE THING]' : '';
         lines.push(`${index + 1}. ${goal.title}${oneThingTag}`);
         lines.push(`   Link: ${goal.url}`);
+        if (goal.coachName) {
+            lines.push(`   AI Coach: ${goal.coachName}`);
+        }
 
         if (options.includeActiveMilestone && goal.activeMilestone) {
             lines.push(`   Active milestone: ${goal.activeMilestone}`);
@@ -2112,11 +2153,21 @@ function buildGroupedGoalBlocks(
         const ribbon = goal.isMyOneThing
             ? `<div style="position: absolute; top: 0; left: 0; right: 0; padding: 8px 12px; text-align: center; background: linear-gradient(90deg,#111827,#dc2626 55%,#f97316); color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;">My One THING</div>`
             : '';
-        const imageBlock = goal.imageUrl
-            ? `<div style="margin: 12px 0 10px 0; border-radius: 12px; overflow: hidden; border: 1px solid #f3f4f6;">
+        let imageBlock = '';
+        if (goal.coachAvatarUrl && goal.coachName) {
+            imageBlock = `
+                <div style="margin: 12px 0 10px 0; display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <img src="${goal.coachAvatarUrl}" alt="${goal.coachName}" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #dc2626; flex-shrink: 0;" />
+                    <div>
+                        <p style="margin: 0 0 2px 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; font-weight: 700;">Your AI Coach</p>
+                        <p style="margin: 0; font-size: 15px; font-weight: 700; color: #111827;">${goal.coachName}</p>
+                    </div>
+                </div>`;
+        } else if (goal.imageUrl) {
+            imageBlock = `<div style="margin: 12px 0 10px 0; border-radius: 12px; overflow: hidden; border: 1px solid #f3f4f6;">
                     <img src="${goal.imageUrl}" alt="${goal.title}" style="width: 100%; height: 150px; object-fit: cover; display: block;" />
-               </div>`
-            : '';
+               </div>`;
+        }
         if (options.includeActiveMilestone && goal.activeMilestone) {
             detailLines.push(`<p style="margin: 4px 0 0 0; color: #6b7280; font-size: 13px;"><strong>Active milestone:</strong> ${goal.activeMilestone}</p>`);
         }
@@ -2632,6 +2683,7 @@ export const sendTestDailyReminder = functions.runWith({
 
             const oneThing = (latestIgnition?.oneThingText || activeMilestone || '').trim();
             const missionLogSummary = summarizeMissionLog(latestMissionLog);
+            const coachInfo = getCoachInfoFromGoalData(goalData);
 
             goals.push({
                 id: goalDoc.id,
@@ -2641,7 +2693,9 @@ export const sendTestDailyReminder = functions.runWith({
                 activeMilestone,
                 oneThing,
                 missionLogSummary,
-                imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl,
+                imageUrl: coachInfo ? undefined : (goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl),
+                coachName: coachInfo?.coachName,
+                coachAvatarUrl: coachInfo?.coachAvatarUrl,
                 createdAtMs: getTimestampMs(goalData.createdAt) || getTimestampMs(goalData.startTime) || undefined
             });
         }
@@ -2809,12 +2863,15 @@ export const sendBulkGoalReminders = functions.runWith({
 
                         const milestones = (await getUpcomingMilestones(goalId, goalData)).slice(0, 3);
                         const goalUrl = `https://www.rocketgoals.com/rocketgoal/${goalId}?tab=milestones`;
+                        const bulkCoachInfo = getCoachInfoFromGoalData(goalData);
                         const goalItem: GroupedGoalReminderItem = {
                             id: goalId,
                             title: goalTitle,
                             url: goalUrl,
                             milestones,
-                            imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl,
+                            imageUrl: bulkCoachInfo ? undefined : (goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl),
+                            coachName: bulkCoachInfo?.coachName,
+                            coachAvatarUrl: bulkCoachInfo?.coachAvatarUrl,
                             createdAtMs: getTimestampMs(goalData.createdAt) || getTimestampMs(goalData.startTime) || undefined
                         };
 
@@ -5639,6 +5696,7 @@ export const processScheduledReminders = functions.runWith({
 
                                 const oneThing = (latestIgnition?.oneThingText || activeMilestone || '').trim();
                                 const missionLogSummary = summarizeMissionLog(latestMissionLog);
+                                const scheduledCoachInfo = getCoachInfoFromGoalData(goalData);
                                 const goalItem: GroupedGoalReminderItem = {
                                     id: goalDoc.id,
                                     title: goalTitle,
@@ -5647,7 +5705,9 @@ export const processScheduledReminders = functions.runWith({
                                     activeMilestone,
                                     oneThing,
                                     missionLogSummary,
-                                    imageUrl: goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl,
+                                    imageUrl: scheduledCoachInfo ? undefined : (goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl),
+                                    coachName: scheduledCoachInfo?.coachName,
+                                    coachAvatarUrl: scheduledCoachInfo?.coachAvatarUrl,
                                     createdAtMs: getTimestampMs(goalData.createdAt) || getTimestampMs(goalData.startTime) || undefined
                                 };
 
