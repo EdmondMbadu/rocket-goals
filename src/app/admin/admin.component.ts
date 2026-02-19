@@ -155,7 +155,7 @@ export class AdminComponent implements OnInit {
   users = signal<AdminUser[]>([]);
   usersLoading = signal(false);
   usersError = signal<string | null>(null);
-  userFilter = signal<'all' | 'real' | 'bots'>('all');
+  userFilter = signal<'all' | 'real' | 'bots'>('real');
   filteredUsers = computed(() => {
     const all = this.users();
     const filter = this.userFilter();
