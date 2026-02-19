@@ -36,11 +36,31 @@ export class TeamDetailComponent implements OnInit {
   async ngOnInit() {
     const teamId = this.route.snapshot.paramMap.get('id');
     if (teamId) {
-      await this.loadTeam(teamId);
-      await this.loadMessages(teamId);
+      this.waitForAuthAndLoad(teamId);
     } else {
       this.loading.set(false);
     }
+  }
+
+  private waitForAuthAndLoad(teamId: string) {
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const tryLoad = async () => {
+      attempts++;
+      const profile = this.authService.profile();
+
+      if (profile?.userId) {
+        await this.loadTeam(teamId);
+        await this.loadMessages(teamId);
+      } else if (attempts < maxAttempts) {
+        setTimeout(tryLoad, 200);
+      } else {
+        this.loading.set(false);
+      }
+    };
+
+    setTimeout(tryLoad, 100);
   }
 
   private async loadTeam(teamId: string) {

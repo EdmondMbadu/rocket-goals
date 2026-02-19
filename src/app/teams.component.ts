@@ -33,17 +33,39 @@ export class TeamsComponent implements OnInit {
   inviteEmails = signal<string[]>([]);
 
   async ngOnInit() {
-    await this.loadTeams();
+    this.waitForAuthAndLoadTeams();
+  }
+
+  private waitForAuthAndLoadTeams() {
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const tryLoad = async () => {
+      attempts++;
+      const profile = this.authService.profile();
+
+      if (profile?.userId) {
+        await this.loadTeams();
+      } else if (attempts < maxAttempts) {
+        setTimeout(tryLoad, 200);
+      } else {
+        this.loading.set(false);
+      }
+    };
+
+    setTimeout(tryLoad, 100);
   }
 
   async loadTeams() {
     this.loading.set(true);
     try {
       const userId = this.authService.profile()?.userId;
-      if (userId) {
-        const teams = await this.teamService.getTeamsByUserId(userId);
-        this.teams.set(teams);
+      if (!userId) {
+        this.loading.set(false);
+        return;
       }
+      const teams = await this.teamService.getTeamsByUserId(userId);
+      this.teams.set(teams);
     } catch (err) {
       console.error('Failed to load teams:', err);
     } finally {
