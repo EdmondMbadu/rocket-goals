@@ -112,7 +112,7 @@ export class App implements AfterViewInit, OnDestroy {
   private document = inject(DOCUMENT);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected mobileNavOpen = signal(false);
   protected readonly isAuthRoute = computed(() => {
@@ -124,7 +124,8 @@ export class App implements AfterViewInit, OnDestroy {
       this.componentRoutes.has(routePath) ||
       routePath.startsWith('/rocketgoal/') ||
       routePath.startsWith('/admin/') ||
-      routePath.startsWith('/launchpad/');
+      routePath.startsWith('/launchpad/') ||
+      routePath.startsWith('/team/');
   });
 
   constructor() {

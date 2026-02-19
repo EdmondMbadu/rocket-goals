@@ -14,6 +14,8 @@ export const routes: Routes = [
   { path: 'admin/synthetic-market-testing', loadComponent: () => import('./admin/synthetic-market-testing.component').then(m => m.SyntheticMarketTestingComponent) },
   { path: 'admin/coaches', loadComponent: () => import('./admin/coaches.component').then(m => m.CoachesComponent) },
   { path: 'admin', loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent) },
+  { path: 'teams', loadComponent: () => import('./teams.component').then(m => m.TeamsComponent), canActivate: [authGuard] },
+  { path: 'team/:id', loadComponent: () => import('./team-detail.component').then(m => m.TeamDetailComponent), canActivate: [authGuard] },
   { path: 'ai', loadComponent: () => import('./rocket-ai-page.component').then(m => m.RocketAiPageComponent) },
   { path: 'quiz', loadComponent: () => import('./rocket-quiz/rocket-quiz').then(m => m.RocketQuiz) },
   { path: 'pricing', loadComponent: () => import('./pricing-page.component').then(m => m.PricingPageComponent), canActivate: [authGuard] },
