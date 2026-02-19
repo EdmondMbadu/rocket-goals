@@ -43,8 +43,10 @@ export class CoachesComponent implements OnInit {
   sharedPhilosophy = signal('');
   sharedPhilosophySaving = signal(false);
   sharedPhilosophyDirty = signal(false);
+  sharedPhilosophyWarning = signal<string | null>(null);
   sharedPhilosophyMessage = signal<string | null>(null);
   sharedPhilosophyError = signal<string | null>(null);
+  sharedPhilosophyExpanded = signal(false);
   searchQuery = signal('');
   searchFeedback = signal<string | null>(null);
   highlightedTemplateId = signal<string | null>(null);
@@ -132,15 +134,41 @@ export class CoachesComponent implements OnInit {
   updateSharedPhilosophy(value: string) {
     this.sharedPhilosophy.set(value);
     this.sharedPhilosophyDirty.set(true);
+    this.sharedPhilosophyWarning.set(null);
     this.sharedPhilosophyMessage.set(null);
     this.sharedPhilosophyError.set(null);
   }
 
+  toggleSharedPhilosophyExpanded() {
+    this.sharedPhilosophyExpanded.update((current) => !current);
+  }
+
+  sharedPhilosophyWordCount(): number {
+    return this.countWords(this.sharedPhilosophy());
+  }
+
   async saveSharedPhilosophy() {
     const rocketGoalsPhilosophy = this.sharedPhilosophy().trim();
+    const wordCount = this.countWords(rocketGoalsPhilosophy);
+
+    this.sharedPhilosophyWarning.set(null);
     this.sharedPhilosophySaving.set(true);
     this.sharedPhilosophyMessage.set(null);
     this.sharedPhilosophyError.set(null);
+
+    if (wordCount > 1000) {
+      this.sharedPhilosophySaving.set(false);
+      this.sharedPhilosophyError.set(
+        'For speed considerations, compact this prompt which will be shared to all coaches to 1000 words.'
+      );
+      return;
+    }
+
+    if (wordCount > 250) {
+      this.sharedPhilosophyWarning.set(
+        `Warning: this shared philosophy is ${wordCount} words. For best speed, keep it concise.`
+      );
+    }
 
     try {
       await this.coachPromptsService.saveSharedPhilosophy({ rocketGoalsPhilosophy });
@@ -221,6 +249,7 @@ export class CoachesComponent implements OnInit {
       const config = await this.coachPromptsService.getSharedPhilosophy();
       this.sharedPhilosophy.set(config.rocketGoalsPhilosophy || '');
       this.sharedPhilosophyDirty.set(false);
+      this.sharedPhilosophyWarning.set(null);
       this.sharedPhilosophyMessage.set(null);
       this.sharedPhilosophyError.set(null);
     } catch (error: any) {
@@ -368,5 +397,11 @@ export class CoachesComponent implements OnInit {
       if (item.templateId !== templateId) return item;
       return { ...item, ...patch };
     }));
+  }
+
+  private countWords(value: string): number {
+    const text = (value || '').trim();
+    if (!text) return 0;
+    return text.split(/\s+/).filter(Boolean).length;
   }
 }
