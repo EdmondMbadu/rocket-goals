@@ -14,6 +14,9 @@ const geminiApiKey = defineSecret('GEMINI_API_KEY');
 // Constants
 const LINK_TOKEN_EXPIRY_MINUTES = 15;
 const MAX_CONVERSATION_HISTORY = 20;
+const SHARED_COACH_PHILOSOPHY_CACHE_TTL_MS = 5 * 60 * 1000;
+let sharedCoachPhilosophyCacheValue = '';
+let sharedCoachPhilosophyCacheLoadedAt = 0;
 
 // Store user's selected goal in Firestore (telegramToUser document)
 interface TelegramUserPrefs {
@@ -40,6 +43,31 @@ function getCurrentMissionDay(startTimeMs: number | null): number {
   start.setHours(0, 0, 0, 0);
   const elapsedDays = Math.floor((now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
   return Math.max(1, elapsedDays);
+}
+
+async function getSharedCoachPhilosophy(): Promise<string> {
+  const now = Date.now();
+  if (
+    sharedCoachPhilosophyCacheLoadedAt > 0 &&
+    now - sharedCoachPhilosophyCacheLoadedAt < SHARED_COACH_PHILOSOPHY_CACHE_TTL_MS
+  ) {
+    return sharedCoachPhilosophyCacheValue;
+  }
+
+  try {
+    const snapshot = await admin.firestore()
+      .collection('coachPromptSettings')
+      .doc('global')
+      .get();
+    const data = snapshot.exists ? snapshot.data() : null;
+    sharedCoachPhilosophyCacheValue = (data?.rocketGoalsPhilosophy || '').toString().trim();
+  } catch (error) {
+    console.error('Failed to load shared coach philosophy for Telegram:', error);
+    sharedCoachPhilosophyCacheValue = '';
+  }
+
+  sharedCoachPhilosophyCacheLoadedAt = now;
+  return sharedCoachPhilosophyCacheValue;
 }
 
 function formatMilestoneDate(startTimeMs: number | null, dayNumber: number): string {
@@ -569,7 +597,7 @@ async function storeMessages(
 /**
  * Build system prompt for Telegram context
  */
-function buildTelegramSystemPrompt(goalContext: any): string {
+async function buildTelegramSystemPrompt(goalContext: any): Promise<string> {
   const now = new Date();
   const currentDateStr = now.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -583,6 +611,11 @@ function buildTelegramSystemPrompt(goalContext: any): string {
     hour12: true
   });
 
+  const sharedPhilosophy = await getSharedCoachPhilosophy();
+  const sharedPhilosophyBlock = sharedPhilosophy
+    ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}`
+    : '';
+
   // Check if there's a custom copilot persona
   const copilot = goalContext?.copilot;
   let baseIdentity: string;
@@ -595,12 +628,12 @@ You are the user's dedicated strategic co-pilot for this mission. Embody this pe
 Your mission is to guide individuals using the ROCKET Goal framework while bringing your unique expertise and perspective.
 
 CURRENT DATE AND TIME:
-Today is ${currentDateStr}. The current time is ${currentTimeStr}.`;
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.${sharedPhilosophyBlock}`;
   } else {
     baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework.
 
 CURRENT DATE AND TIME:
-Today is ${currentDateStr}. The current time is ${currentTimeStr}.`;
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.${sharedPhilosophyBlock}`;
   }
 
   const telegramGuidelines = `
@@ -642,10 +675,11 @@ async function callGeminiAI(
   goalContext: any,
   apiKey: string
 ): Promise<string> {
+  const systemInstruction = await buildTelegramSystemPrompt(goalContext);
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: buildTelegramSystemPrompt(goalContext),
+    systemInstruction,
     generationConfig: {
       temperature: 0.8,
       topP: 0.95,

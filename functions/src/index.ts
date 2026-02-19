@@ -67,6 +67,34 @@ const getPlanFromPriceId = (priceId: string | null | undefined): 'moonshot' | 'i
     return PRICE_TO_PLAN[priceId] || null;
 };
 
+const SHARED_COACH_PHILOSOPHY_CACHE_TTL_MS = 5 * 60 * 1000;
+let sharedCoachPhilosophyCacheValue = '';
+let sharedCoachPhilosophyCacheLoadedAt = 0;
+
+async function getSharedCoachPhilosophy(): Promise<string> {
+    const now = Date.now();
+    if (sharedCoachPhilosophyCacheLoadedAt > 0 &&
+        now - sharedCoachPhilosophyCacheLoadedAt < SHARED_COACH_PHILOSOPHY_CACHE_TTL_MS) {
+        return sharedCoachPhilosophyCacheValue;
+    }
+
+    try {
+        const snapshot = await admin.firestore()
+            .collection('coachPromptSettings')
+            .doc('global')
+            .get();
+        const data = snapshot.exists ? snapshot.data() : null;
+        const philosophy = (data?.rocketGoalsPhilosophy || '').toString().trim();
+        sharedCoachPhilosophyCacheValue = philosophy;
+    } catch (error) {
+        console.error('Failed to load shared coach philosophy:', error);
+        sharedCoachPhilosophyCacheValue = '';
+    }
+
+    sharedCoachPhilosophyCacheLoadedAt = now;
+    return sharedCoachPhilosophyCacheValue;
+}
+
 const parseStripeSignature = (header: string) => {
     const parts = header.split(',').map((part) => part.trim());
     const timestampPart = parts.find((part) => part.startsWith('t='));
@@ -744,7 +772,7 @@ This blueprint embodies your unique approach to achieving opulence through both 
 /**
  * Build system prompt for the AI with calendar + progress context
  */
-function buildSystemPrompt(goalContext: any, calendarEvents: any[], actionItems: any[], latestMissionLog: any): string {
+async function buildSystemPrompt(goalContext: any, calendarEvents: any[], actionItems: any[], latestMissionLog: any): Promise<string> {
     // Get current date information for AI awareness
     const now = new Date();
     const currentDateStr = now.toLocaleDateString('en-US', {
@@ -758,6 +786,12 @@ function buildSystemPrompt(goalContext: any, calendarEvents: any[], actionItems:
         minute: '2-digit',
         hour12: true
     });
+
+    // Shared philosophy (admin-editable)
+    const sharedPhilosophy = await getSharedCoachPhilosophy();
+    const sharedPhilosophyBlock = sharedPhilosophy
+        ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}`
+        : '';
 
     // Check if there's a custom copilot persona from app-suite
     const copilot = goalContext?.copilot;
@@ -773,14 +807,14 @@ Your mission is to guide individuals using the ROCKET Goal framework while bring
 
 CURRENT DATE AND TIME:
 Today is ${currentDateStr}. The current time is ${currentTimeStr}.
-Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.`;
+Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.${sharedPhilosophyBlock}`;
     } else {
         // Default RocketGoals AI persona
         baseIdentity = `You are a world-class coach, motivational genius, and unsurpassed goal-setting expert. Your mission is to guide individuals using the ROCKET Goal framework. You also help users manage their calendar and schedule for achieving their goals.
 
 CURRENT DATE AND TIME:
 Today is ${currentDateStr}. The current time is ${currentTimeStr}.
-Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.`;
+Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.${sharedPhilosophyBlock}`;
     }
 
     const conversationGuidelines = `CRITICAL CONVERSATION GUIDELINES:
@@ -1055,7 +1089,7 @@ export const rocketGoalsAI = onCall({
         console.log(`🔧 Available tools: ${toolRegistry.getToolNames().join(', ')}`);
 
         // Build system prompt with context
-        const systemInstruction = buildSystemPrompt(goalContext, calendarEvents, actionItems, latestMissionLog);
+        const systemInstruction = await buildSystemPrompt(goalContext, calendarEvents, actionItems, latestMissionLog);
 
         // Initialize Gemini with function calling
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -5601,6 +5635,43 @@ export const saveCoachPromptConfig = functions.runWith({
     }
 
     return { success: true, updatedGoals };
+});
+
+/**
+ * Admin-only shared philosophy manager.
+ * Persists RocketGoals Philosophy used across all coaches.
+ */
+export const saveSharedCoachPhilosophy = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: {
+    rocketGoalsPhilosophy: string;
+}, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can edit shared philosophy.');
+    }
+
+    const rocketGoalsPhilosophy = (data?.rocketGoalsPhilosophy || '').toString().trim();
+
+    await admin.firestore()
+        .collection('coachPromptSettings')
+        .doc('global')
+        .set({
+            rocketGoalsPhilosophy,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedBy: context.auth.uid
+        }, { merge: true });
+
+    // Update in-memory cache immediately.
+    sharedCoachPhilosophyCacheValue = rocketGoalsPhilosophy;
+    sharedCoachPhilosophyCacheLoadedAt = Date.now();
+
+    return { success: true };
 });
 
 /**

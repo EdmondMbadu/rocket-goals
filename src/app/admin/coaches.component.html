@@ -139,6 +139,61 @@
       </div>
     </section>
 
+    <!-- Shared Philosophy -->
+    <section class="mb-8">
+      <div class="coach-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Shared Core</p>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white">RocketGoals Philosophy</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Global philosophy shared by all coaches. Keep coach-specific Soul Filets below.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="downloadSharedPhilosophyMd()" class="action-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Download .md
+            </button>
+            <label class="action-btn cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              Upload .md
+              <input type="file" accept=".md,text/markdown" class="hidden" (change)="handleSharedMdUpload($event)" />
+            </label>
+          </div>
+        </div>
+
+        <textarea
+          [value]="sharedPhilosophy()"
+          (input)="updateSharedPhilosophy($any($event.target).value)"
+          rows="10"
+          class="textarea-field"
+          placeholder="Add the RocketGoals Philosophy here. This will be shared across all coach prompts."></textarea>
+
+        <div class="flex flex-wrap items-center gap-3 pt-4">
+          <button type="button" [disabled]="sharedPhilosophySaving() || !sharedPhilosophyDirty()" (click)="saveSharedPhilosophy()"
+            class="save-btn">
+            @if (sharedPhilosophySaving()) {
+            <div class="relative w-4 h-4">
+              <div class="absolute inset-0 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+            </div>
+            <span>Saving...</span>
+            } @else {
+            <span>Save Shared Philosophy</span>
+            }
+          </button>
+          @if (sharedPhilosophyMessage()) {
+          <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{{ sharedPhilosophyMessage() }}</span>
+          }
+          @if (sharedPhilosophyError()) {
+          <span class="text-sm font-semibold text-rose-600 dark:text-rose-400">{{ sharedPhilosophyError() }}</span>
+          }
+        </div>
+      </div>
+    </section>
+
     <!-- Coach Search -->
     <section class="mb-8">
       <div class="coach-card rounded-2xl p-5 sm:p-6">

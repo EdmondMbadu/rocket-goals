@@ -40,6 +40,11 @@ export class CoachesComponent implements OnInit {
   checkingAuth = signal(true);
   loading = signal(true);
   loadError = signal<string | null>(null);
+  sharedPhilosophy = signal('');
+  sharedPhilosophySaving = signal(false);
+  sharedPhilosophyDirty = signal(false);
+  sharedPhilosophyMessage = signal<string | null>(null);
+  sharedPhilosophyError = signal<string | null>(null);
   searchQuery = signal('');
   searchFeedback = signal<string | null>(null);
   highlightedTemplateId = signal<string | null>(null);
@@ -68,7 +73,7 @@ export class CoachesComponent implements OnInit {
     }
 
     this.checkingAuth.set(false);
-    await this.loadCoachPrompts();
+    await Promise.all([this.loadCoachPrompts(), this.loadSharedPhilosophy()]);
   }
 
   toggleDarkMode() {
@@ -124,6 +129,59 @@ export class CoachesComponent implements OnInit {
     return `coach-card-${templateId}`;
   }
 
+  updateSharedPhilosophy(value: string) {
+    this.sharedPhilosophy.set(value);
+    this.sharedPhilosophyDirty.set(true);
+    this.sharedPhilosophyMessage.set(null);
+    this.sharedPhilosophyError.set(null);
+  }
+
+  async saveSharedPhilosophy() {
+    const rocketGoalsPhilosophy = this.sharedPhilosophy().trim();
+    this.sharedPhilosophySaving.set(true);
+    this.sharedPhilosophyMessage.set(null);
+    this.sharedPhilosophyError.set(null);
+
+    try {
+      await this.coachPromptsService.saveSharedPhilosophy({ rocketGoalsPhilosophy });
+      this.sharedPhilosophyDirty.set(false);
+      this.sharedPhilosophyMessage.set('RocketGoals Philosophy saved and applied.');
+    } catch (error: any) {
+      console.error('Failed to save shared philosophy:', error);
+      this.sharedPhilosophyError.set(error?.message || 'Unable to save shared philosophy.');
+    } finally {
+      this.sharedPhilosophySaving.set(false);
+    }
+  }
+
+  async handleSharedMdUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      this.updateSharedPhilosophy(text);
+    } catch (error: any) {
+      this.sharedPhilosophyError.set(error?.message || 'Unable to read markdown file.');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  downloadSharedPhilosophyMd() {
+    const content = this.sharedPhilosophy() || '';
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'rocketgoals-philosophy.md';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   private async loadCoachPrompts() {
     this.loading.set(true);
     this.loadError.set(null);
@@ -155,6 +213,19 @@ export class CoachesComponent implements OnInit {
       this.loadError.set(error?.message || 'Unable to load coach prompts.');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private async loadSharedPhilosophy() {
+    try {
+      const config = await this.coachPromptsService.getSharedPhilosophy();
+      this.sharedPhilosophy.set(config.rocketGoalsPhilosophy || '');
+      this.sharedPhilosophyDirty.set(false);
+      this.sharedPhilosophyMessage.set(null);
+      this.sharedPhilosophyError.set(null);
+    } catch (error: any) {
+      console.error('Failed to load shared philosophy:', error);
+      this.sharedPhilosophyError.set(error?.message || 'Unable to load RocketGoals Philosophy.');
     }
   }
 

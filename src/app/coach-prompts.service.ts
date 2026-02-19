@@ -12,6 +12,12 @@ export type CoachPromptConfig = {
   updatedBy?: string;
 };
 
+export type SharedCoachPhilosophyConfig = {
+  rocketGoalsPhilosophy: string;
+  updatedAt?: unknown;
+  updatedBy?: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class CoachPromptsService {
   private firestoreInstance?: Promise<Firestore>;
@@ -85,5 +91,30 @@ export class CoachPromptsService {
     const fn = httpsCallable(getFunctions(getApp()), 'saveCoachPromptConfig');
     const result = await fn(payload);
     return result.data as { success: boolean; updatedGoals: number };
+  }
+
+  async getSharedPhilosophy(): Promise<SharedCoachPhilosophyConfig> {
+    const firestore = await this.getFirestore();
+    const firestoreModule = await import('firebase/firestore');
+    const ref = firestoreModule.doc(firestore, 'coachPromptSettings', 'global');
+    const snapshot = await firestoreModule.getDoc(ref);
+    if (!snapshot.exists()) {
+      return { rocketGoalsPhilosophy: '' };
+    }
+
+    const data = snapshot.data() as Partial<SharedCoachPhilosophyConfig>;
+    return {
+      rocketGoalsPhilosophy: data.rocketGoalsPhilosophy || '',
+      updatedAt: data.updatedAt,
+      updatedBy: data.updatedBy
+    };
+  }
+
+  async saveSharedPhilosophy(payload: { rocketGoalsPhilosophy: string }) {
+    const { getFunctions, httpsCallable } = await import('firebase/functions');
+    const { getApp } = await import('firebase/app');
+    const fn = httpsCallable(getFunctions(getApp()), 'saveSharedCoachPhilosophy');
+    const result = await fn(payload);
+    return result.data as { success: boolean };
   }
 }
