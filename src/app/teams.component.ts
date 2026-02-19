@@ -22,7 +22,9 @@ export class TeamsComponent implements OnInit {
   loading = signal(true);
   showCreateModal = signal(false);
   creating = signal(false);
+  deleting = signal(false);
   mobileNavOpen = signal(false);
+  teamToDelete = signal<Team | null>(null);
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
 
@@ -75,6 +77,26 @@ export class TeamsComponent implements OnInit {
 
   navigateToTeam(teamId: string) {
     this.router.navigate(['/team', teamId]);
+  }
+
+  confirmDelete(team: Team, event: Event) {
+    event.stopPropagation();
+    this.teamToDelete.set(team);
+  }
+
+  async deleteTeam() {
+    const team = this.teamToDelete();
+    if (!team || this.deleting()) return;
+    this.deleting.set(true);
+    try {
+      await this.teamService.deleteTeam(team.id);
+      this.teams.update(list => list.filter(t => t.id !== team.id));
+      this.teamToDelete.set(null);
+    } catch (err) {
+      console.error('Failed to delete team:', err);
+    } finally {
+      this.deleting.set(false);
+    }
   }
 
   addInviteEmail() {
