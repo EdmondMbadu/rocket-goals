@@ -1108,17 +1108,13 @@ export class AdminComponent implements OnInit {
     if (!firstName && !lastName) return false;
 
     for (const part of [firstName, lastName]) {
-      if (!part || part.length < 3) continue;
+      if (!part || part.length < 5) continue;
 
-      if (part.length > 15) return true;
+      if (part.length > 18) return true;
 
       const inner = part.slice(1);
       const midUpperCount = [...inner].filter((c) => c >= 'A' && c <= 'Z').length;
-      if (inner.length > 2 && midUpperCount / inner.length > 0.2) return true;
-
-      const vowels = [...part.toLowerCase()].filter((c) => 'aeiou'.includes(c)).length;
-      const vowelRatio = vowels / part.length;
-      if (part.length > 5 && vowelRatio < 0.15) return true;
+      if (inner.length > 3 && midUpperCount / inner.length > 0.35) return true;
     }
 
     return false;
