@@ -31,3 +31,165 @@
 :host-context(.dark) .admin-page .shadow-lg {
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.7) !important;
 }
+
+/* ── User Row ── */
+
+.user-row {
+  padding: 16px 24px;
+  transition: background 0.12s;
+}
+
+.user-row:hover {
+  background: #f8fafc;
+}
+
+.user-row--bot {
+  background: #fff5f5;
+}
+
+.user-row--bot:hover {
+  background: #fff1f2;
+}
+
+.user-row__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-row__avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-row__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.user-row__meta-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.user-row__meta-tag--active,
+.user-row__meta-tag--pro {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.user-row__meta-tag--trialing {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.user-row__meta-tag--none,
+.user-row__meta-tag--Free {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.user-row__meta-date {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.user-row__goals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-left: 48px;
+}
+
+.user-row__goal {
+  display: inline-block;
+  max-width: 280px;
+  padding: 3px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive: stack on mobile */
+
+@media (max-width: 767px) {
+  .user-row__top {
+    flex-wrap: wrap;
+  }
+
+  .user-row__meta {
+    width: 100%;
+    padding-left: 48px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .user-row__goals {
+    padding-left: 48px;
+  }
+}
+
+/* ── Dark mode overrides for user rows ── */
+
+:host-context(.dark) .user-row:hover {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+:host-context(.dark) .user-row--bot {
+  background: rgba(136, 19, 55, 0.15);
+}
+
+:host-context(.dark) .user-row--bot:hover {
+  background: rgba(136, 19, 55, 0.25);
+}
+
+:host-context(.dark) .user-row__meta-tag--active,
+:host-context(.dark) .user-row__meta-tag--pro {
+  background: rgba(22, 163, 74, 0.2);
+  color: #4ade80;
+}
+
+:host-context(.dark) .user-row__meta-tag--trialing {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38bdf8;
+}
+
+:host-context(.dark) .user-row__meta-tag--none,
+:host-context(.dark) .user-row__meta-tag--Free {
+  background: rgba(51, 65, 85, 0.5);
+  color: #94a3b8;
+}
+
+:host-context(.dark) .user-row__meta-date {
+  color: #64748b;
+}
+
+:host-context(.dark) .user-row__goal {
+  background: rgba(51, 65, 85, 0.5);
+  color: #cbd5e1;
+}

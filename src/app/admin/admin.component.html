@@ -764,26 +764,15 @@
           <div class="px-6 py-5 text-slate-500">No {{ userFilter() === 'bots' ? 'bot' : 'real' }} users found.</div>
           } @else {
           <div class="divide-y divide-slate-200">
-            <div
-              class="hidden md:grid grid-cols-[1.1fr,1.1fr,1.4fr,0.6fr,0.8fr,0.9fr] px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 bg-slate-50 border-b border-slate-200">
-              <span>Name</span>
-              <span>Email</span>
-              <span>Goals</span>
-              <span>Plan</span>
-              <span>Signed up</span>
-              <span>Last sign-in</span>
-            </div>
             @for (user of filteredUsers(); track user.id) {
-            <div
-              class="px-6 py-4 grid grid-cols-1 md:grid-cols-[1.1fr,1.1fr,1.4fr,0.6fr,0.8fr,0.9fr] gap-3 md:gap-4 items-center"
-              [class.bg-rose-50]="isLikelyBot(user)" [class.bg-rose-50/40]="isLikelyBot(user)">
-              <div class="flex items-center gap-3 min-w-0">
-                <div
-                  class="h-11 w-11 rounded-full font-semibold flex items-center justify-center"
-                  [class]="isLikelyBot(user) ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-700'">
+            <div class="user-row" [class.user-row--bot]="isLikelyBot(user)">
+              <!-- Top: user info + meta -->
+              <div class="user-row__top">
+                <div class="user-row__avatar"
+                  [class]="isLikelyBot(user) ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'">
                   {{ (user.firstName || user.lastName || user.email || 'U').charAt(0).toUpperCase() }}
                 </div>
-                <div class="min-w-0">
+                <div class="user-row__info">
                   <div class="flex items-center gap-2">
                     <p class="text-sm font-semibold text-slate-900 truncate">
                       {{ (user.firstName + ' ' + user.lastName).trim() || 'Unnamed user' }}
@@ -792,34 +781,24 @@
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">Bot</span>
                     }
                   </div>
-                  <p class="text-xs text-slate-500 truncate md:hidden">
-                    {{ user.email || 'No email on file' }}
-                  </p>
+                  <p class="text-xs text-slate-500 truncate">{{ user.email || 'No email on file' }}</p>
+                </div>
+                <div class="user-row__meta">
+                  <span class="user-row__meta-tag" [class]="'user-row__meta-tag--' + (user.subscriptionStatus || 'none')">
+                    {{ user.subscriptionStatus || 'Free' }}
+                  </span>
+                  <span class="user-row__meta-date">Joined {{ formatDate(user.createdAt) }}</span>
+                  <span class="user-row__meta-date">Last seen {{ formatDate(user.lastSignInAt || user.lastSignIn) }}</span>
                 </div>
               </div>
-              <div class="text-sm text-slate-600 truncate hidden md:block">
-                {{ user.email || 'No email on file' }}
-              </div>
-              <div class="text-sm text-slate-700">
-                @if ((user.goals?.length ?? 0) > 0) {
-                <div class="max-h-24 overflow-auto pr-1 space-y-1">
-                  @for (goal of user.goals; track goal.id) {
-                  <p class="text-xs text-slate-700 truncate" [title]="goal.title">{{ goal.title }}</p>
-                  }
-                </div>
-                } @else {
-                <span class="text-slate-400 text-xs">No goals</span>
+              <!-- Bottom: goals -->
+              @if ((user.goals?.length ?? 0) > 0) {
+              <div class="user-row__goals">
+                @for (goal of user.goals; track goal.id) {
+                <span class="user-row__goal" [title]="goal.title">{{ goal.title }}</span>
                 }
               </div>
-              <div class="text-sm text-slate-700">
-                {{ user.subscriptionStatus || '-' }}
-              </div>
-              <div class="text-sm text-slate-700">
-                {{ formatDate(user.createdAt) }}
-              </div>
-              <div class="text-sm text-slate-700">
-                {{ formatDate(user.lastSignInAt || user.lastSignIn) }}
-              </div>
+              }
             </div>
             }
           </div>
