@@ -69,6 +69,20 @@
   gap: 14px;
 }
 
+.user-row__num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+}
+
 .user-row__avatar {
   flex-shrink: 0;
   width: 40px;
@@ -137,7 +151,7 @@
 
 .user-row__goals-wrap {
   margin-top: 12px;
-  padding-left: 54px;
+  padding-left: 82px;
 }
 
 .user-row__goals {
@@ -178,14 +192,14 @@
 
   .user-row__meta {
     width: 100%;
-    padding-left: 54px;
+    padding-left: 82px;
     margin-top: 4px;
     flex-wrap: wrap;
     gap: 8px;
   }
 
   .user-row__goals-wrap {
-    padding-left: 54px;
+    padding-left: 82px;
   }
 }
 
@@ -238,4 +252,9 @@
 
 :host-context(.dark) .user-row__no-goals {
   color: #64748b;
+}
+
+:host-context(.dark) .user-row__num {
+  background: rgba(51, 65, 85, 0.6);
+  color: #94a3b8;
 }

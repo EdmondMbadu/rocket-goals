@@ -764,10 +764,11 @@
           <div class="px-6 py-5 text-slate-500">No {{ userFilter() === 'bots' ? 'bot' : 'real' }} users found.</div>
           } @else {
           <div class="divide-y divide-slate-200">
-            @for (user of filteredUsers(); track user.id) {
+            @for (user of filteredUsers(); track user.id; let i = $index) {
             <div class="user-row" [class.user-row--bot]="isLikelyBot(user)">
               <!-- Top: user info + meta -->
               <div class="user-row__top">
+                <span class="user-row__num">{{ i + 1 }}</span>
                 <div class="user-row__avatar"
                   [class]="isLikelyBot(user) ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'">
                   {{ (user.firstName || user.lastName || user.email || 'U').charAt(0).toUpperCase() }}
