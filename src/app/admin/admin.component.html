@@ -792,13 +792,17 @@
                 </div>
               </div>
               <!-- Bottom: goals -->
-              @if ((user.goals?.length ?? 0) > 0) {
-              <div class="user-row__goals">
-                @for (goal of user.goals; track goal.id) {
-                <span class="user-row__goal" [title]="goal.title">{{ goal.title }}</span>
+              <div class="user-row__goals-wrap">
+                @if ((user.goals?.length ?? 0) > 0) {
+                <div class="user-row__goals">
+                  @for (goal of user.goals; track goal.id) {
+                  <span class="user-row__goal" [title]="goal.title">{{ goal.title }}</span>
+                  }
+                </div>
+                } @else {
+                <p class="user-row__no-goals">No goals yet</p>
                 }
               </div>
-              }
             </div>
             }
           </div>
