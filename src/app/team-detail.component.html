@@ -386,15 +386,26 @@
     <div class="px-6 py-5">
       <div class="flex gap-2">
         <input type="email" [(ngModel)]="inviteEmailField" placeholder="member@email.com"
-          (keydown.enter)="inviteMember()"
-          class="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-black dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm" />
-        <button (click)="inviteMember()"
-          class="px-5 py-3 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-colors">
-          Send
+          (keydown.enter)="inviteMember()" [disabled]="inviteLoading()"
+          class="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-black dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm disabled:opacity-50" />
+        <button (click)="inviteMember()" [disabled]="inviteLoading()"
+          class="px-5 py-3 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+          @if (inviteLoading()) {
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          Adding...
+          } @else {
+          Add
+          }
         </button>
       </div>
+      @if (inviteError()) {
+      <p class="text-xs text-red-600 dark:text-red-400 font-medium mt-3">{{ inviteError() }}</p>
+      }
+      @if (inviteSuccess()) {
+      <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-3">{{ inviteSuccess() }}</p>
+      }
       <p class="text-xs text-gray-400 dark:text-slate-500 mt-3">
-        The member will need a Rocket Goals account. For now, share the team link with them.
+        Enter the email of an existing Rocket Goals user to add them directly.
       </p>
     </div>
     <div class="px-6 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex justify-end">

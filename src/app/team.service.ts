@@ -74,6 +74,26 @@ export class TeamService {
     });
   }
 
+  async findUserByEmail(email: string): Promise<{ userId: string; firstName: string; lastName: string; email: string; profilePictureUrl?: string } | null> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const q = fm.query(
+      fm.collection(firestore, 'userProfiles'),
+      fm.where('email', '==', email.toLowerCase()),
+      fm.limit(1)
+    );
+    const snapshot = await fm.getDocs(q);
+    if (snapshot.empty) return null;
+    const data = snapshot.docs[0].data();
+    return {
+      userId: data['userId'] || snapshot.docs[0].id,
+      firstName: data['firstName'] || '',
+      lastName: data['lastName'] || '',
+      email: data['email'] || email,
+      profilePictureUrl: data['profilePictureUrl']
+    };
+  }
+
   async addMemberToTeam(teamId: string, member: Team['members'][0]): Promise<void> {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');

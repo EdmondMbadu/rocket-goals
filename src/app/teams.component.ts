@@ -147,6 +147,26 @@ export class TeamsComponent implements OnInit {
         aiCoachEnabled: this.newTeamAiCoach
       });
 
+      const emails = this.inviteEmails();
+      for (const email of emails) {
+        try {
+          const user = await this.teamService.findUserByEmail(email);
+          if (user) {
+            await this.teamService.addMemberToTeam(teamId, {
+              userId: user.userId,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              profilePictureUrl: user.profilePictureUrl,
+              role: 'member',
+              joinedAt: Date.now()
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to add invited member ${email}:`, err);
+        }
+      }
+
       this.closeCreateModal();
       this.router.navigate(['/team', teamId]);
     } catch (err) {

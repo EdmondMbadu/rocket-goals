@@ -66,7 +66,12 @@ type ScheduledReminder = {
   lastRunAt?: unknown;
   createdBy: string;
 };
-type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown };
+type UserGoalSummary = {
+  id: string;
+  title: string;
+  createdAt?: unknown;
+};
+type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown; goals?: UserGoalSummary[] };
 type AiAnalytics = {
   path: string;
   dateRange: { startDate: string; endDate: string };
@@ -1045,11 +1050,34 @@ export class AdminComponent implements OnInit {
     try {
       const firestore = await this.ensureFirestore();
       const firestoreModule = await import('firebase/firestore');
-      const collectionRef = firestoreModule.collection(firestore, 'userProfiles');
-      const snapshot = await firestoreModule.getDocs(collectionRef);
-      const data = snapshot.docs.map((doc) => {
+      const usersCollectionRef = firestoreModule.collection(firestore, 'userProfiles');
+      const goalsCollectionRef = firestoreModule.collection(firestore, 'rocketGoals');
+      const [usersSnapshot, goalsSnapshot] = await Promise.all([
+        firestoreModule.getDocs(usersCollectionRef),
+        firestoreModule.getDocs(goalsCollectionRef)
+      ]);
+
+      const goalsByUserId = new Map<string, UserGoalSummary[]>();
+      goalsSnapshot.docs.forEach((doc) => {
+        const payload = doc.data() as { userId?: string; primaryGoal?: string; createdAt?: unknown };
+        const userId = payload.userId;
+        if (!userId) return;
+
+        const title = (payload.primaryGoal ?? '').toString().trim() || 'Untitled goal';
+        const userGoals = goalsByUserId.get(userId) ?? [];
+        userGoals.push({ id: doc.id, title, createdAt: payload.createdAt });
+        goalsByUserId.set(userId, userGoals);
+      });
+
+      goalsByUserId.forEach((goals, userId) => {
+        goals.sort((a, b) => this.getTimestampMillis(b.createdAt) - this.getTimestampMillis(a.createdAt));
+        goalsByUserId.set(userId, goals);
+      });
+
+      const data = usersSnapshot.docs.map((doc) => {
         const payload = doc.data() as AdminUser;
-        return { ...payload, id: doc.id, userId: payload.userId || doc.id };
+        const userId = payload.userId || doc.id;
+        return { ...payload, id: doc.id, userId, goals: goalsByUserId.get(userId) ?? [] };
       });
       const enriched = await this.enrichWithAuthMetadata(data);
       this.users.set(this.sortUsersByLatest(enriched));

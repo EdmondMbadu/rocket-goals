@@ -26,6 +26,9 @@ export class TeamDetailComponent implements OnInit {
   messages = signal<TeamMessage[]>([]);
   showInviteModal = signal(false);
   sendingMessage = signal(false);
+  inviteLoading = signal(false);
+  inviteError = signal<string | null>(null);
+  inviteSuccess = signal<string | null>(null);
 
   newMessage = '';
   inviteEmailField = '';
@@ -131,12 +134,54 @@ export class TeamDetailComponent implements OnInit {
     }
   }
 
-  inviteMember() {
+  async inviteMember() {
     const email = this.inviteEmailField.trim().toLowerCase();
     if (!email || !email.includes('@')) return;
-    // Placeholder: in the future this will send an actual invite
-    console.log('Invite sent to:', email);
-    this.inviteEmailField = '';
+
+    const teamData = this.team();
+    if (!teamData?.id) return;
+
+    if (teamData.memberIds.includes(email) || teamData.members.some(m => m.email === email)) {
+      this.inviteError.set('This person is already a member of the team.');
+      return;
+    }
+
+    this.inviteLoading.set(true);
+    this.inviteError.set(null);
+    this.inviteSuccess.set(null);
+
+    try {
+      const user = await this.teamService.findUserByEmail(email);
+      if (!user) {
+        this.inviteError.set('No Rocket Goals account found for that email.');
+        return;
+      }
+
+      if (teamData.memberIds.includes(user.userId)) {
+        this.inviteError.set('This person is already a member of the team.');
+        return;
+      }
+
+      await this.teamService.addMemberToTeam(teamData.id, {
+        userId: user.userId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profilePictureUrl: user.profilePictureUrl,
+        role: 'member',
+        joinedAt: Date.now()
+      });
+
+      this.inviteEmailField = '';
+      const name = `${user.firstName} ${user.lastName}`.trim() || user.email;
+      this.inviteSuccess.set(`${name} has been added to the team!`);
+      await this.loadTeam(teamData.id);
+    } catch (err: any) {
+      console.error('Failed to add member:', err);
+      this.inviteError.set(err.message || 'Failed to add member. Please try again.');
+    } finally {
+      this.inviteLoading.set(false);
+    }
   }
 
   onEnterKey(event: Event) {

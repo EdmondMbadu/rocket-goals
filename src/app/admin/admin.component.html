@@ -765,16 +765,17 @@
           } @else {
           <div class="divide-y divide-slate-200">
             <div
-              class="hidden md:grid grid-cols-[1.2fr,1.2fr,0.6fr,0.8fr,0.9fr] px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 bg-slate-50 border-b border-slate-200">
+              class="hidden md:grid grid-cols-[1.1fr,1.1fr,1.4fr,0.6fr,0.8fr,0.9fr] px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 bg-slate-50 border-b border-slate-200">
               <span>Name</span>
               <span>Email</span>
+              <span>Goals</span>
               <span>Plan</span>
               <span>Signed up</span>
               <span>Last sign-in</span>
             </div>
             @for (user of filteredUsers(); track user.id) {
             <div
-              class="px-6 py-4 grid grid-cols-1 md:grid-cols-[1.2fr,1.2fr,0.6fr,0.8fr,0.9fr] gap-3 md:gap-4 items-center"
+              class="px-6 py-4 grid grid-cols-1 md:grid-cols-[1.1fr,1.1fr,1.4fr,0.6fr,0.8fr,0.9fr] gap-3 md:gap-4 items-center"
               [class.bg-rose-50]="isLikelyBot(user)" [class.bg-rose-50/40]="isLikelyBot(user)">
               <div class="flex items-center gap-3 min-w-0">
                 <div
@@ -798,6 +799,17 @@
               </div>
               <div class="text-sm text-slate-600 truncate hidden md:block">
                 {{ user.email || 'No email on file' }}
+              </div>
+              <div class="text-sm text-slate-700">
+                @if ((user.goals?.length ?? 0) > 0) {
+                <div class="max-h-24 overflow-auto pr-1 space-y-1">
+                  @for (goal of user.goals; track goal.id) {
+                  <p class="text-xs text-slate-700 truncate" [title]="goal.title">{{ goal.title }}</p>
+                  }
+                </div>
+                } @else {
+                <span class="text-slate-400 text-xs">No goals</span>
+                }
               </div>
               <div class="text-sm text-slate-700">
                 {{ user.subscriptionStatus || '-' }}
