@@ -362,118 +362,122 @@
 </div>
 
 @if (showJoinOnboarding() && showJoinModal()) {
-<div class="modal-overlay join-modal-overlay" (click)="closeJoinModal()">
-  <div class="join-modal-card" (click)="$event.stopPropagation()">
-    <div class="join-modal-header">
-      <div>
-        <p class="join-kicker">Join Team</p>
-        <h2 class="join-title">{{ team()!.name }}</h2>
-        <p class="join-subtext">Sign up or log in. You will be added instantly.</p>
-      </div>
-      <button class="join-close" (click)="closeJoinModal()" aria-label="Close join modal">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <div class="join-modal-body">
-      @if (authService.profile()) {
-      <div class="join-authenticated">
-        <p class="join-subtext">Signed in as <strong>{{ currentUserName() }}</strong>.</p>
-        <button class="btn solid" (click)="joinWithCurrentAccount()" [disabled]="isBusyJoining()">
-          @if (joiningTeam()) {
-          <span class="spinner small"></span> Joining...
-          } @else {
-          Join Team
-          }
-        </button>
-      </div>
-      } @else {
-      <div class="join-mode-switch">
-        <button class="join-mode-btn" [class.active]="onboardingMode() === 'signup'" (click)="onboardingMode.set('signup')">
-          Sign Up
-        </button>
-        <button class="join-mode-btn" [class.active]="onboardingMode() === 'login'" (click)="onboardingMode.set('login')">
-          Log In
+<div [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
+  <div class="modal-overlay join-modal-overlay" (click)="closeJoinModal()">
+    <div class="join-modal-card" (click)="$event.stopPropagation()">
+      <div class="join-modal-header">
+        <div>
+          <p class="join-kicker">Join Team</p>
+          <h2 class="join-title">{{ team()!.name }}</h2>
+          <p class="join-subtext">Sign up or log in. You will be added instantly.</p>
+        </div>
+        <button class="join-close" (click)="closeJoinModal()" aria-label="Close join modal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
-      @if (onboardingMode() === 'signup') {
-      <div class="join-form-grid">
-        <input type="text" [(ngModel)]="signupName" placeholder="Your name" class="input" [disabled]="isBusyJoining()" />
-        <input type="email" [(ngModel)]="signupEmail" placeholder="you@email.com" class="input" [disabled]="isBusyJoining()" />
-        <input type="password" [(ngModel)]="signupPassword" placeholder="Password (min 6 characters)" class="input" [disabled]="isBusyJoining()" />
-        <button class="btn solid" (click)="handleSignupAndJoin()" [disabled]="isBusyJoining()">
-          @if (isBusyJoining()) {
-          <span class="spinner small"></span> Creating account...
-          } @else {
-          Create Account & Join
-          }
-        </button>
+      <div class="join-modal-body">
+        @if (authService.profile()) {
+        <div class="join-authenticated">
+          <p class="join-subtext">Signed in as <strong>{{ currentUserName() }}</strong>.</p>
+          <button class="btn solid" (click)="joinWithCurrentAccount()" [disabled]="isBusyJoining()">
+            @if (joiningTeam()) {
+            <span class="spinner small"></span> Joining...
+            } @else {
+            Join Team
+            }
+          </button>
+        </div>
+        } @else {
+        <div class="join-mode-switch">
+          <button class="join-mode-btn" [class.active]="onboardingMode() === 'signup'" (click)="onboardingMode.set('signup')">
+            Sign Up
+          </button>
+          <button class="join-mode-btn" [class.active]="onboardingMode() === 'login'" (click)="onboardingMode.set('login')">
+            Log In
+          </button>
+        </div>
+
+        @if (onboardingMode() === 'signup') {
+        <div class="join-form-grid">
+          <input type="text" [(ngModel)]="signupName" placeholder="Your name" class="input" [disabled]="isBusyJoining()" />
+          <input type="email" [(ngModel)]="signupEmail" placeholder="you@email.com" class="input" [disabled]="isBusyJoining()" />
+          <input type="password" [(ngModel)]="signupPassword" placeholder="Password (min 6 characters)" class="input" [disabled]="isBusyJoining()" />
+          <button class="btn solid" (click)="handleSignupAndJoin()" [disabled]="isBusyJoining()">
+            @if (isBusyJoining()) {
+            <span class="spinner small"></span> Creating account...
+            } @else {
+            Create Account & Join
+            }
+          </button>
+        </div>
+        } @else {
+        <div class="join-form-grid">
+          <input type="email" [(ngModel)]="loginEmail" placeholder="you@email.com" class="input" [disabled]="isBusyJoining()" />
+          <input type="password" [(ngModel)]="loginPassword" placeholder="Your password" class="input" [disabled]="isBusyJoining()" />
+          <button class="btn solid" (click)="handleLoginAndJoin()" [disabled]="isBusyJoining()">
+            @if (isBusyJoining()) {
+            <span class="spinner small"></span> Logging in...
+            } @else {
+            Log In & Join
+            }
+          </button>
+        </div>
+        }
+        }
       </div>
-      } @else {
-      <div class="join-form-grid">
-        <input type="email" [(ngModel)]="loginEmail" placeholder="you@email.com" class="input" [disabled]="isBusyJoining()" />
-        <input type="password" [(ngModel)]="loginPassword" placeholder="Your password" class="input" [disabled]="isBusyJoining()" />
-        <button class="btn solid" (click)="handleLoginAndJoin()" [disabled]="isBusyJoining()">
-          @if (isBusyJoining()) {
-          <span class="spinner small"></span> Logging in...
-          } @else {
-          Log In & Join
-          }
-        </button>
-      </div>
-      }
-      }
     </div>
   </div>
 </div>
 }
 
 @if (showInviteModal()) {
-<div class="modal-overlay" (click)="showInviteModal.set(false)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Invite Members</h2>
-      <p class="muted">Add people to {{ team()!.name }}</p>
-    </div>
-    <div class="modal-body">
-      <div class="modal-block">
-        <p class="muted tiny" style="margin-bottom: 8px">Team page URL</p>
-        <div class="invite-row">
-          <input type="text" [value]="teamPageUrl()" readonly class="input" />
-          <button (click)="shareTeamLink()" class="btn ghost sm">Copy URL</button>
-        </div>
-        <p class="muted tiny" style="margin-top: 10px">Share this exact page URL. Anyone with it can open this page, sign up or log in, then join the team.</p>
+<div [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
+  <div class="modal-overlay" (click)="showInviteModal.set(false)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Invite Members</h2>
+        <p class="muted">Add people to {{ team()!.name }}</p>
       </div>
-
-      <div class="divider-line"></div>
-
-      <div class="modal-block">
-        <p class="muted tiny" style="margin-bottom: 8px">Add existing Rocket Goals user</p>
-        <div class="invite-row">
-          <input type="email" [(ngModel)]="inviteEmailField" placeholder="member&#64;email.com"
-            (keydown.enter)="inviteMember()" [disabled]="inviteLoading()" class="input" />
-          <button (click)="inviteMember()" [disabled]="inviteLoading()" class="btn solid sm">
-            @if (inviteLoading()) {
-            <span class="spinner small"></span> Adding...
-            } @else {
-            Add
-            }
-          </button>
+      <div class="modal-body">
+        <div class="modal-block">
+          <p class="muted tiny" style="margin-bottom: 8px">Team page URL</p>
+          <div class="invite-row">
+            <input type="text" [value]="teamPageUrl()" readonly class="input" />
+            <button (click)="shareTeamLink()" class="btn ghost sm">Copy URL</button>
+          </div>
+          <p class="muted tiny" style="margin-top: 10px">Share this exact page URL. Anyone with it can open this page, sign up or log in, then join the team.</p>
         </div>
-      </div>
 
-      @if (inviteError()) {
-      <p class="alert-inline error">{{ inviteError() }}</p>
-      }
-      @if (inviteSuccess()) {
-      <p class="alert-inline success">{{ inviteSuccess() }}</p>
-      }
-    </div>
-    <div class="modal-footer">
-      <button class="btn ghost sm" (click)="showInviteModal.set(false)">Done</button>
+        <div class="divider-line"></div>
+
+        <div class="modal-block">
+          <p class="muted tiny" style="margin-bottom: 8px">Add existing Rocket Goals user</p>
+          <div class="invite-row">
+            <input type="email" [(ngModel)]="inviteEmailField" placeholder="member&#64;email.com"
+              (keydown.enter)="inviteMember()" [disabled]="inviteLoading()" class="input" />
+            <button (click)="inviteMember()" [disabled]="inviteLoading()" class="btn solid sm">
+              @if (inviteLoading()) {
+              <span class="spinner small"></span> Adding...
+              } @else {
+              Add
+              }
+            </button>
+          </div>
+        </div>
+
+        @if (inviteError()) {
+        <p class="alert-inline error">{{ inviteError() }}</p>
+        }
+        @if (inviteSuccess()) {
+        <p class="alert-inline success">{{ inviteSuccess() }}</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn ghost sm" (click)="showInviteModal.set(false)">Done</button>
+      </div>
     </div>
   </div>
 </div>
