@@ -1755,30 +1755,14 @@ export const askTeamAiCoach = onCall({
     throw new HttpsError('internal', 'AI service not configured');
   }
 
-  // Gather team member goals for context
-  let membersContext = '';
-  try {
-    const memberGoals: string[] = [];
-    for (const member of (teamData.members || []).slice(0, 15)) {
-      const goalsSnap = await admin.firestore()
-        .collection('rocketGoals')
-        .where('userId', '==', member.userId)
-        .where('status', '==', 'active')
-        .limit(1)
-        .get();
-      if (!goalsSnap.empty) {
-        const goal = goalsSnap.docs[0].data();
-        memberGoals.push(`- ${member.firstName} ${member.lastName}: "${goal.title || 'Untitled goal'}"${goal.primaryGoal ? ` — ${goal.primaryGoal}` : ''}`);
-      } else {
-        memberGoals.push(`- ${member.firstName} ${member.lastName}: No active goal yet`);
-      }
-    }
-    if (memberGoals.length > 0) {
-      membersContext = `\n\nTEAM MEMBERS & THEIR GOALS:\n${memberGoals.join('\n')}`;
-    }
-  } catch (err) {
-    console.error('Failed to load team member goals:', err);
-  }
+  // Build team members list (names + roles only — no personal goals)
+  const membersLines = (teamData.members || []).slice(0, 20).map((m: any) => {
+    const role = m.role === 'admin' ? ' (Admin)' : m.role === 'coach' ? ' (Coach)' : m.role === 'team-lead' ? ' (Team Lead)' : '';
+    return `- ${m.firstName} ${m.lastName}${role}`;
+  });
+  const membersContext = membersLines.length > 0
+    ? `\n\nTEAM MEMBERS (${membersLines.length}):\n${membersLines.join('\n')}`
+    : '';
 
   // Build recent chat context
   let chatContext = '';
@@ -1795,22 +1779,31 @@ export const askTeamAiCoach = onCall({
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const systemPrompt = `You are Rocket, the AI coach for the team "${teamData.name || 'this team'}" on RocketGoals. You help the team stay motivated, accountable, and on track with their goals.
+  const teamName = teamData.name || 'this team';
+  const teamDesc = teamData.description || '';
+
+  const systemPrompt = `You are Rocket, the AI coach for the team "${teamName}" on RocketGoals.
 
 CURRENT DATE: ${dateStr}${sharedBlock}
 
-TEAM: "${teamData.name}"
-${teamData.description ? `Description: ${teamData.description}` : ''}${membersContext}${chatContext}
+TEAM CONTEXT:
+- Team name: "${teamName}"
+${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}
 
-GUIDELINES:
-- You were mentioned with @rocket in the team chat
+YOUR ROLE:
+You are the dedicated AI coach for THIS TEAM. The team itself is the goal. Focus entirely on what this team is working toward together based on the team name, purpose, and what members discuss in chat.
+
+IMPORTANT RULES:
+- NEVER reference members' personal/individual goals from outside this team
+- Focus on the TEAM's collective mission, collaboration, and what they discuss in chat
+- If the team name or description hints at a goal (e.g. "City to Shore Training"), treat THAT as the team's mission
+- Coach the team as a unit — encourage teamwork, accountability between members, and shared progress
 - Be encouraging, supportive, and actionable
 - Keep responses concise (2-4 short paragraphs max)
-- Reference specific team members and their goals when relevant
-- Encourage accountability and celebrate progress
-- Use a warm, coaching tone
-- You can use emojis sparingly
-- If asked about something outside of goal coaching, be helpful but gently steer back to goals`;
+- Reference team members by name to make it personal
+- Use a warm, motivational coaching tone
+- Use emojis sparingly
+- If asked about something unrelated, be helpful but steer back to the team's mission`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
