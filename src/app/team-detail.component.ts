@@ -42,6 +42,9 @@ export class TeamDetailComponent implements OnInit {
   joiningTeam = signal(false);
   verificationPending = signal(false);
   verificationEmail = signal('');
+  leadUpdatingUserId = signal<string | null>(null);
+  leadActionError = signal<string | null>(null);
+  leadActionSuccess = signal<string | null>(null);
   joinError = signal<string | null>(null);
   joinSuccess = signal<string | null>(null);
   verificationNotice = signal<string | null>(null);
@@ -71,6 +74,7 @@ export class TeamDetailComponent implements OnInit {
     if (!profile) return '';
     return `${profile.firstName} ${profile.lastName}`.trim() || profile.email;
   });
+  currentTeamLead = computed(() => this.team()?.members.find(m => m.role === 'team-lead') || null);
 
   isCurrentUserMember = computed(() => {
     const team = this.team();
@@ -182,10 +186,61 @@ export class TeamDetailComponent implements OnInit {
       const rank = (role: TeamMember['role']) => {
         if (role === 'admin') return 0;
         if (role === 'coach') return 1;
-        return 2;
+        if (role === 'team-lead') return 2;
+        return 3;
       };
       return rank(a.role) - rank(b.role);
     });
+  }
+
+  async makeTeamLead(member: TeamMember) {
+    const team = this.team();
+    if (!team?.id || !this.isAdmin() || member.userId === this.currentUserId()) {
+      return;
+    }
+
+    if (member.role !== 'member') {
+      this.leadActionError.set('Only a member can be assigned as Team Lead.');
+      return;
+    }
+
+    this.leadUpdatingUserId.set(member.userId);
+    this.leadActionError.set(null);
+    this.leadActionSuccess.set(null);
+
+    try {
+      await this.teamService.assignTeamLead(team.id, member.userId);
+      await this.loadTeam(team.id);
+      const displayName = `${member.firstName} ${member.lastName}`.trim() || member.email;
+      this.leadActionSuccess.set(`${displayName} is now Team Lead.`);
+    } catch (error: any) {
+      console.error('Failed to assign Team Lead:', error);
+      this.leadActionError.set(error?.message || 'Unable to assign Team Lead right now.');
+    } finally {
+      this.leadUpdatingUserId.set(null);
+    }
+  }
+
+  async clearTeamLead(member: TeamMember) {
+    const team = this.team();
+    if (!team?.id || !this.isAdmin() || member.role !== 'team-lead') {
+      return;
+    }
+
+    this.leadUpdatingUserId.set(member.userId);
+    this.leadActionError.set(null);
+    this.leadActionSuccess.set(null);
+
+    try {
+      await this.teamService.assignTeamLead(team.id, null);
+      await this.loadTeam(team.id);
+      this.leadActionSuccess.set('Team Lead role removed.');
+    } catch (error: any) {
+      console.error('Failed to clear Team Lead:', error);
+      this.leadActionError.set(error?.message || 'Unable to remove Team Lead right now.');
+    } finally {
+      this.leadUpdatingUserId.set(null);
+    }
   }
 
   async shareTeamLink() {

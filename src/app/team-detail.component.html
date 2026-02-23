@@ -127,10 +127,13 @@
       </div>
     </section>
 
-    @if (joinSuccess() || joinError() || verificationNotice() || shareNotice() || shareError()) {
+    @if (joinSuccess() || joinError() || verificationNotice() || shareNotice() || shareError() || leadActionSuccess() || leadActionError()) {
     <div class="status-stack">
       @if (joinSuccess()) {
       <p class="alert-banner success">{{ joinSuccess() }}</p>
+      }
+      @if (leadActionSuccess()) {
+      <p class="alert-banner success">{{ leadActionSuccess() }}</p>
       }
       @if (verificationNotice()) {
       <p class="alert-banner success">{{ verificationNotice() }}</p>
@@ -143,6 +146,9 @@
       }
       @if (shareError()) {
       <p class="alert-banner error">{{ shareError() }}</p>
+      }
+      @if (leadActionError()) {
+      <p class="alert-banner error">{{ leadActionError() }}</p>
       }
     </div>
     }
@@ -183,6 +189,9 @@
         </svg>
         Team Members
       </div>
+      @if (currentTeamLead()) {
+      <p class="muted tiny" style="margin: -4px 0 10px">Current Team Lead: <strong>{{ currentTeamLead()!.firstName }} {{ currentTeamLead()!.lastName }}</strong></p>
+      }
 
       @if (getAllMembers().length === 0) {
       <div class="empty-state glass">
@@ -207,8 +216,26 @@
             <span class="member-status-dot" [class.online]="member.role !== 'member'"></span>
           </div>
           <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
-          <span class="role-pill" [class.admin-pill]="member.role !== 'member'">{{ member.role }}</span>
+          <span
+            class="role-pill"
+            [class.admin-pill]="member.role === 'admin' || member.role === 'coach'"
+            [class.lead-pill]="member.role === 'team-lead'">
+            {{ member.role === 'team-lead' ? 'team lead' : member.role }}
+          </span>
           <p class="member-circle-email">{{ member.email }}</p>
+          @if (isAdmin() && member.userId !== currentUserId() && member.role !== 'admin' && member.role !== 'coach') {
+          <div class="member-inline-actions">
+            @if (member.role === 'team-lead') {
+            <button class="member-action-btn neutral" (click)="clearTeamLead(member)" [disabled]="leadUpdatingUserId() === member.userId">
+              @if (leadUpdatingUserId() === member.userId) { Updating... } @else { Remove Team Lead }
+            </button>
+            } @else {
+            <button class="member-action-btn" (click)="makeTeamLead(member)" [disabled]="leadUpdatingUserId() === member.userId">
+              @if (leadUpdatingUserId() === member.userId) { Assigning... } @else { Make Team Lead }
+            </button>
+            }
+          </div>
+          }
           @if (isAdmin() && member.userId !== currentUserId() && member.role === 'member') {
           <button class="remove-btn-circle" (click)="removeMember(member.userId)" title="Remove member">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
