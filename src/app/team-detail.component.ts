@@ -19,6 +19,7 @@ export class TeamDetailComponent implements OnInit {
   authService = inject(AuthService);
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('coverInput') coverInput?: ElementRef<HTMLInputElement>;
 
   team = signal<Team | null>(null);
   loading = signal(true);
@@ -30,11 +31,20 @@ export class TeamDetailComponent implements OnInit {
   inviteError = signal<string | null>(null);
   inviteSuccess = signal<string | null>(null);
 
+  // Cover image
+  coverImagePreview = signal<string | null>(null);
+  uploadingCover = signal(false);
+  private coverImageFile: File | null = null;
+
   newMessage = '';
   inviteEmailField = '';
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
   isAdmin = computed(() => this.team()?.adminId === this.currentUserId());
+
+  coverImageSrc = computed(() => {
+    return this.coverImagePreview() || this.team()?.coverImageUrl || '/assets/team-rocket.jpg';
+  });
 
   async ngOnInit() {
     const teamId = this.route.snapshot.paramMap.get('id');
@@ -94,6 +104,54 @@ export class TeamDetailComponent implements OnInit {
 
   getMembers(): TeamMember[] {
     return this.team()?.members.filter(m => m.role === 'member') || [];
+  }
+
+  onCoverImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return;
+    }
+
+    this.coverImageFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.coverImagePreview.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async uploadCoverImage() {
+    const teamId = this.team()?.id;
+    if (!teamId || !this.coverImageFile || this.uploadingCover()) return;
+
+    this.uploadingCover.set(true);
+    try {
+      const url = await this.teamService.uploadTeamCoverImage(teamId, this.coverImageFile);
+      this.team.update(t => t ? { ...t, coverImageUrl: url } : t);
+      this.coverImageFile = null;
+      this.coverImagePreview.set(null);
+      if (this.coverInput?.nativeElement) {
+        this.coverInput.nativeElement.value = '';
+      }
+    } catch (err) {
+      console.error('Failed to upload cover image:', err);
+    } finally {
+      this.uploadingCover.set(false);
+    }
+  }
+
+  cancelCoverUpload() {
+    this.coverImageFile = null;
+    this.coverImagePreview.set(null);
+    if (this.coverInput?.nativeElement) {
+      this.coverInput.nativeElement.value = '';
+    }
   }
 
   async sendMessage() {

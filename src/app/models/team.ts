@@ -24,6 +24,7 @@ export interface Team {
   name: string;
   description?: string;
   avatarUrl?: string;
+  coverImageUrl?: string;
   adminId: string;
   members: TeamMember[];
   memberIds: string[];

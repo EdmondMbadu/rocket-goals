@@ -1,76 +1,47 @@
 @if (loading()) {
-<div
-  class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-red-50 flex items-center justify-center dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-950 dark:to-black dark:text-slate-100">
-  <div class="text-center">
-    <div
-      class="w-16 h-16 border-4 border-red-100 border-t-red-600 rounded-full animate-spin mx-auto mb-6 dark:border-red-600/30 dark:border-t-red-400">
-    </div>
-    <p class="text-gray-600 font-semibold text-lg dark:text-slate-300">Loading your teams...</p>
+<div class="team-shell">
+  <div class="page-bg"></div>
+  <div class="load-center">
+    <span class="spinner lg"></span>
+    <p class="muted">Loading your teams...</p>
   </div>
 </div>
 } @else {
-<div
-  class="teams-page min-h-screen bg-gradient-to-br from-white via-gray-50 to-red-50 text-black overflow-hidden flex flex-col dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-black dark:text-slate-100">
+<div class="team-shell">
+  <div class="page-bg"></div>
 
-  <!-- Animated Background -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none">
-    <div
-      class="absolute top-20 left-10 w-72 h-72 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob">
-    </div>
-    <div
-      class="absolute top-40 right-10 w-72 h-72 bg-gray-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000">
-    </div>
-    <div
-      class="absolute -bottom-8 left-1/2 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000">
-    </div>
-  </div>
-
-  <!-- Header -->
-  <header
-    class="relative z-40 px-6 md:px-8 py-6 flex-none border-b border-gray-200/50 bg-white/90 backdrop-blur-xl dark:bg-slate-900/70 dark:border-white/10">
-    <div class="flex items-center justify-between max-w-7xl mx-auto w-full gap-6">
-      <a routerLink="/goals" class="flex items-center gap-3 group flex-none">
-        <div class="relative">
-          <div
-            class="absolute -inset-1 bg-gradient-to-r from-red-600 to-black rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500">
-          </div>
-          <img src="/assets/rocket-goals.png" alt="Rocket Goals"
-            class="relative w-14 h-14 md:w-16 md:h-16 object-contain transform group-hover:scale-105 transition-transform" />
-        </div>
-        <span class="text-2xl md:text-3xl font-black tracking-tighter text-black hidden sm:block dark:text-white">
-          ROCKET<span class="text-red-600">GOALS</span>
-        </span>
+  <!-- Top Nav -->
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <a routerLink="/goals" class="logo-link">
+        <div class="logo-ring"></div>
+        <img src="/assets/rocket-goals.png" alt="Rocket Goals" class="logo" />
+        <span class="logo-text">ROCKET<span class="accent">GOALS</span></span>
       </a>
-      <div class="hidden md:flex flex-1 items-center justify-center gap-6">
-        <a routerLink="/goals" routerLinkActive="text-red-600 border-b-2 border-red-600"
-          class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
+      <div class="nav-links">
+        <a routerLink="/goals" routerLinkActive="active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           Home
         </a>
-        <a routerLink="/teams" routerLinkActive="text-red-600 border-b-2 border-red-600"
-          [routerLinkActiveOptions]="{exact: true}"
-          class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
+        <a routerLink="/teams" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           Teams
         </a>
-        <a routerLink="/ai" routerLinkActive="text-red-600 border-b-2 border-red-600"
-          class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
+        <a routerLink="/ai" routerLinkActive="active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           AI
         </a>
-        <a routerLink="/profile" routerLinkActive="text-red-600 border-b-2 border-red-600"
-          class="pb-1 text-sm font-bold text-black/80 hover:text-red-600 transition-colors uppercase tracking-wide inline-flex items-center gap-2 dark:text-slate-300 dark:hover:text-red-400">
+        <a routerLink="/profile" routerLinkActive="active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -78,257 +49,213 @@
           Profile
         </a>
       </div>
-      <div class="flex items-center gap-3 flex-none">
-        <!-- Mobile nav toggle -->
-        <button type="button" (click)="mobileNavOpen.set(!mobileNavOpen())"
-          class="md:hidden p-3 rounded-full border border-black/10 dark:border-white/20 text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">
+      <div class="nav-actions">
+        <button type="button" class="mobile-toggle" (click)="mobileNavOpen.set(!mobileNavOpen())">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
       </div>
     </div>
-  </header>
+  </nav>
 
   <!-- Mobile Nav -->
   @if (mobileNavOpen()) {
-  <div class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden" (click)="mobileNavOpen.set(false)"></div>
-  <div
-    class="fixed top-20 left-4 right-4 z-50 rounded-2xl bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 shadow-2xl md:hidden">
-    <div class="p-4 grid gap-2 text-sm font-semibold">
-      <a routerLink="/goals" (click)="mobileNavOpen.set(false)"
-        class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Dashboard</a>
-      <a routerLink="/teams" (click)="mobileNavOpen.set(false)"
-        class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 text-red-600 font-bold">Teams</a>
-      <a routerLink="/ai" (click)="mobileNavOpen.set(false)"
-        class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">AI</a>
-      <a routerLink="/profile" (click)="mobileNavOpen.set(false)"
-        class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Profile</a>
-    </div>
+  <div class="mobile-overlay" (click)="mobileNavOpen.set(false)"></div>
+  <div class="mobile-menu">
+    <a routerLink="/goals" (click)="mobileNavOpen.set(false)">Dashboard</a>
+    <a routerLink="/teams" (click)="mobileNavOpen.set(false)" class="active">Teams</a>
+    <a routerLink="/ai" (click)="mobileNavOpen.set(false)">AI</a>
+    <a routerLink="/profile" (click)="mobileNavOpen.set(false)">Profile</a>
   </div>
   }
 
-  <!-- Main Content -->
-  <main class="relative z-10 flex-1 overflow-y-auto">
-    <div class="max-w-7xl mx-auto px-6 md:px-8 py-8 md:py-12">
+  <div class="content">
 
-      <!-- Page Title + Create Button -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 animate-fade-in-up">
-        <div>
-          <h1
-            class="text-3xl md:text-4xl font-black tracking-tight text-black dark:text-white">
-            Your Teams
-          </h1>
-          <p class="text-gray-500 dark:text-slate-400 mt-2 text-sm md:text-base">Collaborate, stay accountable, and
-            crush goals together.</p>
-        </div>
-        <button (click)="showCreateModal.set(true)"
-          class="inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-sm font-bold rounded-full hover:bg-red-600 transition-all duration-300 shadow-lg hover:shadow-red-600/30 transform hover:-translate-y-0.5 dark:bg-white dark:text-black dark:hover:bg-red-500 dark:hover:text-white">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Create Team
-        </button>
+    <!-- Page Header -->
+    <div class="page-header fade-in">
+      <div class="page-header-text">
+        <h1 class="page-title">Your Teams</h1>
+        <p class="page-subtitle">Collaborate, stay accountable, and crush goals together.</p>
       </div>
+      <button class="btn solid" (click)="showCreateModal.set(true)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Create Team
+      </button>
+    </div>
 
-      <!-- Empty State -->
-      @if (teams().length === 0) {
-      <div class="animate-fade-in-up stagger-1 text-center py-20">
-        <div
-          class="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-          <svg class="w-12 h-12 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </div>
-        <h2 class="text-2xl font-bold text-black dark:text-white mb-2">No teams yet</h2>
-        <p class="text-gray-500 dark:text-slate-400 max-w-md mx-auto mb-8">
-          Create a team to start coaching and tracking goals together. Invite members and keep everyone accountable.
-        </p>
-        <button (click)="showCreateModal.set(true)"
-          class="inline-flex items-center gap-2 px-8 py-3 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-700 transition-all shadow-lg hover:shadow-red-600/30">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Create Your First Team
-        </button>
+    <!-- Empty State -->
+    @if (teams().length === 0) {
+    <div class="empty-card glass fade-in">
+      <div class="empty-icon">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #475569">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
       </div>
-      }
+      <h2 class="empty-title">No teams yet</h2>
+      <p class="empty-desc">Create a team to start coaching and tracking goals together. Invite members and keep everyone accountable.</p>
+      <button class="btn solid" (click)="showCreateModal.set(true)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Create Your First Team
+      </button>
+    </div>
+    }
 
-      <!-- Teams Grid -->
-      @if (teams().length > 0) {
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        @for (team of teams(); track team.id; let i = $index) {
-        <div (click)="navigateToTeam(team.id)"
-          class="team-card cursor-pointer rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg p-6 animate-fade-in-up dark:bg-white/[0.06] dark:border-white/10"
-          [style.animation-delay.ms]="i * 100">
+    <!-- Teams Grid -->
+    @if (teams().length > 0) {
+    <div class="teams-grid">
+      @for (team of teams(); track team.id; let i = $index) {
+      <div class="team-card glass" (click)="navigateToTeam(team.id)" [style.animation-delay.ms]="i * 80">
 
-          <!-- Team Header -->
-          <div class="flex items-start gap-4 mb-4">
-            <div
-              class="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
-              {{ team.name.charAt(0).toUpperCase() }}
-            </div>
-            <div class="min-w-0 flex-1">
-              <h3 class="text-lg font-bold text-black dark:text-white truncate">{{ team.name }}</h3>
-              <span
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mt-1"
-                [class]="team.adminId === currentUserId() ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' : 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-slate-400'">
-                @if (team.adminId === currentUserId()) {
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                Admin
-                } @else {
-                Member
-                }
-              </span>
-            </div>
+        <!-- Cover Image -->
+        <div class="card-cover">
+          <img [src]="team.coverImageUrl || '/assets/team-rocket.jpg'" [alt]="team.name" class="card-cover-img" />
+          <div class="card-cover-overlay"></div>
+
+          <!-- Role Badge -->
+          <div class="card-badge" [class.card-badge-admin]="team.adminId === currentUserId()">
+            @if (team.adminId === currentUserId()) {
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            Admin
+            } @else {
+            Member
+            }
           </div>
 
-          <!-- Description -->
+          <!-- Team Avatar -->
+          <div class="card-avatar">
+            {{ team.name.charAt(0).toUpperCase() }}
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <h3 class="card-title">{{ team.name }}</h3>
+
           @if (team.description) {
-          <p class="text-sm text-gray-500 dark:text-slate-400 mb-4 line-clamp-2">{{ team.description }}</p>
+          <p class="card-desc">{{ team.description }}</p>
           }
 
-          <!-- Stats -->
-          <div class="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
-            <div class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-              {{ team.members.length }} {{ team.members.length === 1 ? 'member' : 'members' }}
+          <!-- Member Avatars -->
+          @if (team.members.length > 0) {
+          <div class="card-avatars">
+            <div class="avatar-stack">
+              @for (member of team.members.slice(0, 5); track member.userId) {
+              @if (member.profilePictureUrl) {
+              <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="stack-avatar" />
+              } @else {
+              <div class="stack-avatar stack-avatar-fallback">{{ member.firstName.charAt(0) }}</div>
+              }
+              }
             </div>
-            @if (team.aiCoachEnabled) {
-            <div class="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.591.659H9.061a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2 2 0 01-2 2H7a2 2 0 01-2-2v-2.5" />
-              </svg>
-              AI Coach
-            </div>
-            }
+            <span class="card-member-count">{{ team.members.length }} {{ team.members.length === 1 ? 'member' : 'members' }}</span>
           </div>
+          }
 
-          <!-- Footer Actions -->
-          <div class="flex items-center justify-between mt-3">
-            @if (team.adminId === currentUserId()) {
-            <button (click)="confirmDelete(team, $event)"
-              class="p-1.5 rounded-lg text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-              title="Delete team">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          <!-- Stats Row -->
+          <div class="card-footer">
+            <div class="card-stats">
+              @if (team.aiCoachEnabled) {
+              <span class="card-stat ai">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                AI Coach
+              </span>
+              }
+            </div>
+            <div class="card-actions">
+              @if (team.adminId === currentUserId()) {
+              <button class="card-delete-btn" (click)="confirmDelete(team, $event)" title="Delete team">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              }
+              <svg class="card-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            } @else {
-            <div></div>
-            }
-            <svg class="w-5 h-5 text-gray-300 dark:text-slate-600 transition-colors"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            </div>
           </div>
         </div>
-        }
       </div>
       }
     </div>
-  </main>
+    }
+  </div>
 </div>
 
-<!-- Create Team Modal -->
+<!-- ===== Create Team Modal ===== -->
 @if (showCreateModal()) {
-<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-  (click)="closeCreateModal()">
-  <div class="modal-content w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-white/10 overflow-hidden"
-    (click)="$event.stopPropagation()">
+<div class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
 
-    <!-- Modal Header -->
-    <div class="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-black dark:text-white">Create a Team</h2>
-        <button (click)="closeCreateModal()"
-          class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
-          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="modal-header">
+      <div class="modal-header-row">
+        <h2>Create a Team</h2>
+        <button class="modal-close" (click)="closeCreateModal()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-      <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Set up your accountability group</p>
+      <p class="muted small">Set up your accountability group</p>
     </div>
 
-    <!-- Modal Body -->
-    <div class="px-6 py-5 space-y-5">
+    <div class="modal-body">
 
       <!-- Team Name -->
-      <div>
-        <label class="block text-sm font-semibold text-black dark:text-white mb-2">Team Name</label>
-        <input type="text" [(ngModel)]="newTeamName" placeholder="e.g. Morning Hustle Crew"
-          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-black dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" />
+      <div class="form-group">
+        <label class="label">Team Name</label>
+        <input type="text" [(ngModel)]="newTeamName" placeholder="e.g. Morning Hustle Crew" class="input" />
       </div>
 
       <!-- Description -->
-      <div>
-        <label class="block text-sm font-semibold text-black dark:text-white mb-2">Description
-          <span class="font-normal text-gray-400">(optional)</span>
-        </label>
-        <textarea [(ngModel)]="newTeamDescription" placeholder="What's this team about?"
-          rows="3"
-          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-black dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
+      <div class="form-group">
+        <label class="label">Description <span class="muted">(optional)</span></label>
+        <textarea [(ngModel)]="newTeamDescription" placeholder="What's this team about?" rows="3" class="input textarea"></textarea>
       </div>
 
       <!-- AI Coach Toggle -->
-      <div
-        class="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.591.659H9.061a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2 2 0 01-2 2H7a2 2 0 01-2-2v-2.5" />
-            </svg>
-          </div>
-          <div>
-            <p class="text-sm font-semibold text-black dark:text-white">Enable AI Coach</p>
-            <p class="text-xs text-gray-500 dark:text-slate-400">AI assistant available to the team</p>
-          </div>
+      <div class="toggle-row">
+        <div class="toggle-icon">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: white">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5" />
+          </svg>
         </div>
-        <button type="button" (click)="newTeamAiCoach = !newTeamAiCoach"
-          class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-          [class]="newTeamAiCoach ? 'bg-red-600' : 'bg-gray-200 dark:bg-white/10'">
-          <span
-            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-            [class]="newTeamAiCoach ? 'translate-x-5' : 'translate-x-0'">
-          </span>
+        <div class="toggle-info">
+          <p class="toggle-title">Enable AI Coach</p>
+          <p class="toggle-sub">AI assistant available to the team</p>
+        </div>
+        <button type="button" class="toggle-switch" [class.on]="newTeamAiCoach" (click)="newTeamAiCoach = !newTeamAiCoach">
+          <span class="toggle-knob"></span>
         </button>
       </div>
 
       <!-- Invite Members -->
-      <div>
-        <label class="block text-sm font-semibold text-black dark:text-white mb-2">Invite Members
-          <span class="font-normal text-gray-400">(optional, add later)</span>
-        </label>
-        <div class="flex gap-2">
-          <input type="email" [(ngModel)]="inviteEmail" placeholder="member@email.com"
-            (keydown.enter)="addInviteEmail()"
-            class="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-black dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" />
-          <button (click)="addInviteEmail()"
-            class="px-4 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-sm hover:bg-red-600 dark:hover:bg-red-500 dark:hover:text-white transition-colors">
-            Add
-          </button>
+      <div class="form-group">
+        <label class="label">Invite Members <span class="muted">(optional, add later)</span></label>
+        <div class="invite-row">
+          <input type="email" [(ngModel)]="inviteEmail" placeholder="member&#64;email.com"
+            (keydown.enter)="addInviteEmail()" class="input" />
+          <button class="btn ghost sm" (click)="addInviteEmail()">Add</button>
         </div>
         @if (inviteEmails().length > 0) {
-        <div class="flex flex-wrap gap-2 mt-3">
+        <div class="email-chips">
           @for (email of inviteEmails(); track email) {
-          <span
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-medium">
+          <span class="email-chip">
             {{ email }}
-            <button (click)="removeInviteEmail(email)" class="hover:text-red-900 dark:hover:text-red-300">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button (click)="removeInviteEmail(email)" class="chip-remove">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -339,23 +266,15 @@
       </div>
     </div>
 
-    <!-- Modal Footer -->
-    <div
-      class="px-6 py-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-3 bg-gray-50/50 dark:bg-white/[0.02]">
-      <button (click)="closeCreateModal()"
-        class="px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-slate-400 hover:text-black dark:hover:text-white transition-colors">
-        Cancel
-      </button>
-      <button (click)="createTeam()" [disabled]="creating() || !newTeamName.trim()"
-        class="px-6 py-2.5 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-700 transition-all shadow-lg hover:shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600 disabled:hover:shadow-none inline-flex items-center gap-2">
+    <div class="modal-footer">
+      <button class="btn ghost sm" (click)="closeCreateModal()">Cancel</button>
+      <button class="btn solid sm" (click)="createTeam()" [disabled]="creating() || !newTeamName.trim()">
         @if (creating()) {
-        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        Creating...
+        <span class="spinner small"></span> Creating...
         } @else {
         Launch Team
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
         }
       </button>
@@ -364,34 +283,25 @@
 </div>
 }
 
-<!-- Delete Confirmation Modal -->
+<!-- ===== Delete Confirm Modal ===== -->
 @if (teamToDelete()) {
-<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-  (click)="teamToDelete.set(null)">
-  <div class="modal-content w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-white/10 overflow-hidden"
-    (click)="$event.stopPropagation()">
-    <div class="px-6 pt-6 pb-4 text-center">
-      <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center">
-        <svg class="w-7 h-7 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="modal-overlay" (click)="teamToDelete.set(null)">
+  <div class="modal-card small" (click)="$event.stopPropagation()">
+    <div class="modal-body" style="text-align: center; padding: 28px 24px">
+      <div class="delete-icon">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #ef4444">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       </div>
-      <h3 class="text-lg font-bold text-black dark:text-white mb-1">Delete team?</h3>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        <span class="font-semibold text-black dark:text-white">{{ teamToDelete()!.name }}</span> and all its messages will be permanently deleted.
-      </p>
+      <h3 class="delete-title">Delete team?</h3>
+      <p class="delete-desc"><strong>{{ teamToDelete()!.name }}</strong> and all its messages will be permanently deleted.</p>
     </div>
-    <div class="px-6 py-4 flex gap-3">
-      <button (click)="teamToDelete.set(null)"
-        class="flex-1 px-4 py-2.5 text-sm font-semibold rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-        Cancel
-      </button>
-      <button (click)="deleteTeam()" [disabled]="deleting()"
-        class="flex-1 px-4 py-2.5 text-sm font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2">
+    <div class="modal-footer" style="justify-content: stretch; gap: 10px">
+      <button class="btn ghost sm" style="flex: 1" (click)="teamToDelete.set(null)">Cancel</button>
+      <button class="btn danger sm" style="flex: 1" (click)="deleteTeam()" [disabled]="deleting()">
         @if (deleting()) {
-        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        Deleting...
+        <span class="spinner small"></span> Deleting...
         } @else {
         Delete
         }

@@ -148,6 +148,24 @@ export class TeamService {
     }
   }
 
+  async uploadTeamCoverImage(teamId: string, file: File): Promise<string> {
+    const appModule = await import('firebase/app');
+    const storageModule = await import('firebase/storage');
+    const app = appModule.getApps().length === 0
+      ? appModule.initializeApp(firebaseConfig)
+      : appModule.getApp();
+    const storage = storageModule.getStorage(app);
+
+    const ext = file.name.split('.').pop() || 'jpg';
+    const fileName = `cover-${Date.now()}.${ext}`;
+    const storageRef = storageModule.ref(storage, `teams/${teamId}/${fileName}`);
+    await storageModule.uploadBytes(storageRef, file);
+    const downloadUrl = await storageModule.getDownloadURL(storageRef);
+
+    await this.updateTeam(teamId, { coverImageUrl: downloadUrl } as Partial<Team>);
+    return downloadUrl;
+  }
+
   async deleteTeam(teamId: string): Promise<void> {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
