@@ -118,6 +118,15 @@
   color: #ef4444;
 }
 
+.nav-actions {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+}
+
 /* ===== Content Container ===== */
 .content {
   position: relative;

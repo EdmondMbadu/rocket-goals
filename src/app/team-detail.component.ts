@@ -6,6 +6,7 @@ import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
 import type { Team, TeamMember, TeamMessage } from './models/team';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 
 type InviteUserSuggestion = {
   userId: string;
@@ -18,7 +19,7 @@ type InviteUserSuggestion = {
 @Component({
   selector: 'app-team-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, AvatarDropdownComponent],
   templateUrl: './team-detail.component.html',
   styleUrl: './team-detail.component.css'
 })
