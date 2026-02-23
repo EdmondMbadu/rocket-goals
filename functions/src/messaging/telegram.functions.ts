@@ -1681,8 +1681,8 @@ export const syncTeamMessageToTelegram = onDocumentCreated({
   // Skip messages that came from Telegram (prevent echo loop)
   if (data.source === 'telegram') return;
 
-  // Skip system and AI messages
-  if (data.type !== 'text') return;
+  // Skip system messages (allow text and ai-response)
+  if (data.type !== 'text' && data.type !== 'ai-response') return;
 
   const teamId = event.params.teamId;
 
@@ -1700,9 +1700,13 @@ export const syncTeamMessageToTelegram = onDocumentCreated({
   const senderName = data.senderName || 'Someone';
   const content = data.content || '';
 
+  const formattedMsg = data.type === 'ai-response'
+    ? `🤖 *${senderName}:*\n${content}`
+    : `*${senderName}:*\n${content}`;
+
   await sendTelegramMessage(
     groupChatId,
-    `*${senderName}:*\n${content}`,
+    formattedMsg,
     botToken
   );
 

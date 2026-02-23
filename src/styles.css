@@ -3,3 +3,21 @@
 @tailwind utilities;
 
 /* You can add global styles to this file, and also import other style files */
+
+/* Global page background to prevent white gaps on scroll/overscroll. */
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background-color: #f8fafc;
+}
+
+html.dark,
+html.dark body {
+  background-color: #020617;
+}
+
+app-root {
+  display: block;
+  min-height: 100vh;
+}

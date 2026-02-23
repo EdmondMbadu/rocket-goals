@@ -993,6 +993,10 @@ export class TeamDetailComponent implements OnInit {
     this.showTelegramBanner.set(false);
   }
 
+  toggleTheme(): void {
+    this.theme.toggleDarkMode();
+  }
+
   onEnterKey(event: Event) {
     const ke = event as KeyboardEvent;
     if (!ke.shiftKey) {
