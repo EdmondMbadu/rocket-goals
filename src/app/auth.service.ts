@@ -122,7 +122,7 @@ export class AuthService {
     });
   }
 
-  async sendEmailVerification() {
+  async sendEmailVerification(continueUrl?: string) {
     const { auth, app } = await this.ensureFirebase();
     if (!auth.currentUser) {
       throw new Error('No authenticated user to verify.');
@@ -130,7 +130,7 @@ export class AuthService {
     const functionsModule = await import('firebase/functions');
     const functions = functionsModule.getFunctions(app, 'us-central1');
     const sendVerification = functionsModule.httpsCallable(functions, 'sendVerificationEmail');
-    await sendVerification({});
+    await sendVerification(continueUrl ? { continueUrl } : {});
   }
 
   async sendWelcomeEmail() {

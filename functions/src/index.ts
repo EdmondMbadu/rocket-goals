@@ -179,6 +179,34 @@ const resolveProfileRef = async ({
     return null;
 };
 
+const DEFAULT_VERIFICATION_REDIRECT = 'https://www.rocketgoals.com/login?verified=1';
+const ALLOWED_VERIFICATION_REDIRECT_ORIGINS = new Set([
+    'https://www.rocketgoals.com',
+    'https://rocketgoals.web.app',
+    'http://localhost:4200'
+]);
+
+const resolveVerificationContinueUrl = (candidate?: unknown) => {
+    if (typeof candidate !== 'string') {
+        return DEFAULT_VERIFICATION_REDIRECT;
+    }
+    const value = candidate.trim();
+    if (!value) {
+        return DEFAULT_VERIFICATION_REDIRECT;
+    }
+
+    try {
+        const parsed = new URL(value);
+        if (ALLOWED_VERIFICATION_REDIRECT_ORIGINS.has(parsed.origin)) {
+            return parsed.toString();
+        }
+    } catch (error) {
+        console.warn('Invalid verification redirect URL supplied. Falling back to default.', error);
+    }
+
+    return DEFAULT_VERIFICATION_REDIRECT;
+};
+
 export const stripeWebhookRocketGoals = functions.runWith({
     secrets: [stripeWebhookSecretGoals]
 }).https.onRequest(async (req, res) => {
@@ -3049,7 +3077,7 @@ export const sendBulkGoalReminders = functions.runWith({
  */
 export const sendVerificationEmail = functions.runWith({
     secrets: [sendgridApiKey]
-}).https.onCall(async (_data: Record<string, never>, context: functions.https.CallableContext) => {
+}).https.onCall(async (data: { continueUrl?: string }, context: functions.https.CallableContext) => {
     if (!context.auth) {
         throw new functions.https.HttpsError(
             'unauthenticated',
@@ -3077,8 +3105,9 @@ export const sendVerificationEmail = functions.runWith({
         }
         sgMail.setApiKey(apiKey);
 
+        const continueUrl = resolveVerificationContinueUrl(data?.continueUrl);
         const actionCodeSettings = {
-            url: 'https://www.rocketgoals.com/login?verified=1',
+            url: continueUrl,
             handleCodeInApp: false
         };
 

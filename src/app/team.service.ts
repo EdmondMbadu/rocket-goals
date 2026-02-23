@@ -95,12 +95,41 @@ export class TeamService {
   }
 
   async addMemberToTeam(teamId: string, member: Team['members'][0]): Promise<void> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      throw new Error('Team not found.');
+    }
+
+    const existingMember = team.members.find(m => m.userId === member.userId);
+    const normalizedEmail = member.email.trim().toLowerCase();
+
+    const mergedMember = existingMember
+      ? {
+          ...existingMember,
+          ...member,
+          email: normalizedEmail,
+          // Preserve elevated roles when re-adding an existing member.
+          role: existingMember.role === 'admin' || existingMember.role === 'coach'
+            ? existingMember.role
+            : member.role,
+          joinedAt: existingMember.joinedAt || member.joinedAt
+        }
+      : { ...member, email: normalizedEmail };
+
+    const nextMembers = existingMember
+      ? team.members.map(m => (m.userId === member.userId ? mergedMember : m))
+      : [...team.members, mergedMember];
+
+    const nextMemberIds = team.memberIds.includes(member.userId)
+      ? team.memberIds
+      : [...team.memberIds, member.userId];
+
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
     const docRef = fm.doc(firestore, 'teams', teamId);
     await fm.updateDoc(docRef, {
-      members: fm.arrayUnion(member),
-      memberIds: fm.arrayUnion(member.userId),
+      members: nextMembers,
+      memberIds: nextMemberIds,
       updatedAt: fm.serverTimestamp()
     });
   }

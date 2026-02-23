@@ -19,7 +19,6 @@
 <div class="team-shell" [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
   <div class="page-bg"></div>
 
-  <!-- Top Nav -->
   <nav class="top-nav">
     <div class="nav-inner">
       <a routerLink="/teams" class="back-link">
@@ -38,10 +37,7 @@
   </nav>
 
   <div class="content">
-
-    <!-- HERO CARD -->
     <section class="hero-card glass">
-      <!-- Cover Image -->
       <div class="hero-media">
         <div class="cover-img" [style.backgroundImage]="'url(' + coverImageSrc() + ')'">
           <div class="cover-overlay"></div>
@@ -69,7 +65,6 @@
         }
       </div>
 
-      <!-- Hero Body -->
       <div class="hero-body">
         <div class="avatar-wrap">
           <div class="team-avatar-frame">
@@ -95,6 +90,14 @@
           </p>
         </div>
         <div class="hero-actions">
+          @if (canShareTeamLink()) {
+          <button class="btn ghost" (click)="shareTeamLink()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342a3 3 0 114.632-2.684m-6.948 2.684A3 3 0 005.25 17.25h13.5a3 3 0 00-1.436-2.566m-10.628-1.342L12 9m0 0l5.314 4.342" />
+            </svg>
+            Share Link
+          </button>
+          }
           @if (isAdmin()) {
           <button class="btn solid" (click)="showInviteModal.set(true)">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,6 +106,7 @@
             Invite
           </button>
           }
+          @if (isCurrentUserMember()) {
           <button class="btn ghost" (click)="activeTab.set('chat')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -110,11 +114,120 @@
             </svg>
             Chat
           </button>
+          }
         </div>
       </div>
     </section>
 
-    <!-- TABS -->
+    @if (joinSuccess() || joinError() || verificationNotice() || shareNotice() || shareError()) {
+    <div class="status-stack">
+      @if (joinSuccess()) {
+      <p class="alert-banner success">{{ joinSuccess() }}</p>
+      }
+      @if (verificationNotice()) {
+      <p class="alert-banner success">{{ verificationNotice() }}</p>
+      }
+      @if (shareNotice()) {
+      <p class="alert-banner success">{{ shareNotice() }}</p>
+      }
+      @if (joinError()) {
+      <p class="alert-banner error">{{ joinError() }}</p>
+      }
+      @if (shareError()) {
+      <p class="alert-banner error">{{ shareError() }}</p>
+      }
+    </div>
+    }
+
+    @if (showJoinOnboarding()) {
+    <section class="join-card glass fade-in">
+      <div class="join-header">
+        <p class="join-kicker">Join Team</p>
+        <h2 class="join-title">Join {{ team()!.name }}</h2>
+        <p class="join-subtext">Create an account or log in, and you will be added to this team right away.</p>
+      </div>
+
+      @if (authService.profile()) {
+      <div class="join-authenticated">
+        <p class="join-subtext">Signed in as <strong>{{ currentUserName() }}</strong>.</p>
+        <button class="btn solid" (click)="joinWithCurrentAccount()" [disabled]="isBusyJoining()">
+          @if (joiningTeam()) {
+          <span class="spinner small"></span> Joining...
+          } @else {
+          Join Team
+          }
+        </button>
+      </div>
+      } @else {
+      <div class="join-mode-switch">
+        <button class="join-mode-btn" [class.active]="onboardingMode() === 'signup'" (click)="onboardingMode.set('signup')">
+          Sign Up
+        </button>
+        <button class="join-mode-btn" [class.active]="onboardingMode() === 'login'" (click)="onboardingMode.set('login')">
+          Log In
+        </button>
+      </div>
+
+      @if (onboardingMode() === 'signup') {
+      <div class="join-form-grid">
+        <input
+          type="text"
+          [(ngModel)]="signupName"
+          placeholder="Your name"
+          class="input"
+          [disabled]="isBusyJoining()"
+        />
+        <input
+          type="email"
+          [(ngModel)]="signupEmail"
+          placeholder="you@email.com"
+          class="input"
+          [disabled]="isBusyJoining()"
+        />
+        <input
+          type="password"
+          [(ngModel)]="signupPassword"
+          placeholder="Password (min 6 characters)"
+          class="input"
+          [disabled]="isBusyJoining()"
+        />
+        <button class="btn solid" (click)="handleSignupAndJoin()" [disabled]="isBusyJoining()">
+          @if (isBusyJoining()) {
+          <span class="spinner small"></span> Creating account...
+          } @else {
+          Create Account & Join
+          }
+        </button>
+      </div>
+      } @else {
+      <div class="join-form-grid">
+        <input
+          type="email"
+          [(ngModel)]="loginEmail"
+          placeholder="you@email.com"
+          class="input"
+          [disabled]="isBusyJoining()"
+        />
+        <input
+          type="password"
+          [(ngModel)]="loginPassword"
+          placeholder="Your password"
+          class="input"
+          [disabled]="isBusyJoining()"
+        />
+        <button class="btn solid" (click)="handleLoginAndJoin()" [disabled]="isBusyJoining()">
+          @if (isBusyJoining()) {
+          <span class="spinner small"></span> Logging in...
+          } @else {
+          Log In & Join
+          }
+        </button>
+      </div>
+      }
+      }
+    </section>
+    }
+
     <div class="tab-bar glass">
       <button (click)="activeTab.set('members')" class="tab" [class.active]="activeTab() === 'members'">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,6 +236,7 @@
         </svg>
         Members
       </button>
+      @if (isCurrentUserMember()) {
       <button (click)="activeTab.set('chat')" class="tab" [class.active]="activeTab() === 'chat'">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -137,13 +251,13 @@
         </svg>
         AI Coach
       </button>
+      }
     </div>
 
-    <!-- ===== MEMBERS TAB ===== -->
     @if (activeTab() === 'members') {
     <div class="fade-in">
 
-      <!-- Admins Section -->
+      <!-- Admins / Coaches -->
       <div class="section-label">
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" style="color: #ef4444">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -151,27 +265,24 @@
         Coach / Admin
       </div>
 
-      <div class="member-grid">
+      <div class="members-circle-grid">
         @for (member of getAdmins(); track member.userId) {
-        <div class="member-card glass">
-          <div class="member-card-banner admin-banner"></div>
-          <div class="member-card-body">
-            <div class="member-avatar-wrap">
-              @if (member.profilePictureUrl) {
-              <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-avatar" />
-              } @else {
-              <div class="member-avatar member-avatar-fallback admin-fallback">{{ member.firstName.charAt(0) }}</div>
-              }
-            </div>
-            <span class="role-badge admin-badge">{{ member.role }}</span>
-            <p class="member-name">{{ member.firstName }} {{ member.lastName }}</p>
-            <p class="member-email">{{ member.email }}</p>
+        <div class="member-circle-card">
+          <div class="member-circle-avatar-wrap admin-ring">
+            @if (member.profilePictureUrl) {
+            <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-circle-avatar" />
+            } @else {
+            <div class="member-circle-avatar member-circle-fallback admin-fallback">{{ member.firstName.charAt(0) }}</div>
+            }
+            <span class="member-status-dot online"></span>
           </div>
+          <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
+          <span class="role-pill admin-pill">{{ member.role }}</span>
+          <p class="member-circle-email">{{ member.email }}</p>
         </div>
         }
       </div>
 
-      <!-- AI Coach Card -->
       @if (team()!.aiCoachEnabled) {
       <div class="section-label" style="margin-top: 28px">AI Coach</div>
       <div class="ai-coach-card glass">
@@ -185,11 +296,13 @@
           <p class="ai-coach-name">Rocket AI Coach</p>
           <p class="ai-coach-sub">AI-powered accountability partner for your team</p>
         </div>
+        @if (isCurrentUserMember()) {
         <button class="btn solid sm" (click)="activeTab.set('ai')">Open Chat</button>
+        }
       </div>
       }
 
-      <!-- Members Section -->
+      <!-- Members -->
       <div class="section-label" style="margin-top: 28px">Members</div>
 
       @if (getMembers().length === 0) {
@@ -203,32 +316,27 @@
         }
       </div>
       } @else {
-      <div class="member-grid">
+      <div class="members-circle-grid">
         @for (member of getMembers(); track member.userId) {
-        <div class="member-card glass">
-          <div class="member-card-banner"></div>
-          <div class="member-card-body">
-            <div class="member-avatar-wrap">
-              @if (member.profilePictureUrl) {
-              <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-avatar" />
-              } @else {
-              <div class="member-avatar member-avatar-fallback">{{ member.firstName.charAt(0) }}</div>
-              }
-            </div>
-            <div class="member-info-row">
-              <div class="member-info-text">
-                <p class="member-name">{{ member.firstName }} {{ member.lastName }}</p>
-                <p class="member-email">{{ member.email }}</p>
-              </div>
-              @if (isAdmin() && member.userId !== currentUserId()) {
-              <button class="remove-btn" (click)="removeMember(member.userId)" title="Remove member">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              }
-            </div>
+        <div class="member-circle-card">
+          <div class="member-circle-avatar-wrap">
+            @if (member.profilePictureUrl) {
+            <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-circle-avatar" />
+            } @else {
+            <div class="member-circle-avatar member-circle-fallback">{{ member.firstName.charAt(0) }}</div>
+            }
+            <span class="member-status-dot"></span>
           </div>
+          <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
+          <span class="role-pill">member</span>
+          <p class="member-circle-email">{{ member.email }}</p>
+          @if (isAdmin() && member.userId !== currentUserId()) {
+          <button class="remove-btn-circle" (click)="removeMember(member.userId)" title="Remove member">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          }
         </div>
         }
       </div>
@@ -236,11 +344,9 @@
     </div>
     }
 
-    <!-- ===== CHAT TAB ===== -->
-    @if (activeTab() === 'chat') {
+    @if (activeTab() === 'chat' && isCurrentUserMember()) {
     <div class="chat-wrapper fade-in">
       <div class="chat-container glass">
-        <!-- Messages -->
         <div class="messages-list" #messagesContainer>
           @if (messages().length === 0) {
           <div class="chat-empty">
@@ -284,7 +390,6 @@
           }
         </div>
 
-        <!-- Input -->
         <div class="chat-input-bar">
           <textarea [(ngModel)]="newMessage" placeholder="Type a message..."
             rows="1" (keydown.enter)="onEnterKey($event)" class="chat-input"></textarea>
@@ -303,8 +408,7 @@
     </div>
     }
 
-    <!-- ===== AI COACH TAB ===== -->
-    @if (activeTab() === 'ai') {
+    @if (activeTab() === 'ai' && isCurrentUserMember()) {
     <div class="fade-in">
       <div class="ai-tab-card glass">
         <div class="ai-tab-icon">
@@ -338,7 +442,6 @@
   </div>
 </div>
 
-<!-- ===== INVITE MODAL ===== -->
 @if (showInviteModal()) {
 <div class="modal-overlay" (click)="showInviteModal.set(false)">
   <div class="modal-card" (click)="$event.stopPropagation()">
@@ -347,24 +450,38 @@
       <p class="muted">Add people to {{ team()!.name }}</p>
     </div>
     <div class="modal-body">
-      <div class="invite-row">
-        <input type="email" [(ngModel)]="inviteEmailField" placeholder="member&#64;email.com"
-          (keydown.enter)="inviteMember()" [disabled]="inviteLoading()" class="input" />
-        <button (click)="inviteMember()" [disabled]="inviteLoading()" class="btn solid sm">
-          @if (inviteLoading()) {
-          <span class="spinner small"></span> Adding...
-          } @else {
-          Add
-          }
-        </button>
+      <div class="modal-block">
+        <p class="muted tiny" style="margin-bottom: 8px">Share invite link</p>
+        <div class="invite-row">
+          <input type="text" [value]="teamInviteLink()" readonly class="input" />
+          <button (click)="shareTeamLink()" class="btn ghost sm">Share</button>
+        </div>
+        <p class="muted tiny" style="margin-top: 10px">Anyone with this link can sign up or log in and join this team.</p>
       </div>
+
+      <div class="divider-line"></div>
+
+      <div class="modal-block">
+        <p class="muted tiny" style="margin-bottom: 8px">Add existing Rocket Goals user</p>
+        <div class="invite-row">
+          <input type="email" [(ngModel)]="inviteEmailField" placeholder="member&#64;email.com"
+            (keydown.enter)="inviteMember()" [disabled]="inviteLoading()" class="input" />
+          <button (click)="inviteMember()" [disabled]="inviteLoading()" class="btn solid sm">
+            @if (inviteLoading()) {
+            <span class="spinner small"></span> Adding...
+            } @else {
+            Add
+            }
+          </button>
+        </div>
+      </div>
+
       @if (inviteError()) {
       <p class="alert-inline error">{{ inviteError() }}</p>
       }
       @if (inviteSuccess()) {
       <p class="alert-inline success">{{ inviteSuccess() }}</p>
       }
-      <p class="muted tiny" style="margin-top: 12px">Enter the email of an existing Rocket Goals user to add them directly.</p>
     </div>
     <div class="modal-footer">
       <button class="btn ghost sm" (click)="showInviteModal.set(false)">Done</button>
