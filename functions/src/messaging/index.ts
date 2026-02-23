@@ -3,6 +3,7 @@ export {
   telegramWebhook,
   setupTeamTelegramGroup,
   syncTeamMessageToTelegram,
+  configureTelegramWebhook,
 } from "./telegram.functions";
 export {
   linkTelegramAccount,

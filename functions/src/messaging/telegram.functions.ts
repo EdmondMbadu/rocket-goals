@@ -1525,6 +1525,12 @@ export const setupTeamTelegramGroup = onCall({
   }
 
   // No pending group found - create a pending link and return deep link
+  // First, ensure the webhook is configured to receive my_chat_member events
+  const botToken = telegramBotToken.value();
+  if (botToken) {
+    await ensureWebhookConfigured(botToken);
+  }
+
   // startgroup= opens Telegram's "pick a group" screen and adds the bot
   // admin=true requests admin permissions so the bot can generate invite links
   const deepLink = `https://t.me/RocketGoalsBot?startgroup=team_${teamId}&admin=true`;
@@ -1546,6 +1552,116 @@ export const setupTeamTelegramGroup = onCall({
     deepLink
   };
 });
+
+/**
+ * Reconfigure the Telegram webhook to receive all necessary update types,
+ * including my_chat_member events (required for auto-detecting when the bot
+ * is added to a group).
+ */
+export const configureTelegramWebhook = onCall({
+  region: "us-central1",
+  secrets: [telegramBotToken],
+  cors: [
+    "https://rocket-goals.web.app",
+    "https://rocket-goals.firebaseapp.com",
+    "https://www.rocketgoals.com",
+    "https://rocketgoals.com",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200"
+  ]
+}, async (request) => {
+  const userId = request.auth?.uid;
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const botToken = telegramBotToken.value();
+  if (!botToken) {
+    throw new HttpsError('internal', 'Bot token not configured');
+  }
+
+  // Get the current webhook URL from Telegram
+  const infoResp = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
+  const infoData = await infoResp.json();
+
+  if (!infoData.ok || !infoData.result?.url) {
+    throw new HttpsError('failed-precondition', 'No webhook URL currently set');
+  }
+
+  const currentUrl = infoData.result.url;
+  console.log(`🔧 Current webhook URL: ${currentUrl}`);
+  console.log(`🔧 Current allowed_updates: ${JSON.stringify(infoData.result.allowed_updates)}`);
+
+  // Re-set the webhook with the required allowed_updates
+  const setResp = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url: currentUrl,
+      allowed_updates: ['message', 'edited_message', 'my_chat_member', 'callback_query']
+    })
+  });
+  const setData = await setResp.json();
+
+  if (!setData.ok) {
+    console.error('Failed to set webhook:', setData);
+    throw new HttpsError('internal', `Failed to configure webhook: ${setData.description}`);
+  }
+
+  console.log('✅ Webhook reconfigured with allowed_updates: message, edited_message, my_chat_member, callback_query');
+
+  return {
+    success: true,
+    webhookUrl: currentUrl,
+    allowedUpdates: ['message', 'edited_message', 'my_chat_member', 'callback_query']
+  };
+});
+
+/**
+ * Internal helper: Ensure the webhook is configured to receive my_chat_member events.
+ * Called automatically from setupTeamTelegramGroup.
+ */
+async function ensureWebhookConfigured(botToken: string): Promise<void> {
+  try {
+    const infoResp = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
+    const infoData = await infoResp.json();
+
+    if (!infoData.ok || !infoData.result?.url) {
+      console.warn('⚠️ No webhook URL set, skipping reconfiguration');
+      return;
+    }
+
+    const currentUpdates: string[] = infoData.result.allowed_updates || [];
+    const requiredUpdates = ['message', 'edited_message', 'my_chat_member', 'callback_query'];
+
+    // Check if all required updates are already allowed
+    const missingUpdates = requiredUpdates.filter(u => !currentUpdates.includes(u));
+    if (missingUpdates.length === 0) {
+      console.log('✅ Webhook already configured with all required update types');
+      return;
+    }
+
+    console.log(`🔧 Webhook missing update types: ${missingUpdates.join(', ')}. Reconfiguring...`);
+
+    const setResp = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: infoData.result.url,
+        allowed_updates: requiredUpdates
+      })
+    });
+    const setData = await setResp.json();
+
+    if (setData.ok) {
+      console.log('✅ Webhook reconfigured successfully');
+    } else {
+      console.error('Failed to reconfigure webhook:', setData);
+    }
+  } catch (err) {
+    console.error('Error ensuring webhook configuration:', err);
+  }
+}
 
 /**
  * Firestore trigger: Sync web app messages to Telegram group
