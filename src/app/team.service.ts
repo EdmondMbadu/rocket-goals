@@ -6,6 +6,22 @@ import { CreateTeamInput, Team, TeamMessage } from './models/team';
 @Injectable({ providedIn: 'root' })
 export class TeamService {
   private firestoreInstance?: Promise<Firestore>;
+  private sanitizeMemberForWrite(member: Team['members'][0]): Team['members'][0] {
+    const sanitized: Team['members'][0] = {
+      userId: member.userId,
+      firstName: member.firstName || '',
+      lastName: member.lastName || '',
+      email: (member.email || '').trim().toLowerCase(),
+      role: member.role,
+      joinedAt: member.joinedAt
+    };
+
+    if (member.profilePictureUrl) {
+      sanitized.profilePictureUrl = member.profilePictureUrl;
+    }
+
+    return sanitized;
+  }
 
   private async getFirestore(): Promise<Firestore> {
     if (!this.firestoreInstance) {
@@ -100,29 +116,29 @@ export class TeamService {
       throw new Error('Team not found.');
     }
 
-    const existingMember = team.members.find(m => m.userId === member.userId);
-    const normalizedEmail = member.email.trim().toLowerCase();
+    const sanitizedInput = this.sanitizeMemberForWrite(member);
+    const existingMember = team.members.find(m => m.userId === sanitizedInput.userId);
 
     const mergedMember = existingMember
       ? {
+          ...this.sanitizeMemberForWrite(existingMember),
           ...existingMember,
-          ...member,
-          email: normalizedEmail,
+          ...sanitizedInput,
           // Preserve elevated roles when re-adding an existing member.
           role: existingMember.role === 'admin' || existingMember.role === 'coach'
             ? existingMember.role
-            : member.role,
-          joinedAt: existingMember.joinedAt || member.joinedAt
+            : sanitizedInput.role,
+          joinedAt: existingMember.joinedAt || sanitizedInput.joinedAt
         }
-      : { ...member, email: normalizedEmail };
+      : sanitizedInput;
 
     const nextMembers = existingMember
-      ? team.members.map(m => (m.userId === member.userId ? mergedMember : m))
+      ? team.members.map(m => (m.userId === sanitizedInput.userId ? mergedMember : this.sanitizeMemberForWrite(m)))
       : [...team.members, mergedMember];
 
-    const nextMemberIds = team.memberIds.includes(member.userId)
+    const nextMemberIds = team.memberIds.includes(sanitizedInput.userId)
       ? team.memberIds
-      : [...team.memberIds, member.userId];
+      : [...team.memberIds, sanitizedInput.userId];
 
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
