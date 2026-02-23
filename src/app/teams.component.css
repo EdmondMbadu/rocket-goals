@@ -860,6 +860,255 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ===== LIGHT MODE ===== */
+.light-mode {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 60%, #f8fafc 100%);
+  color: #0f172a;
+}
+
+.light-mode .page-bg {
+  background: radial-gradient(circle at 30% 40%, rgba(239, 68, 68, 0.08), transparent 40%),
+              radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.08), transparent 45%);
+  filter: blur(70px);
+}
+
+.light-mode .top-nav {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.light-mode .logo-text {
+  color: #0f172a;
+}
+
+.light-mode .nav-links a {
+  color: #0f172a;
+  border-color: transparent;
+}
+
+.light-mode .nav-links a.active {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.light-mode .nav-links a:hover {
+  color: #dc2626;
+}
+
+.light-mode .mobile-toggle {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+.light-mode .mobile-menu {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+}
+
+.light-mode .mobile-menu a {
+  color: #334155;
+}
+
+.light-mode .mobile-menu a.active {
+  color: #dc2626;
+}
+
+.light-mode .mobile-menu a:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.light-mode .glass {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+}
+
+.light-mode .page-title {
+  color: #0f172a;
+}
+
+.light-mode .page-subtitle {
+  color: #64748b;
+}
+
+.light-mode .btn.ghost {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.light-mode .btn.ghost:hover {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.light-mode .btn.solid {
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);
+}
+
+.light-mode .btn.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* Team Cards light mode */
+.light-mode .team-card {
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+}
+
+.light-mode .team-card:hover {
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
+}
+
+.light-mode .card-badge {
+  background: rgba(255, 255, 255, 0.85);
+  color: #334155;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.light-mode .card-badge-admin {
+  background: rgba(239, 68, 68, 0.85);
+  color: white;
+}
+
+.light-mode .card-avatar {
+  border-color: #ffffff;
+}
+
+.light-mode .card-title {
+  color: #0f172a;
+}
+
+.light-mode .card-desc {
+  color: #64748b;
+}
+
+.light-mode .stack-avatar {
+  border-color: #ffffff;
+}
+
+.light-mode .card-member-count {
+  color: #94a3b8;
+}
+
+.light-mode .card-footer {
+  border-top-color: rgba(15, 23, 42, 0.06);
+}
+
+.light-mode .card-delete-btn {
+  color: #cbd5e1;
+}
+
+.light-mode .card-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.light-mode .card-arrow {
+  color: #cbd5e1;
+}
+
+.light-mode .team-card:hover .card-arrow {
+  color: #dc2626;
+}
+
+/* Empty state light mode */
+.light-mode .empty-icon {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.light-mode .empty-title {
+  color: #0f172a;
+}
+
+.light-mode .empty-desc {
+  color: #64748b;
+}
+
+/* Modal light mode */
+.light-mode .modal-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.2);
+}
+
+.light-mode .modal-header {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+
+.light-mode .modal-header h2 {
+  color: #0f172a;
+}
+
+.light-mode .modal-close {
+  color: #94a3b8;
+}
+
+.light-mode .modal-close:hover {
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+}
+
+.light-mode .modal-footer {
+  border-top-color: rgba(15, 23, 42, 0.06);
+}
+
+.light-mode .label {
+  color: #0f172a;
+}
+
+.light-mode .input {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.light-mode .input::placeholder {
+  color: #94a3b8;
+}
+
+.light-mode .toggle-row {
+  background: rgba(15, 23, 42, 0.02);
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+.light-mode .toggle-title {
+  color: #0f172a;
+}
+
+.light-mode .toggle-switch {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.light-mode .email-chip {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.light-mode .delete-title {
+  color: #0f172a;
+}
+
+.light-mode .delete-desc {
+  color: #64748b;
+}
+
+.light-mode .delete-desc strong {
+  color: #0f172a;
+}
+
+.light-mode .muted {
+  color: #64748b;
+}
+
+.light-mode .spinner {
+  border-color: rgba(15, 23, 42, 0.1);
+  border-top-color: #ef4444;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
   .nav-links {

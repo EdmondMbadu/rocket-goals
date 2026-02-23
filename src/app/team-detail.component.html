@@ -1,5 +1,5 @@
 @if (loading()) {
-<div class="team-shell">
+<div class="team-shell" [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
   <div class="page-bg"></div>
   <div class="load-center">
     <span class="spinner lg"></span>
@@ -7,7 +7,7 @@
   </div>
 </div>
 } @else if (!team()) {
-<div class="team-shell">
+<div class="team-shell" [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
   <div class="page-bg"></div>
   <div class="load-center">
     <h2>Team not found</h2>
@@ -16,7 +16,7 @@
   </div>
 </div>
 } @else {
-<div class="team-shell">
+<div class="team-shell" [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
   <div class="page-bg"></div>
 
   <!-- Top Nav -->

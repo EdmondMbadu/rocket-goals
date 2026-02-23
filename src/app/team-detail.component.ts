@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
+import { ThemeService } from './theme.service';
 import type { Team, TeamMember, TeamMessage } from './models/team';
 
 @Component({
@@ -17,6 +18,7 @@ export class TeamDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private teamService = inject(TeamService);
   authService = inject(AuthService);
+  protected theme = inject(ThemeService);
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('coverInput') coverInput?: ElementRef<HTMLInputElement>;

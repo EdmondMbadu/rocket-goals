@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
+import { ThemeService } from './theme.service';
 import type { Team, TeamMember } from './models/team';
 
 @Component({
@@ -17,6 +18,7 @@ export class TeamsComponent implements OnInit {
   private router = inject(Router);
   private teamService = inject(TeamService);
   authService = inject(AuthService);
+  protected theme = inject(ThemeService);
 
   teams = signal<Team[]>([]);
   loading = signal(true);
