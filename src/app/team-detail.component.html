@@ -358,7 +358,24 @@
       </div>
 
       <div class="join-modal-body">
-        @if (authService.profile()) {
+        @if (verificationPending()) {
+        <div class="join-form-grid">
+          <p class="join-subtext">
+            Verify <strong>{{ verificationEmail() || signupEmail || authService.user()?.email }}</strong> to continue.
+            Once verified, you will be added directly to this team.
+          </p>
+          <button class="btn solid" (click)="completeEmailVerificationAndJoin()" [disabled]="isBusyJoining()">
+            @if (isBusyJoining()) {
+            <span class="spinner small"></span> Checking verification...
+            } @else {
+            I Verified My Email
+            }
+          </button>
+          <button class="btn ghost" (click)="resendVerificationForTeam()" [disabled]="isBusyJoining()">
+            Resend Verification Email
+          </button>
+        </div>
+        } @else if (authService.profile()) {
         <div class="join-authenticated">
           <p class="join-subtext">Signed in as <strong>{{ currentUserName() }}</strong>.</p>
           <button class="btn solid" (click)="joinWithCurrentAccount()" [disabled]="isBusyJoining()">

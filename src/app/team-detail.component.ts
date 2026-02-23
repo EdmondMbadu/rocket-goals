@@ -40,6 +40,8 @@ export class TeamDetailComponent implements OnInit {
   private joinModalDismissed = signal(false);
   authActionLoading = signal(false);
   joiningTeam = signal(false);
+  verificationPending = signal(false);
+  verificationEmail = signal('');
   joinError = signal<string | null>(null);
   joinSuccess = signal<string | null>(null);
   verificationNotice = signal<string | null>(null);
@@ -138,13 +140,7 @@ export class TeamDetailComponent implements OnInit {
 
     const verified = this.route.snapshot.queryParamMap.get('verified');
     if (verified === '1' || verified === 'true') {
-      this.verificationNotice.set('Email verified. You are all set to keep moving with this team.');
-    }
-
-    const invite = this.route.snapshot.queryParamMap.get('invite');
-    const shouldAutoJoin = invite === '1' || invite === 'true';
-    if (shouldAutoJoin && this.authService.profile() && !this.isCurrentUserMember()) {
-      await this.joinCurrentUserToTeam(false);
+      await this.completeEmailVerificationAndJoin(true);
     }
   }
 
@@ -251,21 +247,18 @@ export class TeamDetailComponent implements OnInit {
         password
       });
 
-      const joined = await this.joinCurrentUserToTeam(false);
-      if (!joined) {
-        return;
-      }
-
       const verificationRedirect = this.buildTeamVerificationUrl();
       try {
         await this.authService.sendEmailVerification(verificationRedirect || undefined);
-        this.verificationNotice.set('Verification email sent. After verification, this link returns to this team page automatically.');
+        this.verificationPending.set(true);
+        this.verificationEmail.set(email);
+        this.verificationNotice.set('Please verify your email first. After you verify, this page will add you to the team automatically.');
       } catch {
-        this.verificationNotice.set('Account created and team joined. Verification email could not be sent right now.');
+        this.verificationNotice.set('Account created. We could not send a verification email right now. Try resending.');
       }
 
       this.authService.sendWelcomeEmail().catch(() => {});
-      this.joinSuccess.set(`Welcome to ${this.team()?.name || 'the team'}!`);
+      this.joinSuccess.set(null);
       this.signupPassword = '';
     } catch (err: any) {
       console.error('Signup + join failed:', err);
@@ -322,6 +315,65 @@ export class TeamDetailComponent implements OnInit {
     await this.joinCurrentUserToTeam(true);
   }
 
+  async resendVerificationForTeam() {
+    if (this.authActionLoading()) {
+      return;
+    }
+
+    this.authActionLoading.set(true);
+    this.joinError.set(null);
+    try {
+      const verificationRedirect = this.buildTeamVerificationUrl();
+      await this.authService.sendEmailVerification(verificationRedirect || undefined);
+      this.verificationNotice.set(`Verification email sent to ${this.verificationEmail() || 'your inbox'}.`);
+    } catch {
+      this.joinError.set('Unable to resend verification email right now.');
+    } finally {
+      this.authActionLoading.set(false);
+    }
+  }
+
+  async completeEmailVerificationAndJoin(fromRedirect = false) {
+    if (this.isBusyJoining()) {
+      return;
+    }
+
+    this.authActionLoading.set(true);
+    this.joinError.set(null);
+
+    try {
+      const user = await this.authService.reloadCurrentUser();
+      if (!user) {
+        this.verificationNotice.set('Email verified. Log in to continue to this team.');
+        this.verificationPending.set(false);
+        return;
+      }
+
+      if (!user.emailVerified) {
+        this.verificationPending.set(true);
+        this.verificationEmail.set(this.normalizeEmail(user.email || this.verificationEmail()));
+        this.joinError.set('Email is not verified yet. Open the verification email and click the link.');
+        return;
+      }
+
+      this.verificationPending.set(false);
+      const joined = await this.joinCurrentUserToTeam(false);
+      if (joined) {
+        this.joinSuccess.set(`Welcome to ${this.team()?.name || 'the team'}!`);
+        if (fromRedirect) {
+          this.verificationNotice.set('Email verified and team access unlocked.');
+        } else {
+          this.verificationNotice.set('Email verified. You are now in the team.');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to complete verification join:', error);
+      this.joinError.set('Unable to confirm verification right now.');
+    } finally {
+      this.authActionLoading.set(false);
+    }
+  }
+
   openJoinModal() {
     if (!this.showJoinOnboarding()) {
       return;
@@ -337,10 +389,22 @@ export class TeamDetailComponent implements OnInit {
 
   private async joinCurrentUserToTeam(showMessage: boolean): Promise<boolean> {
     const team = this.team();
-    const profile = this.authService.profile();
-
-    if (!team?.id || !profile) {
+    if (!team?.id) {
       this.joinError.set('Log in or create an account to join this team.');
+      return false;
+    }
+
+    const currentAuthUser = await this.authService.reloadCurrentUser();
+    const profile = await this.waitForProfile();
+    if (!profile) {
+      this.joinError.set('Log in or create an account to join this team.');
+      return false;
+    }
+
+    if (!currentAuthUser?.emailVerified) {
+      this.verificationPending.set(true);
+      this.verificationEmail.set(this.normalizeEmail(currentAuthUser?.email || profile.email));
+      this.joinError.set('Please verify your email first. Then click "I verified my email" to join the team.');
       return false;
     }
 
@@ -586,5 +650,16 @@ export class TeamDetailComponent implements OnInit {
     } catch {
       return null;
     }
+  }
+
+  private async waitForProfile(maxAttempts = 10): Promise<NonNullable<ReturnType<AuthService['profile']>> | null> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const profile = this.authService.profile();
+      if (profile) {
+        return profile;
+      }
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    return this.authService.profile();
   }
 }
