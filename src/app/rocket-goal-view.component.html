@@ -107,6 +107,16 @@
 
       <!-- Header Actions -->
       <div class="flex items-center gap-2 sm:gap-3 flex-none">
+        @if (teamContextId()) {
+        <button (click)="openTeamPage()"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-wide transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Team View
+        </button>
+        }
+
         <!-- Dark/Light Mode Toggle -->
         <button (click)="toggleDarkMode()" 
           class="theme-toggle-btn p-2.5 rounded-full transition-all"

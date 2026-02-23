@@ -12,7 +12,9 @@ import { CalendarEventsService } from './calendar-events.service';
 import { ActionItemsService, ActionItem } from './action-items.service';
 import { CheckInsService } from './check-ins.service';
 import { TelegramQrModalComponent } from './telegram-qr-modal.component';
+import { TeamService } from './team.service';
 import type { RocketGoal, CareerQuestMetrics } from './models/rocket-goal';
+import type { Team } from './models/team';
 import type {
   DailyIgnition,
   IgnitionConfidence,
@@ -70,6 +72,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private actionItemsService = inject(ActionItemsService);
   private checkInsService = inject(CheckInsService);
   private fansService = inject(FansService);
+  private teamService = inject(TeamService);
   private visualizationService = inject(VisualizationService);
   private rocketGoalsAIService = inject(RocketGoalsAIService);
   authService = inject(AuthService); // Make public for template access
@@ -80,6 +83,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   @ViewChild('goalTitleInput') goalTitleInputRef?: ElementRef<HTMLInputElement>;
 
   goal = signal<RocketGoal | null>(null);
+  teamContextId = signal<string | null>(null);
+  teamContext = signal<Team | null>(null);
+  teamGoalCollaborator = signal(false);
   loading = signal(true);
   error = signal<string | null>(null);
   dashboardTitle = signal<string>('MISSION CONTROL');
@@ -292,6 +298,11 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   telegramError = signal<string | null>(null);
 
   async ngOnInit() {
+    const linkedTeamId = this.route.snapshot.queryParamMap.get('teamId');
+    if (linkedTeamId) {
+      this.teamContextId.set(linkedTeamId);
+    }
+
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
     if (savedTitle) {
@@ -827,6 +838,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       
       // Load user goals for dropdown only if user is logged in and it's their goal
       const currentGoal = this.goal();
+      if (currentGoal) {
+        await this.loadTeamContextForGoal(currentGoal);
+      }
       const currentUser = this.authService.profile();
       if (currentGoal?.userId && currentUser?.userId && currentGoal.userId === currentUser.userId) {
         this.loadUserGoals(currentGoal.userId);
@@ -1179,6 +1193,14 @@ ${url}`;
 
   goHome() {
     this.router.navigateByUrl('/goals');
+  }
+
+  openTeamPage() {
+    const teamId = this.teamContextId();
+    if (!teamId) {
+      return;
+    }
+    this.router.navigate(['/team', teamId]);
   }
 
   toggleDarkMode() {
@@ -2132,10 +2154,10 @@ ${url}`;
 
   private ensureMilestoneLogin(redirectUrl?: string, silent = false): boolean {
     const profile = this.authService.profile();
-    if (profile?.userId && this.isGoalOwner()) {
+    if (profile?.userId && this.canEditMilestones()) {
       return true;
     }
-    if (profile?.userId && !this.isGoalOwner()) {
+    if (profile?.userId && !this.canEditMilestones()) {
       return false;
     }
     if (silent) {
@@ -2147,6 +2169,46 @@ ${url}`;
       : this.router.url;
     this.router.navigate(['/login'], { queryParams: { redirectTo: redirectUrl || fallbackUrl } });
     return false;
+  }
+
+  private canEditMilestones(): boolean {
+    return this.isGoalOwner() || this.teamGoalCollaborator();
+  }
+
+  private async loadTeamContextForGoal(goal: RocketGoal): Promise<void> {
+    const goalTeamId = goal.answers?.['teamId'];
+    const normalizedTeamId = typeof goalTeamId === 'string' && goalTeamId.trim()
+      ? goalTeamId.trim()
+      : this.teamContextId();
+
+    if (!normalizedTeamId) {
+      this.teamContext.set(null);
+      this.teamGoalCollaborator.set(false);
+      return;
+    }
+
+    this.teamContextId.set(normalizedTeamId);
+
+    try {
+      const team = await this.teamService.getTeamById(normalizedTeamId);
+      this.teamContext.set(team);
+
+      const profile = this.authService.profile();
+      const normalizedEmail = (profile?.email || '').trim().toLowerCase();
+      const isMember = !!team && !!profile?.userId && (
+        team.memberIds.includes(profile.userId) ||
+        team.members.some(member =>
+          member.userId === profile.userId ||
+          ((member.email || '').trim().toLowerCase() === normalizedEmail)
+        )
+      );
+
+      this.teamGoalCollaborator.set(isMember);
+    } catch (error) {
+      console.error('Error loading linked team for goal:', error);
+      this.teamContext.set(null);
+      this.teamGoalCollaborator.set(false);
+    }
   }
 
   async loadWeeklyResets(goalId: string) {

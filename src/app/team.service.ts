@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import type { Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 import { CreateTeamInput, Team, TeamMessage } from './models/team';
+import { CreateRocketGoalInput } from './models/rocket-goal';
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
@@ -88,6 +89,105 @@ export class TeamService {
       ...updates,
       updatedAt: fm.serverTimestamp()
     });
+  }
+
+  async ensureTeamRocketGoal(teamId: string): Promise<string> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      throw new Error('Team not found.');
+    }
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+
+    const existingGoalId = (team.rocketGoalId || '').trim();
+    if (existingGoalId) {
+      const existingRef = fm.doc(firestore, 'rocketGoals', existingGoalId);
+      const existingSnap = await fm.getDoc(existingRef);
+      if (existingSnap.exists()) {
+        const data = existingSnap.data() as Record<string, any>;
+        const answers = (data?.['answers'] || {}) as Record<string, any>;
+        if (answers['teamId'] !== teamId || answers['teamGoal'] !== true) {
+          try {
+            await fm.updateDoc(existingRef, {
+              answers: {
+                ...answers,
+                teamId,
+                teamName: team.name,
+                teamGoal: true
+              }
+            });
+          } catch (error) {
+            console.warn('Unable to update team goal metadata on existing goal:', error);
+          }
+        }
+        return existingGoalId;
+      }
+    }
+
+    const goalId = `team-${teamId}`;
+    const goalRef = fm.doc(firestore, 'rocketGoals', goalId);
+    const goalSnap = await fm.getDoc(goalRef);
+
+    if (!goalSnap.exists()) {
+      const adminMember = team.members.find(member => member.userId === team.adminId);
+      const teamName = (team.name || 'Team').trim() || 'Team';
+
+      const payload: CreateRocketGoalInput = {
+        userId: team.adminId,
+        primaryGoal: `${teamName} Team Mission`,
+        answers: {
+          goal_title_label: `${teamName} Team Mission`,
+          custom_goal_title: `${teamName} Team Mission`,
+          goal_theme_label: 'Team Mission',
+          goal_support_label: 'Team',
+          timeframe: 'month',
+          timeframe_days: 30,
+          teamId,
+          teamName,
+          teamGoal: true
+        },
+        participant: {
+          firstName: teamName,
+          lastName: 'Team',
+          email: (adminMember?.email || `team-${teamId}@rocketgoals.local`).trim().toLowerCase()
+        },
+        status: 'active',
+        entryPoint: 'launch_challenge',
+        startTime: Date.now(),
+        createdAt: fm.serverTimestamp()
+      };
+
+      await fm.setDoc(goalRef, {
+        id: goalId,
+        ...payload,
+        createdAt: payload.createdAt || fm.serverTimestamp()
+      });
+    } else {
+      const existingData = goalSnap.data() as Record<string, any>;
+      const answers = (existingData?.['answers'] || {}) as Record<string, any>;
+      try {
+        await fm.updateDoc(goalRef, {
+          id: goalId,
+          answers: {
+            ...answers,
+            teamId,
+            teamName: team.name,
+            teamGoal: true
+          }
+        });
+      } catch (error) {
+        console.warn('Unable to update metadata on deterministic team goal:', error);
+      }
+    }
+
+    try {
+      await this.updateTeam(teamId, { rocketGoalId: goalId } as Partial<Team>);
+    } catch (error) {
+      // Goal can still be used even if team metadata update is restricted.
+      console.warn('Unable to persist rocketGoalId on team doc:', error);
+    }
+    return goalId;
   }
 
   async findUserByEmail(email: string): Promise<{ userId: string; firstName: string; lastName: string; email: string; profilePictureUrl?: string } | null> {

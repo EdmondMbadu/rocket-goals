@@ -1,7 +1,7 @@
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
@@ -26,6 +26,7 @@ type InviteUserSuggestion = {
 })
 export class TeamDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private teamService = inject(TeamService);
   authService = inject(AuthService);
   protected theme = inject(ThemeService);
@@ -35,7 +36,10 @@ export class TeamDetailComponent implements OnInit {
 
   teamId = signal<string | null>(null);
   team = signal<Team | null>(null);
+  teamRocketGoalId = signal<string | null>(null);
   loading = signal(true);
+  preparingTeamGoal = signal(false);
+  teamGoalError = signal<string | null>(null);
   activeTab = signal<'members' | 'chat' | 'ai'>('members');
   messages = signal<TeamMessage[]>([]);
   showInviteModal = signal(false);
@@ -137,6 +141,7 @@ export class TeamDetailComponent implements OnInit {
   isBusyJoining = computed(() => this.authActionLoading() || this.joiningTeam());
 
   readonly teamPageUrl = computed(() => this.buildTeamPageUrl(this.team()?.id || undefined));
+  canOpenTeamRocketGoal = computed(() => !!this.teamRocketGoalId() && !this.preparingTeamGoal());
   hasTelegramGroup = computed(() => !!this.team()?.telegramGroupId);
   telegramInviteLink = computed(() => this.team()?.telegramGroupInviteLink || null);
 
@@ -192,6 +197,7 @@ export class TeamDetailComponent implements OnInit {
     this.teamId.set(teamId);
 
     await this.loadTeam(teamId);
+    await this.prepareTeamRocketGoal(teamId);
 
     const verified = this.route.snapshot.queryParamMap.get('verified');
     if (verified === '1' || verified === 'true') {
@@ -204,12 +210,46 @@ export class TeamDetailComponent implements OnInit {
     try {
       const team = await this.teamService.getTeamById(teamId);
       this.team.set(team);
+      this.teamRocketGoalId.set(team?.rocketGoalId || null);
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async prepareTeamRocketGoal(teamId: string) {
+    const currentTeam = this.team();
+    if (currentTeam?.rocketGoalId) {
+      this.teamRocketGoalId.set(currentTeam.rocketGoalId);
+      return;
+    }
+
+    this.preparingTeamGoal.set(true);
+    this.teamGoalError.set(null);
+    try {
+      const goalId = await this.teamService.ensureTeamRocketGoal(teamId);
+      this.teamRocketGoalId.set(goalId);
+      this.team.update(current => (current ? { ...current, rocketGoalId: goalId } : current));
+    } catch (err) {
+      console.error('Failed to prepare team rocket goal:', err);
+      this.teamGoalError.set('Unable to open Team RocketGoal right now. Please try again.');
+    } finally {
+      this.preparingTeamGoal.set(false);
+    }
+  }
+
+  openTeamRocketGoalView() {
+    const goalId = this.teamRocketGoalId();
+    const teamId = this.team()?.id || this.teamId();
+    if (!goalId || !teamId) {
+      return;
+    }
+
+    this.router.navigate(['/rocketgoal', goalId], {
+      queryParams: { teamId }
+    });
   }
 
   private async loadMessages(teamId: string) {
