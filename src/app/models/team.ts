@@ -17,6 +17,7 @@ export interface TeamMessage {
   content: string;
   timestamp: number;
   type: 'text' | 'ai-response' | 'system';
+  source?: 'web' | 'telegram';
 }
 
 export interface Team {
@@ -29,6 +30,9 @@ export interface Team {
   members: TeamMember[];
   memberIds: string[];
   aiCoachEnabled: boolean;
+  telegramGroupId?: number;
+  telegramGroupInviteLink?: string;
+  telegramGroupTitle?: string;
   createdAt: unknown;
   updatedAt: unknown;
 }

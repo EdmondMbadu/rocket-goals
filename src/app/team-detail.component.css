@@ -1800,4 +1800,184 @@
   .chat-container {
     height: calc(100vh - 360px);
   }
+
+  .telegram-banner-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .telegram-banner-info {
+    align-items: center;
+  }
+
+  .telegram-setup-steps {
+    text-align: left;
+  }
+}
+
+/* ── Telegram Integration ── */
+
+.telegram-banner {
+  position: relative;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(38, 165, 228, 0.2);
+  background: rgba(38, 165, 228, 0.05);
+}
+
+.telegram-banner-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+
+.telegram-banner-close:hover {
+  color: #e5e7eb;
+}
+
+.telegram-banner-content {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.telegram-qr-wrap {
+  flex-shrink: 0;
+}
+
+.telegram-qr-img {
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.telegram-qr-placeholder {
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.telegram-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.telegram-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.telegram-banner-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.telegram-open-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #26a5e4 !important;
+  border-color: #26a5e4 !important;
+  margin-top: 4px;
+}
+
+.telegram-open-btn:hover {
+  background: #1e8fcc !important;
+}
+
+/* Telegram Setup Card (Admin) */
+
+.telegram-setup-card {
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  border: 1px dashed rgba(38, 165, 228, 0.3);
+}
+
+.telegram-setup-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(38, 165, 228, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.telegram-setup-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.telegram-setup-title {
+  font-weight: 800;
+  font-size: 16px;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.telegram-setup-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.telegram-setup-steps {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 4px 0 8px;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.telegram-setup-steps li {
+  margin-bottom: 2px;
+}
+
+.telegram-setup-steps strong {
+  color: #e5e7eb;
+}
+
+/* Light mode overrides */
+
+.light-mode .telegram-banner-close:hover {
+  color: #334155;
+}
+
+.light-mode .telegram-setup-steps strong {
+  color: #1e293b;
+}
+
+.light-mode .telegram-setup-desc,
+.light-mode .telegram-banner-desc,
+.light-mode .telegram-setup-steps {
+  color: #64748b;
 }

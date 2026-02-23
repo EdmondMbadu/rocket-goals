@@ -1,5 +1,9 @@
 // Telegram Functions
-export {telegramWebhook} from "./telegram.functions";
+export {
+  telegramWebhook,
+  setupTeamTelegramGroup,
+  syncTeamMessageToTelegram,
+} from "./telegram.functions";
 export {
   linkTelegramAccount,
   unlinkTelegramAccount,

@@ -17,6 +17,8 @@ export { initiateHeyGenVideo, checkHeyGenVideoStatus, listHeyGenAvatars } from "
 // Re-export Telegram/Messaging functions
 export {
   telegramWebhook,
+  setupTeamTelegramGroup,
+  syncTeamMessageToTelegram,
   linkTelegramAccount,
   unlinkTelegramAccount,
   getTelegramLinkStatus,

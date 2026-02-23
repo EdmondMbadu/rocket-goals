@@ -29,10 +29,19 @@ export interface TelegramMessage {
   reply_to_message?: TelegramMessage;
 }
 
+export interface TelegramChatMemberUpdated {
+  chat: TelegramChat;
+  from: TelegramUser;
+  date: number;
+  old_chat_member: { user: TelegramUser; status: string };
+  new_chat_member: { user: TelegramUser; status: string };
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
   edited_message?: TelegramMessage;
+  my_chat_member?: TelegramChatMemberUpdated;
   callback_query?: {
     id: string;
     from: TelegramUser;

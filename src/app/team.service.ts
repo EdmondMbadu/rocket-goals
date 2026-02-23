@@ -313,6 +313,30 @@ export class TeamService {
     return downloadUrl;
   }
 
+  async setupTeamTelegramGroup(teamId: string): Promise<{
+    success: boolean;
+    telegramGroupId?: number;
+    telegramGroupInviteLink?: string;
+    telegramGroupTitle?: string;
+  }> {
+    const appModule = await import('firebase/app');
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+    const functionsModule = await import('firebase/functions');
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const setup = functionsModule.httpsCallable(functions, 'setupTeamTelegramGroup');
+    const result = await setup({ teamId });
+    return result.data as {
+      success: boolean;
+      telegramGroupId?: number;
+      telegramGroupInviteLink?: string;
+      telegramGroupTitle?: string;
+    };
+  }
+
   async deleteTeam(teamId: string): Promise<void> {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');

@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
 import type { Team, TeamMember, TeamMessage } from './models/team';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
+import QRCode from 'qrcode';
 
 type InviteUserSuggestion = {
   userId: string;
@@ -80,6 +81,13 @@ export class TeamDetailComponent implements OnInit {
   uploadingCover = signal(false);
   private coverImageFile: File | null = null;
 
+  // Telegram group
+  connectingTelegram = signal(false);
+  telegramConnectError = signal<string | null>(null);
+  telegramConnectSuccess = signal<string | null>(null);
+  telegramQrDataUrl = signal<string | null>(null);
+  showTelegramBanner = signal(true);
+
   newMessage = '';
   inviteEmailField = '';
 
@@ -128,6 +136,8 @@ export class TeamDetailComponent implements OnInit {
   isBusyJoining = computed(() => this.authActionLoading() || this.joiningTeam());
 
   readonly teamPageUrl = computed(() => this.buildTeamPageUrl(this.team()?.id || undefined));
+  hasTelegramGroup = computed(() => !!this.team()?.telegramGroupId);
+  telegramInviteLink = computed(() => this.team()?.telegramGroupInviteLink || null);
 
   constructor() {
     effect(() => {
@@ -147,6 +157,11 @@ export class TeamDetailComponent implements OnInit {
 
       if (team?.id && isMember && this.messagesLoadedForTeamId !== team.id) {
         void this.loadMessages(team.id);
+      }
+
+      // Generate QR code when telegram group is connected
+      if (team?.telegramGroupInviteLink) {
+        void this.generateTelegramQr(team.telegramGroupInviteLink);
       }
     });
   }
@@ -693,7 +708,8 @@ export class TeamDetailComponent implements OnInit {
         senderName: `${profile.firstName} ${profile.lastName}`.trim(),
         senderAvatarUrl: profile.profilePictureUrl,
         content,
-        type: 'text'
+        type: 'text',
+        source: 'web'
       });
       await this.loadMessages(teamId);
     } catch (err) {
@@ -843,6 +859,57 @@ export class TeamDetailComponent implements OnInit {
     } finally {
       this.inviteLoading.set(false);
     }
+  }
+
+  async connectTelegramGroup() {
+    const teamId = this.team()?.id;
+    if (!teamId || !this.isAdmin() || this.connectingTelegram()) return;
+
+    this.connectingTelegram.set(true);
+    this.telegramConnectError.set(null);
+    this.telegramConnectSuccess.set(null);
+
+    try {
+      const result = await this.teamService.setupTeamTelegramGroup(teamId);
+      if (result.success) {
+        this.telegramConnectSuccess.set(
+          `Connected to Telegram group "${result.telegramGroupTitle || 'group'}"!`
+        );
+        // Reload team to get updated telegram fields
+        await this.loadTeam(teamId);
+      }
+    } catch (err: any) {
+      console.error('Failed to connect Telegram group:', err);
+      const message = err?.message || err?.code || '';
+      if (message.includes('not-found') || message.includes('No Telegram group')) {
+        this.telegramConnectError.set(
+          'No Telegram group found. Add @RocketGoalsBot to your Telegram group first, then try again.'
+        );
+      } else {
+        this.telegramConnectError.set(
+          'Unable to connect Telegram group right now. Please try again.'
+        );
+      }
+    } finally {
+      this.connectingTelegram.set(false);
+    }
+  }
+
+  private async generateTelegramQr(inviteLink: string) {
+    try {
+      const dataUrl = await QRCode.toDataURL(inviteLink, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+      this.telegramQrDataUrl.set(dataUrl);
+    } catch (err) {
+      console.error('Failed to generate QR code:', err);
+    }
+  }
+
+  dismissTelegramBanner() {
+    this.showTelegramBanner.set(false);
   }
 
   onEnterKey(event: Event) {
