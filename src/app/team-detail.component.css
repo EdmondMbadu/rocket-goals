@@ -1993,3 +1993,10 @@
   background: rgba(38, 165, 228, 0.08);
   margin-top: 4px;
 }
+
+.telegram-setup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}

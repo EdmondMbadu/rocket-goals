@@ -1127,6 +1127,20 @@ export const telegramWebhook = onRequest({
       const startParts = userMessage.split(' ');
       const autoLinkToken = startParts.length > 1 ? startParts[1] : null;
 
+      // Handle team group link that ended up in private chat
+      // This happens when ?startgroup= falls through on some Telegram clients
+      if (autoLinkToken && autoLinkToken.startsWith('team_')) {
+        const teamIdFromLink = autoLinkToken.replace('team_', '');
+        const groupDeepLink = `https://t.me/RocketGoalsBot?startgroup=${autoLinkToken}&admin=true`;
+        await sendTelegramMessage(
+          chatId,
+          `👋 Hi ${firstName}!\n\nTo connect this bot to your team group, please tap the link below. It will let you pick or create a Telegram group:\n\n${groupDeepLink}\n\n_Tip: On mobile, this opens a screen to select a group. On desktop, you may need to first create a group manually and then add @RocketGoalsBot to it._`,
+          botToken
+        );
+        res.sendStatus(200);
+        return;
+      }
+
       if (existingUser) {
         // Already linked
         await sendTelegramMessage(
@@ -1511,8 +1525,9 @@ export const setupTeamTelegramGroup = onCall({
   }
 
   // No pending group found - create a pending link and return deep link
-  // The deep link opens Telegram and lets user pick/create a group
-  const deepLink = `https://t.me/RocketGoalsBot?startgroup=team_${teamId}`;
+  // startgroup= opens Telegram's "pick a group" screen and adds the bot
+  // admin=true requests admin permissions so the bot can generate invite links
+  const deepLink = `https://t.me/RocketGoalsBot?startgroup=team_${teamId}&admin=true`;
 
   // Store pending link so the webhook can auto-complete it
   await admin.firestore().collection('telegramPendingTeamLinks').add({
