@@ -878,19 +878,22 @@ export const telegramWebhook = onRequest({
         console.log(`🤖 Bot added to group "${groupTitle}" (${groupChatId})`);
 
         // Check if there's a pending team waiting to be linked
+        // NOTE: Avoid compound queries (where + orderBy) to prevent needing composite indexes
         const pendingDoc = await admin.firestore()
           .collection('telegramPendingTeamLinks')
           .where('status', '==', 'pending')
-          .orderBy('createdAt', 'desc')
-          .limit(5)
           .get();
 
         let linkedTeamId: string | null = null;
 
-        for (const doc of pendingDoc.docs) {
+        // Sort by createdAt descending in code to find the most recent pending link
+        const sortedDocs = pendingDoc.docs
+          .map(doc => ({ doc, createdAt: doc.data().createdAt?.toMillis?.() || 0 }))
+          .sort((a, b) => b.createdAt - a.createdAt);
+
+        for (const { doc, createdAt } of sortedDocs) {
           const data = doc.data();
           // Check if this pending link was created recently (within 10 minutes)
-          const createdAt = data.createdAt?.toMillis?.() || 0;
           if (Date.now() - createdAt < 10 * 60 * 1000) {
             linkedTeamId = data.teamId;
 
@@ -1009,14 +1012,15 @@ export const telegramWebhook = onRequest({
               updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            // Clean up any pending link
+            // Clean up any pending link for this team
             const pendingLinks = await admin.firestore()
               .collection('telegramPendingTeamLinks')
               .where('teamId', '==', teamId)
-              .where('status', '==', 'pending')
               .get();
             for (const doc of pendingLinks.docs) {
-              await doc.ref.update({ status: 'completed', groupChatId, completedAt: admin.firestore.FieldValue.serverTimestamp() });
+              if (doc.data().status === 'pending') {
+                await doc.ref.update({ status: 'completed', groupChatId, completedAt: admin.firestore.FieldValue.serverTimestamp() });
+              }
             }
 
             const teamName = teamDoc.data()?.name || 'your team';
