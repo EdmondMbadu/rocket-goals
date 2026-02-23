@@ -36,6 +36,8 @@ export class TeamDetailComponent implements OnInit {
 
   // Invite onboarding and sharing state
   onboardingMode = signal<'signup' | 'login'>('signup');
+  showJoinModal = signal(false);
+  private joinModalDismissed = signal(false);
   authActionLoading = signal(false);
   joiningTeam = signal(false);
   joinError = signal<string | null>(null);
@@ -108,6 +110,13 @@ export class TeamDetailComponent implements OnInit {
 
       if (!isMember && this.activeTab() !== 'members') {
         this.activeTab.set('members');
+      }
+
+      if (!team || !this.showJoinOnboarding()) {
+        this.showJoinModal.set(false);
+        this.joinModalDismissed.set(false);
+      } else if (!this.showJoinModal() && !this.joinModalDismissed()) {
+        this.showJoinModal.set(true);
       }
 
       if (team?.id && isMember && this.messagesLoadedForTeamId !== team.id) {
@@ -299,6 +308,19 @@ export class TeamDetailComponent implements OnInit {
     this.joinError.set(null);
     this.joinSuccess.set(null);
     await this.joinCurrentUserToTeam(true);
+  }
+
+  openJoinModal() {
+    if (!this.showJoinOnboarding()) {
+      return;
+    }
+    this.joinModalDismissed.set(false);
+    this.showJoinModal.set(true);
+  }
+
+  closeJoinModal() {
+    this.showJoinModal.set(false);
+    this.joinModalDismissed.set(true);
   }
 
   private async joinCurrentUserToTeam(showMessage: boolean): Promise<boolean> {

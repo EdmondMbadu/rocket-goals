@@ -272,17 +272,6 @@
   border-color: rgba(239, 68, 68, 0.25);
 }
 
-/* ===== Join Card ===== */
-.join-card {
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 18px;
-}
-
-.join-header {
-  margin-bottom: 14px;
-}
-
 .join-kicker {
   margin: 0 0 4px;
   color: #94a3b8;
@@ -352,6 +341,58 @@
   display: grid;
   gap: 10px;
   max-width: 520px;
+}
+
+.join-modal-overlay {
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.join-modal-card {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 22px;
+  background: linear-gradient(165deg, rgba(12, 16, 28, 0.98), rgba(20, 25, 40, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: slide-up 0.3s ease-out;
+}
+
+.join-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.join-modal-body {
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.join-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.join-close:hover {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== Buttons ===== */
@@ -1246,6 +1287,32 @@
   color: #dc2626;
   background: rgba(239, 68, 68, 0.08);
   box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+.light-mode .join-modal-overlay {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.light-mode .join-modal-card {
+  background: linear-gradient(165deg, #ffffff, #f8fafc);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 35px 80px rgba(15, 23, 42, 0.25);
+}
+
+.light-mode .join-modal-header {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+.light-mode .join-close {
+  color: #334155;
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.light-mode .join-close:hover {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.2);
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .light-mode .btn.ghost {

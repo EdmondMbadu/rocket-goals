@@ -90,6 +90,14 @@
           </p>
         </div>
         <div class="hero-actions">
+          @if (showJoinOnboarding()) {
+          <button class="btn solid" (click)="openJoinModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Join Team
+          </button>
+          }
           @if (canShareTeamLink()) {
           <button class="btn ghost" (click)="shareTeamLink()">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,95 +145,6 @@
       <p class="alert-banner error">{{ shareError() }}</p>
       }
     </div>
-    }
-
-    @if (showJoinOnboarding()) {
-    <section class="join-card glass fade-in">
-      <div class="join-header">
-        <p class="join-kicker">Join Team</p>
-        <h2 class="join-title">Join {{ team()!.name }}</h2>
-        <p class="join-subtext">Create an account or log in, and you will be added to this team right away.</p>
-      </div>
-
-      @if (authService.profile()) {
-      <div class="join-authenticated">
-        <p class="join-subtext">Signed in as <strong>{{ currentUserName() }}</strong>.</p>
-        <button class="btn solid" (click)="joinWithCurrentAccount()" [disabled]="isBusyJoining()">
-          @if (joiningTeam()) {
-          <span class="spinner small"></span> Joining...
-          } @else {
-          Join Team
-          }
-        </button>
-      </div>
-      } @else {
-      <div class="join-mode-switch">
-        <button class="join-mode-btn" [class.active]="onboardingMode() === 'signup'" (click)="onboardingMode.set('signup')">
-          Sign Up
-        </button>
-        <button class="join-mode-btn" [class.active]="onboardingMode() === 'login'" (click)="onboardingMode.set('login')">
-          Log In
-        </button>
-      </div>
-
-      @if (onboardingMode() === 'signup') {
-      <div class="join-form-grid">
-        <input
-          type="text"
-          [(ngModel)]="signupName"
-          placeholder="Your name"
-          class="input"
-          [disabled]="isBusyJoining()"
-        />
-        <input
-          type="email"
-          [(ngModel)]="signupEmail"
-          placeholder="you@email.com"
-          class="input"
-          [disabled]="isBusyJoining()"
-        />
-        <input
-          type="password"
-          [(ngModel)]="signupPassword"
-          placeholder="Password (min 6 characters)"
-          class="input"
-          [disabled]="isBusyJoining()"
-        />
-        <button class="btn solid" (click)="handleSignupAndJoin()" [disabled]="isBusyJoining()">
-          @if (isBusyJoining()) {
-          <span class="spinner small"></span> Creating account...
-          } @else {
-          Create Account & Join
-          }
-        </button>
-      </div>
-      } @else {
-      <div class="join-form-grid">
-        <input
-          type="email"
-          [(ngModel)]="loginEmail"
-          placeholder="you@email.com"
-          class="input"
-          [disabled]="isBusyJoining()"
-        />
-        <input
-          type="password"
-          [(ngModel)]="loginPassword"
-          placeholder="Your password"
-          class="input"
-          [disabled]="isBusyJoining()"
-        />
-        <button class="btn solid" (click)="handleLoginAndJoin()" [disabled]="isBusyJoining()">
-          @if (isBusyJoining()) {
-          <span class="spinner small"></span> Logging in...
-          } @else {
-          Log In & Join
-          }
-        </button>
-      </div>
-      }
-      }
-    </section>
     }
 
     <div class="tab-bar glass">
@@ -441,6 +360,76 @@
 
   </div>
 </div>
+
+@if (showJoinOnboarding() && showJoinModal()) {
+<div class="modal-overlay join-modal-overlay" (click)="closeJoinModal()">
+  <div class="join-modal-card" (click)="$event.stopPropagation()">
+    <div class="join-modal-header">
+      <div>
+        <p class="join-kicker">Join Team</p>
+        <h2 class="join-title">{{ team()!.name }}</h2>
+        <p class="join-subtext">Sign up or log in. You will be added instantly.</p>
+      </div>
+      <button class="join-close" (click)="closeJoinModal()" aria-label="Close join modal">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="join-modal-body">
+      @if (authService.profile()) {
+      <div class="join-authenticated">
+        <p class="join-subtext">Signed in as <strong>{{ currentUserName() }}</strong>.</p>
+        <button class="btn solid" (click)="joinWithCurrentAccount()" [disabled]="isBusyJoining()">
+          @if (joiningTeam()) {
+          <span class="spinner small"></span> Joining...
+          } @else {
+          Join Team
+          }
+        </button>
+      </div>
+      } @else {
+      <div class="join-mode-switch">
+        <button class="join-mode-btn" [class.active]="onboardingMode() === 'signup'" (click)="onboardingMode.set('signup')">
+          Sign Up
+        </button>
+        <button class="join-mode-btn" [class.active]="onboardingMode() === 'login'" (click)="onboardingMode.set('login')">
+          Log In
+        </button>
+      </div>
+
+      @if (onboardingMode() === 'signup') {
+      <div class="join-form-grid">
+        <input type="text" [(ngModel)]="signupName" placeholder="Your name" class="input" [disabled]="isBusyJoining()" />
+        <input type="email" [(ngModel)]="signupEmail" placeholder="you@email.com" class="input" [disabled]="isBusyJoining()" />
+        <input type="password" [(ngModel)]="signupPassword" placeholder="Password (min 6 characters)" class="input" [disabled]="isBusyJoining()" />
+        <button class="btn solid" (click)="handleSignupAndJoin()" [disabled]="isBusyJoining()">
+          @if (isBusyJoining()) {
+          <span class="spinner small"></span> Creating account...
+          } @else {
+          Create Account & Join
+          }
+        </button>
+      </div>
+      } @else {
+      <div class="join-form-grid">
+        <input type="email" [(ngModel)]="loginEmail" placeholder="you@email.com" class="input" [disabled]="isBusyJoining()" />
+        <input type="password" [(ngModel)]="loginPassword" placeholder="Your password" class="input" [disabled]="isBusyJoining()" />
+        <button class="btn solid" (click)="handleLoginAndJoin()" [disabled]="isBusyJoining()">
+          @if (isBusyJoining()) {
+          <span class="spinner small"></span> Logging in...
+          } @else {
+          Log In & Join
+          }
+        </button>
+      </div>
+      }
+      }
+    </div>
+  </div>
+</div>
+}
 
 @if (showInviteModal()) {
 <div class="modal-overlay" (click)="showInviteModal.set(false)">
