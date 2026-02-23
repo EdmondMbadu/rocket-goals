@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ElementRef, ViewChild, AfterViewChecked, Input, OnChanges, SimpleChanges, OnDestroy, Output, EventEmitter, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -68,8 +68,24 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   private shouldScrollToBottom = false;
   private scrollInterval: any = null;
+  private scrollRetryTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastAutoPrompt: string | null = null;
   private greetingTimeout: any = null; // Track greeting timeout to cancel it if auto-launch happens
+
+  constructor() {
+    effect(() => {
+      const panelVisible = this.embedded || this.isOpen();
+      const loading = this.isLoading();
+      const messageList = this.messages();
+      const lastMessageLength = messageList.length > 0 ? messageList[messageList.length - 1].content.length : 0;
+
+      if (!panelVisible) return;
+      if (messageList.length === 0 && !loading) return;
+
+      void lastMessageLength;
+      this.queueScrollToBottom();
+    });
+  }
 
   ngOnInit(): void {
     // If a fresh prompt is pending (from rocket-prompt or one-shot), don't load old conversations
@@ -293,7 +309,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
         this.typewriterInterval = null;
         this.typewriterMessageId.set(null);
         this.stopContinuousScroll();
-        this.shouldScrollToBottom = true;
+        this.queueScrollToBottom();
 
         // Finalize the message in service (adds to conversation history)
         this.aiService.finalizeMessage(timestamp, text);
@@ -338,6 +354,10 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     if (this.scrollInterval) {
       clearInterval(this.scrollInterval);
     }
+    if (this.scrollRetryTimeout) {
+      clearTimeout(this.scrollRetryTimeout);
+      this.scrollRetryTimeout = null;
+    }
   }
 
   async sendMessage(): Promise<void> {
@@ -381,7 +401,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
     // Allow both logged-in and non-logged-in users to send messages
     this.inputMessage.set('');
-    this.shouldScrollToBottom = true;
+    this.queueScrollToBottom();
 
     // Track if this was an auto-launch to reset preventAutoSelect after sending
     const wasAutoLaunch = this.aiService.isFreshPromptPending();
@@ -541,7 +561,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     this.inputMessage.set(trimmedPrompt);
     
     // Scroll to bottom to show the new message
-    this.shouldScrollToBottom = true;
+    this.queueScrollToBottom();
 
     // Small delay to ensure UI updates, then send
     // sendMessageWithoutAddingResponse will check if user message exists and preserve it
@@ -754,5 +774,30 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
       const el = this.messagesContainer.nativeElement;
       el.scrollTop = el.scrollHeight;
     }
+  }
+
+  private queueScrollToBottom(): void {
+    this.shouldScrollToBottom = true;
+
+    if (this.scrollRetryTimeout) {
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 6;
+    const tryScroll = () => {
+      this.scrollToBottom();
+      attempts += 1;
+
+      const hasContainer = !!this.messagesContainer?.nativeElement;
+      if (!hasContainer && attempts < maxAttempts) {
+        this.scrollRetryTimeout = setTimeout(tryScroll, 60);
+        return;
+      }
+
+      this.scrollRetryTimeout = null;
+    };
+
+    this.scrollRetryTimeout = setTimeout(tryScroll, 0);
   }
 }

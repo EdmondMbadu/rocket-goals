@@ -40,6 +40,7 @@ export class TeamDetailComponent implements OnInit {
   messages = signal<TeamMessage[]>([]);
   showInviteModal = signal(false);
   sendingMessage = signal(false);
+  aiResponding = signal(false);
   inviteLoading = signal(false);
   inviteError = signal<string | null>(null);
   inviteSuccess = signal<string | null>(null);
@@ -163,6 +164,21 @@ export class TeamDetailComponent implements OnInit {
       if (team?.telegramGroupInviteLink) {
         void this.generateTelegramQr(team.telegramGroupInviteLink);
       }
+    });
+
+    effect(() => {
+      const isChatTab = this.activeTab() === 'chat';
+      const messageCount = this.messages().length;
+      const aiTyping = this.aiResponding();
+
+      if (!isChatTab || !this.isCurrentUserMember()) {
+        return;
+      }
+      if (messageCount === 0 && !aiTyping) {
+        return;
+      }
+
+      this.scrollToBottom();
     });
   }
 
@@ -692,8 +708,6 @@ export class TeamDetailComponent implements OnInit {
     }
   }
 
-  aiResponding = signal(false);
-
   async sendMessage() {
     const content = this.newMessage.trim();
     const teamId = this.team()?.id;
@@ -1017,11 +1031,22 @@ export class TeamDetailComponent implements OnInit {
       ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  private scrollToBottom() {
+  private scrollToBottom(attempt = 0) {
+    const delay = attempt === 0 ? 0 : 60;
     setTimeout(() => {
       const el = this.messagesContainer?.nativeElement;
-      if (el) el.scrollTop = el.scrollHeight;
-    }, 100);
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+        if (attempt < 2) {
+          this.scrollToBottom(attempt + 1);
+        }
+        return;
+      }
+
+      if (attempt < 8) {
+        this.scrollToBottom(attempt + 1);
+      }
+    }, delay);
   }
 
   private normalizeEmail(email: string | null | undefined): string {
