@@ -7,12 +7,14 @@ import { AuthService } from './auth.service';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
+import type { Team } from './models/team';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ThemeService } from './theme.service';
 import { FansService, Fan } from './fans.service';
 import { VisualizationService } from './visualization.service';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
+import { TeamService } from './team.service';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 
@@ -47,6 +49,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private rocketGoalsService = inject(RocketGoalsService);
+  private teamService = inject(TeamService);
   private fansService = inject(FansService);
   // Expose authService for template access
   authService = inject(AuthService);
@@ -61,6 +64,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private storage: any = null;
 
   goals = signal<RocketGoal[]>([]);
+  teams = signal<Team[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
@@ -240,6 +244,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   async loadGoals() {
     const profile = this.authService.profile();
     if (!profile?.userId) {
+      this.teams.set([]);
       this.error.set('Please log in to view your goals');
       this.loading.set(false);
       return;
@@ -249,9 +254,27 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.error.set(null);
     try {
       console.log('Loading goals for userId:', profile.userId);
-      const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
+      const [goalsResult, teamsResult] = await Promise.allSettled([
+        this.rocketGoalsService.getRocketGoalsByUserId(profile.userId),
+        this.teamService.getTeamsByUserId(profile.userId)
+      ]);
+
+      if (goalsResult.status !== 'fulfilled') {
+        throw goalsResult.reason;
+      }
+
+      const goals = goalsResult.value as RocketGoal[];
+      const teams = teamsResult.status === 'fulfilled'
+        ? (teamsResult.value as Team[])
+        : [];
+
+      if (teamsResult.status !== 'fulfilled') {
+        console.warn('Failed to load teams for goals page:', teamsResult.reason);
+      }
+
       console.log('Loaded goals:', goals);
       this.goals.set(goals as RocketGoal[]);
+      this.teams.set(teams);
       const preferredGoalId = profile?.myOneThingGoalId;
       const preferredExists = preferredGoalId && (goals as RocketGoal[]).some(goal => goal.id === preferredGoalId);
       const defaultGoalId = (goals as RocketGoal[])[0]?.id || null;
@@ -273,6 +296,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } catch (err) {
       console.error('Error loading goals:', err);
+      this.teams.set([]);
       this.error.set('Failed to load goals. Please try again.');
     } finally {
       this.loading.set(false);
@@ -410,6 +434,29 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getGoalStatus(goal: RocketGoal): string {
     return goal.status || 'active';
+  }
+
+  getTeamMemberCount(team: Team): number {
+    if (Array.isArray(team.members) && team.members.length > 0) {
+      return team.members.length;
+    }
+    return Array.isArray(team.memberIds) ? team.memberIds.length : 0;
+  }
+
+  isTeamAdmin(team: Team): boolean {
+    const profile = this.authService.profile();
+    if (!profile?.userId) return false;
+    return team.adminId === profile.userId;
+  }
+
+  getTeamCoverImage(team: Team): string {
+    return team.coverImageUrl || '/assets/team-rocket.jpg';
+  }
+
+  onTeamCoverError(event: Event): void {
+    const img = event.target as HTMLImageElement | null;
+    if (!img) return;
+    img.src = '/assets/team-rocket.jpg';
   }
 
   getUserFirstName(): string {

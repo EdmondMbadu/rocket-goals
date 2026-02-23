@@ -211,8 +211,8 @@
         </div>
         <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
           <div>
-            <h2 class="text-3xl md:text-4xl font-black text-black mb-2 tracking-tight">Your Rocket Goals</h2>
-            <p class="text-gray-600">Select a mission to view its dashboard</p>
+            <h2 class="text-3xl md:text-4xl font-black text-black mb-2 tracking-tight">Your Rocket Goals & Teams</h2>
+            <p class="text-gray-600">Select a mission or team to open its dashboard</p>
           </div>
           <div class="flex items-center gap-3">
             <button (click)="openGoalModal()"
@@ -364,7 +364,85 @@
           </div>
         </div>
         }
+
+        @for (team of teams(); track team.id) {
+        <div
+          class="group relative bg-white/80 backdrop-blur-sm border border-gray-200 rounded-3xl p-6 transition-all duration-300 transform overflow-hidden hover:-translate-y-2 hover:border-red-400 hover:shadow-[0_25px_60px_rgba(220,38,38,0.2)] dark:bg-slate-900/80 dark:border-white/10 dark:hover:border-red-500/60 dark:hover:shadow-[0_25px_60px_rgba(248,113,113,0.25)]">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-transparent to-transparent opacity-0 group-hover:opacity-100 group-hover:from-red-500/15 group-hover:to-red-600/10 transition-all duration-300 dark:group-hover:from-red-500/10 dark:group-hover:to-red-500/5">
+          </div>
+          <div class="absolute top-5 right-5 px-3 py-1 rounded-full bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-[0.18em]">
+            Team
+          </div>
+          @if (isTeamAdmin(team)) {
+          <div class="absolute top-5 left-5 px-3 py-1 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-[0.18em] dark:bg-white dark:text-black">
+            Admin
+          </div>
+          }
+
+          <div class="relative z-10 pt-7">
+            <div class="mb-4 rounded-xl overflow-hidden border border-red-200/50 dark:border-red-500/30 shadow-sm group-hover:shadow-md transition-shadow">
+              <img
+                [src]="getTeamCoverImage(team)"
+                (error)="onTeamCoverError($event)"
+                [alt]="team.name + ' cover image'"
+                class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy" />
+            </div>
+            <div class="mb-4">
+              <h3
+                class="text-2xl font-black text-black mb-2 transition-colors line-clamp-2 group-hover:text-red-600 dark:text-white dark:group-hover:text-red-400">
+                {{ team.name }}
+              </h3>
+              <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 dark:text-slate-400">
+                {{ team.description || 'Team mission and accountability space' }}
+              </p>
+            </div>
+
+            <div class="space-y-3 mb-4">
+              <div class="flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-gray-600">Members:</span>
+                <span class="font-bold text-black dark:text-white">{{ getTeamMemberCount(team) }}</span>
+              </div>
+              <div class="text-xs font-mono text-gray-400 uppercase tracking-widest">
+                ID: {{ team.id.substring(0, 8) }}...
+              </div>
+            </div>
+
+            <a [routerLink]="['/team', team.id]"
+              class="inline-flex items-center gap-2 text-sm font-semibold text-red-600 group-hover:text-red-700 transition-colors">
+              <span>Open Team Page</span>
+              <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        }
       </div>
+
+      @if (goals().length === 0 && teams().length === 0) {
+      <div
+        class="mt-8 rounded-3xl border border-dashed border-gray-300 bg-white/70 px-6 py-10 text-center dark:bg-slate-900/50 dark:border-white/15">
+        <p class="text-lg font-semibold text-gray-700 dark:text-slate-200 mb-2">No goals or teams yet</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400 mb-5">Launch your first goal or create a team to start collaborating.</p>
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+          <button (click)="openGoalModal()"
+            class="px-5 py-2.5 bg-black text-white font-bold rounded-full hover:bg-red-600 transition-all">
+            Launch a goal
+          </button>
+          <a routerLink="/teams"
+            class="px-5 py-2.5 border border-black/15 text-black font-bold rounded-full hover:border-red-500 hover:text-red-600 transition-all dark:text-white dark:border-white/20 dark:hover:border-red-400 dark:hover:text-red-300">
+            Open teams
+          </a>
+        </div>
+      </div>
+      }
 
       @if (fanMembershipsLoading() || fanMemberships().length > 0) {
       <div class="mt-12" id="fan-missions-section">
