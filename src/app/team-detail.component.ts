@@ -45,6 +45,9 @@ export class TeamDetailComponent implements OnInit {
   leadUpdatingUserId = signal<string | null>(null);
   leadActionError = signal<string | null>(null);
   leadActionSuccess = signal<string | null>(null);
+  openMemberMenuUserId = signal<string | null>(null);
+  memberPendingRemoval = signal<TeamMember | null>(null);
+  removingMemberUserId = signal<string | null>(null);
   joinError = signal<string | null>(null);
   joinSuccess = signal<string | null>(null);
   verificationNotice = signal<string | null>(null);
@@ -193,6 +196,25 @@ export class TeamDetailComponent implements OnInit {
     });
   }
 
+  canManageMemberActions(member: TeamMember): boolean {
+    if (!this.isAdmin()) return false;
+    if (member.userId === this.currentUserId()) return false;
+    return member.role !== 'admin' && member.role !== 'coach';
+  }
+
+  toggleMemberMenu(member: TeamMember, event?: Event) {
+    event?.stopPropagation();
+    if (!this.canManageMemberActions(member)) {
+      return;
+    }
+
+    this.openMemberMenuUserId.update(current => current === member.userId ? null : member.userId);
+  }
+
+  closeMemberMenu() {
+    this.openMemberMenuUserId.set(null);
+  }
+
   async makeTeamLead(member: TeamMember) {
     const team = this.team();
     if (!team?.id || !this.isAdmin() || member.userId === this.currentUserId()) {
@@ -207,6 +229,7 @@ export class TeamDetailComponent implements OnInit {
     this.leadUpdatingUserId.set(member.userId);
     this.leadActionError.set(null);
     this.leadActionSuccess.set(null);
+    this.closeMemberMenu();
 
     try {
       await this.teamService.assignTeamLead(team.id, member.userId);
@@ -230,6 +253,7 @@ export class TeamDetailComponent implements OnInit {
     this.leadUpdatingUserId.set(member.userId);
     this.leadActionError.set(null);
     this.leadActionSuccess.set(null);
+    this.closeMemberMenu();
 
     try {
       await this.teamService.assignTeamLead(team.id, null);
@@ -240,6 +264,44 @@ export class TeamDetailComponent implements OnInit {
       this.leadActionError.set(error?.message || 'Unable to remove Team Lead right now.');
     } finally {
       this.leadUpdatingUserId.set(null);
+    }
+  }
+
+  promptRemoveMember(member: TeamMember) {
+    if (!this.canManageMemberActions(member)) {
+      return;
+    }
+    this.memberPendingRemoval.set(member);
+    this.closeMemberMenu();
+  }
+
+  cancelRemoveMemberPrompt() {
+    this.memberPendingRemoval.set(null);
+    this.removingMemberUserId.set(null);
+  }
+
+  async confirmRemoveMember() {
+    const teamId = this.team()?.id;
+    const member = this.memberPendingRemoval();
+    if (!teamId || !member || !this.isAdmin()) {
+      return;
+    }
+
+    this.removingMemberUserId.set(member.userId);
+    this.leadActionError.set(null);
+    this.leadActionSuccess.set(null);
+
+    try {
+      await this.teamService.removeMemberFromTeam(teamId, member.userId);
+      await this.loadTeam(teamId);
+      const name = `${member.firstName} ${member.lastName}`.trim() || member.email;
+      this.leadActionSuccess.set(`${name} was removed from the team.`);
+      this.memberPendingRemoval.set(null);
+    } catch (err: any) {
+      console.error('Failed to remove member:', err);
+      this.leadActionError.set(err?.message || 'Unable to remove this member right now.');
+    } finally {
+      this.removingMemberUserId.set(null);
     }
   }
 
@@ -570,17 +632,6 @@ export class TeamDetailComponent implements OnInit {
       this.newMessage = content;
     } finally {
       this.sendingMessage.set(false);
-    }
-  }
-
-  async removeMember(userId: string) {
-    const teamId = this.team()?.id;
-    if (!teamId || !this.isAdmin()) return;
-    try {
-      await this.teamService.removeMemberFromTeam(teamId, userId);
-      await this.loadTeam(teamId);
-    } catch (err) {
-      console.error('Failed to remove member:', err);
     }
   }
 

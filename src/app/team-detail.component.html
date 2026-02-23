@@ -180,7 +180,7 @@
     </div>
 
     @if (activeTab() === 'members') {
-    <div class="fade-in">
+    <div class="fade-in" (click)="closeMemberMenu()">
 
       <!-- All members together -->
       <div class="section-label">
@@ -207,6 +207,26 @@
       <div class="members-circle-grid">
         @for (member of getAllMembers(); track member.userId) {
         <div class="member-circle-card">
+          @if (canManageMemberActions(member)) {
+          <div class="member-menu-wrap">
+            <button class="member-menu-trigger" (click)="toggleMemberMenu(member, $event)" title="Member actions">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6h.01M12 12h.01M12 18h.01" />
+              </svg>
+            </button>
+            @if (openMemberMenuUserId() === member.userId) {
+            <div class="member-menu" (click)="$event.stopPropagation()">
+              @if (member.role === 'member') {
+              <button class="member-menu-item" (click)="makeTeamLead(member)" [disabled]="!!leadUpdatingUserId() || !!removingMemberUserId()">Make Team Lead</button>
+              }
+              @if (member.role === 'team-lead') {
+              <button class="member-menu-item" (click)="clearTeamLead(member)" [disabled]="!!leadUpdatingUserId() || !!removingMemberUserId()">Remove Team Lead</button>
+              }
+              <button class="member-menu-item danger" (click)="promptRemoveMember(member)" [disabled]="!!leadUpdatingUserId() || !!removingMemberUserId()">Remove From Team</button>
+            </div>
+            }
+          </div>
+          }
           <div class="member-circle-avatar-wrap" [class.admin-ring]="member.role !== 'member'">
             @if (member.profilePictureUrl) {
             <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-circle-avatar" />
@@ -223,26 +243,6 @@
             {{ member.role === 'team-lead' ? 'team lead' : member.role }}
           </span>
           <p class="member-circle-email">{{ member.email }}</p>
-          @if (isAdmin() && member.userId !== currentUserId() && member.role !== 'admin' && member.role !== 'coach') {
-          <div class="member-inline-actions">
-            @if (member.role === 'team-lead') {
-            <button class="member-action-btn neutral" (click)="clearTeamLead(member)" [disabled]="leadUpdatingUserId() === member.userId">
-              @if (leadUpdatingUserId() === member.userId) { Updating... } @else { Remove Team Lead }
-            </button>
-            } @else {
-            <button class="member-action-btn" (click)="makeTeamLead(member)" [disabled]="leadUpdatingUserId() === member.userId">
-              @if (leadUpdatingUserId() === member.userId) { Assigning... } @else { Make Team Lead }
-            </button>
-            }
-          </div>
-          }
-          @if (isAdmin() && member.userId !== currentUserId() && member.role === 'member') {
-          <button class="remove-btn-circle" (click)="removeMember(member.userId)" title="Remove member">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          }
         </div>
         }
       </div>
@@ -450,6 +450,31 @@
         </div>
         }
         }
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+@if (memberPendingRemoval()) {
+<div [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
+  <div class="modal-overlay" (click)="cancelRemoveMemberPrompt()">
+    <div class="modal-card small" (click)="$event.stopPropagation()">
+      <div class="modal-body" style="padding: 24px 20px; text-align: center;">
+        <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 900;">Remove member?</h3>
+        <p class="muted" style="margin: 0;">
+          Remove <strong>{{ memberPendingRemoval()!.firstName }} {{ memberPendingRemoval()!.lastName }}</strong> from this team?
+        </p>
+      </div>
+      <div class="modal-footer" style="justify-content: stretch; gap: 10px;">
+        <button class="btn ghost sm" style="flex: 1" (click)="cancelRemoveMemberPrompt()" [disabled]="!!removingMemberUserId()">Cancel</button>
+        <button class="btn danger sm" style="flex: 1" (click)="confirmRemoveMember()" [disabled]="!!removingMemberUserId()">
+          @if (removingMemberUserId()) {
+          <span class="spinner small"></span> Removing...
+          } @else {
+          Remove
+          }
+        </button>
       </div>
     </div>
   </div>
