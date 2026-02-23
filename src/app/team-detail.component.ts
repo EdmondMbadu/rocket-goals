@@ -861,6 +861,10 @@ export class TeamDetailComponent implements OnInit {
     }
   }
 
+  telegramDeepLink = signal<string | null>(null);
+  waitingForTelegramLink = signal(false);
+  private telegramPollInterval: ReturnType<typeof setInterval> | null = null;
+
   async connectTelegramGroup() {
     const teamId = this.team()?.id;
     if (!teamId || !this.isAdmin() || this.connectingTelegram()) return;
@@ -871,27 +875,66 @@ export class TeamDetailComponent implements OnInit {
 
     try {
       const result = await this.teamService.setupTeamTelegramGroup(teamId);
-      if (result.success) {
+
+      if (result.success && result.needsGroupCreation && result.deepLink) {
+        // Open Telegram deep link - user picks/creates a group
+        this.telegramDeepLink.set(result.deepLink);
+        window.open(result.deepLink, '_blank');
+        this.waitingForTelegramLink.set(true);
+        this.connectingTelegram.set(false);
+
+        // Poll for the group to be linked (auto-detected by webhook)
+        this.startTelegramLinkPolling(teamId);
+      } else if (result.success) {
+        // Group was linked immediately (from pending groups or already connected)
         this.telegramConnectSuccess.set(
           `Connected to Telegram group "${result.telegramGroupTitle || 'group'}"!`
         );
-        // Reload team to get updated telegram fields
         await this.loadTeam(teamId);
+        this.connectingTelegram.set(false);
       }
     } catch (err: any) {
       console.error('Failed to connect Telegram group:', err);
-      const message = err?.message || err?.code || '';
-      if (message.includes('not-found') || message.includes('No Telegram group')) {
-        this.telegramConnectError.set(
-          'No Telegram group found. Add @RocketGoalsBot to your Telegram group first, then try again.'
-        );
-      } else {
-        this.telegramConnectError.set(
-          'Unable to connect Telegram group right now. Please try again.'
-        );
-      }
-    } finally {
+      this.telegramConnectError.set(
+        'Unable to connect Telegram group right now. Please try again.'
+      );
       this.connectingTelegram.set(false);
+    }
+  }
+
+  private startTelegramLinkPolling(teamId: string) {
+    this.stopTelegramLinkPolling();
+    let pollCount = 0;
+
+    this.telegramPollInterval = setInterval(async () => {
+      pollCount++;
+      try {
+        const team = await this.teamService.getTeamById(teamId);
+        if (team?.telegramGroupId) {
+          this.stopTelegramLinkPolling();
+          this.waitingForTelegramLink.set(false);
+          this.telegramDeepLink.set(null);
+          this.telegramConnectSuccess.set(
+            `Connected to Telegram group "${team.telegramGroupTitle || 'group'}"!`
+          );
+          this.team.set(team);
+        }
+      } catch {
+        // Ignore polling errors
+      }
+
+      // Stop polling after 2 minutes
+      if (pollCount >= 40) {
+        this.stopTelegramLinkPolling();
+        this.waitingForTelegramLink.set(false);
+      }
+    }, 3000);
+  }
+
+  private stopTelegramLinkPolling() {
+    if (this.telegramPollInterval) {
+      clearInterval(this.telegramPollInterval);
+      this.telegramPollInterval = null;
     }
   }
 

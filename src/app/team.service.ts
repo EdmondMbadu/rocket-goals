@@ -315,6 +315,9 @@ export class TeamService {
 
   async setupTeamTelegramGroup(teamId: string): Promise<{
     success: boolean;
+    needsGroupCreation?: boolean;
+    deepLink?: string;
+    alreadyConnected?: boolean;
     telegramGroupId?: number;
     telegramGroupInviteLink?: string;
     telegramGroupTitle?: string;
@@ -331,6 +334,9 @@ export class TeamService {
     const result = await setup({ teamId });
     return result.data as {
       success: boolean;
+      needsGroupCreation?: boolean;
+      deepLink?: string;
+      alreadyConnected?: boolean;
       telegramGroupId?: number;
       telegramGroupInviteLink?: string;
       telegramGroupTitle?: string;

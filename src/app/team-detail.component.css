@@ -1981,3 +1981,15 @@
 .light-mode .telegram-setup-steps {
   color: #64748b;
 }
+
+.telegram-waiting-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #26a5e4;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(38, 165, 228, 0.08);
+  margin-top: 4px;
+}
