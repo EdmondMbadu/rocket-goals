@@ -1108,17 +1108,6 @@
   color: #ef4444 !important;
 }
 
-.msg-ai-badge {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.12);
-  padding: 1px 5px;
-  border-radius: 4px;
-  line-height: 1;
-}
-
 /* Typing indicator */
 .msg-bubble-typing {
   display: flex;
@@ -1756,10 +1745,6 @@
   background: rgba(239, 68, 68, 0.04);
   border-bottom-color: rgba(239, 68, 68, 0.08);
   color: #64748b;
-}
-
-.light-mode .msg-ai-badge {
-  background: rgba(239, 68, 68, 0.08);
 }
 
 .light-mode .msg-sender {
