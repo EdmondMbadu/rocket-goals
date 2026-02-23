@@ -180,6 +180,18 @@ export class TeamDetailComponent implements OnInit {
     return this.team()?.members.filter(m => m.role === 'member') || [];
   }
 
+  getAllMembers(): TeamMember[] {
+    const members = this.team()?.members || [];
+    return [...members].sort((a, b) => {
+      const rank = (role: TeamMember['role']) => {
+        if (role === 'admin') return 0;
+        if (role === 'coach') return 1;
+        return 2;
+      };
+      return rank(a.role) - rank(b.role);
+    });
+  }
+
   async shareTeamLink() {
     const team = this.team();
     const pageUrl = this.teamPageUrl();
