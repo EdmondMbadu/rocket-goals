@@ -1708,3 +1708,133 @@ export const syncTeamMessageToTelegram = onDocumentCreated({
 
   console.log(`📤 Synced web message to Telegram group ${groupChatId}`);
 });
+
+/**
+ * Callable function: Team AI Coach (@rocket mentions in team chat)
+ * Takes a user message and team context, returns an AI coaching response.
+ */
+export const askTeamAiCoach = onCall({
+  region: "us-central1",
+  secrets: [geminiApiKey],
+  cors: [
+    "https://rocket-goals.web.app",
+    "https://rocket-goals.firebaseapp.com",
+    "https://www.rocketgoals.com",
+    "https://rocketgoals.com",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200"
+  ]
+}, async (request) => {
+  const userId = request.auth?.uid;
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { teamId, message, recentMessages } = request.data as {
+    teamId: string;
+    message: string;
+    recentMessages?: Array<{ senderName: string; content: string; type: string }>;
+  };
+
+  if (!teamId || !message) {
+    throw new HttpsError('invalid-argument', 'teamId and message are required');
+  }
+
+  // Verify user is a team member
+  const teamDoc = await admin.firestore().collection('teams').doc(teamId).get();
+  if (!teamDoc.exists) {
+    throw new HttpsError('not-found', 'Team not found');
+  }
+  const teamData = teamDoc.data();
+  if (!teamData?.memberIds?.includes(userId)) {
+    throw new HttpsError('permission-denied', 'You are not a member of this team');
+  }
+
+  const apiKey = geminiApiKey.value();
+  if (!apiKey) {
+    throw new HttpsError('internal', 'AI service not configured');
+  }
+
+  // Gather team member goals for context
+  let membersContext = '';
+  try {
+    const memberGoals: string[] = [];
+    for (const member of (teamData.members || []).slice(0, 15)) {
+      const goalsSnap = await admin.firestore()
+        .collection('rocketGoals')
+        .where('userId', '==', member.userId)
+        .where('status', '==', 'active')
+        .limit(1)
+        .get();
+      if (!goalsSnap.empty) {
+        const goal = goalsSnap.docs[0].data();
+        memberGoals.push(`- ${member.firstName} ${member.lastName}: "${goal.title || 'Untitled goal'}"${goal.primaryGoal ? ` — ${goal.primaryGoal}` : ''}`);
+      } else {
+        memberGoals.push(`- ${member.firstName} ${member.lastName}: No active goal yet`);
+      }
+    }
+    if (memberGoals.length > 0) {
+      membersContext = `\n\nTEAM MEMBERS & THEIR GOALS:\n${memberGoals.join('\n')}`;
+    }
+  } catch (err) {
+    console.error('Failed to load team member goals:', err);
+  }
+
+  // Build recent chat context
+  let chatContext = '';
+  if (recentMessages && recentMessages.length > 0) {
+    const lines = recentMessages.slice(-10).map(m =>
+      m.type === 'ai-response' ? `Rocket (AI): ${m.content}` : `${m.senderName}: ${m.content}`
+    );
+    chatContext = `\n\nRECENT CHAT MESSAGES:\n${lines.join('\n')}`;
+  }
+
+  const sharedPhilosophy = await getSharedCoachPhilosophy();
+  const sharedBlock = sharedPhilosophy ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}` : '';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const systemPrompt = `You are Rocket, the AI coach for the team "${teamData.name || 'this team'}" on RocketGoals. You help the team stay motivated, accountable, and on track with their goals.
+
+CURRENT DATE: ${dateStr}${sharedBlock}
+
+TEAM: "${teamData.name}"
+${teamData.description ? `Description: ${teamData.description}` : ''}${membersContext}${chatContext}
+
+GUIDELINES:
+- You were mentioned with @rocket in the team chat
+- Be encouraging, supportive, and actionable
+- Keep responses concise (2-4 short paragraphs max)
+- Reference specific team members and their goals when relevant
+- Encourage accountability and celebrate progress
+- Use a warm, coaching tone
+- You can use emojis sparingly
+- If asked about something outside of goal coaching, be helpful but gently steer back to goals`;
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        temperature: 0.8,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 600,
+      }
+    });
+
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: message }] }],
+    });
+
+    const aiText = result.response.text() || "I'm here to help the team! What would you like to work on together?";
+    console.log(`🤖 Team AI Coach responded for team ${teamId}`);
+
+    return { success: true, response: aiText };
+  } catch (err) {
+    console.error('Team AI Coach error:', err);
+    throw new HttpsError('internal', 'AI coach is temporarily unavailable. Please try again.');
+  }
+});

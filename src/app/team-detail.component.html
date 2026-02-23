@@ -400,6 +400,16 @@
       }
 
       <div class="chat-container glass">
+        <!-- @rocket AI hint -->
+        <div class="rocket-ai-hint">
+          <div class="rocket-ai-hint-icon">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span>Type <strong>&#64;rocket</strong> in your message to ask the AI coach for help, motivation, or accountability.</span>
+        </div>
+
         <div class="messages-list" #messagesContainer>
           @if (messages().length === 0) {
           <div class="chat-empty">
@@ -410,18 +420,16 @@
               </svg>
             </div>
             <p class="chat-empty-title">No messages yet</p>
-            <p class="muted tiny">Start the conversation!</p>
+            <p class="muted tiny">Start the conversation! Mention <strong>&#64;rocket</strong> to get coaching from the AI.</p>
           </div>
           }
 
           @for (msg of messages(); track msg.id) {
-          <div class="msg-row" [class.msg-mine]="msg.senderId === currentUserId()">
+          <div class="msg-row" [class.msg-mine]="msg.senderId === currentUserId()" [class.msg-row-ai]="msg.type === 'ai-response'">
             <div class="msg-avatar">
               @if (msg.type === 'ai-response') {
               <div class="msg-avatar-ai">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <img src="/assets/rocket-goals.png" alt="Rocket AI" class="msg-avatar-ai-img" />
               </div>
               } @else if (msg.senderAvatarUrl) {
               <img [src]="msg.senderAvatarUrl" class="msg-avatar-img" />
@@ -431,7 +439,10 @@
             </div>
             <div class="msg-content">
               <div class="msg-meta">
-                <span class="msg-sender">{{ msg.senderName }}</span>
+                <span class="msg-sender" [class.msg-sender-ai]="msg.type === 'ai-response'">{{ msg.senderName }}</span>
+                @if (msg.type === 'ai-response') {
+                <span class="msg-ai-badge">AI</span>
+                }
                 <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
               </div>
               <div class="msg-bubble" [class.msg-bubble-mine]="msg.senderId === currentUserId()"
@@ -441,10 +452,32 @@
             </div>
           </div>
           }
+
+          <!-- AI typing indicator -->
+          @if (aiResponding()) {
+          <div class="msg-row msg-row-ai">
+            <div class="msg-avatar">
+              <div class="msg-avatar-ai">
+                <img src="/assets/rocket-goals.png" alt="Rocket AI" class="msg-avatar-ai-img" />
+              </div>
+            </div>
+            <div class="msg-content">
+              <div class="msg-meta">
+                <span class="msg-sender msg-sender-ai">Rocket AI</span>
+                <span class="msg-ai-badge">AI</span>
+              </div>
+              <div class="msg-bubble msg-bubble-ai msg-bubble-typing">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+              </div>
+            </div>
+          </div>
+          }
         </div>
 
         <div class="chat-input-bar">
-          <textarea [(ngModel)]="newMessage" placeholder="Type a message..."
+          <textarea [(ngModel)]="newMessage" placeholder="Type a message... use @rocket for AI help"
             rows="1" (keydown.enter)="onEnterKey($event)" class="chat-input"></textarea>
           <button (click)="sendMessage()" [disabled]="!newMessage.trim() || sendingMessage()" class="chat-send-btn">
             @if (sendingMessage()) {

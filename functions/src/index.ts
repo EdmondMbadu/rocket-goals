@@ -20,6 +20,7 @@ export {
   setupTeamTelegramGroup,
   syncTeamMessageToTelegram,
   configureTelegramWebhook,
+  askTeamAiCoach,
   linkTelegramAccount,
   unlinkTelegramAccount,
   getTelegramLinkStatus,

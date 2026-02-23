@@ -343,6 +343,20 @@ export class TeamService {
     };
   }
 
+  async askTeamAiCoach(teamId: string, message: string, recentMessages?: Array<{ senderName: string; content: string; type: string }>): Promise<string> {
+    const appModule = await import('firebase/app');
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+    const functionsModule = await import('firebase/functions');
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const ask = functionsModule.httpsCallable(functions, 'askTeamAiCoach');
+    const result = await ask({ teamId, message, recentMessages });
+    return (result.data as { success: boolean; response: string }).response;
+  }
+
   async deleteTeam(teamId: string): Promise<void> {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
