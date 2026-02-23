@@ -83,6 +83,9 @@
 }
 
 .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
