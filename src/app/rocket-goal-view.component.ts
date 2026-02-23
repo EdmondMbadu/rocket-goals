@@ -2177,9 +2177,13 @@ ${url}`;
 
   private async loadTeamContextForGoal(goal: RocketGoal): Promise<void> {
     const goalTeamId = goal.answers?.['teamId'];
-    const normalizedTeamId = typeof goalTeamId === 'string' && goalTeamId.trim()
+    const idFromGoalAnswers = typeof goalTeamId === 'string' && goalTeamId.trim()
       ? goalTeamId.trim()
-      : this.teamContextId();
+      : null;
+    const idFromDeterministicGoal = typeof goal.id === 'string' && goal.id.startsWith('team-')
+      ? goal.id.slice('team-'.length)
+      : null;
+    const normalizedTeamId = idFromGoalAnswers || this.teamContextId() || idFromDeterministicGoal;
 
     if (!normalizedTeamId) {
       this.teamContext.set(null);

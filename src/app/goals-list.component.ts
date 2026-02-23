@@ -272,12 +272,14 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         console.warn('Failed to load teams for goals page:', teamsResult.reason);
       }
 
+      const visibleGoals = (goals as RocketGoal[]).filter(goal => !this.isTeamLinkedGoal(goal));
+
       console.log('Loaded goals:', goals);
-      this.goals.set(goals as RocketGoal[]);
+      this.goals.set(visibleGoals);
       this.teams.set(teams);
       const preferredGoalId = profile?.myOneThingGoalId;
-      const preferredExists = preferredGoalId && (goals as RocketGoal[]).some(goal => goal.id === preferredGoalId);
-      const defaultGoalId = (goals as RocketGoal[])[0]?.id || null;
+      const preferredExists = preferredGoalId && visibleGoals.some(goal => goal.id === preferredGoalId);
+      const defaultGoalId = visibleGoals[0]?.id || null;
       if (preferredExists) {
         this.myOneThingGoalId.set(preferredGoalId || null);
       } else {
@@ -291,7 +293,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
       this.loadFanMemberships();
-      if (goals.length === 0) {
+      if (visibleGoals.length === 0) {
         console.log('No goals found for user - showing empty state');
       }
     } catch (err) {
@@ -301,6 +303,14 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private isTeamLinkedGoal(goal: RocketGoal): boolean {
+    const answers = goal?.answers || {};
+    const explicitTeamGoal = answers['teamGoal'] === true;
+    const hasTeamId = typeof answers['teamId'] === 'string' && answers['teamId'].trim().length > 0;
+    const deterministicTeamGoalId = typeof goal?.id === 'string' && goal.id.startsWith('team-');
+    return explicitTeamGoal || hasTeamId || deterministicTeamGoalId;
   }
 
   async loadFanMemberships() {
