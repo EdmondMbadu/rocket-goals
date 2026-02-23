@@ -103,7 +103,15 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342a3 3 0 114.632-2.684m-6.948 2.684A3 3 0 005.25 17.25h13.5a3 3 0 00-1.436-2.566m-10.628-1.342L12 9m0 0l5.314 4.342" />
             </svg>
-            Copy Page URL
+            Copy Share Link
+          </button>
+          }
+          @if (canLeaveTeam()) {
+          <button class="btn ghost" (click)="promptLeaveTeam()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H7a2 2 0 01-2-2V6a2 2 0 012-2h6" />
+            </svg>
+            Leave Team
           </button>
           }
           @if (isAdmin()) {
@@ -481,6 +489,31 @@
 </div>
 }
 
+@if (leaveTeamPromptOpen()) {
+<div [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
+  <div class="modal-overlay" (click)="cancelLeaveTeamPrompt()">
+    <div class="modal-card small" (click)="$event.stopPropagation()">
+      <div class="modal-body" style="padding: 24px 20px; text-align: center;">
+        <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 900;">Leave team?</h3>
+        <p class="muted" style="margin: 0;">
+          You will be removed from <strong>{{ team()!.name }}</strong>.
+        </p>
+      </div>
+      <div class="modal-footer" style="justify-content: stretch; gap: 10px;">
+        <button class="btn ghost sm" style="flex: 1" (click)="cancelLeaveTeamPrompt()" [disabled]="leavingTeam()">Cancel</button>
+        <button class="btn danger sm" style="flex: 1" (click)="confirmLeaveTeam()" [disabled]="leavingTeam()">
+          @if (leavingTeam()) {
+          <span class="spinner small"></span> Leaving...
+          } @else {
+          Leave Team
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
 @if (showInviteModal()) {
 <div [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
   <div class="modal-overlay" (click)="showInviteModal.set(false)">
@@ -491,12 +524,12 @@
       </div>
       <div class="modal-body">
         <div class="modal-block">
-          <p class="muted tiny" style="margin-bottom: 8px">Team page URL</p>
+          <p class="muted tiny" style="margin-bottom: 8px">Team share link</p>
           <div class="invite-row">
             <input type="text" [value]="teamPageUrl()" readonly class="input" />
-            <button (click)="shareTeamLink()" class="btn ghost sm">Copy URL</button>
+            <button (click)="shareTeamLink()" class="btn ghost sm">Copy Share Link</button>
           </div>
-          <p class="muted tiny" style="margin-top: 10px">Share this exact page URL. Anyone with it can open this page, sign up or log in, then join the team.</p>
+          <p class="muted tiny" style="margin-top: 10px">Share this exact team link. Anyone with it can open this page, sign up or log in, then join the team.</p>
         </div>
 
         <div class="divider-line"></div>

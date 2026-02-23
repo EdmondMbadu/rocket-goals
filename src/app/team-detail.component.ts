@@ -48,6 +48,8 @@ export class TeamDetailComponent implements OnInit {
   openMemberMenuUserId = signal<string | null>(null);
   memberPendingRemoval = signal<TeamMember | null>(null);
   removingMemberUserId = signal<string | null>(null);
+  leaveTeamPromptOpen = signal(false);
+  leavingTeam = signal(false);
   joinError = signal<string | null>(null);
   joinSuccess = signal<string | null>(null);
   verificationNotice = signal<string | null>(null);
@@ -95,6 +97,7 @@ export class TeamDetailComponent implements OnInit {
   });
 
   isAdmin = computed(() => this.team()?.adminId === this.currentUserId());
+  canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
 
   coverImageSrc = computed(() => {
     return this.coverImagePreview() || this.team()?.coverImageUrl || '/assets/team-rocket.jpg';
@@ -318,14 +321,66 @@ export class TeamDetailComponent implements OnInit {
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(pageUrl);
-        this.shareNotice.set('Team page URL copied to clipboard.');
+        this.shareNotice.set('Share link copied to clipboard.');
         return;
       }
 
       this.shareError.set('Copy is not available on this device right now.');
     } catch (err) {
       console.error('Failed to copy team URL:', err);
-      this.shareError.set('Unable to copy the team page URL right now. Please try again.');
+      this.shareError.set('Unable to copy the share link right now. Please try again.');
+    }
+  }
+
+  promptLeaveTeam() {
+    if (!this.canLeaveTeam()) {
+      return;
+    }
+    this.leaveTeamPromptOpen.set(true);
+  }
+
+  cancelLeaveTeamPrompt() {
+    if (this.leavingTeam()) {
+      return;
+    }
+    this.leaveTeamPromptOpen.set(false);
+  }
+
+  async confirmLeaveTeam() {
+    const team = this.team();
+    const userId = this.currentUserId();
+    if (!team?.id || !userId) {
+      this.joinError.set('Unable to leave this team right now.');
+      return;
+    }
+
+    if (this.isAdmin()) {
+      this.joinError.set('Team admin cannot leave this team.');
+      this.leaveTeamPromptOpen.set(false);
+      return;
+    }
+
+    this.leavingTeam.set(true);
+    this.joinError.set(null);
+    this.joinSuccess.set(null);
+    this.joinModalDismissed.set(true);
+    this.showJoinModal.set(false);
+
+    const teamName = team.name;
+    try {
+      await this.teamService.removeMemberFromTeam(team.id, userId);
+      this.messages.set([]);
+      this.messagesLoadedForTeamId = null;
+      await this.loadTeam(team.id);
+      this.joinSuccess.set(`You left ${teamName}.`);
+      this.leaveTeamPromptOpen.set(false);
+      this.activeTab.set('members');
+      this.closeMemberMenu();
+    } catch (err: any) {
+      console.error('Failed to leave team:', err);
+      this.joinError.set(err?.message || 'Unable to leave this team right now.');
+    } finally {
+      this.leavingTeam.set(false);
     }
   }
 
