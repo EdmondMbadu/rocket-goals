@@ -7,6 +7,14 @@ import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
 import type { Team, TeamMember, TeamMessage } from './models/team';
 
+type InviteUserSuggestion = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profilePictureUrl?: string;
+};
+
 @Component({
   selector: 'app-team-detail',
   standalone: true,
@@ -33,6 +41,9 @@ export class TeamDetailComponent implements OnInit {
   inviteLoading = signal(false);
   inviteError = signal<string | null>(null);
   inviteSuccess = signal<string | null>(null);
+  inviteSuggestions = signal<InviteUserSuggestion[]>([]);
+  inviteSearchLoading = signal(false);
+  selectedInviteCandidate = signal<InviteUserSuggestion | null>(null);
 
   // Invite onboarding and sharing state
   onboardingMode = signal<'signup' | 'login'>('signup');
@@ -72,6 +83,8 @@ export class TeamDetailComponent implements OnInit {
   inviteEmailField = '';
 
   private messagesLoadedForTeamId: string | null = null;
+  private inviteSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+  private inviteSearchRequestId = 0;
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
   currentUserName = computed(() => {
@@ -690,12 +703,104 @@ export class TeamDetailComponent implements OnInit {
     }
   }
 
+  openInviteModal() {
+    if (!this.isAdmin()) {
+      return;
+    }
+    this.inviteError.set(null);
+    this.inviteSuccess.set(null);
+    this.showInviteModal.set(true);
+  }
+
+  closeInviteModal() {
+    this.showInviteModal.set(false);
+    this.inviteEmailField = '';
+    this.inviteError.set(null);
+    this.inviteSuccess.set(null);
+    this.resetInviteSearchState();
+  }
+
+  onInviteEmailInputChange(value: string) {
+    this.inviteEmailField = value;
+    this.inviteError.set(null);
+    this.inviteSuccess.set(null);
+
+    const normalizedEmail = this.normalizeEmail(value);
+    const selected = this.selectedInviteCandidate();
+    if (selected && this.normalizeEmail(selected.email) !== normalizedEmail) {
+      this.selectedInviteCandidate.set(null);
+    }
+
+    if (this.inviteSearchTimeout) {
+      clearTimeout(this.inviteSearchTimeout);
+      this.inviteSearchTimeout = null;
+    }
+
+    this.inviteSearchRequestId += 1;
+    const requestId = this.inviteSearchRequestId;
+
+    if (normalizedEmail.length < 2) {
+      this.inviteSearchLoading.set(false);
+      this.inviteSuggestions.set([]);
+      return;
+    }
+
+    this.inviteSearchLoading.set(true);
+    this.inviteSearchTimeout = setTimeout(async () => {
+      try {
+        const matches = await this.teamService.searchUsersByEmailPrefix(normalizedEmail);
+        if (requestId !== this.inviteSearchRequestId) {
+          return;
+        }
+
+        const existingEmails = new Set(
+          (this.team()?.members || []).map(member => this.normalizeEmail(member.email))
+        );
+        const dedupedEmails = new Set<string>();
+        const suggestions = matches.filter(match => {
+          const email = this.normalizeEmail(match.email);
+          if (!email || existingEmails.has(email) || dedupedEmails.has(email)) {
+            return false;
+          }
+          dedupedEmails.add(email);
+          return true;
+        });
+
+        this.inviteSuggestions.set(suggestions);
+      } catch (error) {
+        console.error('Failed to load invite suggestions:', error);
+        if (requestId === this.inviteSearchRequestId) {
+          this.inviteSuggestions.set([]);
+        }
+      } finally {
+        if (requestId === this.inviteSearchRequestId) {
+          this.inviteSearchLoading.set(false);
+        }
+      }
+    }, 250);
+  }
+
+  applyInviteSuggestion(suggestion: InviteUserSuggestion) {
+    this.inviteEmailField = suggestion.email;
+    this.selectedInviteCandidate.set(suggestion);
+    this.inviteSuggestions.set([]);
+    this.inviteSearchLoading.set(false);
+    if (this.inviteSearchTimeout) {
+      clearTimeout(this.inviteSearchTimeout);
+      this.inviteSearchTimeout = null;
+    }
+    this.inviteSearchRequestId += 1;
+  }
+
   async inviteMember() {
     const email = this.normalizeEmail(this.inviteEmailField);
-    if (!email || !this.isValidEmail(email)) return;
+    if (!email || !this.isValidEmail(email)) {
+      this.inviteError.set('Enter a valid email address to send an invite.');
+      return;
+    }
 
     const teamData = this.team();
-    if (!teamData?.id) return;
+    if (!teamData?.id || !this.isAdmin()) return;
 
     if (teamData.members.some(m => this.normalizeEmail(m.email) === email)) {
       this.inviteError.set('This person is already a member of the team.');
@@ -707,35 +812,33 @@ export class TeamDetailComponent implements OnInit {
     this.inviteSuccess.set(null);
 
     try {
-      const user = await this.teamService.findUserByEmail(email);
-      if (!user) {
-        this.inviteError.set('No Rocket Goals account found for that email.');
-        return;
-      }
+      const selected = this.selectedInviteCandidate();
+      const inviteeName = selected && this.normalizeEmail(selected.email) === email
+        ? `${selected.firstName} ${selected.lastName}`.trim() || undefined
+        : undefined;
 
-      const isAlreadyMember = teamData.memberIds.includes(user.userId) || teamData.members.some(m => m.userId === user.userId);
-      if (isAlreadyMember) {
-        this.inviteError.set('This person is already a member of the team.');
-        return;
-      }
-
-      await this.teamService.addMemberToTeam(teamData.id, {
-        userId: user.userId,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: this.normalizeEmail(user.email),
-        profilePictureUrl: user.profilePictureUrl,
-        role: 'member',
-        joinedAt: Date.now()
+      await this.teamService.sendTeamInviteEmail({
+        teamId: teamData.id,
+        inviteeEmail: email,
+        inviteeName,
+        teamName: teamData.name,
+        teamUrl: this.teamPageUrl()
       });
-
       this.inviteEmailField = '';
-      const name = `${user.firstName} ${user.lastName}`.trim() || user.email;
-      this.inviteSuccess.set(`${name} has been added to the team!`);
-      await this.loadTeam(teamData.id);
+      this.resetInviteSearchState();
+      this.inviteSuccess.set(`Invite sent to ${email}. They can use the link to join ${teamData.name}.`);
     } catch (err: any) {
-      console.error('Failed to add member:', err);
-      this.inviteError.set(err.message || 'Failed to add member. Please try again.');
+      console.error('Failed to send invite:', err);
+      const code = String(err?.code || '');
+      if (code.includes('permission-denied')) {
+        this.inviteError.set('Only the team admin can send invites.');
+      } else if (code.includes('invalid-argument')) {
+        this.inviteError.set('Enter a valid email address to send an invite.');
+      } else if (code.includes('already-exists')) {
+        this.inviteError.set('This person is already a member of the team.');
+      } else {
+        this.inviteError.set(err?.message || 'Failed to send invite. Please try again.');
+      }
     } finally {
       this.inviteLoading.set(false);
     }
@@ -770,6 +873,17 @@ export class TeamDetailComponent implements OnInit {
 
   private normalizeEmail(email: string | null | undefined): string {
     return (email || '').trim().toLowerCase();
+  }
+
+  private resetInviteSearchState() {
+    if (this.inviteSearchTimeout) {
+      clearTimeout(this.inviteSearchTimeout);
+      this.inviteSearchTimeout = null;
+    }
+    this.inviteSearchRequestId += 1;
+    this.inviteSearchLoading.set(false);
+    this.inviteSuggestions.set([]);
+    this.selectedInviteCandidate.set(null);
   }
 
   private isValidEmail(email: string): boolean {

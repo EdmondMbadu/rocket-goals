@@ -185,6 +185,12 @@ const ALLOWED_VERIFICATION_REDIRECT_ORIGINS = new Set([
     'https://rocketgoals.web.app',
     'http://localhost:4200'
 ]);
+const DEFAULT_TEAM_INVITE_ORIGIN = 'https://www.rocketgoals.com';
+const ALLOWED_TEAM_INVITE_ORIGINS = new Set([
+    'https://www.rocketgoals.com',
+    'https://rocketgoals.web.app',
+    'http://localhost:4200'
+]);
 
 const resolveVerificationContinueUrl = (candidate?: unknown) => {
     if (typeof candidate !== 'string') {
@@ -205,6 +211,28 @@ const resolveVerificationContinueUrl = (candidate?: unknown) => {
     }
 
     return DEFAULT_VERIFICATION_REDIRECT;
+};
+
+const resolveTeamInviteUrl = (candidate: unknown, teamId: string) => {
+    const fallback = `${DEFAULT_TEAM_INVITE_ORIGIN}/team/${teamId}`;
+    if (typeof candidate !== 'string') {
+        return fallback;
+    }
+
+    const value = candidate.trim();
+    if (!value) {
+        return fallback;
+    }
+
+    try {
+        const parsed = new URL(value);
+        if (!ALLOWED_TEAM_INVITE_ORIGINS.has(parsed.origin)) {
+            return fallback;
+        }
+        return `${parsed.origin}/team/${teamId}`;
+    } catch {
+        return fallback;
+    }
 };
 
 export const stripeWebhookRocketGoals = functions.runWith({
@@ -3335,6 +3363,169 @@ export const sendWelcomeEmail = functions.runWith({
         throw new functions.https.HttpsError(
             'internal',
             `Failed to send welcome email: ${error.message}`
+        );
+    }
+});
+
+/**
+ * Cloud Function to send team invitation emails
+ * Accessible by team admins only
+ */
+export const sendTeamInviteEmail = functions.runWith({
+    secrets: [sendgridApiKey]
+}).https.onCall(async (data: {
+    teamId: string;
+    inviteeEmail: string;
+    inviteeName?: string;
+    teamName?: string;
+    teamUrl?: string;
+}, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send team invitations.'
+        );
+    }
+
+    const teamId = String(data?.teamId || '').trim();
+    const inviteeEmail = String(data?.inviteeEmail || '').trim().toLowerCase();
+
+    if (!teamId || !inviteeEmail) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Missing required fields: teamId, inviteeEmail'
+        );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteeEmail)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid invite email address format'
+        );
+    }
+
+    try {
+        const teamDoc = await admin.firestore().collection('teams').doc(teamId).get();
+        if (!teamDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Team not found.');
+        }
+
+        const teamData = teamDoc.data() || {};
+        if (teamData.adminId !== context.auth.uid) {
+            throw new functions.https.HttpsError('permission-denied', 'Only the team admin can invite members.');
+        }
+
+        const members = Array.isArray(teamData.members) ? teamData.members : [];
+        const isAlreadyMember = members.some((member: any) =>
+            (member?.email || '').toString().trim().toLowerCase() === inviteeEmail
+        );
+
+        if (isAlreadyMember) {
+            throw new functions.https.HttpsError('already-exists', 'This person is already a member of this team.');
+        }
+
+        const apiKey = sendgridApiKey.value();
+        if (!apiKey) {
+            throw new Error('SendGrid API key is not set.');
+        }
+        sgMail.setApiKey(apiKey);
+
+        const inviterRecord = await admin.auth().getUser(context.auth.uid).catch(() => null);
+        const inviterFromTeam = members.find((member: any) => member?.userId === context.auth.uid);
+        const inviterDisplayName = (
+            inviterRecord?.displayName?.trim() ||
+            `${inviterFromTeam?.firstName || ''} ${inviterFromTeam?.lastName || ''}`.trim() ||
+            'A Rocket Goals admin'
+        );
+
+        const teamName = (String(data?.teamName || teamData.name || '').trim() || 'your team');
+        const inviteeDisplayName = (String(data?.inviteeName || '').trim() || 'there');
+        const teamUrl = resolveTeamInviteUrl(data?.teamUrl, teamId);
+
+        const msg = {
+            to: inviteeEmail,
+            from: 'missioncontrol@rocketgoals.com',
+            subject: `🚀 ${inviterDisplayName} invited you to join ${teamName}`,
+            text:
+`Hi ${inviteeDisplayName},
+
+${inviterDisplayName} invited you to join "${teamName}" on Rocket Goals.
+
+Join the team here: ${teamUrl}
+
+If you already have an account, log in and join.
+If you are new, create your account, verify your email, and you will be able to join the team.
+
+To your success,
+The Rocket Goals Team`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 680px; margin: 0 auto; padding: 0;">
+                    <div style="background: linear-gradient(135deg, #dc2626 0%, #111827 100%); border-radius: 18px 18px 0 0; padding: 40px 30px; text-align: center;">
+                        <div style="font-size: 42px; margin-bottom: 8px;">🚀</div>
+                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800;">You're Invited To Join A Team</h1>
+                        <p style="margin: 10px 0 0; color: rgba(255,255,255,0.82); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;">
+                            Rocket Goals Team Invitation
+                        </p>
+                    </div>
+
+                    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 18px 18px; padding: 34px 30px;">
+                        <p style="margin: 0 0 16px; color: #111827; font-size: 16px; line-height: 1.6;">
+                            Hi <strong>${inviteeDisplayName}</strong>,
+                        </p>
+                        <p style="margin: 0 0 22px; color: #374151; font-size: 16px; line-height: 1.7;">
+                            <strong>${inviterDisplayName}</strong> invited you to join <strong>${teamName}</strong> on Rocket Goals.
+                        </p>
+
+                        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fecaca; border-radius: 14px; padding: 18px 16px; margin-bottom: 24px;">
+                            <p style="margin: 0; color: #991b1b; font-size: 14px; line-height: 1.6;">
+                                Join the team to collaborate, stay accountable, and track progress together.
+                            </p>
+                        </div>
+
+                        <div style="text-align: center; margin: 28px 0 24px;">
+                            <a href="${teamUrl}"
+                               style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 15px 30px; border-radius: 12px; font-size: 16px; font-weight: 700; box-shadow: 0 10px 24px rgba(220, 38, 38, 0.28);">
+                                Join ${teamName}
+                            </a>
+                        </div>
+
+                        <p style="margin: 0 0 10px; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                            If the button doesn't work, copy and paste this link into your browser:
+                        </p>
+                        <p style="margin: 0; color: #111827; font-size: 13px; word-break: break-all;">
+                            ${teamUrl}
+                        </p>
+                    </div>
+                </div>
+            `,
+        };
+
+        await sgMail.send(msg);
+
+        console.log(`✅ Team invitation email sent to ${inviteeEmail} for team ${teamId}`);
+        return {
+            success: true,
+            message: `Team invitation email sent to ${inviteeEmail}`
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending team invitation email:', error);
+
+        if (error.response) {
+            const { body } = error.response;
+            throw new functions.https.HttpsError(
+                'internal',
+                `SendGrid error: ${JSON.stringify(body)}`
+            );
+        }
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send team invitation email: ${error.message}`
         );
     }
 });

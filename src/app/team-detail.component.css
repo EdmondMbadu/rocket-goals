@@ -1152,6 +1152,43 @@
   gap: 8px;
 }
 
+.invite-suggestions {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.invite-suggestion-btn {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: rgba(15, 23, 42, 0.35);
+  color: #e2e8f0;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.invite-suggestion-btn:hover {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(30, 41, 59, 0.55);
+}
+
+.invite-suggestion-name {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.invite-suggestion-email {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
 .input {
   flex: 1;
   padding: 10px 14px;
@@ -1609,6 +1646,21 @@
   background: #f8fafc;
   color: #0f172a;
   border-color: rgba(15, 23, 42, 0.12);
+}
+
+.light-mode .invite-suggestion-btn {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+.light-mode .invite-suggestion-btn:hover {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: #fff7f7;
+}
+
+.light-mode .invite-suggestion-email {
+  color: #64748b;
 }
 
 .light-mode .input::placeholder {

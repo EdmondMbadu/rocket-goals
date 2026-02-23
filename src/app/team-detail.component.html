@@ -115,7 +115,7 @@
           </button>
           }
           @if (isAdmin()) {
-          <button class="btn solid" (click)="showInviteModal.set(true)">
+          <button class="btn solid" (click)="openInviteModal()">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
@@ -208,7 +208,7 @@
         </svg>
         <p>No members yet</p>
         @if (isAdmin()) {
-        <button class="btn solid sm" (click)="showInviteModal.set(true)">Invite members</button>
+        <button class="btn solid sm" (click)="openInviteModal()">Invite members</button>
         }
       </div>
       } @else {
@@ -516,7 +516,7 @@
 
 @if (showInviteModal()) {
 <div [class.light-mode]="!theme.isDarkMode()" [class.dark-mode]="theme.isDarkMode()">
-  <div class="modal-overlay" (click)="showInviteModal.set(false)">
+  <div class="modal-overlay" (click)="closeInviteModal()">
     <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Invite Members</h2>
@@ -535,18 +535,32 @@
         <div class="divider-line"></div>
 
         <div class="modal-block">
-          <p class="muted tiny" style="margin-bottom: 8px">Add existing Rocket Goals user</p>
+          <p class="muted tiny" style="margin-bottom: 8px">Send email invite</p>
           <div class="invite-row">
-            <input type="email" [(ngModel)]="inviteEmailField" placeholder="member&#64;email.com"
+            <input type="email" [ngModel]="inviteEmailField" (ngModelChange)="onInviteEmailInputChange($event)" placeholder="member&#64;email.com"
               (keydown.enter)="inviteMember()" [disabled]="inviteLoading()" class="input" />
             <button (click)="inviteMember()" [disabled]="inviteLoading()" class="btn solid sm">
               @if (inviteLoading()) {
-              <span class="spinner small"></span> Adding...
+              <span class="spinner small"></span> Sending...
               } @else {
-              Add
+              Send Invite
               }
             </button>
           </div>
+          @if (inviteSearchLoading()) {
+          <p class="muted tiny" style="margin-top: 8px">Searching Rocket Goals users...</p>
+          }
+          @if (inviteSuggestions().length) {
+          <div class="invite-suggestions">
+            @for (suggestion of inviteSuggestions(); track suggestion.userId) {
+            <button type="button" class="invite-suggestion-btn" (click)="applyInviteSuggestion(suggestion)">
+              <span class="invite-suggestion-name">{{ (suggestion.firstName + ' ' + suggestion.lastName).trim() || suggestion.email }}</span>
+              <span class="invite-suggestion-email">{{ suggestion.email }}</span>
+            </button>
+            }
+          </div>
+          }
+          <p class="muted tiny" style="margin-top: 10px">They will get a beautiful invite email with a direct link to this team page.</p>
         </div>
 
         @if (inviteError()) {
@@ -557,7 +571,7 @@
         }
       </div>
       <div class="modal-footer">
-        <button class="btn ghost sm" (click)="showInviteModal.set(false)">Done</button>
+        <button class="btn ghost sm" (click)="closeInviteModal()">Done</button>
       </div>
     </div>
   </div>

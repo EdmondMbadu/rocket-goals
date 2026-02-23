@@ -110,6 +110,62 @@ export class TeamService {
     };
   }
 
+  async searchUsersByEmailPrefix(prefix: string, limitCount = 8): Promise<Array<{
+    userId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profilePictureUrl?: string;
+  }>> {
+    const normalizedPrefix = (prefix || '').trim().toLowerCase();
+    if (normalizedPrefix.length < 2) {
+      return [];
+    }
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const usersRef = fm.collection(firestore, 'userProfiles');
+    const q = fm.query(
+      usersRef,
+      fm.where('email', '>=', normalizedPrefix),
+      fm.where('email', '<=', `${normalizedPrefix}\uf8ff`),
+      fm.limit(limitCount)
+    );
+
+    const snapshot = await fm.getDocs(q);
+    return snapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        return {
+          userId: data['userId'] || doc.id,
+          firstName: data['firstName'] || '',
+          lastName: data['lastName'] || '',
+          email: (data['email'] || '').toString().trim().toLowerCase(),
+          profilePictureUrl: data['profilePictureUrl']
+        };
+      })
+      .filter(user => !!user.email);
+  }
+
+  async sendTeamInviteEmail(payload: {
+    teamId: string;
+    inviteeEmail: string;
+    inviteeName?: string;
+    teamName?: string;
+    teamUrl?: string;
+  }): Promise<void> {
+    const appModule = await import('firebase/app');
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+    const functionsModule = await import('firebase/functions');
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const sendInvite = functionsModule.httpsCallable(functions, 'sendTeamInviteEmail');
+    await sendInvite(payload);
+  }
+
   async addMemberToTeam(teamId: string, member: Team['members'][0]): Promise<void> {
     const team = await this.getTeamById(teamId);
     if (!team) {
