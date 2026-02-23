@@ -95,7 +95,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342a3 3 0 114.632-2.684m-6.948 2.684A3 3 0 005.25 17.25h13.5a3 3 0 00-1.436-2.566m-10.628-1.342L12 9m0 0l5.314 4.342" />
             </svg>
-            Share Link
+            Copy Page URL
           </button>
           }
           @if (isAdmin()) {
@@ -451,12 +451,12 @@
     </div>
     <div class="modal-body">
       <div class="modal-block">
-        <p class="muted tiny" style="margin-bottom: 8px">Share invite link</p>
+        <p class="muted tiny" style="margin-bottom: 8px">Team page URL</p>
         <div class="invite-row">
-          <input type="text" [value]="teamInviteLink()" readonly class="input" />
-          <button (click)="shareTeamLink()" class="btn ghost sm">Share</button>
+          <input type="text" [value]="teamPageUrl()" readonly class="input" />
+          <button (click)="shareTeamLink()" class="btn ghost sm">Copy URL</button>
         </div>
-        <p class="muted tiny" style="margin-top: 10px">Anyone with this link can sign up or log in and join this team.</p>
+        <p class="muted tiny" style="margin-top: 10px">Share this exact page URL. Anyone with it can open this page, sign up or log in, then join the team.</p>
       </div>
 
       <div class="divider-line"></div>

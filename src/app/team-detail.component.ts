@@ -99,7 +99,7 @@ export class TeamDetailComponent implements OnInit {
 
   isBusyJoining = computed(() => this.authActionLoading() || this.joiningTeam());
 
-  readonly teamInviteLink = computed(() => this.buildTeamInviteUrl(this.team()?.id || undefined));
+  readonly teamPageUrl = computed(() => this.buildTeamPageUrl(this.team()?.id || undefined));
 
   constructor() {
     effect(() => {
@@ -173,8 +173,8 @@ export class TeamDetailComponent implements OnInit {
 
   async shareTeamLink() {
     const team = this.team();
-    const inviteLink = this.teamInviteLink();
-    if (!team?.id || !inviteLink) {
+    const pageUrl = this.teamPageUrl();
+    if (!team?.id || !pageUrl) {
       return;
     }
 
@@ -182,26 +182,16 @@ export class TeamDetailComponent implements OnInit {
     this.shareError.set(null);
 
     try {
-      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-        await navigator.share({
-          title: `Join ${team.name} on Rocket Goals`,
-          text: `Join my team "${team.name}" on Rocket Goals.`,
-          url: inviteLink
-        });
-        this.shareNotice.set('Invite link shared.');
-        return;
-      }
-
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(inviteLink);
-        this.shareNotice.set('Invite link copied to clipboard.');
+        await navigator.clipboard.writeText(pageUrl);
+        this.shareNotice.set('Team page URL copied to clipboard.');
         return;
       }
 
-      this.shareError.set('Sharing is not available on this device right now.');
+      this.shareError.set('Copy is not available on this device right now.');
     } catch (err) {
-      console.error('Failed to share invite link:', err);
-      this.shareError.set('Unable to share the link right now. Please try again.');
+      console.error('Failed to copy team URL:', err);
+      this.shareError.set('Unable to copy the team page URL right now. Please try again.');
     }
   }
 
@@ -536,7 +526,7 @@ export class TeamDetailComponent implements OnInit {
     };
   }
 
-  private buildTeamInviteUrl(teamId?: string): string {
+  private buildTeamPageUrl(teamId?: string): string {
     const id = teamId || this.teamId();
     if (!id) {
       return '';
@@ -546,17 +536,17 @@ export class TeamDetailComponent implements OnInit {
       ? window.location.origin
       : 'https://www.rocketgoals.com';
 
-    return `${baseOrigin}/team/${id}?invite=1`;
+    return `${baseOrigin}/team/${id}`;
   }
 
   private buildTeamVerificationUrl(): string | null {
-    const inviteUrl = this.buildTeamInviteUrl();
-    if (!inviteUrl) {
+    const pageUrl = this.buildTeamPageUrl();
+    if (!pageUrl) {
       return null;
     }
 
     try {
-      const url = new URL(inviteUrl);
+      const url = new URL(pageUrl);
       url.searchParams.set('verified', '1');
       return url.toString();
     } catch {
