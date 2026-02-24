@@ -13,6 +13,18 @@ export interface MessagingPreferences {
   reminderTime: string; // "20:00" format (24-hour)
 }
 
+export type ProfileSectionVisibility = 'public' | 'private';
+
+export interface ProfileVisibilitySettings {
+  hero: ProfileSectionVisibility;
+  stats: ProfileSectionVisibility;
+  goals: ProfileSectionVisibility;
+  subscription: ProfileSectionVisibility;
+  rocketGoalPhoto: ProfileSectionVisibility;
+  telegram: ProfileSectionVisibility;
+  contact: ProfileSectionVisibility;
+}
+
 export interface UserProfile {
   id: string;
   userId: string;
@@ -48,4 +60,5 @@ export interface UserProfile {
   telegramUsername?: string;
   telegramChatId?: number;
   messagingPreferences?: MessagingPreferences;
+  profileVisibility?: Partial<ProfileVisibilitySettings>;
 }

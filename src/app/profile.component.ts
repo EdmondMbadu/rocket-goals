@@ -1,14 +1,26 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectorRef, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
-import { UserProfile } from './models/user-profile';
+import { ProfileVisibilitySettings, UserProfile } from './models/user-profile';
 import { RocketGoalsService } from './rocket-goals.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
 import { ThemeService } from './theme.service';
 import { TelegramQrModalComponent } from './telegram-qr-modal.component';
+
+type ProfileVisibilityKey = keyof ProfileVisibilitySettings;
+
+const DEFAULT_PROFILE_VISIBILITY: ProfileVisibilitySettings = {
+  hero: 'public',
+  stats: 'public',
+  goals: 'public',
+  subscription: 'private',
+  rocketGoalPhoto: 'private',
+  telegram: 'private',
+  contact: 'private'
+};
 
 @Component({
   selector: 'app-profile',
@@ -20,12 +32,18 @@ import { TelegramQrModalComponent } from './telegram-qr-modal.component';
 export class ProfileComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   router = inject(Router);
+  private route = inject(ActivatedRoute);
   private rocketGoalsService = inject(RocketGoalsService);
   protected theme = inject(ThemeService);
   private cdr = inject(ChangeDetectorRef);
   private storage: any = null;
+  private profileSyncInterval: ReturnType<typeof setInterval> | null = null;
   
   profile = signal<UserProfile | null>(null);
+  profileNotFound = signal(false);
+  viewedUserId = signal<string | null>(null);
+  isOwnProfile = signal(true);
+  visibilitySavingSection = signal<ProfileVisibilityKey | null>(null);
   loading = signal(false);
   uploading = signal(false);
   uploadingHeader = signal(false);
@@ -69,90 +87,71 @@ export class ProfileComponent implements OnInit, OnDestroy {
   checkInTimeDraft = signal('08:00');
   missionLogReminderEnabled = signal(true);
   reminderTimeDraft = signal('20:00');
+  readonly resolvedVisibility = computed<ProfileVisibilitySettings>(() => this.resolveProfileVisibility(this.profile()));
+  readonly canEditProfile = computed(() => this.isOwnProfile());
 
   async ngOnInit() {
-    // Wait a bit for auth to initialize
-    let profile = this.authService.profile();
-    if (!profile) {
-      // Try waiting a bit for profile to load
-      await new Promise(resolve => setTimeout(resolve, 100));
-      profile = this.authService.profile();
-    }
-    
-    if (!profile) {
+    this.loading.set(true);
+    this.error.set(null);
+    this.profileNotFound.set(false);
+
+    const routeUserId = (this.route.snapshot.paramMap.get('userId') || '').trim();
+    const signedInProfile = await this.waitForSignedInProfile();
+
+    if (!routeUserId && !signedInProfile?.userId) {
+      this.loading.set(false);
       this.router.navigate(['/login']);
       return;
     }
-    
-    this.profile.set(profile);
-    this.phoneNumberDraft.set(profile.phoneNumber || '');
-    this.telegramLinked.set(!!profile.telegramId);
-    this.telegramUsername.set(profile.telegramUsername ?? null);
-    const prefs = profile.messagingPreferences;
-    if (prefs) {
-      this.dailyCheckInEnabled.set(prefs.dailyCheckInEnabled ?? true);
-      this.checkInTimeDraft.set(prefs.checkInTime || '08:00');
-      this.missionLogReminderEnabled.set(prefs.missionLogReminderEnabled ?? true);
-      this.reminderTimeDraft.set(prefs.reminderTime || '20:00');
-    }
-    
-    // Set profile image - check both preview and profile
-    const profileImageUrl = profile.profilePictureUrl;
-    if (profileImageUrl) {
-      console.log('Setting profile image URL:', profileImageUrl);
-      this.profileImagePreview.set(profileImageUrl);
-    }
-    
-    if (profile.headerImageUrl) {
-      this.headerImagePreview.set(profile.headerImageUrl);
-    }
-    
-    if (profile.rocketGoalPhotoUrl) {
-      this.rocketGoalPhotoPreview.set(profile.rocketGoalPhotoUrl);
-    }
-    
-    await this.initStorage();
-    await this.loadGoals();
-    await this.loadTelegramStatus();
-    
-    // Watch for profile changes
-    const checkProfile = () => {
-      const currentProfile = this.authService.profile();
-      if (currentProfile && currentProfile.userId === profile.userId) {
-        this.profile.set(currentProfile);
-        if (!this.phoneNumberDirty()) {
-          this.phoneNumberDraft.set(currentProfile.phoneNumber || '');
-        }
-        // Only override the preview with the stored image when we don't have a local
-        // selection in progress. This lets the user actually see the file they just picked.
-        if (!this.profileImageFile && currentProfile.profilePictureUrl && currentProfile.profilePictureUrl !== this.profileImagePreview()) {
-          console.log('Profile image updated:', currentProfile.profilePictureUrl);
-          this.profileImagePreview.set(currentProfile.profilePictureUrl);
-        }
-        if (!this.headerImageFile && currentProfile.headerImageUrl && currentProfile.headerImageUrl !== this.headerImagePreview()) {
-          this.headerImagePreview.set(currentProfile.headerImageUrl);
-        }
-        if (!this.rocketGoalPhotoFile && currentProfile.rocketGoalPhotoUrl && currentProfile.rocketGoalPhotoUrl !== this.rocketGoalPhotoPreview()) {
-          this.rocketGoalPhotoPreview.set(currentProfile.rocketGoalPhotoUrl);
-        }
-        // Sync Telegram and messaging prefs from profile when it updates
-        const prefs = currentProfile.messagingPreferences;
-        if (prefs) {
-          this.dailyCheckInEnabled.set(prefs.dailyCheckInEnabled ?? true);
-          this.checkInTimeDraft.set(prefs.checkInTime || '08:00');
-          this.missionLogReminderEnabled.set(prefs.missionLogReminderEnabled ?? true);
-          this.reminderTimeDraft.set(prefs.reminderTime || '20:00');
-        }
-        this.telegramLinked.set(!!currentProfile.telegramId);
-        this.telegramUsername.set(currentProfile.telegramUsername ?? null);
-      }
-    };
 
-    // Check periodically for profile updates
-    setInterval(checkProfile, 2000);
+    const viewedUserId = routeUserId || signedInProfile!.userId;
+    const viewingOwnProfile = !!signedInProfile?.userId && signedInProfile.userId === viewedUserId;
+    this.viewedUserId.set(viewedUserId);
+    this.isOwnProfile.set(viewingOwnProfile);
+
+    let profileToDisplay: UserProfile | null = null;
+    if (viewingOwnProfile && signedInProfile) {
+      profileToDisplay = signedInProfile;
+    } else {
+      profileToDisplay = await this.fetchUserProfileById(viewedUserId);
+    }
+
+    if (!profileToDisplay) {
+      this.loading.set(false);
+      this.profileNotFound.set(true);
+      this.profile.set(null);
+      return;
+    }
+
+    this.applyLoadedProfile(profileToDisplay, viewingOwnProfile);
+
+    if (this.shouldLoadGoalsForCurrentView(profileToDisplay)) {
+      await this.loadGoals();
+    } else {
+      this.goals.set([]);
+      this.loadingGoals.set(false);
+    }
+
+    if (viewingOwnProfile) {
+      await this.initStorage();
+      await this.loadTelegramStatus();
+      this.startOwnerProfileSync(profileToDisplay.userId);
+    } else {
+      this.telegramLoading.set(false);
+      this.telegramError.set(null);
+      this.telegramLinked.set(!!profileToDisplay.telegramId);
+      this.telegramUsername.set(profileToDisplay.telegramUsername ?? null);
+    }
+
+    this.loading.set(false);
   }
 
   ngOnDestroy() {
+    if (this.profileSyncInterval) {
+      clearInterval(this.profileSyncInterval);
+      this.profileSyncInterval = null;
+    }
+
     // Clean up preview URLs (only blob URLs need to be revoked)
     const profilePreview = this.profileImagePreview();
     if (profilePreview && profilePreview.startsWith('blob:')) {
@@ -166,6 +165,122 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (rocketGoalPhotoPreview && rocketGoalPhotoPreview.startsWith('blob:')) {
       URL.revokeObjectURL(rocketGoalPhotoPreview);
     }
+  }
+
+  private async waitForSignedInProfile(): Promise<UserProfile | null> {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const profile = this.authService.profile();
+      if (profile?.userId) {
+        return profile;
+      }
+      await new Promise(resolve => setTimeout(resolve, 120));
+    }
+    return this.authService.profile();
+  }
+
+  private async fetchUserProfileById(userId: string): Promise<UserProfile | null> {
+    try {
+      const { firestore } = await this.ensureFirebase();
+      const firestoreModule = await import('firebase/firestore');
+
+      const byDocIdRef = firestoreModule.doc(firestore, 'userProfiles', userId);
+      const byDocIdSnap = await firestoreModule.getDoc(byDocIdRef);
+      if (byDocIdSnap.exists()) {
+        return byDocIdSnap.data() as UserProfile;
+      }
+
+      const q = firestoreModule.query(
+        firestoreModule.collection(firestore, 'userProfiles'),
+        firestoreModule.where('userId', '==', userId),
+        firestoreModule.limit(1)
+      );
+      const querySnap = await firestoreModule.getDocs(q);
+      if (!querySnap.empty) {
+        return querySnap.docs[0].data() as UserProfile;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to load profile by user id:', error);
+      this.error.set('Unable to load this profile right now.');
+      return null;
+    }
+  }
+
+  private applyLoadedProfile(profile: UserProfile, viewingOwnProfile: boolean): void {
+    this.profile.set(profile);
+    this.isOwnProfile.set(viewingOwnProfile);
+    this.profileNotFound.set(false);
+    if (!viewingOwnProfile) {
+      this.profileImageFile = null;
+      this.headerImageFile = null;
+      this.rocketGoalPhotoFile = null;
+      this.editingGoalId.set(null);
+      this.editingGoalTitle.set('');
+    }
+    this.phoneNumberDraft.set(profile.phoneNumber || '');
+    this.phoneNumberDirty.set(false);
+
+    const prefs = profile.messagingPreferences;
+    this.dailyCheckInEnabled.set(prefs?.dailyCheckInEnabled ?? true);
+    this.checkInTimeDraft.set(prefs?.checkInTime || '08:00');
+    this.missionLogReminderEnabled.set(prefs?.missionLogReminderEnabled ?? true);
+    this.reminderTimeDraft.set(prefs?.reminderTime || '20:00');
+
+    if (!this.profileImageFile) {
+      this.profileImagePreview.set(profile.profilePictureUrl || null);
+    }
+    if (!this.headerImageFile) {
+      this.headerImagePreview.set(profile.headerImageUrl || null);
+    }
+    if (!this.rocketGoalPhotoFile) {
+      this.rocketGoalPhotoPreview.set(profile.rocketGoalPhotoUrl || null);
+    }
+  }
+
+  private startOwnerProfileSync(ownerUserId: string): void {
+    if (this.profileSyncInterval) {
+      clearInterval(this.profileSyncInterval);
+      this.profileSyncInterval = null;
+    }
+
+    this.profileSyncInterval = setInterval(() => {
+      const currentProfile = this.authService.profile();
+      if (!currentProfile || currentProfile.userId !== ownerUserId) {
+        return;
+      }
+
+      this.profile.set(currentProfile);
+      if (!this.phoneNumberDirty()) {
+        this.phoneNumberDraft.set(currentProfile.phoneNumber || '');
+      }
+      if (!this.profileImageFile && currentProfile.profilePictureUrl && currentProfile.profilePictureUrl !== this.profileImagePreview()) {
+        this.profileImagePreview.set(currentProfile.profilePictureUrl);
+      }
+      if (!this.headerImageFile && currentProfile.headerImageUrl && currentProfile.headerImageUrl !== this.headerImagePreview()) {
+        this.headerImagePreview.set(currentProfile.headerImageUrl);
+      }
+      if (!this.rocketGoalPhotoFile && currentProfile.rocketGoalPhotoUrl && currentProfile.rocketGoalPhotoUrl !== this.rocketGoalPhotoPreview()) {
+        this.rocketGoalPhotoPreview.set(currentProfile.rocketGoalPhotoUrl);
+      }
+
+      const prefs = currentProfile.messagingPreferences;
+      this.dailyCheckInEnabled.set(prefs?.dailyCheckInEnabled ?? true);
+      this.checkInTimeDraft.set(prefs?.checkInTime || '08:00');
+      this.missionLogReminderEnabled.set(prefs?.missionLogReminderEnabled ?? true);
+      this.reminderTimeDraft.set(prefs?.reminderTime || '20:00');
+      this.telegramLinked.set(!!currentProfile.telegramId);
+      this.telegramUsername.set(currentProfile.telegramUsername ?? null);
+    }, 2000);
+  }
+
+  private shouldLoadGoalsForCurrentView(profile: UserProfile | null): boolean {
+    if (!profile?.userId) {
+      return false;
+    }
+    if (this.isOwnProfile()) {
+      return true;
+    }
+    return this.isSectionPublic('stats') || this.isSectionPublic('goals');
   }
 
   private async initStorage() {
@@ -471,6 +586,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   private async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
+    if (!this.isOwnProfile()) {
+      throw new Error('Only the profile owner can update profile settings.');
+    }
     const updatedProfile = await this.authService.updateUserProfile(updates);
     this.profile.set(updatedProfile);
     return updatedProfile;
@@ -487,6 +605,86 @@ export class ProfileComponent implements OnInit, OnDestroy {
     
     const firestore = firestoreModule.getFirestore(app);
     return { firestore };
+  }
+
+  private resolveProfileVisibility(profile: UserProfile | null): ProfileVisibilitySettings {
+    const raw = (profile?.profileVisibility || {}) as Partial<ProfileVisibilitySettings>;
+    return {
+      hero: raw.hero === 'private' ? 'private' : DEFAULT_PROFILE_VISIBILITY.hero,
+      stats: raw.stats === 'private' ? 'private' : DEFAULT_PROFILE_VISIBILITY.stats,
+      goals: raw.goals === 'private' ? 'private' : DEFAULT_PROFILE_VISIBILITY.goals,
+      subscription: raw.subscription === 'public' ? 'public' : DEFAULT_PROFILE_VISIBILITY.subscription,
+      rocketGoalPhoto: raw.rocketGoalPhoto === 'public' ? 'public' : DEFAULT_PROFILE_VISIBILITY.rocketGoalPhoto,
+      telegram: raw.telegram === 'public' ? 'public' : DEFAULT_PROFILE_VISIBILITY.telegram,
+      contact: raw.contact === 'public' ? 'public' : DEFAULT_PROFILE_VISIBILITY.contact
+    };
+  }
+
+  isSectionPublic(section: ProfileVisibilityKey): boolean {
+    return this.resolvedVisibility()[section] === 'public';
+  }
+
+  canShowSection(section: ProfileVisibilityKey): boolean {
+    return this.isOwnProfile() || this.isSectionPublic(section);
+  }
+
+  hasAnyVisiblePublicSection(): boolean {
+    if (this.isOwnProfile()) {
+      return true;
+    }
+    const sections: ProfileVisibilityKey[] = ['hero', 'stats', 'goals', 'subscription', 'rocketGoalPhoto', 'telegram', 'contact'];
+    return sections.some(section => this.isSectionPublic(section));
+  }
+
+  async toggleSectionVisibility(section: ProfileVisibilityKey): Promise<void> {
+    if (!this.isOwnProfile() || this.visibilitySavingSection()) {
+      return;
+    }
+
+    const profile = this.profile();
+    if (!profile?.userId) {
+      return;
+    }
+
+    const current = this.resolvedVisibility();
+    const nextValue: ProfileVisibilitySettings[ProfileVisibilityKey] =
+      current[section] === 'public' ? 'private' : 'public';
+    const nextVisibility = {
+      ...(profile.profileVisibility || {}),
+      [section]: nextValue
+    };
+
+    this.visibilitySavingSection.set(section);
+    this.error.set(null);
+    try {
+      const updatedProfile = await this.updateProfile({ profileVisibility: nextVisibility });
+      this.profile.set(updatedProfile);
+      this.success.set(`${this.getSectionLabel(section)} is now ${nextValue}.`);
+      setTimeout(() => this.success.set(null), 3500);
+    } catch (error) {
+      console.error('Failed to update profile section visibility:', error);
+      this.error.set('Unable to update section visibility right now.');
+      setTimeout(() => this.error.set(null), 4000);
+    } finally {
+      this.visibilitySavingSection.set(null);
+    }
+  }
+
+  getSectionLabel(section: ProfileVisibilityKey): string {
+    switch (section) {
+      case 'hero': return 'Profile header';
+      case 'stats': return 'Stats';
+      case 'goals': return 'Goals';
+      case 'subscription': return 'Subscription';
+      case 'rocketGoalPhoto': return 'Rocket goal photo';
+      case 'telegram': return 'Telegram';
+      case 'contact': return 'Contact';
+      default: return 'Section';
+    }
+  }
+
+  getVisibilityPillLabel(section: ProfileVisibilityKey): string {
+    return this.isSectionPublic(section) ? 'Public' : 'Private';
   }
 
   getDisplayName(): string {
@@ -580,6 +778,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async savePhoneNumber() {
+    if (!this.isOwnProfile()) return;
     if (this.phoneNumberSaving()) return;
     const trimmed = this.phoneNumberDraft().trim();
     const normalized = trimmed ? this.normalizeUsPhoneNumber(trimmed) : '';
@@ -617,6 +816,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   startEditingGoal(goal: RocketGoal) {
+    if (!this.isOwnProfile()) return;
     this.editingGoalId.set(goal.id);
     this.editingGoalTitle.set(this.getGoalTitle(goal));
     // Focus the input after Angular updates
@@ -635,6 +835,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async saveGoalTitle(goalId: string) {
+    if (!this.isOwnProfile()) return;
     const newTitle = this.editingGoalTitle().trim();
     if (!newTitle) {
       this.error.set('Goal title cannot be empty');
@@ -680,6 +881,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async deleteGoal(goalId: string) {
+    if (!this.isOwnProfile()) return;
     if (!confirm('Are you sure you want to delete this goal?')) {
       return;
     }
@@ -786,6 +988,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async openBillingPortal() {
+    if (!this.isOwnProfile()) return;
     this.subscriptionLoading.set(true);
     this.subscriptionError.set(null);
 
@@ -822,6 +1025,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async cancelSubscription() {
+    if (!this.isOwnProfile()) return;
     if (!confirm('Are you sure you want to cancel your subscription? You will still have access until the end of your billing period.')) {
       return;
     }
@@ -862,6 +1066,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   /** Generate a deep link and open Telegram for instant connection. */
   async connectTelegram(): Promise<void> {
+    if (!this.isOwnProfile()) return;
     this.telegramConnecting.set(true);
     this.telegramError.set(null);
     this.telegramDeepLink.set(null);
@@ -922,6 +1127,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async loadTelegramStatus() {
+    if (!this.isOwnProfile()) return;
     const profile = this.profile();
     if (!profile?.userId) return;
 
@@ -953,6 +1159,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async unlinkTelegram() {
+    if (!this.isOwnProfile()) return;
     if (!confirm("Disconnect Telegram? You can reconnect anytime by messaging the bot again.")) return;
 
     this.telegramUnlinkLoading.set(true);
@@ -987,6 +1194,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async saveMessagingPreferences() {
+    if (!this.isOwnProfile()) return;
     this.messagingPrefsSaving.set(true);
     this.telegramError.set(null);
     try {
@@ -1010,6 +1218,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async reactivateSubscription() {
+    if (!this.isOwnProfile()) return;
     this.subscriptionLoading.set(true);
     this.subscriptionError.set(null);
 

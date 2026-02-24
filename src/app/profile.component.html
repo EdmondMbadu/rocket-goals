@@ -57,65 +57,87 @@
   <div class="page-bg"></div>
 
   <div class="content">
-    <section class="hero-card glass">
-      <div class="hero-media">
-        <div class="header-img"
-          [style.backgroundImage]="(headerImagePreview() || profile()?.headerImageUrl) ? 'url(' + (headerImagePreview() || profile()?.headerImageUrl) + ')' : ''">
-          <div class="header-overlay"></div>
-        </div>
-        <div class="hero-controls">
-          <label class="icon-btn" title="Upload cover">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <input type="file" accept="image/*" (change)="onHeaderImageSelected($event)" class="hidden" />
-          </label>
-          @if (headerImageFile && !uploadingHeader()) {
-          <button class="pill" (click)="uploadHeaderImage()">Upload cover</button>
-          }
-          @if (uploadingHeader()) {
-          <div class="pill muted">Uploading...</div>
-          }
-        </div>
+    @if (profileNotFound()) {
+    <div class="card glass">
+      <div class="empty">
+        <p class="name">Profile not found</p>
+        <p class="muted tiny">This user profile is unavailable.</p>
       </div>
-
-      <div class="hero-body">
-        <div class="avatar-wrap">
-          <div class="avatar-frame">
-            @if (getAvatarImageSrc()) {
-            <img [src]="getAvatarImageSrc()!" alt="Profile"
-              (error)="onProfileImageError($event)"
-              [attr.loading]="'eager'" />
-            } @else {
-            <div class="avatar-fallback">{{ getInitials() }}</div>
-            }
-            <label class="avatar-upload">
+    </div>
+    } @else if (profile()) {
+      @if (canShowSection('hero')) {
+      <section class="hero-card glass">
+        <div class="hero-media">
+          <div class="header-img"
+            [style.backgroundImage]="(headerImagePreview() || profile()?.headerImageUrl) ? 'url(' + (headerImagePreview() || profile()?.headerImageUrl) + ')' : ''">
+            <div class="header-overlay"></div>
+          </div>
+          @if (canEditProfile()) {
+          <div class="hero-controls">
+            <label class="icon-btn" title="Upload cover">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <input type="file" accept="image/*" (change)="onProfileImageSelected($event)" class="hidden" />
+              <input type="file" accept="image/*" (change)="onHeaderImageSelected($event)" class="hidden" />
             </label>
+            @if (headerImageFile && !uploadingHeader()) {
+            <button class="pill" (click)="uploadHeaderImage()">Upload cover</button>
+            }
+            @if (uploadingHeader()) {
+            <div class="pill muted">Uploading...</div>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="hero-body">
+          <div class="avatar-wrap">
+            <div class="avatar-frame">
+              @if (getAvatarImageSrc()) {
+              <img [src]="getAvatarImageSrc()!" alt="Profile" (error)="onProfileImageError($event)" [attr.loading]="'eager'" />
+              } @else {
+              <div class="avatar-fallback">{{ getInitials() }}</div>
+              }
+              @if (canEditProfile()) {
+              <label class="avatar-upload">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <input type="file" accept="image/*" (change)="onProfileImageSelected($event)" class="hidden" />
+              </label>
+              }
+            </div>
+          </div>
+          <div class="hero-info">
+            <p class="eyebrow">{{ canEditProfile() ? 'Mission Commander' : 'Team Member' }}</p>
+            <h1 class="title">{{ getDisplayName() }}</h1>
+            @if (canEditProfile() || canShowSection('contact')) {
+            <p class="subtext">{{ profile()?.email }}</p>
+            }
+          </div>
+          <div class="hero-actions">
+            @if (canEditProfile()) {
+            <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('hero')"
+              [disabled]="visibilitySavingSection() === 'hero'">
+              {{ getVisibilityPillLabel('hero') }}
+            </button>
+            <button class="ghost" (click)="router.navigateByUrl('/goals')">View goals</button>
+            <button class="solid" (click)="router.navigateByUrl('/ai')">Ask AI</button>
+            } @else {
+            <button class="ghost" (click)="router.navigateByUrl('/goals')">Back to goals</button>
+            }
           </div>
         </div>
-        <div class="hero-info">
-          <p class="eyebrow">Mission Commander</p>
-          <h1 class="title">{{ getDisplayName() }}</h1>
-          <p class="subtext">{{ profile()?.email }}</p>
-        </div>
-        <div class="hero-actions">
-          <button class="ghost" (click)="router.navigateByUrl('/goals')">View goals</button>
-          <button class="solid" (click)="router.navigateByUrl('/ai')">Ask AI</button>
-        </div>
-      </div>
-    </section>
+      </section>
+      }
 
-    @if (success()) { <div class="alert success">{{ success() }}</div> }
-    @if (error()) { <div class="alert error">{{ error() }}</div> }
-    @if (phoneSavedModalVisible()) {
+      @if (success()) { <div class="alert success">{{ success() }}</div> }
+      @if (error()) { <div class="alert error">{{ error() }}</div> }
+      @if (phoneSavedModalVisible() && canEditProfile()) {
       <div class="phone-modal">
         <div class="phone-modal-card">
           <div class="phone-modal-icon">✅</div>
@@ -125,346 +147,456 @@
           </div>
         </div>
       </div>
-    }
+      }
 
-    @if (profileImageFile && !uploading()) {
-    <div class="card glass">
-      <div class="card-head">
-        <h3>Profile picture preview</h3>
-        <button class="solid sm" (click)="uploadProfileImage()">Upload</button>
-      </div>
-      <div class="preview-row">
-        <img [src]="profileImagePreview()" alt="Preview" class="preview-avatar" />
-        <div class="preview-meta">
-          <p class="name">{{ profileImageFile.name }}</p>
-          <p class="muted">Ready to upload</p>
+      @if (!isOwnProfile() && !hasAnyVisiblePublicSection()) {
+      <div class="card glass">
+        <div class="empty">
+          <p class="name">This profile is private</p>
+          <p class="muted tiny">The profile owner has chosen to keep all sections private.</p>
         </div>
-      </div>
-    </div>
-    }
-
-    @if (uploading()) {
-    <div class="card glass">
-      <div class="loading">
-        <span class="spinner"></span>
-        <div>
-          <p class="name">Uploading profile picture...</p>
-          <p class="muted">Please wait</p>
-        </div>
-      </div>
-    </div>
-    }
-
-    <div class="stats-grid">
-      <div class="stat-card glass">
-        <div class="stat-value">{{ getActiveGoalsCount() }}</div>
-        <div class="stat-label">Active</div>
-      </div>
-      <div class="stat-card glass">
-        <div class="stat-value">{{ getCompletedGoalsCount() }}</div>
-        <div class="stat-label">Done</div>
-      </div>
-      <div class="stat-card glass">
-        <div class="stat-value">{{ goals().length }}</div>
-        <div class="stat-label">Total</div>
-      </div>
-    </div>
-
-    <div class="card glass">
-      <div class="card-head">
-        <h3>My Goals</h3>
-        <button class="ghost sm" (click)="router.navigateByUrl('/goals')">View all</button>
-      </div>
-
-      @if (loadingGoals()) {
-      <div class="loading center">
-        <span class="spinner"></span>
-        <p class="muted">Loading goals...</p>
-      </div>
-      } @else if (goals().length === 0) {
-      <div class="empty">
-        <p>No goals yet.</p>
-        <button class="solid sm" (click)="router.navigateByUrl('/goals')">Create your first goal</button>
       </div>
       } @else {
-      <div class="goal-list">
-        @for (goal of goals(); track goal.id) {
-        <div class="goal-row">
-          <div class="goal-info">
-            @if (editingGoalId() === goal.id) {
-            <div class="edit-row">
-              <input type="text" [(ngModel)]="editingGoalTitle" (keyup.enter)="saveGoalTitle(goal.id)"
-                (keyup.escape)="cancelEditingGoal()" />
-              <div class="edit-actions">
-                <button class="solid xs" (click)="saveGoalTitle(goal.id)">Save</button>
-                <button class="ghost xs" (click)="cancelEditingGoal()">Cancel</button>
-              </div>
+        @if (canEditProfile() && profileImageFile && !uploading()) {
+        <div class="card glass">
+          <div class="card-head">
+            <h3>Profile picture preview</h3>
+            <button class="solid sm" (click)="uploadProfileImage()">Upload</button>
+          </div>
+          <div class="preview-row">
+            <img [src]="profileImagePreview()" alt="Preview" class="preview-avatar" />
+            <div class="preview-meta">
+              <p class="name">{{ profileImageFile.name }}</p>
+              <p class="muted">Ready to upload</p>
             </div>
-            } @else {
-            <h4 (click)="navigateToGoal(goal.id)">{{ getGoalTitle(goal) }}</h4>
-            <p class="muted tiny">{{ getGoalTheme(goal) }}</p>
+          </div>
+        </div>
+        }
+
+        @if (canEditProfile() && uploading()) {
+        <div class="card glass">
+          <div class="loading">
+            <span class="spinner"></span>
+            <div>
+              <p class="name">Uploading profile picture...</p>
+              <p class="muted">Please wait</p>
+            </div>
+          </div>
+        </div>
+        }
+
+        @if (canShowSection('stats')) {
+        @if (canEditProfile()) {
+        <div class="section-inline-head">
+          <p class="muted tiny">Stats visibility</p>
+          <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('stats')"
+            [disabled]="visibilitySavingSection() === 'stats'">
+            {{ getVisibilityPillLabel('stats') }}
+          </button>
+        </div>
+        }
+        <div class="stats-grid">
+          <div class="stat-card glass">
+            <div class="stat-value">{{ getActiveGoalsCount() }}</div>
+            <div class="stat-label">Active</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value">{{ getCompletedGoalsCount() }}</div>
+            <div class="stat-label">Done</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value">{{ goals().length }}</div>
+            <div class="stat-label">Total</div>
+          </div>
+        </div>
+        }
+
+        @if (canShowSection('goals')) {
+        <div class="card glass">
+          <div class="card-head">
+            <h3>{{ canEditProfile() ? 'My Goals' : 'Goals' }}</h3>
+            <div class="card-head-actions">
+              @if (canEditProfile()) {
+              <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('goals')"
+                [disabled]="visibilitySavingSection() === 'goals'">
+                {{ getVisibilityPillLabel('goals') }}
+              </button>
+              <button class="ghost sm" (click)="router.navigateByUrl('/goals')">View all</button>
+              }
+            </div>
+          </div>
+
+          @if (loadingGoals()) {
+          <div class="loading center">
+            <span class="spinner"></span>
+            <p class="muted">Loading goals...</p>
+          </div>
+          } @else if (goals().length === 0) {
+          <div class="empty">
+            <p>{{ canEditProfile() ? 'No goals yet.' : 'No public goals yet.' }}</p>
+            @if (canEditProfile()) {
+            <button class="solid sm" (click)="router.navigateByUrl('/goals')">Create your first goal</button>
             }
           </div>
-          <div class="goal-actions">
-            <button class="ghost xs" (click)="startEditingGoal(goal)">Edit</button>
-            <button class="solid xs" (click)="navigateToGoal(goal.id)">View</button>
-            <button class="danger xs" (click)="deleteGoal(goal.id)">Delete</button>
+          } @else {
+          <div class="goal-list">
+            @for (goal of goals(); track goal.id) {
+            <div class="goal-row">
+              <div class="goal-info">
+                @if (canEditProfile() && editingGoalId() === goal.id) {
+                <div class="edit-row">
+                  <input type="text" [(ngModel)]="editingGoalTitle" (keyup.enter)="saveGoalTitle(goal.id)"
+                    (keyup.escape)="cancelEditingGoal()" />
+                  <div class="edit-actions">
+                    <button class="solid xs" (click)="saveGoalTitle(goal.id)">Save</button>
+                    <button class="ghost xs" (click)="cancelEditingGoal()">Cancel</button>
+                  </div>
+                </div>
+                } @else {
+                <h4 (click)="navigateToGoal(goal.id)">{{ getGoalTitle(goal) }}</h4>
+                <p class="muted tiny">{{ getGoalTheme(goal) }}</p>
+                }
+              </div>
+              <div class="goal-actions">
+                @if (canEditProfile()) {
+                <button class="ghost xs" (click)="startEditingGoal(goal)">Edit</button>
+                }
+                <button class="solid xs" (click)="navigateToGoal(goal.id)">View</button>
+                @if (canEditProfile()) {
+                <button class="danger xs" (click)="deleteGoal(goal.id)">Delete</button>
+                }
+              </div>
+            </div>
+            }
           </div>
-        </div>
-        }
-      </div>
-      }
-    </div>
-
-    <div class="card glass">
-      <div class="card-head">
-        <h3>Subscription</h3>
-        @if (hasActiveSubscription()) {
-        <button class="ghost sm" (click)="openBillingPortal()" [disabled]="subscriptionLoading()">
-          {{ subscriptionLoading() ? 'Loading...' : 'Manage Billing' }}
-        </button>
-        }
-      </div>
-      @if (subscriptionError()) {
-      <div class="alert error">{{ subscriptionError() }}</div>
-      }
-      <div class="settings">
-        <div class="setting-row">
-          <div>
-            <p class="name">Plan</p>
-            <p class="muted tiny flex items-center gap-2">
-              <span class="px-2 py-0.5 text-xs font-bold rounded" [ngClass]="getPlanBadgeClass()">
-                {{ getSubscriptionPlanDisplay() }}
-              </span>
-              @if (getSubscriptionStatus() === 'active') {
-              <span class="text-green-500">Active</span>
-              } @else if (getSubscriptionStatus() === 'canceling') {
-              <span class="text-yellow-500">Canceling</span>
-              } @else if (getSubscriptionStatus() === 'past_due') {
-              <span class="text-red-500">Past Due</span>
-              }
-            </p>
-          </div>
-          @if (getSubscriptionStatus() === 'none' || getSubscriptionStatus() === 'canceled') {
-          <button class="solid xs" (click)="router.navigateByUrl('/pricing')">Subscribe</button>
-          } @else if (getSubscriptionPlan() !== 'galactic') {
-          <button class="ghost xs" (click)="router.navigateByUrl('/pricing')">Upgrade</button>
           }
         </div>
-        @if (getSubscriptionExpiresAt() && hasActiveSubscription()) {
-        <div class="setting-row">
-          <div>
-            <p class="name">{{ getSubscriptionExpiresAt() === 'Lifetime' ? 'Access' : (getSubscriptionStatus() === 'canceling' ? 'Access Until' : 'Renews On') }}</p>
-            <p class="muted tiny">{{ getSubscriptionExpiresAt() }}</p>
-          </div>
-        </div>
         }
-        @if (getSubscriptionStatus() === 'active') {
-        <div class="setting-row">
-          <div>
-            <p class="name">Cancel Subscription</p>
-            <p class="muted tiny">Cancel at the end of your billing period</p>
-          </div>
-          <button class="danger xs" (click)="cancelSubscription()" [disabled]="subscriptionLoading()">
-            {{ subscriptionLoading() ? 'Processing...' : 'Cancel' }}
-          </button>
-        </div>
-        }
-        @if (getSubscriptionStatus() === 'canceling') {
-        <div class="setting-row">
-          <div>
-            <p class="name">Reactivate Subscription</p>
-            <p class="muted tiny">Continue your subscription</p>
-          </div>
-          <button class="solid xs" (click)="reactivateSubscription()" [disabled]="subscriptionLoading()">
-            {{ subscriptionLoading() ? 'Processing...' : 'Reactivate' }}
-          </button>
-        </div>
-        }
-      </div>
-    </div>
 
-    <div class="card glass">
-      <div class="card-head">
-        <h3>Rocket Goal Photo</h3>
-        <p class="muted tiny">This photo is used when generating visualizations for your goals</p>
-      </div>
-      <div class="settings">
-        <div class="setting-row">
-          <div class="flex-1">
-            @if (rocketGoalPhotoPreview()) {
-            <div class="rocket-goal-photo-preview">
-              <img [src]="rocketGoalPhotoPreview()" alt="Rocket Goal Photo" class="rocket-goal-photo-img" />
-              <div class="rocket-goal-photo-overlay">
-                <label class="icon-btn" title="Change photo">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        @if (canShowSection('subscription')) {
+        <div class="card glass">
+          <div class="card-head">
+            <h3>Subscription</h3>
+            <div class="card-head-actions">
+              @if (canEditProfile()) {
+              <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('subscription')"
+                [disabled]="visibilitySavingSection() === 'subscription'">
+                {{ getVisibilityPillLabel('subscription') }}
+              </button>
+              @if (hasActiveSubscription()) {
+              <button class="ghost sm" (click)="openBillingPortal()" [disabled]="subscriptionLoading()">
+                {{ subscriptionLoading() ? 'Loading...' : 'Manage Billing' }}
+              </button>
+              }
+              }
+            </div>
+          </div>
+          @if (subscriptionError() && canEditProfile()) {
+          <div class="alert error">{{ subscriptionError() }}</div>
+          }
+          <div class="settings">
+            <div class="setting-row">
+              <div>
+                <p class="name">Plan</p>
+                <p class="muted tiny flex items-center gap-2">
+                  <span class="px-2 py-0.5 text-xs font-bold rounded" [ngClass]="getPlanBadgeClass()">
+                    {{ getSubscriptionPlanDisplay() }}
+                  </span>
+                  @if (getSubscriptionStatus() === 'active') {
+                  <span class="text-green-500">Active</span>
+                  } @else if (getSubscriptionStatus() === 'canceling') {
+                  <span class="text-yellow-500">Canceling</span>
+                  } @else if (getSubscriptionStatus() === 'past_due') {
+                  <span class="text-red-500">Past Due</span>
+                  }
+                </p>
+              </div>
+              @if (canEditProfile() && (getSubscriptionStatus() === 'none' || getSubscriptionStatus() === 'canceled')) {
+              <button class="solid xs" (click)="router.navigateByUrl('/pricing')">Subscribe</button>
+              } @else if (canEditProfile() && getSubscriptionPlan() !== 'galactic') {
+              <button class="ghost xs" (click)="router.navigateByUrl('/pricing')">Upgrade</button>
+              }
+            </div>
+            @if (getSubscriptionExpiresAt() && hasActiveSubscription()) {
+            <div class="setting-row">
+              <div>
+                <p class="name">{{ getSubscriptionExpiresAt() === 'Lifetime' ? 'Access' : (getSubscriptionStatus() === 'canceling' ? 'Access Until' : 'Renews On') }}</p>
+                <p class="muted tiny">{{ getSubscriptionExpiresAt() }}</p>
+              </div>
+            </div>
+            }
+            @if (canEditProfile() && getSubscriptionStatus() === 'active') {
+            <div class="setting-row">
+              <div>
+                <p class="name">Cancel Subscription</p>
+                <p class="muted tiny">Cancel at the end of your billing period</p>
+              </div>
+              <button class="danger xs" (click)="cancelSubscription()" [disabled]="subscriptionLoading()">
+                {{ subscriptionLoading() ? 'Processing...' : 'Cancel' }}
+              </button>
+            </div>
+            }
+            @if (canEditProfile() && getSubscriptionStatus() === 'canceling') {
+            <div class="setting-row">
+              <div>
+                <p class="name">Reactivate Subscription</p>
+                <p class="muted tiny">Continue your subscription</p>
+              </div>
+              <button class="solid xs" (click)="reactivateSubscription()" [disabled]="subscriptionLoading()">
+                {{ subscriptionLoading() ? 'Processing...' : 'Reactivate' }}
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if (canShowSection('rocketGoalPhoto')) {
+        <div class="card glass">
+          <div class="card-head">
+            <h3>Rocket Goal Photo</h3>
+            <div class="card-head-actions">
+              @if (canEditProfile()) {
+              <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('rocketGoalPhoto')"
+                [disabled]="visibilitySavingSection() === 'rocketGoalPhoto'">
+                {{ getVisibilityPillLabel('rocketGoalPhoto') }}
+              </button>
+              }
+              <p class="muted tiny">Used when generating goal visualizations</p>
+            </div>
+          </div>
+          <div class="settings">
+            <div class="setting-row">
+              <div class="flex-1">
+                @if (rocketGoalPhotoPreview()) {
+                <div class="rocket-goal-photo-preview">
+                  <img [src]="rocketGoalPhotoPreview()" alt="Rocket Goal Photo" class="rocket-goal-photo-img" />
+                  @if (canEditProfile()) {
+                  <div class="rocket-goal-photo-overlay">
+                    <label class="icon-btn" title="Change photo">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <input type="file" accept="image/*" (change)="onRocketGoalPhotoSelected($event)" class="hidden" />
+                    </label>
+                    <button class="danger xs" (click)="removeRocketGoalPhoto()" title="Remove photo">Remove</button>
+                  </div>
+                  }
+                </div>
+                } @else {
+                <div class="rocket-goal-photo-placeholder">
+                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
+                  <p class="muted tiny mt-2">{{ canEditProfile() ? 'No photo set' : 'No public photo available' }}</p>
+                </div>
+                }
+              </div>
+              @if (canEditProfile()) {
+              <div class="flex flex-col gap-2">
+                @if (rocketGoalPhotoFile && !uploadingRocketGoalPhoto()) {
+                <button class="solid xs" (click)="uploadRocketGoalPhoto()">Upload Photo</button>
+                } @else if (!rocketGoalPhotoPreview()) {
+                <label class="solid xs cursor-pointer">
                   <input type="file" accept="image/*" (change)="onRocketGoalPhotoSelected($event)" class="hidden" />
+                  Add Photo
                 </label>
-                <button class="danger xs" (click)="removeRocketGoalPhoto()" title="Remove photo">Remove</button>
+                }
+                @if (uploadingRocketGoalPhoto()) {
+                <div class="pill muted">Uploading...</div>
+                }
+              </div>
+              }
+            </div>
+            @if (canEditProfile() && rocketGoalPhotoFile && !uploadingRocketGoalPhoto()) {
+            <div class="setting-row">
+              <div>
+                <p class="name">Ready to upload</p>
+                <p class="muted tiny">{{ rocketGoalPhotoFile.name }}</p>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if (canShowSection('telegram')) {
+        <div class="card glass">
+          <div class="card-head">
+            <h3>Telegram</h3>
+            <div class="card-head-actions">
+              @if (canEditProfile()) {
+              <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('telegram')"
+                [disabled]="visibilitySavingSection() === 'telegram'">
+                {{ getVisibilityPillLabel('telegram') }}
+              </button>
+              }
+              @if (telegramLinked()) {
+              <span class="pill success">Connected</span>
+              }
+            </div>
+          </div>
+          @if (telegramError() && canEditProfile()) {
+          <div class="alert error">{{ telegramError() }}</div>
+          }
+          <div class="settings">
+            @if (!canEditProfile()) {
+            <div class="setting-row">
+              <div>
+                <p class="name">{{ telegramLinked() ? ('Connected as ' + (telegramUsername() ? '@' + telegramUsername() : 'Telegram user')) : 'Not connected' }}</p>
+                <p class="muted tiny">{{ telegramLinked() ? 'Telegram coaching is enabled for this profile.' : 'This user has not linked Telegram publicly.' }}</p>
+              </div>
+            </div>
+            } @else if (telegramLoading()) {
+            <div class="setting-row">
+              <span class="spinner small"></span>
+              <p class="muted tiny">Checking Telegram connection...</p>
+            </div>
+            } @else if (telegramLinked()) {
+            <div class="setting-row">
+              <div>
+                <p class="name">Connected as {{ telegramUsername() ? '@' + telegramUsername() : 'Telegram user' }}</p>
+                <p class="muted tiny">Chat with your AI coach in Telegram. Conversations sync with the web app.</p>
+              </div>
+              <button class="danger xs" (click)="unlinkTelegram()" [disabled]="telegramUnlinkLoading()">
+                {{ telegramUnlinkLoading() ? 'Disconnecting...' : 'Disconnect' }}
+              </button>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="name">Morning check-in</p>
+                <p class="muted tiny">Daily reminder to set your ONE thing (e.g. 8:00 AM)</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="dailyCheckIn" [checked]="dailyCheckInEnabled()" (change)="dailyCheckInEnabled.set($any($event.target).checked)" />
+                <label for="dailyCheckIn" class="muted tiny">Enabled</label>
+                <input type="time" [value]="checkInTimeDraft()" (input)="checkInTimeDraft.set($any($event.target).value)" class="time-input" />
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="name">Evening reminder</p>
+                <p class="muted tiny">Reminder to log your mission (e.g. 8:00 PM)</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="missionReminder" [checked]="missionLogReminderEnabled()" (change)="missionLogReminderEnabled.set($any($event.target).checked)" />
+                <label for="missionReminder" class="muted tiny">Enabled</label>
+                <input type="time" [value]="reminderTimeDraft()" (input)="reminderTimeDraft.set($any($event.target).value)" class="time-input" />
+              </div>
+            </div>
+            <div class="setting-row">
+              <div></div>
+              <button class="solid xs" (click)="saveMessagingPreferences()" [disabled]="messagingPrefsSaving()">
+                {{ messagingPrefsSaving() ? 'Saving...' : 'Save preferences' }}
+              </button>
+            </div>
+            } @else {
+            <div class="setting-row">
+              <div>
+                <p class="name">Connect Telegram</p>
+                <p class="muted tiny">Chat with your RocketGoals AI coach in Telegram. One click to connect!</p>
+              </div>
+              <button class="solid xs" (click)="connectTelegram()" [disabled]="telegramConnecting()">
+                {{ telegramConnecting() ? 'Opening...' : 'Connect Telegram' }}
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if (canShowSection('contact')) {
+        <div class="card glass">
+          <div class="card-head">
+            <h3>Contact</h3>
+            @if (canEditProfile()) {
+            <button class="visibility-toggle" type="button" (click)="toggleSectionVisibility('contact')"
+              [disabled]="visibilitySavingSection() === 'contact'">
+              {{ getVisibilityPillLabel('contact') }}
+            </button>
+            }
+          </div>
+          <div class="settings">
+            @if (canEditProfile()) {
+            <div class="setting-row">
+              <div>
+                <p class="name">Phone number</p>
+                <p class="muted tiny">Used for Reminder OS nudges. Add it now or leave blank if you prefer.</p>
+              </div>
+              <div class="phone-input">
+                <input type="tel"
+                  [value]="phoneNumberDraft()"
+                  (input)="updatePhoneNumberDraft($any($event.target).value)"
+                  [disabled]="phoneNumberSaving()"
+                  placeholder="415-555-1234 or +1 415-555-1234" />
+                <button class="solid xs" (click)="savePhoneNumber()" [disabled]="phoneNumberSaving()">
+                  {{ phoneNumberSaving() ? 'Saving...' : 'Save' }}
+                </button>
               </div>
             </div>
             } @else {
-            <div class="rocket-goal-photo-placeholder">
-              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p class="muted tiny mt-2">No photo set</p>
+            <div class="setting-row">
+              <div>
+                <p class="name">Email</p>
+                <p class="muted tiny break">{{ profile()?.email }}</p>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="name">Phone</p>
+                <p class="muted tiny break">{{ profile()?.phoneNumber || 'Not shared' }}</p>
+              </div>
             </div>
             }
           </div>
-          <div class="flex flex-col gap-2">
-            @if (rocketGoalPhotoFile && !uploadingRocketGoalPhoto()) {
-            <button class="solid xs" (click)="uploadRocketGoalPhoto()">Upload Photo</button>
-            } @else if (!rocketGoalPhotoPreview()) {
-            <label class="solid xs cursor-pointer">
-              <input type="file" accept="image/*" (change)="onRocketGoalPhotoSelected($event)" class="hidden" />
-              Add Photo
-            </label>
-            }
-            @if (uploadingRocketGoalPhoto()) {
-            <div class="pill muted">Uploading...</div>
-            }
-          </div>
-        </div>
-        @if (rocketGoalPhotoFile && !uploadingRocketGoalPhoto()) {
-        <div class="setting-row">
-          <div>
-            <p class="name">Ready to upload</p>
-            <p class="muted tiny">{{ rocketGoalPhotoFile.name }}</p>
-          </div>
         </div>
         }
-      </div>
-    </div>
-
-    <div class="card glass">
-      <div class="card-head">
-        <h3>Telegram</h3>
-        @if (telegramLinked()) {
-          <span class="pill success">Connected</span>
-        }
-      </div>
-      @if (telegramError()) {
-        <div class="alert error">{{ telegramError() }}</div>
       }
-      <div class="settings">
-        @if (telegramLoading()) {
-          <div class="setting-row">
-            <span class="spinner small"></span>
-            <p class="muted tiny">Checking Telegram connection...</p>
-          </div>
-        } @else if (telegramLinked()) {
-          <div class="setting-row">
-            <div>
-              <p class="name">Connected as {{ telegramUsername() ? '@' + telegramUsername() : 'Telegram user' }}</p>
-              <p class="muted tiny">Chat with your AI coach in Telegram. Conversations sync with the web app.</p>
-            </div>
-            <button class="danger xs" (click)="unlinkTelegram()" [disabled]="telegramUnlinkLoading()">
-              {{ telegramUnlinkLoading() ? 'Disconnecting...' : 'Disconnect' }}
-            </button>
-          </div>
-          <div class="setting-row">
-            <div>
-              <p class="name">Morning check-in</p>
-              <p class="muted tiny">Daily reminder to set your ONE thing (e.g. 8:00 AM)</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="dailyCheckIn" [checked]="dailyCheckInEnabled()" (change)="dailyCheckInEnabled.set($any($event.target).checked)" />
-              <label for="dailyCheckIn" class="muted tiny">Enabled</label>
-              <input type="time" [value]="checkInTimeDraft()" (input)="checkInTimeDraft.set($any($event.target).value)" class="time-input" />
-            </div>
-          </div>
-          <div class="setting-row">
-            <div>
-              <p class="name">Evening reminder</p>
-              <p class="muted tiny">Reminder to log your mission (e.g. 8:00 PM)</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="missionReminder" [checked]="missionLogReminderEnabled()" (change)="missionLogReminderEnabled.set($any($event.target).checked)" />
-              <label for="missionReminder" class="muted tiny">Enabled</label>
-              <input type="time" [value]="reminderTimeDraft()" (input)="reminderTimeDraft.set($any($event.target).value)" class="time-input" />
-            </div>
-          </div>
-          <div class="setting-row">
-            <div></div>
-            <button class="solid xs" (click)="saveMessagingPreferences()" [disabled]="messagingPrefsSaving()">
-              {{ messagingPrefsSaving() ? 'Saving...' : 'Save preferences' }}
-            </button>
-          </div>
-        } @else {
-          <div class="setting-row">
-            <div>
-              <p class="name">Connect Telegram</p>
-              <p class="muted tiny">Chat with your RocketGoals AI coach in Telegram. One click to connect!</p>
-            </div>
-            <button class="solid xs" (click)="connectTelegram()" [disabled]="telegramConnecting()">
-              {{ telegramConnecting() ? 'Opening...' : 'Connect Telegram' }}
-            </button>
-          </div>
-        }
-      </div>
-    </div>
 
-    <div class="card glass">
-      <div class="card-head">
-        <h3>Contact</h3>
-      </div>
-      <div class="settings">
-        <div class="setting-row">
-          <div>
-            <p class="name">Phone number</p>
-            <p class="muted tiny">Used for Reminder OS nudges. Add it now or leave blank if you prefer.</p>
-          </div>
-          <div class="phone-input">
-            <input type="tel"
-              [value]="phoneNumberDraft()"
-              (input)="updatePhoneNumberDraft($any($event.target).value)"
-              [disabled]="phoneNumberSaving()"
-              placeholder="415-555-1234 or +1 415-555-1234" />
-            <button class="solid xs" (click)="savePhoneNumber()" [disabled]="phoneNumberSaving()">
-              {{ phoneNumberSaving() ? 'Saving...' : 'Save' }}
+      @if (canEditProfile()) {
+      <div class="card glass">
+        <div class="card-head">
+          <h3>Account</h3>
+        </div>
+        <div class="settings">
+          <div class="setting-row">
+            <div>
+              <p class="name">Email</p>
+              <p class="muted tiny break">{{ profile()?.email }}</p>
+            </div>
+            <button class="ghost xs" (click)="router.navigate(['/login'], { queryParams: { returnUrl: '/profile' } })">
+              Re-authenticate
             </button>
           </div>
+          <div class="setting-row">
+            <div>
+              <p class="name">Password</p>
+              <p class="muted tiny">Reset your password</p>
+            </div>
+            <button class="ghost xs" (click)="router.navigate(['/login'], { queryParams: { resetPassword: true } })">
+              Reset
+            </button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="name">Logout</p>
+              <p class="muted tiny">Sign out of your account</p>
+            </div>
+            <button class="danger xs" (click)="router.navigateByUrl('/login')">Logout</button>
+          </div>
         </div>
       </div>
-    </div>
-
+      }
+    } @else {
     <div class="card glass">
-      <div class="card-head">
-        <h3>Account</h3>
-      </div>
-      <div class="settings">
-        <div class="setting-row">
-          <div>
-            <p class="name">Email</p>
-            <p class="muted tiny break">{{ profile()?.email }}</p>
-          </div>
-          <button class="ghost xs" (click)="router.navigate(['/login'], { queryParams: { returnUrl: '/profile' } })">
-            Re-authenticate
-          </button>
-        </div>
-        <div class="setting-row">
-          <div>
-            <p class="name">Password</p>
-            <p class="muted tiny">Reset your password</p>
-          </div>
-          <button class="ghost xs" (click)="router.navigate(['/login'], { queryParams: { resetPassword: true } })">
-            Reset
-          </button>
-        </div>
-        <div class="setting-row">
-          <div>
-            <p class="name">Logout</p>
-            <p class="muted tiny">Sign out of your account</p>
-          </div>
-          <button class="danger xs" (click)="router.navigateByUrl('/login')">Logout</button>
-        </div>
+      <div class="loading center">
+        <span class="spinner"></span>
+        <p class="muted">Loading profile...</p>
       </div>
     </div>
+    }
   </div>
 </div>
 

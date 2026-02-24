@@ -476,6 +476,15 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.selectedDirectMemberUserId.set(member.userId);
   }
 
+  openMemberProfile(member: TeamMember, event?: Event) {
+    event?.stopPropagation();
+    const userId = (member.userId || '').trim();
+    if (!userId) {
+      return;
+    }
+    this.router.navigate(['/profile', userId]);
+  }
+
   getConversationPreview(memberUserId: string): TeamMemberConversationPreview | null {
     return this.directConversationPreviews().find(item => item.memberUserId === memberUserId) || null;
   }

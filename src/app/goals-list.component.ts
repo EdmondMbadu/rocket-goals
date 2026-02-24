@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
-import type { Team } from './models/team';
+import type { Team, TeamMember } from './models/team';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ThemeService } from './theme.service';
@@ -89,6 +89,13 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly isCreatingGoal = signal(false);
   protected readonly goalCreationError = signal<string | null>(null);
   protected readonly showAuthPrompt = signal(false);
+  protected readonly showCreateTeamModal = signal(false);
+  protected readonly creatingTeam = signal(false);
+  protected newTeamName = '';
+  protected newTeamDescription = '';
+  protected newTeamAiCoach = true;
+  protected inviteEmail = '';
+  protected inviteEmails = signal<string[]>([]);
 
   // Photo capture state
   protected readonly isCameraActive = signal(false);
@@ -620,6 +627,112 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   goHome() {
     this.router.navigateByUrl('/goals');
+  }
+
+  protected openCreateTeamModal(): void {
+    this.showCreateTeamModal.set(true);
+    this.newTeamName = '';
+    this.newTeamDescription = '';
+    this.newTeamAiCoach = true;
+    this.inviteEmail = '';
+    this.inviteEmails.set([]);
+  }
+
+  protected closeCreateTeamModal(): void {
+    this.showCreateTeamModal.set(false);
+    this.newTeamName = '';
+    this.newTeamDescription = '';
+    this.newTeamAiCoach = true;
+    this.inviteEmail = '';
+    this.inviteEmails.set([]);
+    this.creatingTeam.set(false);
+  }
+
+  protected addInviteEmail(): void {
+    const email = this.inviteEmail.trim().toLowerCase();
+    if (email && email.includes('@') && !this.inviteEmails().includes(email)) {
+      this.inviteEmails.update(list => [...list, email]);
+      this.inviteEmail = '';
+    }
+  }
+
+  protected removeInviteEmail(email: string): void {
+    this.inviteEmails.update(list => list.filter(candidate => candidate !== email));
+  }
+
+  protected async createTeamFromGoalsPage(): Promise<void> {
+    const teamName = this.newTeamName.trim();
+    if (!teamName || this.creatingTeam()) {
+      return;
+    }
+
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      this.error.set('Please log in to create a team.');
+      setTimeout(() => this.error.set(null), 4000);
+      return;
+    }
+
+    this.creatingTeam.set(true);
+    this.error.set(null);
+
+    try {
+      const description = this.newTeamDescription.trim();
+      const adminMember: TeamMember = {
+        userId: profile.userId,
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        email: (profile.email || '').trim().toLowerCase(),
+        role: 'admin',
+        joinedAt: Date.now(),
+        ...(profile.profilePictureUrl ? { profilePictureUrl: profile.profilePictureUrl } : {})
+      };
+
+      const teamId = await this.teamService.createTeam({
+        name: teamName,
+        ...(description ? { description } : {}),
+        adminId: profile.userId,
+        members: [adminMember],
+        memberIds: [profile.userId],
+        aiCoachEnabled: this.newTeamAiCoach
+      });
+
+      try {
+        await this.teamService.ensureTeamRocketGoal(teamId);
+      } catch (goalError) {
+        console.warn('Unable to ensure team rocket goal during team creation:', goalError);
+      }
+
+      const emails = this.inviteEmails();
+      for (const email of emails) {
+        try {
+          const user = await this.teamService.findUserByEmail(email);
+          if (!user) {
+            continue;
+          }
+          await this.teamService.addMemberToTeam(teamId, {
+            userId: user.userId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            profilePictureUrl: user.profilePictureUrl,
+            role: 'member',
+            joinedAt: Date.now()
+          });
+        } catch (inviteError) {
+          console.error(`Failed to add invited member ${email}:`, inviteError);
+        }
+      }
+
+      await this.loadGoals();
+      this.closeCreateTeamModal();
+    } catch (err) {
+      console.error('Failed to create team from goals page:', err);
+      this.error.set('Failed to create team. Please try again.');
+      setTimeout(() => this.error.set(null), 5000);
+    } finally {
+      this.creatingTeam.set(false);
+    }
   }
 
   // Goal creation modal methods (Launch Your GOAL wizard)

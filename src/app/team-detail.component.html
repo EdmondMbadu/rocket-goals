@@ -297,15 +297,17 @@
             }
           </div>
           }
-          <div class="member-circle-avatar-wrap" [class.admin-ring]="member.role !== 'member'">
-            @if (member.profilePictureUrl) {
-            <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-circle-avatar" />
-            } @else {
-            <div class="member-circle-avatar member-circle-fallback" [class.admin-fallback]="member.role !== 'member'">{{ member.firstName.charAt(0) }}</div>
-            }
-            <span class="member-status-dot" [class.online]="member.role !== 'member'"></span>
-          </div>
-          <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
+          <button class="member-profile-link" type="button" (click)="openMemberProfile(member, $event)" title="View profile">
+            <div class="member-circle-avatar-wrap" [class.admin-ring]="member.role !== 'member'">
+              @if (member.profilePictureUrl) {
+              <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="member-circle-avatar" />
+              } @else {
+              <div class="member-circle-avatar member-circle-fallback" [class.admin-fallback]="member.role !== 'member'">{{ member.firstName.charAt(0) }}</div>
+              }
+              <span class="member-status-dot" [class.online]="member.role !== 'member'"></span>
+            </div>
+            <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
+          </button>
           <span
             class="role-pill"
             [class.admin-pill]="member.role === 'admin' || member.role === 'coach'"

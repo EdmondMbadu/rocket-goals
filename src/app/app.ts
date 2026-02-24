@@ -123,6 +123,7 @@ export class App implements AfterViewInit, OnDestroy {
     return this.authOnlyRoutes.has(routePath) ||
       this.componentRoutes.has(routePath) ||
       routePath.startsWith('/rocketgoal/') ||
+      routePath.startsWith('/profile/') ||
       routePath.startsWith('/admin/') ||
       routePath.startsWith('/launchpad/') ||
       routePath.startsWith('/team/');

@@ -215,6 +215,14 @@
             <p class="text-gray-600">Select a mission or team to open its dashboard</p>
           </div>
           <div class="flex items-center gap-3">
+            <button (click)="openCreateTeamModal()"
+              class="hidden md:flex items-center gap-2 px-6 py-3 border border-black/15 text-black font-bold rounded-full hover:border-red-500 hover:text-red-600 transition-all shadow-sm hover:shadow-md dark:text-white dark:border-white/20 dark:hover:border-red-400 dark:hover:text-red-300">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5V9H2v11h5m10 0v-2a4 4 0 00-8 0v2m8 0H9m8-11V7a4 4 0 00-8 0v2m8 0H9" />
+              </svg>
+              Create team
+            </button>
             <button (click)="openGoalModal()"
               class="hidden md:flex items-center gap-2 px-6 py-3 bg-black text-white font-bold rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,14 +440,14 @@
         <p class="text-lg font-semibold text-gray-700 dark:text-slate-200 mb-2">No goals or teams yet</p>
         <p class="text-sm text-gray-500 dark:text-slate-400 mb-5">Launch your first goal or create a team to start collaborating.</p>
         <div class="flex items-center justify-center gap-3 flex-wrap">
+          <button (click)="openCreateTeamModal()"
+            class="px-5 py-2.5 border border-black/15 text-black font-bold rounded-full hover:border-red-500 hover:text-red-600 transition-all dark:text-white dark:border-white/20 dark:hover:border-red-400 dark:hover:text-red-300">
+            Create team
+          </button>
           <button (click)="openGoalModal()"
             class="px-5 py-2.5 bg-black text-white font-bold rounded-full hover:bg-red-600 transition-all">
             Launch a goal
           </button>
-          <a routerLink="/teams"
-            class="px-5 py-2.5 border border-black/15 text-black font-bold rounded-full hover:border-red-500 hover:text-red-600 transition-all dark:text-white dark:border-white/20 dark:hover:border-red-400 dark:hover:text-red-300">
-            Open teams
-          </a>
         </div>
       </div>
       }
@@ -519,8 +527,16 @@
       </div>
       }
 
-      <!-- Mobile Launch a goal Button -->
-      <div class="md:hidden fixed bottom-6 right-6 z-50">
+      <!-- Mobile quick actions -->
+      <div class="md:hidden fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        <button (click)="openCreateTeamModal()"
+          class="w-14 h-14 rounded-full bg-white text-black border border-black/15 shadow-2xl hover:shadow-red-600/20 transition-all duration-300 hover:scale-110 flex items-center justify-center dark:bg-slate-900 dark:text-white dark:border-white/20"
+          aria-label="Create team">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 20h5V9H2v11h5m10 0v-2a4 4 0 00-8 0v2m8 0H9m8-11V7a4 4 0 00-8 0v2m8 0H9" />
+          </svg>
+        </button>
         <button (click)="openGoalModal()"
           class="w-14 h-14 rounded-full bg-gradient-to-r from-black to-gray-900 text-white shadow-2xl hover:shadow-red-600/30 transition-all duration-300 hover:scale-110 flex items-center justify-center">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,6 +552,120 @@
   <app-rocket-goals-ai></app-rocket-goals-ai>
 </div>
 }
+
+<!-- Create Team Modal -->
+<div *ngIf="showCreateTeamModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md px-4 py-6 overflow-y-auto">
+  <div class="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-white/50 overflow-hidden dark:bg-slate-900 dark:border-white/10">
+    <div class="px-6 py-5 border-b border-black/10 dark:border-white/10 flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-[0.22em] text-red-500 font-bold mb-1">Team Mission</p>
+        <h3 class="text-2xl font-black text-black dark:text-white">Create Team</h3>
+        <p class="text-sm text-gray-600 dark:text-slate-300 mt-1">Your team appears in this list and gets its own team rocket goal.</p>
+      </div>
+      <button type="button"
+        class="w-10 h-10 rounded-full border border-black/10 text-gray-500 hover:text-red-600 hover:border-red-400 transition-all dark:border-white/15 dark:text-slate-300 dark:hover:text-red-300 dark:hover:border-red-400/60"
+        (click)="closeCreateTeamModal()"
+        [disabled]="creatingTeam()">
+        <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Team name</label>
+        <input type="text"
+          class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 dark:bg-slate-950/70 dark:border-white/15 dark:text-white dark:placeholder-slate-500"
+          [ngModel]="newTeamName"
+          (ngModelChange)="newTeamName = $event"
+          placeholder="e.g. MS Bike - Team Walksalot"
+          maxlength="80" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Description (optional)</label>
+        <textarea
+          class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 resize-none dark:bg-slate-950/70 dark:border-white/15 dark:text-white dark:placeholder-slate-500"
+          [ngModel]="newTeamDescription"
+          (ngModelChange)="newTeamDescription = $event"
+          rows="3"
+          placeholder="What your team is working toward"></textarea>
+      </div>
+
+      <div class="rounded-xl border border-black/10 bg-black/[0.02] px-4 py-3 flex items-center justify-between gap-3 dark:border-white/10 dark:bg-white/[0.02]">
+        <div>
+          <p class="text-sm font-semibold text-black dark:text-white">Enable AI coach for team chat</p>
+          <p class="text-xs text-gray-500 dark:text-slate-400">You can adjust this later in team settings.</p>
+        </div>
+        <label class="inline-flex items-center cursor-pointer">
+          <input type="checkbox"
+            class="sr-only"
+            [ngModel]="newTeamAiCoach"
+            (ngModelChange)="newTeamAiCoach = $event" />
+          <span class="relative w-11 h-6 rounded-full transition-all"
+            [class.bg-red-500]="newTeamAiCoach"
+            [class.bg-gray-300]="!newTeamAiCoach">
+            <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform"
+              [class.translate-x-5]="newTeamAiCoach"></span>
+          </span>
+        </label>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Invite teammates (optional)</label>
+        <div class="flex items-center gap-2">
+          <input type="email"
+            class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 dark:bg-slate-950/70 dark:border-white/15 dark:text-white dark:placeholder-slate-500"
+            [ngModel]="inviteEmail"
+            (ngModelChange)="inviteEmail = $event"
+            (keyup.enter)="addInviteEmail()"
+            placeholder="name@email.com" />
+          <button type="button"
+            class="px-4 py-3 rounded-xl border border-black/15 font-semibold text-black hover:border-red-500 hover:text-red-600 transition-all disabled:opacity-40 dark:text-white dark:border-white/20 dark:hover:border-red-400 dark:hover:text-red-300"
+            (click)="addInviteEmail()"
+            [disabled]="!inviteEmail.trim()">
+            Add
+          </button>
+        </div>
+        @if (inviteEmails().length > 0) {
+          <div class="mt-3 flex flex-wrap gap-2">
+            @for (email of inviteEmails(); track email) {
+              <span class="inline-flex items-center gap-2 rounded-full bg-red-50 border border-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-200">
+                {{ email }}
+                <button type="button"
+                  class="text-red-500 hover:text-red-700 dark:text-red-300 dark:hover:text-red-100"
+                  (click)="removeInviteEmail(email)">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-black/10 dark:border-white/10 flex items-center justify-end gap-3">
+      <button type="button"
+        class="px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors dark:text-slate-300 dark:hover:text-white"
+        (click)="closeCreateTeamModal()"
+        [disabled]="creatingTeam()">
+        Cancel
+      </button>
+      <button type="button"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black text-white text-sm font-bold hover:bg-red-600 transition-all disabled:opacity-50 disabled:hover:bg-black"
+        (click)="createTeamFromGoalsPage()"
+        [disabled]="!newTeamName.trim() || creatingTeam()">
+        @if (creatingTeam()) {
+          <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+        }
+        {{ creatingTeam() ? 'Creating team...' : 'Create team' }}
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Launch Your GOAL Modal - Multi-step ROCKET Quiz -->
 <div *ngIf="showGoalModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md px-4 py-6 overflow-y-auto goal-modal-overlay">

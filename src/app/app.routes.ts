@@ -8,6 +8,7 @@ export const routes: Routes = [
   { path: 'welcome', loadComponent: () => import('./auth/welcome.component').then(m => m.WelcomeComponent) },
   { path: 'goals', loadComponent: () => import('./goals-list.component').then(m => m.GoalsListComponent), canActivate: [authGuard] },
   { path: 'rocketgoal/:id', loadComponent: () => import('./rocket-goal-view.component').then(m => m.RocketGoalViewComponent) },
+  { path: 'profile/:userId', loadComponent: () => import('./profile.component').then(m => m.ProfileComponent) },
   { path: 'profile', loadComponent: () => import('./profile.component').then(m => m.ProfileComponent) },
   { path: 'link-telegram', loadComponent: () => import('./link-telegram.component').then(m => m.LinkTelegramComponent) },
   { path: 'admin/ai-stats', loadComponent: () => import('./admin/ai-stats.component').then(m => m.AiStatsComponent) },
