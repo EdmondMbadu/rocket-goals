@@ -2280,6 +2280,62 @@
 }
 .mc-header-right {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mc-admin-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.mc-admin-btn {
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(239, 68, 68, 0.16);
+  color: #fecaca;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mc-admin-btn:hover {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(239, 68, 68, 0.24);
+}
+
+.mc-admin-btn.secondary {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.45);
+  color: #cbd5e1;
+}
+
+.mc-admin-btn.secondary:hover {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(30, 41, 59, 0.62);
+}
+
+.mc-admin-btn.primary {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.2);
+  color: #bbf7d0;
+}
+
+.mc-admin-btn.primary:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.28);
+}
+
+.mc-admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .mc-live-badge {
   display: inline-flex;
@@ -2317,6 +2373,120 @@
   font-size: 11px;
   font-weight: 700;
   color: #a5b4fc;
+}
+
+.mc-add-form {
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.48);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(200px, 1.2fr) minmax(170px, 1fr) minmax(150px, 0.8fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.mc-add-input,
+.mc-add-select,
+.mc-card-name-input,
+.mc-card-select {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.76);
+  color: #f8fafc;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.mc-card-select.small {
+  max-width: 150px;
+}
+
+.mc-add-input:focus,
+.mc-add-select:focus,
+.mc-card-name-input:focus,
+.mc-card-select:focus {
+  outline: none;
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.mc-add-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.mc-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.mc-card-shell {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.5);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.mc-card-shell:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.66);
+}
+
+.mc-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mc-card-edit-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mc-card-remove {
+  border: 1px solid rgba(248, 113, 113, 0.34);
+  background: rgba(127, 29, 29, 0.28);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mc-card-remove:hover {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(127, 29, 29, 0.45);
+}
+
+.mc-card-body-circular {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mc-card-body-circular .mc-stat-content {
+  flex: 1;
+}
+
+.mc-empty-state {
+  margin: 8px 0 0;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  color: #94a3b8;
+  font-size: 12px;
+  text-align: center;
 }
 
 /* Hero Stat Cards */
@@ -2427,6 +2597,8 @@
 .mc-ring-fill.participants { stroke: #818cf8; }
 .mc-ring-fill.milestones { stroke: #ef4444; }
 .mc-ring-fill.today { stroke: #f59e0b; }
+.mc-ring-fill.engagement { stroke: #10b981; }
+.mc-ring-fill.active { stroke: #14b8a6; }
 
 /* Progress Bars Section */
 .mc-progress-section {
@@ -2463,6 +2635,8 @@
 }
 .mc-progress-pct.today { color: #f59e0b; }
 .mc-progress-pct.engagement { color: #10b981; }
+.mc-progress-pct.participants { color: #818cf8; }
+.mc-progress-pct.active { color: #14b8a6; }
 .mc-progress-track {
   height: 10px;
   border-radius: 8px;
@@ -2488,6 +2662,12 @@
 }
 .mc-progress-fill.engagement {
   background: linear-gradient(90deg, #10b981, #34d399);
+}
+.mc-progress-fill.participants {
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+}
+.mc-progress-fill.active {
+  background: linear-gradient(90deg, #0ea5e9, #14b8a6);
 }
 .mc-progress-text {
   font-size: 9px;
@@ -3107,6 +3287,21 @@
   border-color: rgba(99, 102, 241, 0.2);
   color: #4f46e5;
 }
+.light-mode .mc-admin-btn {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+.light-mode .mc-admin-btn.secondary {
+  border-color: rgba(15, 23, 42, 0.14);
+  background: rgba(241, 245, 249, 0.95);
+  color: #334155;
+}
+.light-mode .mc-admin-btn.primary {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
 .light-mode .mc-stat-card {
   border-color: rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.9);
@@ -3147,6 +3342,28 @@
 .light-mode .mc-progress-label-row { color: #334155; }
 .light-mode .mc-progress-track { background: rgba(15, 23, 42, 0.06); }
 .light-mode .mc-progress-footnote { color: #94a3b8; }
+.light-mode .mc-add-form,
+.light-mode .mc-card-shell {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+}
+.light-mode .mc-add-input,
+.light-mode .mc-add-select,
+.light-mode .mc-card-name-input,
+.light-mode .mc-card-select {
+  border-color: rgba(15, 23, 42, 0.16);
+  background: #ffffff;
+  color: #0f172a;
+}
+.light-mode .mc-card-remove {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+.light-mode .mc-empty-state {
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #64748b;
+}
 
 .light-mode .team-direct-summary {
   border-color: rgba(239, 68, 68, 0.2);
@@ -3255,12 +3472,22 @@
   .mc-progress-section {
     grid-template-columns: 1fr;
   }
+  .mc-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .mc-add-form {
+    grid-template-columns: 1fr;
+  }
+  .mc-add-actions {
+    justify-content: flex-end;
+  }
   .mc-header {
     flex-direction: column;
     gap: 10px;
   }
   .mc-stat-ring {
-    display: none;
+    width: 42px;
+    height: 42px;
   }
 
   .direct-messages-list {

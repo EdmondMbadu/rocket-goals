@@ -348,160 +348,146 @@
               Live
             </span>
             }
+            @if (canManageMissionControlCards()) {
+            <div class="mc-admin-actions">
+              @if (!missionControlCardsEditing()) {
+              <button type="button" class="mc-admin-btn" (click)="openMissionControlEditor()">
+                Edit Cards
+              </button>
+              } @else {
+              <button type="button" class="mc-admin-btn secondary" (click)="showAddMissionControlCard()">
+                Add Card
+              </button>
+              <button type="button" class="mc-admin-btn secondary" (click)="cancelMissionControlEditor()">
+                Cancel
+              </button>
+              <button type="button" class="mc-admin-btn primary" (click)="saveMissionControlCards()"
+                [disabled]="missionControlCardsSaving()">
+                @if (missionControlCardsSaving()) {
+                Saving...
+                } @else {
+                Save
+                }
+              </button>
+              }
+            </div>
+            }
           </div>
         </div>
 
         @if (participantSummaryError()) {
         <p class="alert-inline error">{{ participantSummaryError() }}</p>
         }
+        @if (missionControlCardsError()) {
+        <p class="alert-inline error">{{ missionControlCardsError() }}</p>
+        }
+        @if (missionControlCardsSuccess()) {
+        <p class="alert-inline success">{{ missionControlCardsSuccess() }}</p>
+        }
 
-        <!-- Hero Stats Row -->
-        <div class="mc-hero-stats">
-          <article class="mc-stat-card mc-stat-participants">
-            <div class="mc-stat-icon-wrap participants">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <div class="mc-stat-content">
-              <p class="mc-stat-label">Total Members</p>
-              <p class="mc-stat-value">{{ teamDirectSummary().totalParticipants }}</p>
-              <p class="mc-stat-sub">{{ teamDirectSummary().goalsStarted }} with active goals</p>
-            </div>
-            <div class="mc-stat-ring">
-              <svg viewBox="0 0 36 36" class="mc-ring-svg">
-                <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path class="mc-ring-fill participants" [attr.stroke-dasharray]="(teamDirectSummary().totalParticipants > 0 ? (teamDirectSummary().goalsStarted / teamDirectSummary().totalParticipants * 100) : 0) + ', 100'"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-            </div>
-          </article>
-
-          <article class="mc-stat-card mc-stat-milestones">
-            <div class="mc-stat-icon-wrap milestones">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="mc-stat-content">
-              <p class="mc-stat-label">Milestones Done</p>
-              <p class="mc-stat-value">{{ teamDirectSummary().completedMilestones }}<span class="mc-stat-total"> / {{ teamDirectSummary().totalMilestones }}</span></p>
-              <p class="mc-stat-sub">{{ teamDirectSummary().completionPercent }}% completion rate</p>
-            </div>
-            <div class="mc-stat-ring">
-              <svg viewBox="0 0 36 36" class="mc-ring-svg">
-                <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path class="mc-ring-fill milestones" [attr.stroke-dasharray]="teamDirectSummary().completionPercent + ', 100'"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-            </div>
-          </article>
-
-          <article class="mc-stat-card mc-stat-today">
-            <div class="mc-stat-icon-wrap today">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div class="mc-stat-content">
-              <p class="mc-stat-label">Today's Execution</p>
-              <p class="mc-stat-value">{{ teamDirectSummary().completedToday }}<span class="mc-stat-total"> / {{ teamDirectSummary().totalToday }}</span></p>
-              <p class="mc-stat-sub">{{ teamDirectSummary().todayPercent }}% done today</p>
-            </div>
-            <div class="mc-stat-ring">
-              <svg viewBox="0 0 36 36" class="mc-ring-svg">
-                <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path class="mc-ring-fill today" [attr.stroke-dasharray]="teamDirectSummary().todayPercent + ', 100'"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-            </div>
-          </article>
-
-          <article class="mc-stat-card mc-stat-active">
-            <div class="mc-stat-icon-wrap active">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
-            <div class="mc-stat-content">
-              <p class="mc-stat-label">Active Today</p>
-              <p class="mc-stat-value">{{ teamDirectSummary().activeTodayCount }}</p>
-              <p class="mc-stat-sub">members with tasks today</p>
-            </div>
-          </article>
-        </div>
-
-        <!-- Progress Bars Section -->
-        <div class="mc-progress-section">
-          <div class="mc-progress-card">
-            <div class="mc-progress-header">
-              <div class="mc-progress-label-row">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #ef4444">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Overall Milestone Progress</span>
-              </div>
-              <strong class="mc-progress-pct">{{ teamDirectSummary().completionPercent }}%</strong>
-            </div>
-            <div class="mc-progress-track">
-              <div class="mc-progress-fill milestones" [style.width.%]="teamDirectSummary().completionPercent">
-                @if (teamDirectSummary().completionPercent > 8) {
-                <span class="mc-progress-text">{{ teamDirectSummary().completedMilestones }} done</span>
-                }
-              </div>
-            </div>
-            <p class="mc-progress-footnote">{{ teamDirectSummary().completedMilestones }} of {{ teamDirectSummary().totalMilestones }} milestones completed across all members</p>
-          </div>
-
-          <div class="mc-progress-card">
-            <div class="mc-progress-header">
-              <div class="mc-progress-label-row">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #f59e0b">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Today's Execution Rate</span>
-              </div>
-              <strong class="mc-progress-pct today">{{ teamDirectSummary().todayPercent }}%</strong>
-            </div>
-            <div class="mc-progress-track">
-              <div class="mc-progress-fill today" [style.width.%]="teamDirectSummary().todayPercent">
-                @if (teamDirectSummary().todayPercent > 8) {
-                <span class="mc-progress-text">{{ teamDirectSummary().completedToday }} done</span>
-                }
-              </div>
-            </div>
-            <p class="mc-progress-footnote">{{ teamDirectSummary().completedToday }} of {{ teamDirectSummary().totalToday }} tasks completed today</p>
-          </div>
-
-          <div class="mc-progress-card">
-            <div class="mc-progress-header">
-              <div class="mc-progress-label-row">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #10b981">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>Team Engagement</span>
-              </div>
-              <strong class="mc-progress-pct engagement">{{ teamDirectSummary().totalParticipants > 0 ? (teamDirectSummary().goalsStarted * 100 / teamDirectSummary().totalParticipants | number:'1.0-0') : 0 }}%</strong>
-            </div>
-            <div class="mc-progress-track">
-              <div class="mc-progress-fill engagement" [style.width.%]="teamDirectSummary().totalParticipants > 0 ? (teamDirectSummary().goalsStarted / teamDirectSummary().totalParticipants * 100) : 0">
-                @if (teamDirectSummary().totalParticipants > 0 && (teamDirectSummary().goalsStarted / teamDirectSummary().totalParticipants * 100) > 8) {
-                <span class="mc-progress-text">{{ teamDirectSummary().goalsStarted }} active</span>
-                }
-              </div>
-            </div>
-            <p class="mc-progress-footnote">{{ teamDirectSummary().goalsStarted }} of {{ teamDirectSummary().totalParticipants }} members have started their goals</p>
+        @if (missionControlCardsEditing() && showAddMissionControlCardForm()) {
+        <div class="mc-add-form">
+          <input class="mc-add-input" type="text" placeholder="Card name" [(ngModel)]="newMissionControlCardName" />
+          <select class="mc-add-select" [(ngModel)]="newMissionControlCardMetric">
+            @for (option of missionControlMetricOptions; track option.key) {
+            <option [ngValue]="option.key">{{ option.label }}</option>
+            }
+          </select>
+          <select class="mc-add-select" [(ngModel)]="newMissionControlCardStyle">
+            @for (option of missionControlStyleOptions; track option.key) {
+            <option [ngValue]="option.key">{{ option.label }}</option>
+            }
+          </select>
+          <div class="mc-add-actions">
+            <button type="button" class="mc-admin-btn primary" (click)="addMissionControlCardToDraft()">Add</button>
+            <button type="button" class="mc-admin-btn secondary" (click)="cancelAddMissionControlCard()">Close</button>
           </div>
         </div>
+        }
+
+        <div class="mc-cards-grid">
+          @for (card of missionControlCardViews(); track card.id) {
+          <article class="mc-card-shell" [class.mc-card-histogram]="card.style === 'histogram'">
+            <div class="mc-card-top">
+              @if (missionControlCardsEditing()) {
+              <input class="mc-card-name-input" type="text" [ngModel]="card.name"
+                (ngModelChange)="updateMissionControlDraftCardName(card.id, $event)" />
+              <div class="mc-card-edit-fields">
+                <select class="mc-card-select" [ngModel]="card.metricKey"
+                  (ngModelChange)="updateMissionControlDraftCardMetric(card.id, $event)">
+                  @for (option of missionControlMetricOptions; track option.key) {
+                  <option [ngValue]="option.key">{{ option.label }}</option>
+                  }
+                </select>
+                <select class="mc-card-select small" [ngModel]="card.style"
+                  (ngModelChange)="updateMissionControlDraftCardStyle(card.id, $event)">
+                  @for (option of missionControlStyleOptions; track option.key) {
+                  <option [ngValue]="option.key">{{ option.label }}</option>
+                  }
+                </select>
+                <button type="button" class="mc-card-remove" (click)="removeMissionControlDraftCard(card.id)">
+                  Remove
+                </button>
+              </div>
+              } @else {
+              <p class="mc-stat-label">{{ card.name }}</p>
+              <p class="mc-stat-sub">{{ getMissionControlMetricLabel(card.metricKey) }}</p>
+              }
+            </div>
+
+            @if (card.style === 'circular') {
+            <div class="mc-card-body-circular">
+              <div class="mc-stat-content">
+                <p class="mc-stat-value">{{ card.valueText }}</p>
+                <p class="mc-stat-sub">{{ card.subtitle }}</p>
+              </div>
+              <div class="mc-stat-ring">
+                <svg viewBox="0 0 36 36" class="mc-ring-svg">
+                  <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path class="mc-ring-fill"
+                    [class.participants]="card.tone === 'participants'"
+                    [class.milestones]="card.tone === 'milestones'"
+                    [class.today]="card.tone === 'today'"
+                    [class.engagement]="card.tone === 'engagement'"
+                    [class.active]="card.tone === 'active'"
+                    [attr.stroke-dasharray]="card.percent + ', 100'"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+              </div>
+            </div>
+            } @else {
+            <div class="mc-progress-header">
+              <div class="mc-progress-label-row">
+                <span>{{ card.name }}</span>
+              </div>
+              <strong class="mc-progress-pct"
+                [class.today]="card.tone === 'today'"
+                [class.engagement]="card.tone === 'engagement'"
+                [class.participants]="card.tone === 'participants'"
+                [class.active]="card.tone === 'active'">{{ card.percentText }}</strong>
+            </div>
+            <div class="mc-progress-track">
+              <div class="mc-progress-fill"
+                [class.milestones]="card.tone === 'milestones'"
+                [class.today]="card.tone === 'today'"
+                [class.engagement]="card.tone === 'engagement'"
+                [class.participants]="card.tone === 'participants'"
+                [class.active]="card.tone === 'active'"
+                [style.width.%]="card.percent">
+                @if (card.percent > 8) {
+                <span class="mc-progress-text">{{ card.progressText }}</span>
+                }
+              </div>
+            </div>
+            <p class="mc-progress-footnote">{{ card.footnote }}</p>
+            }
+          </article>
+          }
+        </div>
+
+        @if (missionControlCardViews().length === 0) {
+        <p class="mc-empty-state">No Mission Control cards configured yet.</p>
+        }
       </section>
       }
 

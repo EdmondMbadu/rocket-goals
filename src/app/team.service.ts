@@ -4,6 +4,7 @@ import { firebaseConfig } from '../../environments/environment';
 import {
   CreateTeamInput,
   Team,
+  TeamMissionControlCard,
   TeamDirectMessage,
   TeamMemberActivitySnapshot,
   TeamMemberConversationPreview,
@@ -14,6 +15,51 @@ import { CreateRocketGoalInput } from './models/rocket-goal';
 @Injectable({ providedIn: 'root' })
 export class TeamService {
   private firestoreInstance?: Promise<Firestore>;
+
+  private buildDefaultMissionControlCards(): TeamMissionControlCard[] {
+    return [
+      { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
+      { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
+      { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
+      { id: 'mc-active-today', name: 'Active Today', style: 'circular', metricKey: 'active_today' },
+      { id: 'mc-overall-progress', name: 'Overall Milestone Progress', style: 'histogram', metricKey: 'overall_milestone_progress' },
+      { id: 'mc-today-rate', name: "Today's Execution Rate", style: 'histogram', metricKey: 'today_execution_rate' },
+      { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
+    ];
+  }
+
+  private normalizeMissionControlCards(cards?: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    const defaults = this.buildDefaultMissionControlCards();
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return defaults;
+    }
+
+    const allowedStyles = new Set<TeamMissionControlCard['style']>(['circular', 'histogram']);
+    const allowedMetrics = new Set<TeamMissionControlCard['metricKey']>([
+      'total_members',
+      'milestones_done',
+      'today_execution',
+      'active_today',
+      'overall_milestone_progress',
+      'today_execution_rate',
+      'team_engagement_rate'
+    ]);
+
+    const normalized = cards
+      .map((card, index) => {
+        const fallback = defaults[index % defaults.length];
+        const id = String(card?.id || '').trim() || `mc-${Date.now()}-${index}`;
+        const name = String(card?.name || '').trim() || fallback.name;
+        const styleCandidate = card?.style as TeamMissionControlCard['style'] | undefined;
+        const metricCandidate = card?.metricKey as TeamMissionControlCard['metricKey'] | undefined;
+        const style = styleCandidate && allowedStyles.has(styleCandidate) ? styleCandidate : fallback.style;
+        const metricKey = metricCandidate && allowedMetrics.has(metricCandidate) ? metricCandidate : fallback.metricKey;
+        return { id, name, style, metricKey } as TeamMissionControlCard;
+      })
+      .filter(card => !!card.id);
+
+    return normalized.length ? normalized : defaults;
+  }
 
   private getTimestampMillis(value: any): number | null {
     if (value === null || value === undefined) {
@@ -108,8 +154,10 @@ export class TeamService {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
     const collectionRef = fm.collection(firestore, 'teams');
+    const missionControlCards = this.normalizeMissionControlCards(payload.missionControlCards);
     const docRef = await fm.addDoc(collectionRef, {
       ...payload,
+      missionControlCards,
       createdAt: fm.serverTimestamp(),
       updatedAt: fm.serverTimestamp()
     });

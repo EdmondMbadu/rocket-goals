@@ -54,6 +54,24 @@ export interface TeamMemberActivitySnapshot {
   latestActivityAt: number | null;
 }
 
+export type TeamMissionControlCardStyle = 'circular' | 'histogram';
+
+export type TeamMissionControlMetricKey =
+  | 'total_members'
+  | 'milestones_done'
+  | 'today_execution'
+  | 'active_today'
+  | 'overall_milestone_progress'
+  | 'today_execution_rate'
+  | 'team_engagement_rate';
+
+export interface TeamMissionControlCard {
+  id: string;
+  name: string;
+  style: TeamMissionControlCardStyle;
+  metricKey: TeamMissionControlMetricKey;
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -65,6 +83,7 @@ export interface Team {
   members: TeamMember[];
   memberIds: string[];
   aiCoachEnabled: boolean;
+  missionControlCards?: TeamMissionControlCard[];
   telegramGroupId?: number;
   telegramGroupInviteLink?: string;
   telegramGroupTitle?: string;

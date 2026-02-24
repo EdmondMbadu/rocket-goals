@@ -9,6 +9,9 @@ import type {
   Team,
   TeamDirectMessage,
   TeamMember,
+  TeamMissionControlCard,
+  TeamMissionControlCardStyle,
+  TeamMissionControlMetricKey,
   TeamMemberActivitySnapshot,
   TeamMemberConversationPreview,
   TeamMessage
@@ -23,6 +26,53 @@ type InviteUserSuggestion = {
   email: string;
   profilePictureUrl?: string;
 };
+
+type MissionControlCardDisplay = TeamMissionControlCard & {
+  valueText: string;
+  subtitle: string;
+  percent: number;
+  percentText: string;
+  progressText: string;
+  footnote: string;
+  tone: 'participants' | 'milestones' | 'today' | 'engagement' | 'active';
+};
+
+type TeamMissionSummary = {
+  totalParticipants: number;
+  goalsStarted: number;
+  totalMilestones: number;
+  completedMilestones: number;
+  totalToday: number;
+  completedToday: number;
+  activeTodayCount: number;
+  completionPercent: number;
+  todayPercent: number;
+};
+
+const DEFAULT_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
+  { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
+  { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
+  { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
+  { id: 'mc-active-today', name: 'Active Today', style: 'circular', metricKey: 'active_today' },
+  { id: 'mc-overall-progress', name: 'Overall Milestone Progress', style: 'histogram', metricKey: 'overall_milestone_progress' },
+  { id: 'mc-today-rate', name: "Today's Execution Rate", style: 'histogram', metricKey: 'today_execution_rate' },
+  { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
+];
+
+const MISSION_CONTROL_METRIC_OPTIONS: Array<{ key: TeamMissionControlMetricKey; label: string }> = [
+  { key: 'total_members', label: 'Total Members' },
+  { key: 'milestones_done', label: 'Milestones Done' },
+  { key: 'today_execution', label: "Today's Execution" },
+  { key: 'active_today', label: 'Active Today' },
+  { key: 'overall_milestone_progress', label: 'Overall Milestone Progress' },
+  { key: 'today_execution_rate', label: "Today's Execution Rate" },
+  { key: 'team_engagement_rate', label: 'Team Engagement Rate' }
+];
+
+const MISSION_CONTROL_STYLE_OPTIONS: Array<{ key: TeamMissionControlCardStyle; label: string }> = [
+  { key: 'circular', label: 'Circular Graph' },
+  { key: 'histogram', label: 'Histogram' }
+];
 
 @Component({
   selector: 'app-team-detail',
@@ -116,6 +166,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   newMessage = '';
   directMessage = '';
   inviteEmailField = '';
+  newMissionControlCardName = '';
+  newMissionControlCardMetric: TeamMissionControlMetricKey = 'overall_milestone_progress';
+  newMissionControlCardStyle: TeamMissionControlCardStyle = 'histogram';
 
   private messagesLoadedForTeamId: string | null = null;
   private directConversationLoadedForTeamId: string | null = null;
@@ -124,6 +177,12 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private inviteSearchRequestId = 0;
   private linkedTeamGoalProfileKey: string | null = null;
   private directConversationPollInterval: ReturnType<typeof setInterval> | null = null;
+  missionControlCardsSaving = signal(false);
+  missionControlCardsError = signal<string | null>(null);
+  missionControlCardsSuccess = signal<string | null>(null);
+  missionControlCardsEditing = signal(false);
+  showAddMissionControlCardForm = signal(false);
+  missionControlDraftCards = signal<TeamMissionControlCard[]>([]);
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
   currentUserName = computed(() => {
@@ -149,7 +208,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   });
   canAccessDirectConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
+  canManageMissionControlCards = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
+  readonly missionControlMetricOptions = MISSION_CONTROL_METRIC_OPTIONS;
+  readonly missionControlStyleOptions = MISSION_CONTROL_STYLE_OPTIONS;
   summaryMembers = computed(() => {
     return (this.team()?.members || []).filter(member => member.role !== 'admin' && member.role !== 'coach');
   });
@@ -183,7 +245,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       activity: activityMap[member.userId] || null
     }));
   });
-  teamDirectSummary = computed(() => {
+  teamDirectSummary = computed<TeamMissionSummary>(() => {
     const rows = this.participantSummaryRows();
     const totalParticipants = this.team()?.members.length || rows.length;
     const goalsStarted = rows.filter(row => !!row.activity?.goalId || !!row.activity?.primaryGoal).length;
@@ -205,6 +267,16 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       completionPercent: Math.max(0, Math.min(100, completionPercent)),
       todayPercent: Math.max(0, Math.min(100, todayPercent))
     };
+  });
+  missionControlCards = computed(() => this.resolveMissionControlCards(this.team()?.missionControlCards));
+  renderedMissionControlCards = computed(() => {
+    return this.missionControlCardsEditing()
+      ? this.missionControlDraftCards()
+      : this.missionControlCards();
+  });
+  missionControlCardViews = computed<MissionControlCardDisplay[]>(() => {
+    const summary = this.teamDirectSummary();
+    return this.renderedMissionControlCards().map(card => this.buildMissionControlCardView(card, summary));
   });
   selectedConversationOverview = computed(() => {
     const member = this.activeDirectParticipant();
@@ -397,6 +469,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.participantSummaryLoadedKey = null;
       this.participantActivityMap.set({});
       this.participantSummaryError.set(null);
+      this.missionControlCardsEditing.set(false);
+      this.showAddMissionControlCardForm.set(false);
+      this.missionControlDraftCards.set([]);
+      this.missionControlCardsError.set(null);
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
@@ -520,6 +596,264 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   getParticipantActivity(memberUserId: string): TeamMemberActivitySnapshot | null {
     return this.participantActivityMap()[memberUserId] || null;
+  }
+
+  openMissionControlEditor() {
+    if (!this.canManageMissionControlCards()) {
+      return;
+    }
+    this.missionControlCardsError.set(null);
+    this.missionControlCardsSuccess.set(null);
+    this.showAddMissionControlCardForm.set(false);
+    this.newMissionControlCardName = '';
+    this.newMissionControlCardMetric = 'overall_milestone_progress';
+    this.newMissionControlCardStyle = 'histogram';
+    this.missionControlDraftCards.set(this.missionControlCards().map(card => ({ ...card })));
+    this.missionControlCardsEditing.set(true);
+  }
+
+  cancelMissionControlEditor() {
+    this.missionControlCardsEditing.set(false);
+    this.showAddMissionControlCardForm.set(false);
+    this.missionControlDraftCards.set([]);
+    this.newMissionControlCardName = '';
+  }
+
+  showAddMissionControlCard() {
+    if (!this.canManageMissionControlCards() || !this.missionControlCardsEditing()) {
+      return;
+    }
+    this.showAddMissionControlCardForm.set(true);
+    this.newMissionControlCardName = '';
+    this.newMissionControlCardMetric = 'overall_milestone_progress';
+    this.newMissionControlCardStyle = 'histogram';
+  }
+
+  cancelAddMissionControlCard() {
+    this.showAddMissionControlCardForm.set(false);
+    this.newMissionControlCardName = '';
+  }
+
+  addMissionControlCardToDraft() {
+    if (!this.missionControlCardsEditing()) {
+      return;
+    }
+    const fallbackLabel = this.getMissionControlMetricLabel(this.newMissionControlCardMetric);
+    const name = this.newMissionControlCardName.trim() || fallbackLabel;
+    const newCard: TeamMissionControlCard = {
+      id: this.createMissionControlCardId(),
+      name,
+      style: this.newMissionControlCardStyle,
+      metricKey: this.newMissionControlCardMetric
+    };
+    this.missionControlDraftCards.update(cards => [...cards, newCard]);
+    this.showAddMissionControlCardForm.set(false);
+    this.newMissionControlCardName = '';
+  }
+
+  updateMissionControlDraftCardName(cardId: string, name: string) {
+    this.missionControlDraftCards.update(cards => cards.map(card => (
+      card.id === cardId
+        ? { ...card, name }
+        : card
+    )));
+  }
+
+  updateMissionControlDraftCardMetric(cardId: string, metricKey: TeamMissionControlMetricKey) {
+    this.missionControlDraftCards.update(cards => cards.map(card => (
+      card.id === cardId ? { ...card, metricKey } : card
+    )));
+  }
+
+  updateMissionControlDraftCardStyle(cardId: string, style: TeamMissionControlCardStyle) {
+    this.missionControlDraftCards.update(cards => cards.map(card => (
+      card.id === cardId ? { ...card, style } : card
+    )));
+  }
+
+  removeMissionControlDraftCard(cardId: string) {
+    this.missionControlDraftCards.update(cards => cards.filter(card => card.id !== cardId));
+  }
+
+  async saveMissionControlCards() {
+    if (!this.canManageMissionControlCards() || this.missionControlCardsSaving()) {
+      return;
+    }
+    const team = this.team();
+    if (!team?.id) {
+      return;
+    }
+    const normalizedCards = this.normalizeMissionControlCards(this.missionControlDraftCards());
+    if (!normalizedCards.length) {
+      this.missionControlCardsError.set('Add at least one card before saving.');
+      return;
+    }
+    this.missionControlCardsSaving.set(true);
+    this.missionControlCardsError.set(null);
+    this.missionControlCardsSuccess.set(null);
+    try {
+      await this.teamService.updateTeam(team.id, { missionControlCards: normalizedCards });
+      this.team.update(current => current ? { ...current, missionControlCards: normalizedCards } : current);
+      this.missionControlCardsEditing.set(false);
+      this.showAddMissionControlCardForm.set(false);
+      this.missionControlDraftCards.set([]);
+      this.missionControlCardsSuccess.set('Mission Control cards updated.');
+    } catch (error) {
+      console.error('Failed to save Mission Control cards:', error);
+      this.missionControlCardsError.set('Unable to save Mission Control cards right now.');
+    } finally {
+      this.missionControlCardsSaving.set(false);
+    }
+  }
+
+  getMissionControlMetricLabel(metricKey: TeamMissionControlMetricKey): string {
+    return this.missionControlMetricOptions.find(option => option.key === metricKey)?.label || 'Custom Data Point';
+  }
+
+  private resolveMissionControlCards(cards: TeamMissionControlCard[] | undefined): TeamMissionControlCard[] {
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return DEFAULT_MISSION_CONTROL_CARDS.map(card => ({ ...card }));
+    }
+    return this.normalizeMissionControlCards(cards);
+  }
+
+  private normalizeMissionControlCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    const allowedStyles = new Set<TeamMissionControlCardStyle>(['circular', 'histogram']);
+    const allowedMetrics = new Set<TeamMissionControlMetricKey>([
+      'total_members',
+      'milestones_done',
+      'today_execution',
+      'active_today',
+      'overall_milestone_progress',
+      'today_execution_rate',
+      'team_engagement_rate'
+    ]);
+
+    return cards
+      .map((card, index) => {
+        const fallback = DEFAULT_MISSION_CONTROL_CARDS[index % DEFAULT_MISSION_CONTROL_CARDS.length];
+        const metricKey = allowedMetrics.has(card.metricKey) ? card.metricKey : fallback.metricKey;
+        const style = allowedStyles.has(card.style) ? card.style : fallback.style;
+        const name = String(card.name || '').trim() || this.getMissionControlMetricLabel(metricKey);
+        const id = String(card.id || '').trim() || `mc-${Date.now()}-${index}`;
+        return { id, name, style, metricKey } as TeamMissionControlCard;
+      })
+      .filter(card => !!card.id);
+  }
+
+  private createMissionControlCardId(): string {
+    return `mc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  private buildMissionControlCardView(
+    card: TeamMissionControlCard,
+    summary: TeamMissionSummary
+  ): MissionControlCardDisplay {
+    const totalMembers = summary.totalParticipants;
+    const engagementPercent = totalMembers > 0
+      ? Math.round((summary.goalsStarted / totalMembers) * 100)
+      : 0;
+    const activeTodayPercent = totalMembers > 0
+      ? Math.round((summary.activeTodayCount / totalMembers) * 100)
+      : 0;
+
+    switch (card.metricKey) {
+      case 'total_members':
+        return {
+          ...card,
+          tone: 'participants',
+          valueText: `${summary.totalParticipants}`,
+          subtitle: `${summary.goalsStarted} with active goals`,
+          percent: this.clampPercent(engagementPercent),
+          percentText: `${this.clampPercent(engagementPercent)}%`,
+          progressText: `${summary.goalsStarted} active`,
+          footnote: `${summary.goalsStarted} of ${summary.totalParticipants} members have started their goals`
+        };
+      case 'milestones_done':
+        return {
+          ...card,
+          tone: 'milestones',
+          valueText: `${summary.completedMilestones} / ${summary.totalMilestones}`,
+          subtitle: `${summary.completionPercent}% completion rate`,
+          percent: this.clampPercent(summary.completionPercent),
+          percentText: `${this.clampPercent(summary.completionPercent)}%`,
+          progressText: `${summary.completedMilestones} done`,
+          footnote: `${summary.completedMilestones} of ${summary.totalMilestones} milestones completed across all members`
+        };
+      case 'today_execution':
+        return {
+          ...card,
+          tone: 'today',
+          valueText: `${summary.completedToday} / ${summary.totalToday}`,
+          subtitle: `${summary.todayPercent}% done today`,
+          percent: this.clampPercent(summary.todayPercent),
+          percentText: `${this.clampPercent(summary.todayPercent)}%`,
+          progressText: `${summary.completedToday} done`,
+          footnote: `${summary.completedToday} of ${summary.totalToday} tasks completed today`
+        };
+      case 'active_today':
+        return {
+          ...card,
+          tone: 'active',
+          valueText: `${summary.activeTodayCount}`,
+          subtitle: 'members with tasks today',
+          percent: this.clampPercent(activeTodayPercent),
+          percentText: `${this.clampPercent(activeTodayPercent)}%`,
+          progressText: `${summary.activeTodayCount} members`,
+          footnote: `${summary.activeTodayCount} of ${summary.totalParticipants} members have tasks scheduled today`
+        };
+      case 'overall_milestone_progress':
+        return {
+          ...card,
+          tone: 'milestones',
+          valueText: `${summary.completionPercent}%`,
+          subtitle: `${summary.completedMilestones}/${summary.totalMilestones} milestones`,
+          percent: this.clampPercent(summary.completionPercent),
+          percentText: `${this.clampPercent(summary.completionPercent)}%`,
+          progressText: `${summary.completedMilestones} done`,
+          footnote: `${summary.completedMilestones} of ${summary.totalMilestones} milestones completed across all members`
+        };
+      case 'today_execution_rate':
+        return {
+          ...card,
+          tone: 'today',
+          valueText: `${summary.todayPercent}%`,
+          subtitle: `${summary.completedToday}/${summary.totalToday} tasks today`,
+          percent: this.clampPercent(summary.todayPercent),
+          percentText: `${this.clampPercent(summary.todayPercent)}%`,
+          progressText: `${summary.completedToday} done`,
+          footnote: `${summary.completedToday} of ${summary.totalToday} tasks completed today`
+        };
+      case 'team_engagement_rate':
+        return {
+          ...card,
+          tone: 'engagement',
+          valueText: `${this.clampPercent(engagementPercent)}%`,
+          subtitle: `${summary.goalsStarted}/${summary.totalParticipants} started`,
+          percent: this.clampPercent(engagementPercent),
+          percentText: `${this.clampPercent(engagementPercent)}%`,
+          progressText: `${summary.goalsStarted} active`,
+          footnote: `${summary.goalsStarted} of ${summary.totalParticipants} members have started their goals`
+        };
+      default:
+        return {
+          ...card,
+          tone: 'participants',
+          valueText: '0',
+          subtitle: 'No data',
+          percent: 0,
+          percentText: '0%',
+          progressText: '0',
+          footnote: 'No data'
+        };
+    }
+  }
+
+  private clampPercent(value: number): number {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round(value)));
   }
 
   private async loadParticipantActivitySummaries(teamId: string, members: TeamMember[]) {
