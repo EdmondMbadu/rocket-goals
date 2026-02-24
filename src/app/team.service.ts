@@ -607,42 +607,48 @@ export class TeamService {
       }
     }
 
-    const goalId = String(profileData?.['myOneThingGoalId'] || '').trim() || null;
-    if (!goalId) {
-      return {
-        memberUserId,
-        goalId: null,
-        primaryGoal: null,
-        missionDay: null,
-        totalDays: null,
-        completedMilestones: 0,
-        totalMilestones: 0,
-        completedToday: 0,
-        totalToday: 0,
-        latestMissionLogAt: null,
-        latestIgnitionAt: null,
-        latestMilestoneUpdateAt: null,
-        latestActivityAt: null
-      };
+    const emptySnapshot = (resolvedGoalId: string | null): TeamMemberActivitySnapshot => ({
+      memberUserId,
+      goalId: resolvedGoalId,
+      primaryGoal: null,
+      missionDay: null,
+      totalDays: null,
+      completedMilestones: 0,
+      totalMilestones: 0,
+      completedToday: 0,
+      totalToday: 0,
+      latestMissionLogAt: null,
+      latestIgnitionAt: null,
+      latestMilestoneUpdateAt: null,
+      latestActivityAt: null
+    });
+
+    const profileGoalId = String(profileData?.['myOneThingGoalId'] || '').trim();
+    const teamGoalId = String(team.rocketGoalId || '').trim() || `team-${teamId}`;
+
+    let goalId: string | null = profileGoalId || null;
+    let goalDoc: any = null;
+
+    if (teamGoalId) {
+      const teamGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', teamGoalId));
+      if (teamGoalDoc.exists()) {
+        goalId = teamGoalId;
+        goalDoc = teamGoalDoc;
+      }
     }
 
-    const goalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', goalId));
-    if (!goalDoc.exists()) {
-      return {
-        memberUserId,
-        goalId,
-        primaryGoal: null,
-        missionDay: null,
-        totalDays: null,
-        completedMilestones: 0,
-        totalMilestones: 0,
-        completedToday: 0,
-        totalToday: 0,
-        latestMissionLogAt: null,
-        latestIgnitionAt: null,
-        latestMilestoneUpdateAt: null,
-        latestActivityAt: null
-      };
+    if (!goalDoc && goalId) {
+      const selectedGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', goalId));
+      if (selectedGoalDoc.exists()) {
+        goalDoc = selectedGoalDoc;
+      }
+    }
+
+    if (!goalId) {
+      return emptySnapshot(null);
+    }
+    if (!goalDoc?.exists()) {
+      return emptySnapshot(goalId);
     }
 
     const goal = goalDoc.data() as Record<string, any>;

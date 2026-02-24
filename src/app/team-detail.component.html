@@ -246,7 +246,7 @@
         </svg>
         Chat
       </button>
-      @if (canManageParticipantConversations()) {
+      @if (canAccessDirectConversations()) {
       <button (click)="openDirectConversationsTab()" class="tab" [class.active]="activeTab() === 'direct'">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -534,23 +534,28 @@
     </div>
     }
 
-    @if (activeTab() === 'direct' && canManageParticipantConversations()) {
+    @if (activeTab() === 'direct' && canAccessDirectConversations()) {
     <div class="direct-workspace fade-in">
       <aside class="direct-members-panel glass">
         <div class="direct-panel-head">
+          @if (canManageParticipantConversations()) {
           <h3>Participant Conversations</h3>
           <p>Open a participant thread to coach and follow individual execution.</p>
+          } @else {
+          <h3>Private Coaching Thread</h3>
+          <p>This thread is only visible to you, team leads, and admins.</p>
+          }
         </div>
-        @if (loadingDirectConversations()) {
+        @if (loadingDirectConversations() && canManageParticipantConversations()) {
         <p class="muted tiny" style="margin: 0; padding: 10px 14px 0;">Loading threads...</p>
         }
 
-        @if (!participantMembers().length) {
+        @if (canManageParticipantConversations() && !participantMembers().length) {
         <div class="direct-empty">
           <p class="direct-empty-title">No participants yet</p>
           <p class="muted tiny">Invite members to unlock individual conversations.</p>
         </div>
-        } @else {
+        } @else if (canManageParticipantConversations()) {
         <div class="direct-member-list">
           @for (member of participantMembers(); track member.userId) {
           <button class="direct-member-item" type="button" (click)="selectParticipantConversation(member)"
@@ -573,6 +578,11 @@
           </button>
           }
         </div>
+        } @else {
+        <div class="direct-empty">
+          <p class="direct-empty-title">You are in your private thread</p>
+          <p class="muted tiny">Reply here to message your team lead and admin directly.</p>
+        </div>
         }
       </aside>
 
@@ -581,16 +591,18 @@
         <p class="alert-inline error">{{ directError() }}</p>
         }
 
-        @if (!selectedDirectMember()) {
+        @if (!activeDirectParticipant()) {
         <div class="direct-empty">
-          <p class="direct-empty-title">Select a participant</p>
-          <p class="muted tiny">Choose someone on the left to open their activity and direct thread.</p>
+          <p class="direct-empty-title">{{ canManageParticipantConversations() ? 'Select a participant' : 'Loading your private thread' }}</p>
+          <p class="muted tiny">
+            {{ canManageParticipantConversations() ? 'Choose someone on the left to open their activity and direct thread.' : 'Your private conversation will appear here in a moment.' }}
+          </p>
         </div>
         } @else {
         <div class="direct-chat-head">
           <div class="direct-chat-person">
-            <h3>{{ selectedDirectMember()!.firstName }} {{ selectedDirectMember()!.lastName }}</h3>
-            <p>{{ selectedDirectMember()!.email }}</p>
+            <h3>{{ activeDirectParticipant()!.firstName }} {{ activeDirectParticipant()!.lastName }}</h3>
+            <p>{{ activeDirectParticipant()!.email }}</p>
           </div>
           @if (loadingDirectActivity()) {
           <span class="muted tiny">Loading activity...</span>
@@ -643,7 +655,9 @@
           } @else if (directMessages().length === 0) {
           <div class="direct-empty">
             <p class="direct-empty-title">No direct messages yet</p>
-            <p class="muted tiny">Send the first message to kick off one-on-one coaching.</p>
+            <p class="muted tiny">
+              {{ canManageParticipantConversations() ? 'Send the first message to kick off one-on-one coaching.' : 'Your team lead or admin can message you here.' }}
+            </p>
           </div>
           } @else {
           @for (msg of directMessages(); track msg.id) {
@@ -673,7 +687,7 @@
         <p class="alert-inline error">{{ directSendError() }}</p>
         }
         <div class="chat-input-bar direct-input-bar">
-          <textarea [(ngModel)]="directMessage" placeholder="Type a private coaching message..."
+          <textarea [(ngModel)]="directMessage" [placeholder]="canManageParticipantConversations() ? 'Type a private coaching message...' : 'Reply privately to your team lead and admin...'"
             rows="1" (keydown.enter)="onDirectEnterKey($event)" class="chat-input"></textarea>
           <button (click)="sendDirectMessage()" [disabled]="!directMessage.trim() || sendingDirectMessage()" class="chat-send-btn">
             @if (sendingDirectMessage()) {

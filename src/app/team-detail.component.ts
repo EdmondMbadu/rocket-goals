@@ -119,6 +119,7 @@ export class TeamDetailComponent implements OnInit {
   private directConversationLoadedForTeamId: string | null = null;
   private inviteSearchTimeout: ReturnType<typeof setTimeout> | null = null;
   private inviteSearchRequestId = 0;
+  private linkedTeamGoalProfileKey: string | null = null;
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
   currentUserName = computed(() => {
@@ -130,27 +131,19 @@ export class TeamDetailComponent implements OnInit {
 
   isCurrentUserMember = computed(() => {
     const team = this.team();
-    const profile = this.authService.profile();
-    if (!team || !profile) return false;
-
-    const userEmail = this.normalizeEmail(profile.email);
-    if (team.memberIds.includes(profile.userId)) return true;
-
-    return team.members.some(member => {
-      if (member.userId === profile.userId) return true;
-      if (!userEmail) return false;
-      return this.normalizeEmail(member.email) === userEmail;
-    });
+    if (!team) return false;
+    return !!this.findCurrentUserTeamMember(team);
   });
 
   isAdmin = computed(() => this.team()?.adminId === this.currentUserId());
   isCurrentUserTeamLead = computed(() => {
-    const userId = this.currentUserId();
-    if (!userId) {
+    const team = this.team();
+    if (!team) {
       return false;
     }
-    return (this.team()?.members || []).some(member => member.userId === userId && member.role === 'team-lead');
+    return this.findCurrentUserTeamMember(team)?.role === 'team-lead';
   });
+  canAccessDirectConversations = computed(() => this.isCurrentUserMember());
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
   participantMembers = computed(() => {
@@ -159,12 +152,22 @@ export class TeamDetailComponent implements OnInit {
       .filter(member => member.userId !== currentUserId)
       .filter(member => member.role !== 'admin' && member.role !== 'coach');
   });
-  selectedDirectMember = computed(() => {
-    const selectedId = this.selectedDirectMemberUserId();
-    if (!selectedId) {
+  activeDirectParticipantUserId = computed(() => {
+    if (!this.canAccessDirectConversations()) {
       return null;
     }
-    return this.participantMembers().find(member => member.userId === selectedId) || null;
+    if (this.canManageParticipantConversations()) {
+      return this.selectedDirectMemberUserId();
+    }
+    const currentTeamMemberUserId = this.findCurrentUserTeamMember(this.team())?.userId;
+    return currentTeamMemberUserId || this.currentUserId() || null;
+  });
+  activeDirectParticipant = computed(() => {
+    const participantUserId = this.activeDirectParticipantUserId();
+    if (!participantUserId) {
+      return null;
+    }
+    return (this.team()?.members || []).find(member => member.userId === participantUserId) || null;
   });
 
   coverImageSrc = computed(() => {
@@ -190,12 +193,13 @@ export class TeamDetailComponent implements OnInit {
     effect(() => {
       const team = this.team();
       const isMember = this.isCurrentUserMember();
+      const canAccessDirectConversations = this.canAccessDirectConversations();
       const canManageParticipantConversations = this.canManageParticipantConversations();
 
       if (!isMember && this.activeTab() !== 'members') {
         this.activeTab.set('members');
       }
-      if (!canManageParticipantConversations && this.activeTab() === 'direct') {
+      if (!canAccessDirectConversations && this.activeTab() === 'direct') {
         this.activeTab.set('members');
       }
 
@@ -210,16 +214,36 @@ export class TeamDetailComponent implements OnInit {
         void this.loadMessages(team.id);
       }
 
+      const profile = this.authService.profile();
+      if (team?.id && isMember && profile?.userId && this.shouldLinkCurrentUserTeamGoal(team)) {
+        const teamGoalId = (this.teamRocketGoalId() || team.rocketGoalId || '').trim();
+        const linkedGoalId = (profile.myOneThingGoalId || '').trim();
+        const profileKey = `${team.id}|${profile.userId}|${teamGoalId}|${linkedGoalId}`;
+        if (this.linkedTeamGoalProfileKey !== profileKey) {
+          this.linkedTeamGoalProfileKey = profileKey;
+          void this.linkCurrentUserToTeamGoal(team.id);
+        }
+      } else {
+        this.linkedTeamGoalProfileKey = null;
+      }
+
       // Generate QR code when telegram group is connected
       if (team?.telegramGroupInviteLink) {
         void this.generateTelegramQr(team.telegramGroupInviteLink);
       }
 
-      if (team?.id && canManageParticipantConversations) {
-        const participants = this.participantMembers();
-        const selectedMemberId = this.selectedDirectMemberUserId();
-        if (!participants.some(member => member.userId === selectedMemberId)) {
-          this.selectedDirectMemberUserId.set(participants[0]?.userId || null);
+      if (team?.id && canAccessDirectConversations) {
+        if (canManageParticipantConversations) {
+          const participants = this.participantMembers();
+          const selectedMemberId = this.selectedDirectMemberUserId();
+          if (!participants.some(member => member.userId === selectedMemberId)) {
+            this.selectedDirectMemberUserId.set(participants[0]?.userId || null);
+          }
+        } else {
+          const ownParticipantId = this.findCurrentUserTeamMember(team)?.userId || this.currentUserId() || null;
+          this.selectedDirectMemberUserId.set(ownParticipantId);
+          this.directConversationPreviews.set([]);
+          this.directConversationLoadedForTeamId = null;
         }
       } else {
         this.selectedDirectMemberUserId.set(null);
@@ -247,13 +271,10 @@ export class TeamDetailComponent implements OnInit {
 
     effect(() => {
       const isDirectTab = this.activeTab() === 'direct';
-      const canManageParticipantConversations = this.canManageParticipantConversations();
+      const canAccessDirectConversations = this.canAccessDirectConversations();
       const teamId = this.team()?.id;
-      const selectedMemberId = this.selectedDirectMemberUserId();
-      if (!isDirectTab || !canManageParticipantConversations || !teamId) {
-        return;
-      }
-      if (!selectedMemberId) {
+      const participantUserId = this.activeDirectParticipantUserId();
+      if (!isDirectTab || !canAccessDirectConversations || !teamId || !participantUserId) {
         return;
       }
       void this.loadSelectedParticipantConversation();
@@ -262,7 +283,7 @@ export class TeamDetailComponent implements OnInit {
     effect(() => {
       const isDirectTab = this.activeTab() === 'direct';
       const messageCount = this.directMessages().length;
-      if (!isDirectTab || !this.canManageParticipantConversations()) {
+      if (!isDirectTab || !this.canAccessDirectConversations()) {
         return;
       }
       if (messageCount === 0) {
@@ -350,14 +371,19 @@ export class TeamDetailComponent implements OnInit {
   }
 
   openDirectConversationsTab() {
-    if (!this.canManageParticipantConversations()) {
+    if (!this.canAccessDirectConversations()) {
       return;
     }
     this.activeTab.set('direct');
-    const selectedMember = this.selectedDirectMemberUserId();
-    const participants = this.participantMembers();
-    if (!selectedMember && participants.length) {
-      this.selectedDirectMemberUserId.set(participants[0].userId);
+    if (this.canManageParticipantConversations()) {
+      const selectedMember = this.selectedDirectMemberUserId();
+      const participants = this.participantMembers();
+      if (!selectedMember && participants.length) {
+        this.selectedDirectMemberUserId.set(participants[0].userId);
+      }
+    } else {
+      const ownParticipantId = this.findCurrentUserTeamMember(this.team())?.userId || this.currentUserId() || null;
+      this.selectedDirectMemberUserId.set(ownParticipantId);
     }
   }
 
@@ -427,14 +453,17 @@ export class TeamDetailComponent implements OnInit {
 
   private async loadSelectedParticipantConversation() {
     const teamId = this.team()?.id;
-    const memberUserId = this.selectedDirectMemberUserId();
-    if (!teamId || !memberUserId || !this.canManageParticipantConversations()) {
+    const participantUserId = this.activeDirectParticipantUserId();
+    const canManageParticipantConversations = this.canManageParticipantConversations();
+    if (!teamId || !participantUserId || !this.canAccessDirectConversations()) {
       return;
     }
 
-    const participantIds = this.participantMembers().map(member => member.userId);
-    if (this.directConversationLoadedForTeamId !== teamId) {
-      await this.loadDirectConversationPreviews(teamId, participantIds);
+    if (canManageParticipantConversations) {
+      const participantIds = this.participantMembers().map(member => member.userId);
+      if (this.directConversationLoadedForTeamId !== teamId) {
+        await this.loadDirectConversationPreviews(teamId, participantIds);
+      }
     }
 
     this.loadingDirectMessages.set(true);
@@ -442,8 +471,8 @@ export class TeamDetailComponent implements OnInit {
     this.directError.set(null);
     try {
       const [messages, activity] = await Promise.all([
-        this.teamService.getDirectMessages(teamId, memberUserId),
-        this.teamService.getMemberActivitySnapshot(teamId, memberUserId)
+        this.teamService.getDirectMessages(teamId, participantUserId),
+        this.teamService.getMemberActivitySnapshot(teamId, participantUserId)
       ]);
       this.directMessages.set(messages);
       this.selectedDirectMemberActivity.set(activity);
@@ -462,12 +491,13 @@ export class TeamDetailComponent implements OnInit {
   async sendDirectMessage() {
     const content = this.directMessage.trim();
     const teamId = this.team()?.id;
-    const participantUserId = this.selectedDirectMemberUserId();
+    const participantUserId = this.activeDirectParticipantUserId();
     const profile = this.authService.profile();
-    if (!content || !teamId || !participantUserId || !profile || !this.canManageParticipantConversations()) {
+    if (!content || !teamId || !participantUserId || !profile || !this.canAccessDirectConversations()) {
       return;
     }
 
+    const canManageParticipantConversations = this.canManageParticipantConversations();
     this.sendingDirectMessage.set(true);
     this.directSendError.set(null);
     this.directMessage = '';
@@ -481,7 +511,9 @@ export class TeamDetailComponent implements OnInit {
         source: 'web'
       });
       await this.loadSelectedParticipantConversation();
-      await this.loadDirectConversationPreviews(teamId, this.participantMembers().map(member => member.userId));
+      if (canManageParticipantConversations) {
+        await this.loadDirectConversationPreviews(teamId, this.participantMembers().map(member => member.userId));
+      }
     } catch (err) {
       console.error('Failed to send direct message:', err);
       this.directSendError.set('Unable to send message right now.');
@@ -682,6 +714,7 @@ export class TeamDetailComponent implements OnInit {
     const teamName = team.name;
     try {
       await this.teamService.removeMemberFromTeam(team.id, userId);
+      await this.authService.refreshProfile().catch(() => null);
       this.messages.set([]);
       this.messagesLoadedForTeamId = null;
       await this.loadTeam(team.id);
@@ -894,6 +927,9 @@ export class TeamDetailComponent implements OnInit {
     }
 
     if (this.isCurrentUserMember()) {
+      if (this.shouldLinkCurrentUserTeamGoal(team)) {
+        await this.linkCurrentUserToTeamGoal(team.id);
+      }
       if (showMessage) {
         this.joinSuccess.set(`You are already in ${team.name}.`);
       }
@@ -915,6 +951,7 @@ export class TeamDetailComponent implements OnInit {
       });
 
       await this.loadTeam(team.id);
+      await this.linkCurrentUserToTeamGoal(team.id);
       if (showMessage) {
         this.joinSuccess.set(`You are in. Welcome to ${this.team()?.name || 'the team'}!`);
       }
@@ -925,6 +962,36 @@ export class TeamDetailComponent implements OnInit {
       return false;
     } finally {
       this.joiningTeam.set(false);
+    }
+  }
+
+  private async linkCurrentUserToTeamGoal(teamId: string): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      return;
+    }
+
+    let goalId = (this.teamRocketGoalId() || this.team()?.rocketGoalId || '').trim();
+    if (!goalId) {
+      try {
+        goalId = (await this.teamService.ensureTeamRocketGoal(teamId)).trim();
+        if (goalId) {
+          this.teamRocketGoalId.set(goalId);
+        }
+      } catch (error) {
+        console.warn('Unable to ensure team goal while linking member profile:', error);
+        return;
+      }
+    }
+
+    if (!goalId || (profile.myOneThingGoalId || '').trim() === goalId) {
+      return;
+    }
+
+    try {
+      await this.authService.updateUserProfile({ myOneThingGoalId: goalId });
+    } catch (error) {
+      console.warn('Unable to link member profile to team goal:', error);
     }
   }
 
@@ -1399,6 +1466,31 @@ export class TeamDetailComponent implements OnInit {
 
   private normalizeEmail(email: string | null | undefined): string {
     return (email || '').trim().toLowerCase();
+  }
+
+  private shouldLinkCurrentUserTeamGoal(team: Team | null): boolean {
+    if (!team) {
+      return false;
+    }
+    const matchingMember = this.findCurrentUserTeamMember(team);
+    return matchingMember?.role === 'member' || matchingMember?.role === 'team-lead';
+  }
+
+  private findCurrentUserTeamMember(team: Team | null): TeamMember | null {
+    const profile = this.authService.profile();
+    if (!team || !profile) {
+      return null;
+    }
+    const normalizedEmail = this.normalizeEmail(profile.email);
+    return (team.members || []).find(member => {
+      if (!!profile.userId && member.userId === profile.userId) {
+        return true;
+      }
+      if (!normalizedEmail) {
+        return false;
+      }
+      return this.normalizeEmail(member.email) === normalizedEmail;
+    }) || null;
   }
 
   private resetInviteSearchState() {
