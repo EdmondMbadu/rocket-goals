@@ -483,6 +483,137 @@
   font-weight: 600;
 }
 
+.team-welcome-card {
+  width: 100%;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(56, 189, 248, 0.16), transparent 48%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.72));
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  box-shadow: 0 12px 28px rgba(14, 116, 144, 0.2);
+}
+
+.team-welcome-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-welcome-kicker {
+  margin: 0;
+  color: #bae6fd;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.team-welcome-edit {
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  background: rgba(14, 116, 144, 0.22);
+  color: #bae6fd;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.team-welcome-edit:hover {
+  background: rgba(14, 116, 144, 0.34);
+  border-color: rgba(125, 211, 252, 0.75);
+}
+
+.team-welcome-text,
+.team-welcome-empty {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.team-welcome-text {
+  color: #e0f2fe;
+  white-space: pre-line;
+}
+
+.team-welcome-empty {
+  color: #7dd3fc;
+  opacity: 0.86;
+}
+
+.team-welcome-edit-wrap {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.team-welcome-input {
+  width: 100%;
+  border-radius: 10px;
+  padding: 9px 11px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  background: rgba(2, 6, 23, 0.5);
+  color: #f8fafc;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 84px;
+  outline: none;
+}
+
+.team-welcome-input:focus {
+  border-color: rgba(125, 211, 252, 0.58);
+  box-shadow: 0 0 0 2px rgba(14, 116, 144, 0.2);
+}
+
+.team-welcome-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-welcome-save,
+.team-welcome-cancel {
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.team-welcome-save {
+  color: #e0f2fe;
+  background: rgba(14, 116, 144, 0.32);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.team-welcome-cancel {
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.team-welcome-save:disabled,
+.team-welcome-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.team-welcome-error {
+  margin: 6px 0 0;
+  color: #bae6fd;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* ===== Status Alerts ===== */
 .status-stack {
   display: grid;
@@ -1834,6 +1965,48 @@
   color: #dc2626;
 }
 
+.light-mode .team-welcome-card {
+  background:
+    radial-gradient(circle at 88% 10%, rgba(56, 189, 248, 0.16), transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(248, 250, 252, 0.99));
+  border-color: rgba(14, 116, 144, 0.22);
+  box-shadow: 0 12px 26px rgba(14, 116, 144, 0.12);
+}
+
+.light-mode .team-welcome-kicker {
+  color: #075985;
+}
+
+.light-mode .team-welcome-edit {
+  color: #075985;
+  background: rgba(14, 116, 144, 0.09);
+  border-color: rgba(14, 116, 144, 0.32);
+}
+
+.light-mode .team-welcome-text {
+  color: #0f172a;
+}
+
+.light-mode .team-welcome-empty {
+  color: #0369a1;
+}
+
+.light-mode .team-welcome-input {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(14, 116, 144, 0.22);
+}
+
+.light-mode .team-welcome-cancel {
+  color: #334155;
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+.light-mode .team-welcome-error {
+  color: #0369a1;
+}
+
 .light-mode .alert-banner.success {
   color: #166534;
   background: #f0fdf4;
@@ -2273,6 +2446,10 @@
   }
 
   .team-countdown-card {
+    width: 100%;
+  }
+
+  .team-welcome-card {
     width: 100%;
   }
 

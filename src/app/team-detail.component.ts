@@ -110,6 +110,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   teamDeadlineInputValue = signal('');
   teamDeadlineError = signal<string | null>(null);
   savingTeamDeadline = signal(false);
+  teamWelcomeEditing = signal(false);
+  teamWelcomeDraft = signal('');
+  teamWelcomeError = signal<string | null>(null);
+  savingTeamWelcome = signal(false);
   activeTab = signal<'members' | 'chat' | 'direct'>('members');
   messages = signal<TeamMessage[]>([]);
   directMessages = signal<TeamDirectMessage[]>([]);
@@ -230,6 +234,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const role = this.currentUserTeamMember()?.role;
     return role === 'coach' || role === 'captain' || role === 'team-lead';
   });
+  canEditTeamWelcome = computed(() => this.canManageTeamInvites());
   canEditTeamDeadline = computed(() => this.canManageTeamInvites() && !!this.teamGoal()?.id);
   canAccessDirectConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
@@ -493,6 +498,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       const resolvedGoalId = (team?.rocketGoalId || '').trim() || null;
       this.teamRocketGoalId.set(resolvedGoalId);
       void this.loadTeamGoal(resolvedGoalId);
+      this.teamWelcomeEditing.set(false);
+      this.teamWelcomeError.set(null);
       this.directConversationLoadedForTeamId = null;
       this.participantSummaryLoadedKey = null;
       this.participantActivityMap.set({});
@@ -510,6 +517,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.teamGoal.set(null);
       this.teamDeadlineEditing.set(false);
       this.teamDeadlineError.set(null);
+      this.teamWelcomeEditing.set(false);
+      this.teamWelcomeError.set(null);
       this.stopTeamCountdown();
       this.setTeamCountdownValues(0, 0, 0, 0);
     } finally {
@@ -728,6 +737,53 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const dayMs = 24 * 60 * 60 * 1000;
     const diffDays = Math.ceil((deadlineTimestamp - startTime) / dayMs);
     return Math.max(1, diffDays);
+  }
+
+  startEditingTeamWelcome(): void {
+    if (!this.canEditTeamWelcome()) {
+      return;
+    }
+    const team = this.team();
+    if (!team?.id) {
+      return;
+    }
+    this.teamWelcomeDraft.set(String(team.welcomeMessage || ''));
+    this.teamWelcomeError.set(null);
+    this.teamWelcomeEditing.set(true);
+  }
+
+  cancelEditingTeamWelcome(): void {
+    this.teamWelcomeEditing.set(false);
+    this.teamWelcomeError.set(null);
+  }
+
+  async saveTeamWelcome(): Promise<void> {
+    if (!this.canEditTeamWelcome()) {
+      return;
+    }
+    const team = this.team();
+    if (!team?.id) {
+      return;
+    }
+
+    const nextMessage = this.teamWelcomeDraft().trim();
+    if (nextMessage.length > 320) {
+      this.teamWelcomeError.set('Welcome message should stay under 320 characters.');
+      return;
+    }
+
+    this.savingTeamWelcome.set(true);
+    this.teamWelcomeError.set(null);
+    try {
+      await this.teamService.updateTeam(team.id, { welcomeMessage: nextMessage } as Partial<Team>);
+      this.team.update(current => (current ? { ...current, welcomeMessage: nextMessage } : current));
+      this.teamWelcomeEditing.set(false);
+    } catch (error) {
+      console.error('Failed to save welcome message:', error);
+      this.teamWelcomeError.set('Could not save welcome message right now.');
+    } finally {
+      this.savingTeamWelcome.set(false);
+    }
   }
 
   async saveTeamDeadline(): Promise<void> {

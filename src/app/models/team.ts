@@ -76,6 +76,7 @@ export interface Team {
   id: string;
   name: string;
   description?: string;
+  welcomeMessage?: string;
   avatarUrl?: string;
   coverImageUrl?: string;
   rocketGoalId?: string;
