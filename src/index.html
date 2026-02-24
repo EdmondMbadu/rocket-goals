@@ -83,9 +83,75 @@
     gtag('js', new Date());
     gtag('config', 'G-6HCB340LRG');
   </script>
+  <script>
+    document.documentElement.classList.add('js');
+  </script>
+  <style>
+    #app-bootstrap-splash {
+      display: none;
+    }
+
+    html.js #app-bootstrap-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: #020617;
+      color: #f8fafc;
+      z-index: 2147483647;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    html.js #app-bootstrap-splash__logo {
+      width: 68px;
+      height: 68px;
+      object-fit: contain;
+    }
+
+    html.js #app-bootstrap-splash__spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(248, 250, 252, 0.24);
+      border-top-color: #f8fafc;
+      border-radius: 50%;
+      animation: app-bootstrap-spin 0.8s linear infinite;
+    }
+
+    html.js #app-bootstrap-splash__text {
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      opacity: 0.92;
+    }
+
+    html.js #seo-static-content {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes app-bootstrap-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 <body>
   <app-root>
+    <div id="app-bootstrap-splash" aria-hidden="true">
+      <img id="app-bootstrap-splash__logo" src="/assets/rocket-goals.png" alt="" />
+      <div id="app-bootstrap-splash__spinner"></div>
+      <p id="app-bootstrap-splash__text">Loading RocketGoals...</p>
+    </div>
     <main id="seo-static-content" aria-label="RocketGoals overview">
       <h1>RocketGoals: Goal Setting, Habit Tracking, and AI Coaching</h1>
       <p>
