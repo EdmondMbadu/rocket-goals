@@ -4,12 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
 import { AuthService } from './auth.service';
+import { TeamService } from './team.service';
 import type { RocketGoal, RocketGoalCopilot } from './models/rocket-goal';
 import type { TeamDirectMessage } from './models/team';
 
 type DisplayChatMessage = ChatMessage & {
   source?: 'ai' | 'team-direct';
   sourceId?: string;
+  senderName?: string;
+  senderAvatarUrl?: string;
+  privateMessage?: boolean;
 };
 
 @Component({
@@ -22,6 +26,8 @@ type DisplayChatMessage = ChatMessage & {
 export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChanges, OnDestroy {
   @Input() goalContext: RocketGoal | null = null;
   @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
+  @Input() teamContextId: string | null = null;
+  @Input() teamParticipantUserId: string | null = null;
   @Input()
   set teamDirectMessages(value: TeamDirectMessage[] | null | undefined) {
     this.teamDirectMessagesInput.set(value || []);
@@ -32,6 +38,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   private readonly aiService = inject(RocketGoalsAIService);
   private readonly authService = inject(AuthService);
+  private readonly teamService = inject(TeamService);
   private readonly router = inject(Router);
 
   readonly isOpen = this.aiService.isOpen;
@@ -47,19 +54,21 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     const currentUserId = this.authService.profile()?.userId || '';
     const directMessages = this.teamDirectMessagesInput()
       .filter(message => !!message?.content?.trim())
+      .filter(message => message.senderId !== currentUserId)
+      .filter(message => message.senderId !== 'rocket-ai')
       .map(message => {
         const timestampMs = this.getTimestampMillis(message.timestamp) ?? Date.now();
-        const isMine = !!currentUserId && message.senderId === currentUserId;
         const sourceId = message.id || `team-${message.senderId}-${timestampMs}`;
-        const role: ChatMessage['role'] = isMine ? 'user' : 'model';
+        const role: ChatMessage['role'] = 'model';
         return {
           role,
-          content: isMine
-            ? message.content
-            : `Private message from ${message.senderName}: ${message.content}`,
+          content: message.content,
           timestamp: new Date(timestampMs),
           source: 'team-direct' as const,
-          sourceId
+          sourceId,
+          senderName: message.senderName,
+          senderAvatarUrl: message.senderAvatarUrl,
+          privateMessage: true
         };
       });
 
@@ -460,8 +469,10 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
         attachmentContext.length > 0 ? attachmentContext : undefined
       );
       // Check if result contains side effects (calendar actions, etc.)
+      let aiResponseText = '';
       if (typeof result === 'object' && result !== null && 'response' in result) {
         // Add response with typewriter effect
+        aiResponseText = result.response;
         this.addMessageWithTypewriter(result.response);
         // If side effects occurred, notify parent to refresh calendar
         if (result.sideEffects && result.sideEffects.length > 0) {
@@ -473,8 +484,11 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
         }
       } else {
         // Result is just a string (no side effects)
+        aiResponseText = result;
         this.addMessageWithTypewriter(result);
       }
+
+      void this.mirrorToTeamDirectConversation(finalMessage, aiResponseText);
 
       // After message is successfully sent, reset preventAutoSelect if this was an auto-launch
       // This allows normal session loading for future interactions
@@ -816,6 +830,29 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     return this.copiedMessageId() === message.timestamp.getTime();
   }
 
+  isPrivateTeamMessage(message: DisplayChatMessage): boolean {
+    return message.source === 'team-direct' && !!message.privateMessage;
+  }
+
+  getMessageSenderName(message: DisplayChatMessage): string {
+    if (this.isPrivateTeamMessage(message)) {
+      return message.senderName?.trim() || 'Team Lead';
+    }
+    return this.copilot()?.name || 'Mission Control AI';
+  }
+
+  getMessageSenderInitials(message: DisplayChatMessage): string {
+    const name = this.getMessageSenderName(message);
+    const tokens = name.trim().split(/\s+/).filter(Boolean);
+    if (!tokens.length) {
+      return 'T';
+    }
+    if (tokens.length === 1) {
+      return tokens[0].charAt(0).toUpperCase();
+    }
+    return `${tokens[0].charAt(0)}${tokens[tokens.length - 1].charAt(0)}`.toUpperCase();
+  }
+
   private getTimestampMillis(value: any): number | null {
     if (value === null || value === undefined) {
       return null;
@@ -843,6 +880,72 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     }
     const parsed = Date.parse(String(value));
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private resolveTeamContext(goalContext?: RocketGoal | null): { teamId: string; participantUserId: string } | null {
+    const profile = this.authService.profile();
+    const explicitParticipantUserId = (this.teamParticipantUserId || '').trim();
+    const participantUserId = explicitParticipantUserId || (profile?.userId || '').trim();
+    if (!participantUserId) {
+      return null;
+    }
+
+    const goal = goalContext || this.goalContext;
+    if (!goal) {
+      return null;
+    }
+
+    const answerTeamId = typeof goal.answers?.['teamId'] === 'string' ? goal.answers['teamId'].trim() : '';
+    const deterministicTeamId = typeof goal.id === 'string' && goal.id.startsWith('team-')
+      ? goal.id.slice('team-'.length).trim()
+      : '';
+    const explicitTeamId = (this.teamContextId || '').trim();
+    const teamId = explicitTeamId || answerTeamId || deterministicTeamId;
+    if (!teamId) {
+      return null;
+    }
+
+    return { teamId, participantUserId };
+  }
+
+  private async mirrorToTeamDirectConversation(userMessage: string, aiResponse: string): Promise<void> {
+    const context = this.resolveTeamContext(this.goalContext);
+    const profile = this.authService.profile();
+    if (!context || !profile?.userId) {
+      return;
+    }
+
+    const senderName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email || 'Member';
+    try {
+      const userContent = userMessage.trim();
+      if (!userContent) {
+        return;
+      }
+      await this.teamService.sendDirectMessage(context.teamId, context.participantUserId, {
+        senderId: profile.userId,
+        senderName,
+        senderAvatarUrl: profile.profilePictureUrl,
+        content: userContent,
+        type: 'text',
+        source: 'web'
+      });
+
+      const aiContent = aiResponse.trim();
+      if (!aiContent) {
+        return;
+      }
+      const aiSenderName = this.copilot()?.name || 'Rocket AI';
+      await this.teamService.sendDirectMessage(context.teamId, context.participantUserId, {
+        senderId: 'rocket-ai',
+        senderName: aiSenderName,
+        senderAvatarUrl: this.copilot()?.avatar,
+        content: aiContent,
+        type: 'text',
+        source: 'web'
+      });
+    } catch (error) {
+      console.warn('Unable to mirror AI chat into team direct conversation:', error);
+    }
   }
 
   private scrollToBottom(): void {

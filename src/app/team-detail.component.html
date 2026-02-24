@@ -622,12 +622,12 @@
               } @else if (msg.senderAvatarUrl) {
               <img [src]="msg.senderAvatarUrl" class="msg-avatar-img" />
               } @else {
-              <div class="msg-avatar-fallback">{{ msg.senderName.charAt(0) }}</div>
+              <div class="msg-avatar-fallback">{{ (msg.senderName || '?').charAt(0) }}</div>
               }
             </div>
             <div class="msg-content">
               <div class="msg-meta">
-                <span class="msg-sender" [class.msg-sender-ai]="msg.type === 'ai-response'">{{ msg.senderName }}</span>
+                <span class="msg-sender" [class.msg-sender-ai]="msg.type === 'ai-response'">{{ msg.senderName || 'Unknown sender' }}</span>
                 <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
               </div>
               <div class="msg-bubble" [class.msg-bubble-mine]="msg.senderId === currentUserId()"
@@ -828,12 +828,12 @@
               @if (msg.senderAvatarUrl) {
               <img [src]="msg.senderAvatarUrl" class="msg-avatar-img" />
               } @else {
-              <div class="msg-avatar-fallback">{{ msg.senderName.charAt(0) }}</div>
+              <div class="msg-avatar-fallback">{{ (msg.senderName || '?').charAt(0) }}</div>
               }
             </div>
             <div class="msg-content">
               <div class="msg-meta">
-                <span class="msg-sender">{{ msg.senderName }}</span>
+                <span class="msg-sender">{{ msg.senderName || 'Unknown sender' }}</span>
                 <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
               </div>
               <div class="msg-bubble" [class.msg-bubble-mine]="msg.senderId === currentUserId()">

@@ -85,6 +85,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   goal = signal<RocketGoal | null>(null);
   teamContextId = signal<string | null>(null);
   teamContext = signal<Team | null>(null);
+  teamParticipantUserId = signal<string | null>(null);
   teamGoalCollaborator = signal(false);
   teamDirectMessages = signal<TeamDirectMessage[]>([]);
   loading = signal(true);
@@ -2226,6 +2227,7 @@ ${url}`;
 
     if (!normalizedTeamId) {
       this.teamContext.set(null);
+      this.teamParticipantUserId.set(null);
       this.teamGoalCollaborator.set(false);
       this.teamDirectMessages.set([]);
       return;
@@ -2251,13 +2253,16 @@ ${url}`;
       this.teamGoalCollaborator.set(isMember);
       const participantUserId = matchingMember?.userId || (isMember ? (profile?.userId || null) : null);
       if (isMember && participantUserId) {
+        this.teamParticipantUserId.set(participantUserId);
         await this.loadTeamDirectMessagesForMember(normalizedTeamId, participantUserId);
       } else {
+        this.teamParticipantUserId.set(null);
         this.teamDirectMessages.set([]);
       }
     } catch (error) {
       console.error('Error loading linked team for goal:', error);
       this.teamContext.set(null);
+      this.teamParticipantUserId.set(null);
       this.teamGoalCollaborator.set(false);
       this.teamDirectMessages.set([]);
     }

@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -31,7 +31,7 @@ type InviteUserSuggestion = {
   templateUrl: './team-detail.component.html',
   styleUrl: './team-detail.component.css'
 })
-export class TeamDetailComponent implements OnInit {
+export class TeamDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private teamService = inject(TeamService);
@@ -123,6 +123,7 @@ export class TeamDetailComponent implements OnInit {
   private inviteSearchTimeout: ReturnType<typeof setTimeout> | null = null;
   private inviteSearchRequestId = 0;
   private linkedTeamGoalProfileKey: string | null = null;
+  private directConversationPollInterval: ReturnType<typeof setInterval> | null = null;
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
   currentUserName = computed(() => {
@@ -343,9 +344,11 @@ export class TeamDetailComponent implements OnInit {
       const teamId = this.team()?.id;
       const participantUserId = this.activeDirectParticipantUserId();
       if (!isDirectTab || !canAccessDirectConversations || !teamId || !participantUserId) {
+        this.stopDirectConversationPolling();
         return;
       }
       void this.loadSelectedParticipantConversation();
+      this.startDirectConversationPolling();
     });
 
     effect(() => {
@@ -377,6 +380,11 @@ export class TeamDetailComponent implements OnInit {
     if (verified === '1' || verified === 'true') {
       await this.completeEmailVerificationAndJoin(true);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.stopDirectConversationPolling();
+    this.stopTelegramLinkPolling();
   }
 
   private async loadTeam(teamId: string) {
@@ -558,25 +566,48 @@ export class TeamDetailComponent implements OnInit {
     }
   }
 
-  private async loadSelectedParticipantConversation() {
+  private startDirectConversationPolling() {
+    if (this.directConversationPollInterval) {
+      return;
+    }
+
+    this.directConversationPollInterval = setInterval(() => {
+      if (this.activeTab() !== 'direct' || !this.canAccessDirectConversations()) {
+        this.stopDirectConversationPolling();
+        return;
+      }
+      void this.refreshActiveDirectConversation(false);
+    }, 4000);
+  }
+
+  private stopDirectConversationPolling() {
+    if (this.directConversationPollInterval) {
+      clearInterval(this.directConversationPollInterval);
+      this.directConversationPollInterval = null;
+    }
+  }
+
+  private async refreshActiveDirectConversation(showLoading: boolean): Promise<void> {
     const teamId = this.team()?.id;
     const participantUserId = this.activeDirectParticipantUserId();
     const canManageParticipantConversations = this.canManageParticipantConversations();
     if (!teamId || !participantUserId || !this.canAccessDirectConversations()) {
       return;
     }
-
-    if (canManageParticipantConversations) {
-      const participantIds = this.participantMembers().map(member => member.userId);
-      if (this.directConversationLoadedForTeamId !== teamId) {
-        await this.loadDirectConversationPreviews(teamId, participantIds);
-      }
+    if (showLoading) {
+      this.loadingDirectMessages.set(true);
+      this.loadingDirectActivity.set(true);
+      this.directError.set(null);
     }
 
-    this.loadingDirectMessages.set(true);
-    this.loadingDirectActivity.set(true);
-    this.directError.set(null);
     try {
+      if (canManageParticipantConversations) {
+        const participantIds = this.participantMembers().map(member => member.userId);
+        if (this.directConversationLoadedForTeamId !== teamId) {
+          await this.loadDirectConversationPreviews(teamId, participantIds);
+        }
+      }
+
       const [messages, activity] = await Promise.all([
         this.teamService.getDirectMessages(teamId, participantUserId),
         this.teamService.getMemberActivitySnapshot(teamId, participantUserId)
@@ -590,13 +621,21 @@ export class TeamDetailComponent implements OnInit {
       this.scrollDirectToBottom();
     } catch (err) {
       console.error('Failed to load participant conversation:', err);
-      this.directError.set('Unable to load this participant conversation right now.');
-      this.directMessages.set([]);
-      this.selectedDirectMemberActivity.set(null);
+      if (showLoading) {
+        this.directError.set('Unable to load this participant conversation right now.');
+        this.directMessages.set([]);
+        this.selectedDirectMemberActivity.set(null);
+      }
     } finally {
-      this.loadingDirectMessages.set(false);
-      this.loadingDirectActivity.set(false);
+      if (showLoading) {
+        this.loadingDirectMessages.set(false);
+        this.loadingDirectActivity.set(false);
+      }
     }
+  }
+
+  private async loadSelectedParticipantConversation() {
+    await this.refreshActiveDirectConversation(true);
   }
 
   async sendDirectMessage() {
@@ -621,7 +660,7 @@ export class TeamDetailComponent implements OnInit {
         type: 'text',
         source: 'web'
       });
-      await this.loadSelectedParticipantConversation();
+      await this.refreshActiveDirectConversation(false);
       if (canManageParticipantConversations) {
         await this.loadDirectConversationPreviews(teamId, this.participantMembers().map(member => member.userId));
       }
