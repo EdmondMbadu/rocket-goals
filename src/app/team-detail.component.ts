@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
+import { RocketGoalsService } from './rocket-goals.service';
 import type {
   Team,
   TeamDirectMessage,
@@ -16,6 +17,7 @@ import type {
   TeamMemberConversationPreview,
   TeamMessage
 } from './models/team';
+import type { RocketGoal } from './models/rocket-goal';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import QRCode from 'qrcode';
 
@@ -85,6 +87,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private teamService = inject(TeamService);
+  private rocketGoalsService = inject(RocketGoalsService);
   authService = inject(AuthService);
   protected theme = inject(ThemeService);
 
@@ -95,9 +98,18 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   teamId = signal<string | null>(null);
   team = signal<Team | null>(null);
   teamRocketGoalId = signal<string | null>(null);
+  teamGoal = signal<RocketGoal | null>(null);
   loading = signal(true);
   preparingTeamGoal = signal(false);
   teamGoalError = signal<string | null>(null);
+  teamCountdownDays = signal(0);
+  teamCountdownHours = signal(0);
+  teamCountdownMinutes = signal(0);
+  teamCountdownSeconds = signal(0);
+  teamDeadlineEditing = signal(false);
+  teamDeadlineInputValue = signal('');
+  teamDeadlineError = signal<string | null>(null);
+  savingTeamDeadline = signal(false);
   activeTab = signal<'members' | 'chat' | 'direct'>('members');
   messages = signal<TeamMessage[]>([]);
   directMessages = signal<TeamDirectMessage[]>([]);
@@ -177,6 +189,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private inviteSearchRequestId = 0;
   private linkedTeamGoalProfileKey: string | null = null;
   private directConversationPollInterval: ReturnType<typeof setInterval> | null = null;
+  private teamCountdownInterval: ReturnType<typeof setInterval> | null = null;
   missionControlCardsSaving = signal(false);
   missionControlCardsError = signal<string | null>(null);
   missionControlCardsSuccess = signal<string | null>(null);
@@ -217,6 +230,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const role = this.currentUserTeamMember()?.role;
     return role === 'coach' || role === 'captain' || role === 'team-lead';
   });
+  canEditTeamDeadline = computed(() => this.canManageTeamInvites() && !!this.teamGoal()?.id);
   canAccessDirectConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageMissionControlCards = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
@@ -468,6 +482,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopDirectConversationPolling();
     this.stopTelegramLinkPolling();
+    this.stopTeamCountdown();
   }
 
   private async loadTeam(teamId: string) {
@@ -475,7 +490,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     try {
       const team = await this.teamService.getTeamById(teamId);
       this.team.set(team);
-      this.teamRocketGoalId.set(team?.rocketGoalId || null);
+      const resolvedGoalId = (team?.rocketGoalId || '').trim() || null;
+      this.teamRocketGoalId.set(resolvedGoalId);
+      void this.loadTeamGoal(resolvedGoalId);
       this.directConversationLoadedForTeamId = null;
       this.participantSummaryLoadedKey = null;
       this.participantActivityMap.set({});
@@ -490,6 +507,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
+      this.teamGoal.set(null);
+      this.teamDeadlineEditing.set(false);
+      this.teamDeadlineError.set(null);
+      this.stopTeamCountdown();
+      this.setTeamCountdownValues(0, 0, 0, 0);
     } finally {
       this.loading.set(false);
     }
@@ -498,7 +520,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private async prepareTeamRocketGoal(teamId: string) {
     const currentTeam = this.team();
     if (currentTeam?.rocketGoalId) {
-      this.teamRocketGoalId.set(currentTeam.rocketGoalId);
+      const resolvedGoalId = currentTeam.rocketGoalId.trim();
+      this.teamRocketGoalId.set(resolvedGoalId);
+      void this.loadTeamGoal(resolvedGoalId);
       return;
     }
 
@@ -508,6 +532,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       const goalId = await this.teamService.ensureTeamRocketGoal(teamId);
       this.teamRocketGoalId.set(goalId);
       this.team.update(current => (current ? { ...current, rocketGoalId: goalId } : current));
+      void this.loadTeamGoal(goalId);
     } catch (err) {
       console.error('Failed to prepare team rocket goal:', err);
       this.teamGoalError.set('Unable to open Individual View right now. Please try again.');
@@ -526,6 +551,233 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/rocketgoal', goalId], {
       queryParams: { teamId }
     });
+  }
+
+  private async loadTeamGoal(goalId: string | null): Promise<void> {
+    const normalizedGoalId = (goalId || '').trim();
+    if (!normalizedGoalId) {
+      this.teamGoal.set(null);
+      this.teamDeadlineEditing.set(false);
+      this.teamDeadlineError.set(null);
+      this.stopTeamCountdown();
+      this.setTeamCountdownValues(0, 0, 0, 0);
+      return;
+    }
+
+    try {
+      const goal = await this.rocketGoalsService.getRocketGoalById(normalizedGoalId);
+      this.teamGoal.set((goal as RocketGoal | null) || null);
+      this.teamDeadlineEditing.set(false);
+      this.teamDeadlineError.set(null);
+      this.startTeamCountdown();
+    } catch (err) {
+      console.error('Failed to load team rocket goal:', err);
+      this.teamGoal.set(null);
+      this.teamDeadlineEditing.set(false);
+      this.teamDeadlineError.set('Unable to load mission deadline right now.');
+      this.stopTeamCountdown();
+      this.setTeamCountdownValues(0, 0, 0, 0);
+    }
+  }
+
+  private stopTeamCountdown(): void {
+    if (this.teamCountdownInterval) {
+      clearInterval(this.teamCountdownInterval);
+      this.teamCountdownInterval = null;
+    }
+  }
+
+  private setTeamCountdownValues(days: number, hours: number, minutes: number, seconds: number): void {
+    this.teamCountdownDays.set(days);
+    this.teamCountdownHours.set(hours);
+    this.teamCountdownMinutes.set(minutes);
+    this.teamCountdownSeconds.set(seconds);
+  }
+
+  private startTeamCountdown(): void {
+    this.stopTeamCountdown();
+    const goal = this.teamGoal();
+    if (!goal) {
+      this.setTeamCountdownValues(0, 0, 0, 0);
+      return;
+    }
+
+    const endTime = this.getTeamGoalEndTime(goal);
+    if (!endTime) {
+      this.setTeamCountdownValues(0, 0, 0, 0);
+      return;
+    }
+
+    const tick = () => {
+      const remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        this.setTeamCountdownValues(0, 0, 0, 0);
+        return;
+      }
+
+      const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+      this.setTeamCountdownValues(days, hours, minutes, seconds);
+    };
+
+    tick();
+    this.teamCountdownInterval = setInterval(tick, 1000);
+  }
+
+  private getTeamGoalStartTime(goal: RocketGoal | null = this.teamGoal()): number {
+    return Number(goal?.startTime || Date.now());
+  }
+
+  private getTeamGoalDeadlineTimestamp(goal: RocketGoal | null = this.teamGoal()): number | null {
+    const deadlineValue = goal?.answers?.['deadlineDate'];
+    if (!deadlineValue) return null;
+    if (typeof deadlineValue === 'number') return deadlineValue;
+    if (typeof deadlineValue === 'string') {
+      const parsed = Date.parse(deadlineValue);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    if (typeof deadlineValue?.toMillis === 'function') {
+      try {
+        return deadlineValue.toMillis();
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private getTeamGoalTimeframeDays(goal: RocketGoal | null = this.teamGoal()): number {
+    const fromAnswers = Number(goal?.answers?.['timeframe_days']);
+    if (Number.isFinite(fromAnswers) && fromAnswers > 0) {
+      return Math.max(1, Math.round(fromAnswers));
+    }
+    const timeframe = String(goal?.answers?.['timeframe'] || '').trim();
+    if (timeframe === 'week') return 7;
+    if (timeframe === 'month') return 30;
+    if (timeframe === '3months') return 90;
+    if (timeframe === '6months') return 180;
+    return 30;
+  }
+
+  private getTeamGoalEndTime(goal: RocketGoal | null = this.teamGoal()): number | null {
+    if (!goal) return null;
+    const deadlineTimestamp = this.getTeamGoalDeadlineTimestamp(goal);
+    if (deadlineTimestamp) {
+      return deadlineTimestamp;
+    }
+    const startTime = this.getTeamGoalStartTime(goal);
+    return startTime + (this.getTeamGoalTimeframeDays(goal) * 24 * 60 * 60 * 1000);
+  }
+
+  getTeamDeadlineDateDisplay(): string {
+    const goal = this.teamGoal();
+    const endTime = this.getTeamGoalEndTime(goal);
+    if (!endTime) return '';
+    return new Date(endTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  getTeamCountdownProgress(): number {
+    const goal = this.teamGoal();
+    if (!goal) return 0;
+    const startTime = this.getTeamGoalStartTime(goal);
+    const endTime = this.getTeamGoalEndTime(goal);
+    if (!endTime || endTime <= startTime) return 0;
+    const total = endTime - startTime;
+    const elapsed = Math.min(Math.max(Date.now() - startTime, 0), total);
+    return Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)));
+  }
+
+  private formatDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getTeamMinDeadlineDate(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return this.formatDateInputValue(tomorrow);
+  }
+
+  startEditingTeamDeadline(): void {
+    if (!this.canEditTeamDeadline()) {
+      return;
+    }
+    const goal = this.teamGoal();
+    if (!goal) {
+      return;
+    }
+
+    const deadlineTimestamp = this.getTeamGoalDeadlineTimestamp(goal);
+    const fallbackEndTime = this.getTeamGoalEndTime(goal);
+    const initialDate = new Date(deadlineTimestamp || fallbackEndTime || Date.now());
+    this.teamDeadlineInputValue.set(this.formatDateInputValue(initialDate));
+    this.teamDeadlineError.set(null);
+    this.teamDeadlineEditing.set(true);
+  }
+
+  cancelEditingTeamDeadline(): void {
+    this.teamDeadlineEditing.set(false);
+    this.teamDeadlineError.set(null);
+  }
+
+  private getTimeframeDaysFromDeadline(deadlineTimestamp: number, startTime: number): number {
+    const dayMs = 24 * 60 * 60 * 1000;
+    const diffDays = Math.ceil((deadlineTimestamp - startTime) / dayMs);
+    return Math.max(1, diffDays);
+  }
+
+  async saveTeamDeadline(): Promise<void> {
+    if (!this.canEditTeamDeadline()) {
+      return;
+    }
+    const goal = this.teamGoal();
+    if (!goal?.id) {
+      return;
+    }
+
+    const inputValue = this.teamDeadlineInputValue().trim();
+    if (!inputValue) {
+      this.teamDeadlineError.set('Pick a deadline date to continue.');
+      return;
+    }
+
+    const [year, month, day] = inputValue.split('-').map(value => Number(value));
+    if (!year || !month || !day) {
+      this.teamDeadlineError.set('Pick a valid deadline date.');
+      return;
+    }
+
+    const deadline = new Date(year, month - 1, day, 23, 59, 59, 999);
+    if (Number.isNaN(deadline.getTime())) {
+      this.teamDeadlineError.set('Pick a valid deadline date.');
+      return;
+    }
+
+    this.savingTeamDeadline.set(true);
+    this.teamDeadlineError.set(null);
+
+    try {
+      const startTime = this.getTeamGoalStartTime(goal);
+      const updatedAnswers = {
+        ...(goal.answers || {}),
+        deadlineDate: deadline.getTime(),
+        timeframe_days: this.getTimeframeDaysFromDeadline(deadline.getTime(), startTime)
+      };
+
+      await this.rocketGoalsService.updateRocketGoal(goal.id, { answers: updatedAnswers });
+      this.teamGoal.set({ ...goal, answers: updatedAnswers });
+      this.teamDeadlineEditing.set(false);
+      this.startTeamCountdown();
+    } catch (error) {
+      console.error('Failed to save team deadline:', error);
+      this.teamDeadlineError.set('Could not save deadline. Please try again.');
+    } finally {
+      this.savingTeamDeadline.set(false);
+    }
   }
 
   private async loadMessages(teamId: string) {

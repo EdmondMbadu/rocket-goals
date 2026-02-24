@@ -314,6 +314,171 @@
   flex-wrap: wrap;
 }
 
+.team-countdown-card {
+  min-width: 290px;
+  max-width: 340px;
+  flex: 1 1 320px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(248, 113, 113, 0.2), transparent 48%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.7));
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  box-shadow: 0 12px 30px rgba(220, 38, 38, 0.22);
+}
+
+.team-countdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-countdown-kicker {
+  margin: 0;
+  color: #fecaca;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.team-countdown-edit {
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.team-countdown-edit:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(248, 113, 113, 0.65);
+}
+
+.team-countdown-date {
+  margin: 4px 0 8px;
+  color: #fef2f2;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.team-countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.team-countdown-box {
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  background: rgba(2, 6, 23, 0.46);
+  padding: 6px 5px;
+  text-align: center;
+}
+
+.team-countdown-value {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 18px rgba(248, 113, 113, 0.35);
+}
+
+.team-countdown-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+.team-countdown-progress {
+  margin-top: 8px;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.team-countdown-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #fb7185, #ef4444, #f97316);
+  transition: width 0.4s ease;
+}
+
+.team-countdown-edit-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.team-deadline-input {
+  flex: 1;
+  min-width: 170px;
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(2, 6, 23, 0.48);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  outline: none;
+}
+
+.team-deadline-save,
+.team-deadline-cancel {
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.team-deadline-save {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.team-deadline-cancel {
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.team-deadline-save:disabled,
+.team-deadline-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.team-deadline-error {
+  margin: 6px 0 0;
+  color: #fecaca;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* ===== Status Alerts ===== */
 .status-stack {
   display: grid;
@@ -1609,6 +1774,62 @@
   color: #64748b;
 }
 
+.light-mode .team-countdown-card {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(239, 68, 68, 0.13), transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+  border-color: rgba(239, 68, 68, 0.24);
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.12);
+}
+
+.light-mode .team-countdown-kicker {
+  color: #b91c1c;
+}
+
+.light-mode .team-countdown-edit {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.light-mode .team-countdown-date {
+  color: #7f1d1d;
+}
+
+.light-mode .team-countdown-box {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(239, 68, 68, 0.16);
+}
+
+.light-mode .team-countdown-value {
+  color: #991b1b;
+  text-shadow: none;
+}
+
+.light-mode .team-countdown-label {
+  color: #dc2626;
+}
+
+.light-mode .team-countdown-progress {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.light-mode .team-deadline-input {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.16);
+}
+
+.light-mode .team-deadline-cancel {
+  color: #334155;
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+.light-mode .team-deadline-error {
+  color: #dc2626;
+}
+
 .light-mode .alert-banner.success {
   color: #166534;
   background: #f0fdf4;
@@ -2045,6 +2266,20 @@
 
   .join-authenticated {
     align-items: stretch;
+  }
+
+  .team-countdown-card {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .team-countdown-grid {
+    gap: 5px;
+  }
+
+  .team-countdown-value {
+    font-size: 16px;
   }
 
   .members-circle-grid {
