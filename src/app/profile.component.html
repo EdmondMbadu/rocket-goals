@@ -253,7 +253,7 @@
                   </div>
                 </div>
                 } @else {
-                <h4 (click)="navigateToGoal(goal.id)">{{ getGoalTitle(goal) }}</h4>
+                <h4 (click)="navigateToGoal(goal.id, goal)">{{ getGoalTitle(goal) }}</h4>
                 <p class="muted tiny">{{ getGoalTheme(goal) }}</p>
                 }
               </div>
@@ -261,7 +261,7 @@
                 @if (canEditProfile()) {
                 <button class="ghost xs" (click)="startEditingGoal(goal)">Edit</button>
                 }
-                <button class="solid xs" (click)="navigateToGoal(goal.id)">View</button>
+                <button class="solid xs" (click)="navigateToGoal(goal.id, goal)">View</button>
                 @if (canEditProfile()) {
                 <button class="danger xs" (click)="deleteGoal(goal.id)">Delete</button>
                 }

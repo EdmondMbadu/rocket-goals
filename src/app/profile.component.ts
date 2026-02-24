@@ -5,8 +5,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { ProfileVisibilitySettings, UserProfile } from './models/user-profile';
 import { RocketGoalsService } from './rocket-goals.service';
+import { TeamService } from './team.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
+import type { Team } from './models/team';
 import { ThemeService } from './theme.service';
 import { TelegramQrModalComponent } from './telegram-qr-modal.component';
 
@@ -34,6 +36,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   router = inject(Router);
   private route = inject(ActivatedRoute);
   private rocketGoalsService = inject(RocketGoalsService);
+  private teamService = inject(TeamService);
   protected theme = inject(ThemeService);
   private cdr = inject(ChangeDetectorRef);
   private storage: any = null;
@@ -740,13 +743,130 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.loadingGoals.set(true);
     try {
-      const goals = await this.rocketGoalsService.getRocketGoalsByUserId(profile.userId);
-      this.goals.set(goals as RocketGoal[]);
+      const [personalGoalsRaw, teamsRaw] = await Promise.all([
+        this.rocketGoalsService.getRocketGoalsByUserId(profile.userId).catch(error => {
+          console.warn('Failed to load personal goals for profile:', error);
+          return [] as any[];
+        }),
+        this.teamService.getTeamsByUserId(profile.userId).catch(error => {
+          console.warn('Failed to load teams while resolving profile goals:', error);
+          return [] as any[];
+        })
+      ]);
+
+      const mergedGoals = new Map<string, RocketGoal>();
+      const fallbackTeamGoals = new Map<string, RocketGoal>();
+
+      for (const goal of personalGoalsRaw as RocketGoal[]) {
+        if (goal?.id) {
+          mergedGoals.set(goal.id, goal);
+        }
+      }
+
+      const candidateTeamGoalIds = new Set<string>();
+      for (const team of teamsRaw as Team[]) {
+        const explicitGoalId = String(team?.rocketGoalId || '').trim();
+        const resolvedGoalId = explicitGoalId || (team?.id ? `team-${team.id}` : '');
+        if (resolvedGoalId) {
+          candidateTeamGoalIds.add(resolvedGoalId);
+          fallbackTeamGoals.set(resolvedGoalId, this.buildFallbackTeamGoal(team, profile, resolvedGoalId));
+        }
+      }
+
+      const preferredGoalId = String(profile.myOneThingGoalId || '').trim();
+      if (preferredGoalId) {
+        candidateTeamGoalIds.add(preferredGoalId);
+      }
+
+      for (const goalId of candidateTeamGoalIds) {
+        if (!goalId || mergedGoals.has(goalId)) {
+          continue;
+        }
+        try {
+          const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
+          if (goal?.id) {
+            mergedGoals.set(goal.id, goal as RocketGoal);
+            continue;
+          }
+          const fallback = fallbackTeamGoals.get(goalId);
+          if (fallback) {
+            mergedGoals.set(goalId, fallback);
+          }
+        } catch (error) {
+          console.warn(`Failed to load goal ${goalId} while building profile goals:`, error);
+          const fallback = fallbackTeamGoals.get(goalId);
+          if (fallback) {
+            mergedGoals.set(goalId, fallback);
+          }
+        }
+      }
+
+      const mergedList = Array.from(mergedGoals.values()).sort((a, b) => this.getGoalSortTime(b) - this.getGoalSortTime(a));
+      this.goals.set(mergedList);
     } catch (err) {
       console.error('Error loading goals:', err);
+      this.goals.set([]);
     } finally {
       this.loadingGoals.set(false);
     }
+  }
+
+  private getGoalSortTime(goal: RocketGoal): number {
+    const createdAt = (goal as any)?.createdAt;
+    if (typeof createdAt?.toMillis === 'function') {
+      try {
+        return createdAt.toMillis();
+      } catch {
+        return 0;
+      }
+    }
+    if (typeof createdAt?.toDate === 'function') {
+      try {
+        const date = createdAt.toDate();
+        return date instanceof Date ? date.getTime() : 0;
+      } catch {
+        return 0;
+      }
+    }
+    if (createdAt instanceof Date) {
+      return createdAt.getTime();
+    }
+    if (typeof createdAt === 'number') {
+      return Number.isFinite(createdAt) ? createdAt : 0;
+    }
+    if (typeof createdAt === 'string') {
+      const parsed = Date.parse(createdAt);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  }
+
+  private buildFallbackTeamGoal(team: Team, profile: UserProfile, goalId: string): RocketGoal {
+    const teamName = String(team.name || 'Team').trim() || 'Team';
+    const createdAt = (team.updatedAt || team.createdAt || Date.now()) as unknown;
+    return {
+      id: goalId,
+      userId: profile.userId,
+      primaryGoal: `${teamName} Team Mission`,
+      answers: {
+        goal_title_label: `${teamName} Team Mission`,
+        custom_goal_title: `${teamName} Team Mission`,
+        goal_theme_label: 'Team Mission',
+        goal_support_label: 'Team',
+        teamId: team.id,
+        teamName,
+        teamGoal: true
+      },
+      participant: {
+        firstName: profile.firstName || teamName,
+        lastName: profile.lastName || 'Team Member',
+        email: profile.email || ''
+      },
+      status: 'active',
+      entryPoint: 'launch_challenge',
+      createdAt,
+      startTime: typeof team.createdAt === 'number' ? team.createdAt : Date.now()
+    };
   }
 
   getActiveGoalsCount(): number {
@@ -876,7 +996,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  navigateToGoal(goalId: string) {
+  navigateToGoal(goalId: string, goal?: RocketGoal) {
+    const teamId = String(goal?.answers?.['teamId'] || '').trim();
+    if (teamId) {
+      this.router.navigateByUrl(`/team/${teamId}`);
+      return;
+    }
     this.router.navigateByUrl(`/rocketgoal/${goalId}`);
   }
 
