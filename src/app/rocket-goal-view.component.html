@@ -247,7 +247,7 @@
               </div>
             }
             <!-- Goal owner or team collaborator sees the AI Co-Pilot -->
-            <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
+            <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" [teamDirectMessages]="teamDirectMessages()" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
           } @else {
             <!-- Fans/Visitors see Launch Your Goal prompt -->
             <div class="fan-launch-goal-card hud-card shimmer flex-1 flex flex-col p-6 relative">

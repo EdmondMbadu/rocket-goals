@@ -334,6 +334,69 @@
       </div>
       }
 
+      @if (isCurrentUserMember()) {
+      <section class="team-direct-summary team-members-global-summary glass">
+        <div class="team-direct-summary-head">
+          <div>
+            <p class="team-direct-kicker">Team Mission Control</p>
+            <h3>Global Goal Summary</h3>
+            <p>Live global stats for this team goal only.</p>
+          </div>
+          @if (loadingParticipantSummaries()) {
+          <span class="muted tiny">Refreshing...</span>
+          }
+        </div>
+
+        @if (participantSummaryError()) {
+        <p class="alert-inline error">{{ participantSummaryError() }}</p>
+        }
+
+        <div class="team-direct-stats-grid">
+          <article class="team-direct-stat-card">
+            <p class="team-direct-stat-label">Participants</p>
+            <p class="team-direct-stat-value">{{ teamDirectSummary().totalParticipants }}</p>
+            <p class="team-direct-stat-sub">{{ teamDirectSummary().goalsStarted }} with active goals</p>
+          </article>
+          <article class="team-direct-stat-card">
+            <p class="team-direct-stat-label">Milestones Done</p>
+            <p class="team-direct-stat-value">{{ teamDirectSummary().completedMilestones }} / {{ teamDirectSummary().totalMilestones }}</p>
+            <p class="team-direct-stat-sub">{{ teamDirectSummary().completionPercent }}% completion rate</p>
+          </article>
+          <article class="team-direct-stat-card">
+            <p class="team-direct-stat-label">Today Done</p>
+            <p class="team-direct-stat-value">{{ teamDirectSummary().completedToday }} / {{ teamDirectSummary().totalToday }}</p>
+            <p class="team-direct-stat-sub">{{ teamDirectSummary().todayPercent }}% execution today</p>
+          </article>
+          <article class="team-direct-stat-card">
+            <p class="team-direct-stat-label">Active Today</p>
+            <p class="team-direct-stat-value">{{ teamDirectSummary().activeTodayCount }}</p>
+            <p class="team-direct-stat-sub">participants with tasks for today</p>
+          </article>
+        </div>
+
+        <div class="team-direct-progress-grid">
+          <div class="team-direct-progress-item">
+            <div class="team-direct-progress-meta">
+              <span>Overall Milestone Completion</span>
+              <strong>{{ teamDirectSummary().completionPercent }}%</strong>
+            </div>
+            <div class="direct-progress-track">
+              <span class="direct-progress-fill" [style.width.%]="teamDirectSummary().completionPercent"></span>
+            </div>
+          </div>
+          <div class="team-direct-progress-item">
+            <div class="team-direct-progress-meta">
+              <span>Today's Execution Rate</span>
+              <strong>{{ teamDirectSummary().todayPercent }}%</strong>
+            </div>
+            <div class="direct-progress-track">
+              <span class="direct-progress-fill today" [style.width.%]="teamDirectSummary().todayPercent"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+      }
+
       @if (team()!.aiCoachEnabled) {
       <div class="section-label" style="margin-top: 18px">AI Coach</div>
       <div class="ai-coach-card glass">
@@ -599,6 +662,44 @@
           </p>
         </div>
         } @else {
+        @if (canManageParticipantConversations() && selectedConversationOverview(); as overview) {
+        <div class="direct-coach-hero">
+          <div class="direct-coach-hero-head">
+            <p class="direct-coach-kicker">Private Coaching Channel</p>
+            <span class="direct-coach-last">{{ formatRelativeTime(overview.activity?.latestActivityAt) }}</span>
+          </div>
+          <h3>{{ overview.member.firstName }} {{ overview.member.lastName }}</h3>
+          <p class="direct-coach-goal">{{ overview.activity?.primaryGoal || 'No RocketGoal linked yet' }}</p>
+          <div class="direct-coach-metrics">
+            <article class="direct-coach-metric-card">
+              <p>Milestones</p>
+              <strong>{{ overview.activity?.completedMilestones || 0 }} / {{ overview.activity?.totalMilestones || 0 }}</strong>
+              <div class="direct-progress-track">
+                <span class="direct-progress-fill" [style.width.%]="overview.completionPercent"></span>
+              </div>
+            </article>
+            <article class="direct-coach-metric-card">
+              <p>Today</p>
+              <strong>{{ overview.activity?.completedToday || 0 }} / {{ overview.activity?.totalToday || 0 }}</strong>
+              <div class="direct-progress-track">
+                <span class="direct-progress-fill today" [style.width.%]="overview.todayPercent"></span>
+              </div>
+            </article>
+            <article class="direct-coach-metric-card">
+              <p>Mission Day</p>
+              <strong>
+                @if (overview.activity?.missionDay && overview.activity?.totalDays) {
+                Day {{ overview.activity?.missionDay }} / {{ overview.activity?.totalDays }}
+                } @else {
+                Not started
+                }
+              </strong>
+              <span class="direct-coach-muted">Goal tracking status</span>
+            </article>
+          </div>
+        </div>
+        }
+
         <div class="direct-chat-head">
           <div class="direct-chat-person">
             <h3>{{ activeDirectParticipant()!.firstName }} {{ activeDirectParticipant()!.lastName }}</h3>

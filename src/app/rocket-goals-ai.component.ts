@@ -5,6 +5,12 @@ import { Router } from '@angular/router';
 import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
 import { AuthService } from './auth.service';
 import type { RocketGoal, RocketGoalCopilot } from './models/rocket-goal';
+import type { TeamDirectMessage } from './models/team';
+
+type DisplayChatMessage = ChatMessage & {
+  source?: 'ai' | 'team-direct';
+  sourceId?: string;
+};
 
 @Component({
   selector: 'app-rocket-goals-ai',
@@ -16,6 +22,10 @@ import type { RocketGoal, RocketGoalCopilot } from './models/rocket-goal';
 export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChanges, OnDestroy {
   @Input() goalContext: RocketGoal | null = null;
   @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
+  @Input()
+  set teamDirectMessages(value: TeamDirectMessage[] | null | undefined) {
+    this.teamDirectMessagesInput.set(value || []);
+  }
   @Output() eventAction = new EventEmitter<'refresh'>(); // Emit when calendar events are modified
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
@@ -26,7 +36,44 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   readonly isOpen = this.aiService.isOpen;
   readonly inputMessage = signal('');
-  readonly messages = this.aiService.messages;
+  private readonly aiMessages = this.aiService.messages;
+  private readonly teamDirectMessagesInput = signal<TeamDirectMessage[]>([]);
+  readonly messages = computed<DisplayChatMessage[]>(() => {
+    const aiMessages = this.aiMessages().map(message => ({
+      ...message,
+      source: 'ai' as const,
+      sourceId: `ai-${message.timestamp.getTime()}-${message.role}`
+    }));
+    const currentUserId = this.authService.profile()?.userId || '';
+    const directMessages = this.teamDirectMessagesInput()
+      .filter(message => !!message?.content?.trim())
+      .map(message => {
+        const timestampMs = this.getTimestampMillis(message.timestamp) ?? Date.now();
+        const isMine = !!currentUserId && message.senderId === currentUserId;
+        const sourceId = message.id || `team-${message.senderId}-${timestampMs}`;
+        const role: ChatMessage['role'] = isMine ? 'user' : 'model';
+        return {
+          role,
+          content: isMine
+            ? message.content
+            : `Private message from ${message.senderName}: ${message.content}`,
+          timestamp: new Date(timestampMs),
+          source: 'team-direct' as const,
+          sourceId
+        };
+      });
+
+    const merged = [...aiMessages, ...directMessages];
+    merged.sort((left, right) => {
+      const leftTime = left.timestamp.getTime();
+      const rightTime = right.timestamp.getTime();
+      if (leftTime !== rightTime) {
+        return leftTime - rightTime;
+      }
+      return (left.sourceId || '').localeCompare(right.sourceId || '');
+    });
+    return merged;
+  });
   readonly isLoading = this.aiService.isLoading;
   readonly error = this.aiService.error;
   readonly copiedMessageId = signal<number | null>(null);
@@ -614,8 +661,8 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
       .replace(/'/g, '&#039;');
   }
 
-  trackByTimestamp(_index: number, message: ChatMessage): number {
-    return message.timestamp.getTime();
+  trackByTimestamp(index: number, message: DisplayChatMessage): string {
+    return `${message.timestamp.getTime()}-${message.source || 'ai'}-${message.sourceId || index}`;
   }
 
   getGoalSpecificPrompts(): string[] {
@@ -767,6 +814,35 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
 
   isCopied(message: ChatMessage): boolean {
     return this.copiedMessageId() === message.timestamp.getTime();
+  }
+
+  private getTimestampMillis(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+    if (value instanceof Date) {
+      return value.getTime();
+    }
+    if (typeof value?.toMillis === 'function') {
+      try {
+        return value.toMillis();
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value?.toDate === 'function') {
+      try {
+        const date = value.toDate();
+        return date instanceof Date ? date.getTime() : null;
+      } catch {
+        return null;
+      }
+    }
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private scrollToBottom(): void {

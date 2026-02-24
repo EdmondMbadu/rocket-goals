@@ -2169,6 +2169,207 @@
   gap: 14px;
 }
 
+.team-direct-summary {
+  grid-column: 1 / -1;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  background:
+    radial-gradient(circle at 20% -20%, rgba(239, 68, 68, 0.26), transparent 55%),
+    radial-gradient(circle at 85% 120%, rgba(249, 115, 22, 0.2), transparent 50%),
+    rgba(2, 6, 23, 0.66);
+  padding: 16px;
+}
+
+.team-members-global-summary {
+  margin-top: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.team-members-global-summary::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% -45% auto;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.2), transparent 65%);
+  pointer-events: none;
+}
+
+.team-members-global-summary > * {
+  position: relative;
+  z-index: 1;
+}
+
+.team-direct-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.team-direct-kicker {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+.team-direct-summary-head h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+}
+
+.team-direct-summary-head p {
+  margin: 0;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.team-direct-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.team-direct-stat-card {
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.team-direct-stat-label {
+  margin: 0 0 4px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.team-direct-stat-value {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.team-direct-stat-sub {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.team-direct-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.team-direct-progress-item {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.54);
+  padding: 10px 12px;
+}
+
+.team-direct-progress-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.team-direct-progress-meta strong {
+  font-size: 13px;
+  color: #f8fafc;
+}
+
+.team-direct-roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.team-direct-roster-item {
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.56);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.team-direct-roster-item:hover {
+  border-color: rgba(239, 68, 68, 0.38);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.team-direct-roster-item.active {
+  border-color: rgba(239, 68, 68, 0.48);
+  background: rgba(239, 68, 68, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+.team-direct-roster-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.team-direct-roster-title span:first-child {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.team-direct-roster-time {
+  font-size: 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.team-direct-roster-goal {
+  margin: 6px 0 8px;
+  font-size: 11px;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-direct-roster-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-direct-roster-metrics span {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fca5a5;
+  border: 1px solid rgba(252, 165, 165, 0.25);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: rgba(127, 29, 29, 0.28);
+}
+
 .direct-members-panel {
   border-radius: 14px;
   overflow: hidden;
@@ -2302,6 +2503,91 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+}
+
+.direct-coach-hero {
+  border-radius: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  background:
+    linear-gradient(135deg, rgba(127, 29, 29, 0.24), rgba(249, 115, 22, 0.14)),
+    rgba(15, 23, 42, 0.62);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.direct-coach-hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.direct-coach-kicker {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+.direct-coach-last {
+  font-size: 10px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.direct-coach-hero h3 {
+  margin: 6px 0 2px;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.direct-coach-goal {
+  margin: 0 0 10px;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.direct-coach-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.direct-coach-metric-card {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.52);
+  padding: 8px 10px;
+}
+
+.direct-coach-metric-card p {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.direct-coach-metric-card strong {
+  margin-top: 4px;
+  display: block;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.direct-coach-muted {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #94a3b8;
 }
 
 .direct-chat-person h3 {
@@ -2476,6 +2762,76 @@
   border-color: rgba(15, 23, 42, 0.08);
 }
 
+.light-mode .team-direct-summary {
+  border-color: rgba(239, 68, 68, 0.2);
+  background:
+    radial-gradient(circle at 20% -20%, rgba(239, 68, 68, 0.12), transparent 55%),
+    radial-gradient(circle at 85% 120%, rgba(249, 115, 22, 0.1), transparent 50%),
+    rgba(255, 255, 255, 0.95);
+}
+
+.light-mode .team-members-global-summary::after {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.12), transparent 70%);
+}
+
+.light-mode .team-direct-kicker,
+.light-mode .team-direct-roster-metrics span {
+  color: #dc2626;
+}
+
+.light-mode .team-direct-summary-head h3,
+.light-mode .team-direct-stat-value,
+.light-mode .team-direct-progress-meta strong,
+.light-mode .team-direct-roster-title span:first-child,
+.light-mode .direct-coach-hero h3,
+.light-mode .direct-coach-metric-card strong {
+  color: #0f172a;
+}
+
+.light-mode .team-direct-summary-head p,
+.light-mode .team-direct-stat-sub,
+.light-mode .team-direct-progress-meta,
+.light-mode .team-direct-roster-goal,
+.light-mode .team-direct-roster-time,
+.light-mode .direct-coach-goal,
+.light-mode .direct-coach-last,
+.light-mode .direct-coach-muted {
+  color: #64748b;
+}
+
+.light-mode .team-direct-stat-card,
+.light-mode .team-direct-progress-item,
+.light-mode .team-direct-roster-item,
+.light-mode .direct-coach-hero,
+.light-mode .direct-coach-metric-card {
+  border-color: rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.light-mode .team-direct-roster-item:hover {
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.light-mode .team-direct-roster-item.active {
+  border-color: rgba(239, 68, 68, 0.42);
+  background: rgba(239, 68, 68, 0.11);
+}
+
+.light-mode .team-direct-roster-metrics span {
+  border-color: rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.light-mode .direct-coach-kicker {
+  color: #dc2626;
+}
+
+.light-mode .direct-coach-metric-card p,
+.light-mode .team-direct-stat-label {
+  color: #64748b;
+}
+
 /* Direct Conversations Responsive */
 @media (max-width: 640px) {
   .direct-workspace {
@@ -2493,6 +2849,17 @@
 
   .direct-activity-grid {
     grid-template-columns: 1fr;
+  }
+
+  .team-direct-stats-grid,
+  .team-direct-progress-grid,
+  .direct-coach-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .team-direct-summary-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .direct-messages-list {

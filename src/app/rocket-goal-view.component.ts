@@ -14,7 +14,7 @@ import { CheckInsService } from './check-ins.service';
 import { TelegramQrModalComponent } from './telegram-qr-modal.component';
 import { TeamService } from './team.service';
 import type { RocketGoal, CareerQuestMetrics } from './models/rocket-goal';
-import type { Team } from './models/team';
+import type { Team, TeamDirectMessage } from './models/team';
 import type {
   DailyIgnition,
   IgnitionConfidence,
@@ -86,6 +86,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   teamContextId = signal<string | null>(null);
   teamContext = signal<Team | null>(null);
   teamGoalCollaborator = signal(false);
+  teamDirectMessages = signal<TeamDirectMessage[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   dashboardTitle = signal<string>('MISSION CONTROL');
@@ -2226,6 +2227,7 @@ ${url}`;
     if (!normalizedTeamId) {
       this.teamContext.set(null);
       this.teamGoalCollaborator.set(false);
+      this.teamDirectMessages.set([]);
       return;
     }
 
@@ -2237,19 +2239,37 @@ ${url}`;
 
       const profile = this.authService.profile();
       const normalizedEmail = (profile?.email || '').trim().toLowerCase();
+      const matchingMember = team?.members.find(member =>
+        (!!profile?.userId && member.userId === profile.userId) ||
+        ((member.email || '').trim().toLowerCase() === normalizedEmail)
+      ) || null;
       const isMember = !!team && !!profile && (
         (!!profile.userId && team.memberIds.includes(profile.userId)) ||
-        team.members.some(member =>
-          (!!profile.userId && member.userId === profile.userId) ||
-          ((member.email || '').trim().toLowerCase() === normalizedEmail)
-        )
+        !!matchingMember
       );
 
       this.teamGoalCollaborator.set(isMember);
+      const participantUserId = matchingMember?.userId || (isMember ? (profile?.userId || null) : null);
+      if (isMember && participantUserId) {
+        await this.loadTeamDirectMessagesForMember(normalizedTeamId, participantUserId);
+      } else {
+        this.teamDirectMessages.set([]);
+      }
     } catch (error) {
       console.error('Error loading linked team for goal:', error);
       this.teamContext.set(null);
       this.teamGoalCollaborator.set(false);
+      this.teamDirectMessages.set([]);
+    }
+  }
+
+  private async loadTeamDirectMessagesForMember(teamId: string, memberUserId: string): Promise<void> {
+    try {
+      const messages = await this.teamService.getDirectMessages(teamId, memberUserId);
+      this.teamDirectMessages.set(messages);
+    } catch (error) {
+      console.error('Error loading member direct messages for team goal:', error);
+      this.teamDirectMessages.set([]);
     }
   }
 

@@ -54,11 +54,14 @@ export class TeamDetailComponent implements OnInit {
   directConversationPreviews = signal<TeamMemberConversationPreview[]>([]);
   selectedDirectMemberUserId = signal<string | null>(null);
   selectedDirectMemberActivity = signal<TeamMemberActivitySnapshot | null>(null);
+  participantActivityMap = signal<Record<string, TeamMemberActivitySnapshot>>({});
   loadingDirectConversations = signal(false);
   loadingDirectMessages = signal(false);
   loadingDirectActivity = signal(false);
+  loadingParticipantSummaries = signal(false);
   sendingDirectMessage = signal(false);
   directError = signal<string | null>(null);
+  participantSummaryError = signal<string | null>(null);
   directSendError = signal<string | null>(null);
   showInviteModal = signal(false);
   sendingMessage = signal(false);
@@ -117,6 +120,7 @@ export class TeamDetailComponent implements OnInit {
 
   private messagesLoadedForTeamId: string | null = null;
   private directConversationLoadedForTeamId: string | null = null;
+  private participantSummaryLoadedKey: string | null = null;
   private inviteSearchTimeout: ReturnType<typeof setTimeout> | null = null;
   private inviteSearchRequestId = 0;
   private linkedTeamGoalProfileKey: string | null = null;
@@ -143,9 +147,12 @@ export class TeamDetailComponent implements OnInit {
     }
     return this.findCurrentUserTeamMember(team)?.role === 'team-lead';
   });
-  canAccessDirectConversations = computed(() => this.isCurrentUserMember());
+  canAccessDirectConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
+  summaryMembers = computed(() => {
+    return (this.team()?.members || []).filter(member => member.role !== 'admin' && member.role !== 'coach');
+  });
   participantMembers = computed(() => {
     const currentUserId = this.currentUserId();
     return (this.team()?.members || [])
@@ -168,6 +175,52 @@ export class TeamDetailComponent implements OnInit {
       return null;
     }
     return (this.team()?.members || []).find(member => member.userId === participantUserId) || null;
+  });
+  participantSummaryRows = computed(() => {
+    const activityMap = this.participantActivityMap();
+    return this.summaryMembers().map(member => ({
+      member,
+      activity: activityMap[member.userId] || null
+    }));
+  });
+  teamDirectSummary = computed(() => {
+    const rows = this.participantSummaryRows();
+    const totalParticipants = rows.length;
+    const goalsStarted = rows.filter(row => !!row.activity?.goalId || !!row.activity?.primaryGoal).length;
+    const totalMilestones = rows.reduce((sum, row) => sum + (row.activity?.totalMilestones || 0), 0);
+    const completedMilestones = rows.reduce((sum, row) => sum + (row.activity?.completedMilestones || 0), 0);
+    const totalToday = rows.reduce((sum, row) => sum + (row.activity?.totalToday || 0), 0);
+    const completedToday = rows.reduce((sum, row) => sum + (row.activity?.completedToday || 0), 0);
+    const activeTodayCount = rows.filter(row => (row.activity?.totalToday || 0) > 0).length;
+    const completionPercent = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+    const todayPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+    return {
+      totalParticipants,
+      goalsStarted,
+      totalMilestones,
+      completedMilestones,
+      totalToday,
+      completedToday,
+      activeTodayCount,
+      completionPercent: Math.max(0, Math.min(100, completionPercent)),
+      todayPercent: Math.max(0, Math.min(100, todayPercent))
+    };
+  });
+  selectedConversationOverview = computed(() => {
+    const member = this.activeDirectParticipant();
+    const activity = this.selectedDirectMemberActivity();
+    if (!member) {
+      return null;
+    }
+    const completionPercent = this.getParticipantCompletionPercent(activity);
+    const todayPercent = this.getParticipantTodayPercent(activity);
+    return {
+      member,
+      activity,
+      completionPercent,
+      todayPercent,
+      hasGoal: !!activity?.goalId || !!activity?.primaryGoal
+    };
   });
 
   coverImageSrc = computed(() => {
@@ -232,18 +285,32 @@ export class TeamDetailComponent implements OnInit {
         void this.generateTelegramQr(team.telegramGroupInviteLink);
       }
 
-      if (team?.id && canAccessDirectConversations) {
-        if (canManageParticipantConversations) {
+      if (team?.id && isMember) {
+        const summaryMembers = this.summaryMembers();
+        const summaryKey = `${team.id}|${summaryMembers.map(member => member.userId).join(',')}`;
+        if (summaryKey !== this.participantSummaryLoadedKey) {
+          this.participantSummaryLoadedKey = summaryKey;
+          void this.loadParticipantActivitySummaries(team.id, summaryMembers);
+        }
+
+        if (canAccessDirectConversations && canManageParticipantConversations) {
           const participants = this.participantMembers();
           const selectedMemberId = this.selectedDirectMemberUserId();
           if (!participants.some(member => member.userId === selectedMemberId)) {
             this.selectedDirectMemberUserId.set(participants[0]?.userId || null);
           }
         } else {
-          const ownParticipantId = this.findCurrentUserTeamMember(team)?.userId || this.currentUserId() || null;
-          this.selectedDirectMemberUserId.set(ownParticipantId);
+          this.selectedDirectMemberUserId.set(null);
+          this.selectedDirectMemberActivity.set(null);
+          this.directMessages.set([]);
           this.directConversationPreviews.set([]);
           this.directConversationLoadedForTeamId = null;
+          this.loadingDirectMessages.set(false);
+          this.loadingDirectActivity.set(false);
+          this.loadingDirectConversations.set(false);
+          this.directError.set(null);
+          this.directSendError.set(null);
+          this.directMessage = '';
         }
       } else {
         this.selectedDirectMemberUserId.set(null);
@@ -251,6 +318,10 @@ export class TeamDetailComponent implements OnInit {
         this.directMessages.set([]);
         this.directConversationPreviews.set([]);
         this.directConversationLoadedForTeamId = null;
+        this.participantActivityMap.set({});
+        this.participantSummaryLoadedKey = null;
+        this.loadingParticipantSummaries.set(false);
+        this.participantSummaryError.set(null);
       }
     });
 
@@ -318,6 +389,9 @@ export class TeamDetailComponent implements OnInit {
       this.team.set(team);
       this.teamRocketGoalId.set(team?.rocketGoalId || null);
       this.directConversationLoadedForTeamId = null;
+      this.participantSummaryLoadedKey = null;
+      this.participantActivityMap.set({});
+      this.participantSummaryError.set(null);
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
@@ -430,6 +504,42 @@ export class TeamDetailComponent implements OnInit {
     return Math.max(0, Math.min(100, Math.round((activity.completedToday / activity.totalToday) * 100)));
   }
 
+  getParticipantActivity(memberUserId: string): TeamMemberActivitySnapshot | null {
+    return this.participantActivityMap()[memberUserId] || null;
+  }
+
+  private async loadParticipantActivitySummaries(teamId: string, members: TeamMember[]) {
+    const memberIds = members.map(member => member.userId).filter(Boolean);
+    if (!memberIds.length) {
+      this.participantActivityMap.set({});
+      this.loadingParticipantSummaries.set(false);
+      this.participantSummaryError.set(null);
+      return;
+    }
+
+    this.loadingParticipantSummaries.set(true);
+    this.participantSummaryError.set(null);
+    try {
+      const snapshots = await Promise.all(
+        members.map(async member => {
+          const activity = await this.teamService.getMemberActivitySnapshot(teamId, member.userId);
+          return { memberUserId: member.userId, activity };
+        })
+      );
+      const nextMap: Record<string, TeamMemberActivitySnapshot> = {};
+      for (const item of snapshots) {
+        nextMap[item.memberUserId] = item.activity;
+      }
+      this.participantActivityMap.set(nextMap);
+    } catch (error) {
+      console.error('Failed to load participant activity summaries:', error);
+      this.participantSummaryError.set('Unable to load team execution summary right now.');
+      this.participantActivityMap.set({});
+    } finally {
+      this.loadingParticipantSummaries.set(false);
+    }
+  }
+
   private async loadDirectConversationPreviews(teamId: string, memberUserIds: string[]) {
     if (!memberUserIds.length) {
       this.directConversationPreviews.set([]);
@@ -476,6 +586,10 @@ export class TeamDetailComponent implements OnInit {
       ]);
       this.directMessages.set(messages);
       this.selectedDirectMemberActivity.set(activity);
+      this.participantActivityMap.update(current => ({
+        ...current,
+        [participantUserId]: activity
+      }));
       this.scrollDirectToBottom();
     } catch (err) {
       console.error('Failed to load participant conversation:', err);
