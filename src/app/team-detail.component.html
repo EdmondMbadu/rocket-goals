@@ -116,16 +116,7 @@
           </div>
         </div>
         <div class="hero-info">
-          <p class="eyebrow">
-            @if (team()!.aiCoachEnabled) {
-            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            AI-Powered Team
-            } @else {
-            Team
-            }
-          </p>
+          <p class="eyebrow">Team</p>
           <h1 class="title">{{ team()!.name }}</h1>
           <p class="subtext">{{ team()!.members.length }} {{ team()!.members.length === 1 ? 'member' : 'members' }}
             @if (team()!.description) {
@@ -255,13 +246,6 @@
         Direct
       </button>
       }
-      <button (click)="activeTab.set('ai')" class="tab" [class.active]="activeTab() === 'ai'">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5" />
-        </svg>
-        AI Coach
-      </button>
       }
     </div>
 
@@ -397,21 +381,6 @@
       </section>
       }
 
-      @if (team()!.aiCoachEnabled) {
-      <div class="section-label" style="margin-top: 18px">AI Coach</div>
-      <div class="ai-coach-card glass">
-        <div class="ai-coach-icon">
-          <img src="/assets/rocket-goals.png" alt="Rocket AI" class="ai-coach-icon-img" />
-        </div>
-        <div class="ai-coach-info">
-          <p class="ai-coach-name">Rocket AI Coach</p>
-          <p class="ai-coach-sub">AI-powered accountability partner for your team</p>
-        </div>
-        @if (isCurrentUserMember()) {
-        <button class="btn solid sm" (click)="activeTab.set('ai')">Open Chat</button>
-        }
-      </div>
-      }
     </div>
     }
 
@@ -507,16 +476,6 @@
       }
 
       <div class="chat-container glass">
-        <!-- @rocket AI hint -->
-        <div class="rocket-ai-hint">
-          <div class="rocket-ai-hint-icon">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <span>Type <strong>&#64;rocket</strong> in your message to ask the AI coach for help, motivation, or accountability.</span>
-        </div>
-
         <div class="messages-list" #messagesContainer>
           @if (messages().length === 0) {
           <div class="chat-empty">
@@ -527,7 +486,7 @@
               </svg>
             </div>
             <p class="chat-empty-title">No messages yet</p>
-            <p class="muted tiny">Start the conversation! Mention <strong>&#64;rocket</strong> to get coaching from the AI.</p>
+            <p class="muted tiny">Start the conversation with your team.</p>
           </div>
           }
 
@@ -557,30 +516,10 @@
           </div>
           }
 
-          <!-- AI typing indicator -->
-          @if (aiResponding()) {
-          <div class="msg-row msg-row-ai">
-            <div class="msg-avatar">
-              <div class="msg-avatar-ai">
-                <img src="/assets/rocket-goals.png" alt="Rocket AI" class="msg-avatar-ai-img" />
-              </div>
-            </div>
-            <div class="msg-content">
-              <div class="msg-meta">
-                <span class="msg-sender msg-sender-ai">Rocket AI</span>
-              </div>
-              <div class="msg-bubble msg-bubble-ai msg-bubble-typing">
-                <span class="typing-dot"></span>
-                <span class="typing-dot"></span>
-                <span class="typing-dot"></span>
-              </div>
-            </div>
-          </div>
-          }
         </div>
 
         <div class="chat-input-bar">
-          <textarea [(ngModel)]="newMessage" placeholder="Type a message... use @rocket for AI help"
+          <textarea [(ngModel)]="newMessage" placeholder="Type a message..."
             rows="1" (keydown.enter)="onEnterKey($event)" class="chat-input"></textarea>
           <button (click)="sendMessage()" [disabled]="!newMessage.trim() || sendingMessage()" class="chat-send-btn">
             @if (sendingMessage()) {
@@ -803,37 +742,6 @@
         </div>
         }
       </section>
-    </div>
-    }
-
-    @if (activeTab() === 'ai' && isCurrentUserMember()) {
-    <div class="fade-in">
-      <div class="ai-tab-card glass">
-        <div class="ai-tab-icon">
-          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.591.659H9.061a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2 2 0 01-2 2H7a2 2 0 01-2-2v-2.5" />
-          </svg>
-        </div>
-        <h2 class="ai-tab-title">Rocket AI Coach</h2>
-        <p class="ai-tab-desc">Your team's AI accountability coach. It knows everyone's goals and helps the whole team stay on track.</p>
-        <p class="ai-tab-note">Full AI coaching features coming soon. In the meantime, use the team chat or visit the <a routerLink="/ai" class="link-accent">AI page</a> for personal coaching.</p>
-        <div class="ai-tab-actions">
-          <a routerLink="/ai" class="btn solid">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Go to Personal AI
-          </a>
-          <button class="btn ghost" (click)="activeTab.set('chat')">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Team Chat
-          </button>
-        </div>
-      </div>
     </div>
     }
 

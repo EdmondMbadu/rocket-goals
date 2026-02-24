@@ -48,7 +48,7 @@ export class TeamDetailComponent implements OnInit {
   loading = signal(true);
   preparingTeamGoal = signal(false);
   teamGoalError = signal<string | null>(null);
-  activeTab = signal<'members' | 'chat' | 'ai' | 'direct'>('members');
+  activeTab = signal<'members' | 'chat' | 'direct'>('members');
   messages = signal<TeamMessage[]>([]);
   directMessages = signal<TeamDirectMessage[]>([]);
   directConversationPreviews = signal<TeamMemberConversationPreview[]>([]);
@@ -65,7 +65,6 @@ export class TeamDetailComponent implements OnInit {
   directSendError = signal<string | null>(null);
   showInviteModal = signal(false);
   sendingMessage = signal(false);
-  aiResponding = signal(false);
   inviteLoading = signal(false);
   inviteError = signal<string | null>(null);
   inviteSuccess = signal<string | null>(null);
@@ -328,12 +327,10 @@ export class TeamDetailComponent implements OnInit {
     effect(() => {
       const isChatTab = this.activeTab() === 'chat';
       const messageCount = this.messages().length;
-      const aiTyping = this.aiResponding();
-
       if (!isChatTab || !this.isCurrentUserMember()) {
         return;
       }
-      if (messageCount === 0 && !aiTyping) {
+      if (messageCount === 0) {
         return;
       }
 
@@ -1177,47 +1174,11 @@ export class TeamDetailComponent implements OnInit {
         source: 'web'
       });
       await this.loadMessages(teamId);
-
-      // Check if message mentions @rocket — trigger AI coach
-      if (/@rocket\b/i.test(content)) {
-        this.triggerAiCoach(teamId, content);
-      }
     } catch (err) {
       console.error('Failed to send message:', err);
       this.newMessage = content;
     } finally {
       this.sendingMessage.set(false);
-    }
-  }
-
-  private async triggerAiCoach(teamId: string, userMessage: string) {
-    this.aiResponding.set(true);
-
-    try {
-      // Pass recent messages for context
-      const recentMsgs = this.messages().slice(-10).map(m => ({
-        senderName: m.senderName,
-        content: m.content,
-        type: m.type
-      }));
-
-      const aiResponse = await this.teamService.askTeamAiCoach(teamId, userMessage, recentMsgs);
-
-      // Save AI response as a message in the chat
-      await this.teamService.sendMessage(teamId, {
-        teamId,
-        senderId: 'rocket-ai',
-        senderName: 'Rocket AI',
-        content: aiResponse,
-        type: 'ai-response',
-        source: 'web'
-      });
-
-      await this.loadMessages(teamId);
-    } catch (err) {
-      console.error('AI Coach error:', err);
-    } finally {
-      this.aiResponding.set(false);
     }
   }
 
