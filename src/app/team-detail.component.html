@@ -110,76 +110,80 @@
       </div>
 
       <div class="hero-body">
-        <div class="avatar-wrap">
-          <div class="team-avatar-frame">
-            <div class="team-avatar-fallback">{{ team()!.name.charAt(0).toUpperCase() }}</div>
+        <div class="hero-identity">
+          <div class="avatar-wrap">
+            <div class="team-avatar-frame">
+              <div class="team-avatar-fallback">{{ team()!.name.charAt(0).toUpperCase() }}</div>
+            </div>
+          </div>
+          <div class="hero-info">
+            <p class="eyebrow">Team</p>
+            <h1 class="title">{{ team()!.name }}</h1>
+            <p class="subtext">{{ team()!.members.length }} {{ team()!.members.length === 1 ? 'member' : 'members' }}
+              @if (team()!.description) {
+              <span class="divider">·</span> {{ team()!.description }}
+              }
+            </p>
           </div>
         </div>
-        <div class="hero-info">
-          <p class="eyebrow">Team</p>
-          <h1 class="title">{{ team()!.name }}</h1>
-          <p class="subtext">{{ team()!.members.length }} {{ team()!.members.length === 1 ? 'member' : 'members' }}
-            @if (team()!.description) {
-            <span class="divider">·</span> {{ team()!.description }}
-            }
-          </p>
-        </div>
-        <div class="hero-actions">
-          @if (teamGoal()) {
-          <div class="team-countdown-card">
-            <div class="team-countdown-head">
-              <p class="team-countdown-kicker">Mission Countdown</p>
-              @if (!teamDeadlineEditing() && canEditTeamDeadline()) {
-              <button class="team-countdown-edit" type="button" (click)="startEditingTeamDeadline()">
-                Edit Deadline
-              </button>
-              }
-            </div>
 
-            @if (teamDeadlineEditing()) {
-            <div class="team-countdown-edit-row">
-              <input
-                type="date"
-                class="team-deadline-input"
-                [value]="teamDeadlineInputValue()"
-                (input)="teamDeadlineInputValue.set($any($event.target).value)"
-                [min]="getTeamMinDeadlineDate()" />
-              <button class="team-deadline-save" type="button" (click)="saveTeamDeadline()" [disabled]="savingTeamDeadline()">
-                @if (savingTeamDeadline()) { Saving... } @else { Save }
-              </button>
-              <button class="team-deadline-cancel" type="button" (click)="cancelEditingTeamDeadline()" [disabled]="savingTeamDeadline()">
-                Cancel
-              </button>
-            </div>
-            @if (teamDeadlineError()) {
-            <p class="team-deadline-error">{{ teamDeadlineError() }}</p>
+        @if (teamGoal()) {
+        <div class="team-countdown-card">
+          <div class="team-countdown-head">
+            <p class="team-countdown-kicker">Mission Countdown</p>
+            @if (!teamDeadlineEditing() && canEditTeamDeadline()) {
+            <button class="team-countdown-edit" type="button" (click)="startEditingTeamDeadline()">
+              Edit Deadline
+            </button>
             }
-            } @else {
-            <p class="team-countdown-date">{{ getTeamDeadlineDateDisplay() }}</p>
-            <div class="team-countdown-grid">
-              <div class="team-countdown-box">
-                <span class="team-countdown-value">{{ teamCountdownDays() }}</span>
-                <span class="team-countdown-label">Days</span>
-              </div>
-              <div class="team-countdown-box">
-                <span class="team-countdown-value">{{ teamCountdownHours() }}</span>
-                <span class="team-countdown-label">Hours</span>
-              </div>
-              <div class="team-countdown-box">
-                <span class="team-countdown-value">{{ teamCountdownMinutes() }}</span>
-                <span class="team-countdown-label">Mins</span>
-              </div>
-              <div class="team-countdown-box">
-                <span class="team-countdown-value">{{ teamCountdownSeconds() }}</span>
-                <span class="team-countdown-label">Secs</span>
-              </div>
+          </div>
+
+          @if (teamDeadlineEditing()) {
+          <div class="team-countdown-edit-row">
+            <input
+              type="date"
+              class="team-deadline-input"
+              [value]="teamDeadlineInputValue()"
+              (input)="teamDeadlineInputValue.set($any($event.target).value)"
+              [min]="getTeamMinDeadlineDate()" />
+            <button class="team-deadline-save" type="button" (click)="saveTeamDeadline()" [disabled]="savingTeamDeadline()">
+              @if (savingTeamDeadline()) { Saving... } @else { Save }
+            </button>
+            <button class="team-deadline-cancel" type="button" (click)="cancelEditingTeamDeadline()" [disabled]="savingTeamDeadline()">
+              Cancel
+            </button>
+          </div>
+          @if (teamDeadlineError()) {
+          <p class="team-deadline-error">{{ teamDeadlineError() }}</p>
+          }
+          } @else {
+          <p class="team-countdown-date">{{ getTeamDeadlineDateDisplay() }}</p>
+          <div class="team-countdown-grid">
+            <div class="team-countdown-box">
+              <span class="team-countdown-value">{{ teamCountdownDays() }}</span>
+              <span class="team-countdown-label">Days</span>
             </div>
-            <div class="team-countdown-progress">
-              <span class="team-countdown-progress-fill" [style.width.%]="getTeamCountdownProgress()"></span>
+            <div class="team-countdown-box">
+              <span class="team-countdown-value">{{ teamCountdownHours() }}</span>
+              <span class="team-countdown-label">Hours</span>
             </div>
-            }
+            <div class="team-countdown-box">
+              <span class="team-countdown-value">{{ teamCountdownMinutes() }}</span>
+              <span class="team-countdown-label">Mins</span>
+            </div>
+            <div class="team-countdown-box">
+              <span class="team-countdown-value">{{ teamCountdownSeconds() }}</span>
+              <span class="team-countdown-label">Secs</span>
+            </div>
+          </div>
+          <div class="team-countdown-progress">
+            <span class="team-countdown-progress-fill" [style.width.%]="getTeamCountdownProgress()"></span>
           </div>
           }
+        </div>
+        }
+
+        <div class="hero-actions">
           @if (showJoinOnboarding()) {
           <button class="btn solid" (click)="openJoinModal()">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

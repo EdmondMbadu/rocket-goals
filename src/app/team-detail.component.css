@@ -230,16 +230,21 @@
 }
 
 .hero-body {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  padding: 18px;
+  padding: 18px 20px;
+}
+
+.hero-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 @media (max-width: 640px) {
-  .hero-body {
-    grid-template-columns: 1fr;
+  .hero-identity {
+    flex-direction: column;
     text-align: center;
   }
 
@@ -315,11 +320,9 @@
 }
 
 .team-countdown-card {
-  min-width: 290px;
-  max-width: 340px;
-  flex: 1 1 320px;
+  width: 100%;
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background:
     radial-gradient(circle at 15% 0%, rgba(248, 113, 113, 0.2), transparent 48%),
     linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.7));
@@ -372,8 +375,9 @@
 
 .team-countdown-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
+  max-width: 360px;
 }
 
 .team-countdown-box {
@@ -406,7 +410,7 @@
 
 .team-countdown-progress {
   margin-top: 8px;
-  width: 100%;
+  max-width: 360px;
   height: 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
@@ -2269,9 +2273,7 @@
   }
 
   .team-countdown-card {
-    min-width: 0;
     width: 100%;
-    max-width: 100%;
   }
 
   .team-countdown-grid {
