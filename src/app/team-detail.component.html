@@ -319,63 +319,185 @@
       }
 
       @if (isCurrentUserMember()) {
-      <section class="team-direct-summary team-members-global-summary glass">
-        <div class="team-direct-summary-head">
-          <div>
-            <p class="team-direct-kicker">Team Mission Control</p>
-            <h3>Global Goal Summary</h3>
-            <p>Live global stats for this team goal only.</p>
+      <section class="mission-control-dashboard glass">
+        <div class="mc-header">
+          <div class="mc-header-left">
+            <div class="mc-icon-wrap">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <p class="mc-kicker">Team Mission Control</p>
+              <h3 class="mc-title">Global Goal Summary</h3>
+              <p class="mc-subtitle">Live global stats across all team members</p>
+            </div>
           </div>
-          @if (loadingParticipantSummaries()) {
-          <span class="muted tiny">Refreshing...</span>
-          }
+          <div class="mc-header-right">
+            @if (loadingParticipantSummaries()) {
+            <span class="mc-refresh-badge">
+              <span class="spinner small"></span>
+              Syncing...
+            </span>
+            } @else {
+            <span class="mc-live-badge">
+              <span class="mc-live-dot"></span>
+              Live
+            </span>
+            }
+          </div>
         </div>
 
         @if (participantSummaryError()) {
         <p class="alert-inline error">{{ participantSummaryError() }}</p>
         }
 
-        <div class="team-direct-stats-grid">
-          <article class="team-direct-stat-card">
-            <p class="team-direct-stat-label">Participants</p>
-            <p class="team-direct-stat-value">{{ teamDirectSummary().totalParticipants }}</p>
-            <p class="team-direct-stat-sub">{{ teamDirectSummary().goalsStarted }} with active goals</p>
+        <!-- Hero Stats Row -->
+        <div class="mc-hero-stats">
+          <article class="mc-stat-card mc-stat-participants">
+            <div class="mc-stat-icon-wrap participants">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div class="mc-stat-content">
+              <p class="mc-stat-label">Total Members</p>
+              <p class="mc-stat-value">{{ teamDirectSummary().totalParticipants }}</p>
+              <p class="mc-stat-sub">{{ teamDirectSummary().goalsStarted }} with active goals</p>
+            </div>
+            <div class="mc-stat-ring">
+              <svg viewBox="0 0 36 36" class="mc-ring-svg">
+                <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="mc-ring-fill participants" [attr.stroke-dasharray]="(teamDirectSummary().totalParticipants > 0 ? (teamDirectSummary().goalsStarted / teamDirectSummary().totalParticipants * 100) : 0) + ', 100'"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
           </article>
-          <article class="team-direct-stat-card">
-            <p class="team-direct-stat-label">Milestones Done</p>
-            <p class="team-direct-stat-value">{{ teamDirectSummary().completedMilestones }} / {{ teamDirectSummary().totalMilestones }}</p>
-            <p class="team-direct-stat-sub">{{ teamDirectSummary().completionPercent }}% completion rate</p>
+
+          <article class="mc-stat-card mc-stat-milestones">
+            <div class="mc-stat-icon-wrap milestones">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="mc-stat-content">
+              <p class="mc-stat-label">Milestones Done</p>
+              <p class="mc-stat-value">{{ teamDirectSummary().completedMilestones }}<span class="mc-stat-total"> / {{ teamDirectSummary().totalMilestones }}</span></p>
+              <p class="mc-stat-sub">{{ teamDirectSummary().completionPercent }}% completion rate</p>
+            </div>
+            <div class="mc-stat-ring">
+              <svg viewBox="0 0 36 36" class="mc-ring-svg">
+                <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="mc-ring-fill milestones" [attr.stroke-dasharray]="teamDirectSummary().completionPercent + ', 100'"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
           </article>
-          <article class="team-direct-stat-card">
-            <p class="team-direct-stat-label">Today Done</p>
-            <p class="team-direct-stat-value">{{ teamDirectSummary().completedToday }} / {{ teamDirectSummary().totalToday }}</p>
-            <p class="team-direct-stat-sub">{{ teamDirectSummary().todayPercent }}% execution today</p>
+
+          <article class="mc-stat-card mc-stat-today">
+            <div class="mc-stat-icon-wrap today">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div class="mc-stat-content">
+              <p class="mc-stat-label">Today's Execution</p>
+              <p class="mc-stat-value">{{ teamDirectSummary().completedToday }}<span class="mc-stat-total"> / {{ teamDirectSummary().totalToday }}</span></p>
+              <p class="mc-stat-sub">{{ teamDirectSummary().todayPercent }}% done today</p>
+            </div>
+            <div class="mc-stat-ring">
+              <svg viewBox="0 0 36 36" class="mc-ring-svg">
+                <path class="mc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="mc-ring-fill today" [attr.stroke-dasharray]="teamDirectSummary().todayPercent + ', 100'"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
           </article>
-          <article class="team-direct-stat-card">
-            <p class="team-direct-stat-label">Active Today</p>
-            <p class="team-direct-stat-value">{{ teamDirectSummary().activeTodayCount }}</p>
-            <p class="team-direct-stat-sub">participants with tasks for today</p>
+
+          <article class="mc-stat-card mc-stat-active">
+            <div class="mc-stat-icon-wrap active">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <div class="mc-stat-content">
+              <p class="mc-stat-label">Active Today</p>
+              <p class="mc-stat-value">{{ teamDirectSummary().activeTodayCount }}</p>
+              <p class="mc-stat-sub">members with tasks today</p>
+            </div>
           </article>
         </div>
 
-        <div class="team-direct-progress-grid">
-          <div class="team-direct-progress-item">
-            <div class="team-direct-progress-meta">
-              <span>Overall Milestone Completion</span>
-              <strong>{{ teamDirectSummary().completionPercent }}%</strong>
+        <!-- Progress Bars Section -->
+        <div class="mc-progress-section">
+          <div class="mc-progress-card">
+            <div class="mc-progress-header">
+              <div class="mc-progress-label-row">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #ef4444">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Overall Milestone Progress</span>
+              </div>
+              <strong class="mc-progress-pct">{{ teamDirectSummary().completionPercent }}%</strong>
             </div>
-            <div class="direct-progress-track">
-              <span class="direct-progress-fill" [style.width.%]="teamDirectSummary().completionPercent"></span>
+            <div class="mc-progress-track">
+              <div class="mc-progress-fill milestones" [style.width.%]="teamDirectSummary().completionPercent">
+                @if (teamDirectSummary().completionPercent > 8) {
+                <span class="mc-progress-text">{{ teamDirectSummary().completedMilestones }} done</span>
+                }
+              </div>
             </div>
+            <p class="mc-progress-footnote">{{ teamDirectSummary().completedMilestones }} of {{ teamDirectSummary().totalMilestones }} milestones completed across all members</p>
           </div>
-          <div class="team-direct-progress-item">
-            <div class="team-direct-progress-meta">
-              <span>Today's Execution Rate</span>
-              <strong>{{ teamDirectSummary().todayPercent }}%</strong>
+
+          <div class="mc-progress-card">
+            <div class="mc-progress-header">
+              <div class="mc-progress-label-row">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #f59e0b">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Today's Execution Rate</span>
+              </div>
+              <strong class="mc-progress-pct today">{{ teamDirectSummary().todayPercent }}%</strong>
             </div>
-            <div class="direct-progress-track">
-              <span class="direct-progress-fill today" [style.width.%]="teamDirectSummary().todayPercent"></span>
+            <div class="mc-progress-track">
+              <div class="mc-progress-fill today" [style.width.%]="teamDirectSummary().todayPercent">
+                @if (teamDirectSummary().todayPercent > 8) {
+                <span class="mc-progress-text">{{ teamDirectSummary().completedToday }} done</span>
+                }
+              </div>
             </div>
+            <p class="mc-progress-footnote">{{ teamDirectSummary().completedToday }} of {{ teamDirectSummary().totalToday }} tasks completed today</p>
+          </div>
+
+          <div class="mc-progress-card">
+            <div class="mc-progress-header">
+              <div class="mc-progress-label-row">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #10b981">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Team Engagement</span>
+              </div>
+              <strong class="mc-progress-pct engagement">{{ teamDirectSummary().totalParticipants > 0 ? (teamDirectSummary().goalsStarted * 100 / teamDirectSummary().totalParticipants | number:'1.0-0') : 0 }}%</strong>
+            </div>
+            <div class="mc-progress-track">
+              <div class="mc-progress-fill engagement" [style.width.%]="teamDirectSummary().totalParticipants > 0 ? (teamDirectSummary().goalsStarted / teamDirectSummary().totalParticipants * 100) : 0">
+                @if (teamDirectSummary().totalParticipants > 0 && (teamDirectSummary().goalsStarted / teamDirectSummary().totalParticipants * 100) > 8) {
+                <span class="mc-progress-text">{{ teamDirectSummary().goalsStarted }} active</span>
+                }
+              </div>
+            </div>
+            <p class="mc-progress-footnote">{{ teamDirectSummary().goalsStarted }} of {{ teamDirectSummary().totalParticipants }} members have started their goals</p>
           </div>
         </div>
       </section>

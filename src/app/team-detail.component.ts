@@ -184,7 +184,7 @@ export class TeamDetailComponent implements OnInit {
   });
   teamDirectSummary = computed(() => {
     const rows = this.participantSummaryRows();
-    const totalParticipants = rows.length;
+    const totalParticipants = this.team()?.members.length || rows.length;
     const goalsStarted = rows.filter(row => !!row.activity?.goalId || !!row.activity?.primaryGoal).length;
     const totalMilestones = rows.reduce((sum, row) => sum + (row.activity?.totalMilestones || 0), 0);
     const completedMilestones = rows.reduce((sum, row) => sum + (row.activity?.completedMilestones || 0), 0);
