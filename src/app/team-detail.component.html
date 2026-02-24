@@ -407,9 +407,25 @@
 
         <div class="mc-cards-grid">
           @for (card of missionControlCardViews(); track card.id) {
-          <article class="mc-card-shell" [class.mc-card-histogram]="card.style === 'histogram'">
+          <article class="mc-card-shell"
+            [class.mc-card-histogram]="card.style === 'histogram'"
+            [class.mc-card-draggable]="missionControlCardsEditing()"
+            [class.mc-card-dragging]="draggingMissionControlCardId() === card.id"
+            [class.mc-card-drop-before]="dragOverMissionControlCardId() === card.id && dragOverMissionControlCardPosition() === 'before'"
+            [class.mc-card-drop-after]="dragOverMissionControlCardId() === card.id && dragOverMissionControlCardPosition() === 'after'"
+            [draggable]="missionControlCardsEditing()"
+            (dragstart)="onMissionControlCardDragStart(card.id, $event)"
+            (dragover)="onMissionControlCardDragOver(card.id, $event)"
+            (drop)="onMissionControlCardDrop(card.id, $event)"
+            (dragend)="onMissionControlCardDragEnd()">
             <div class="mc-card-top">
               @if (missionControlCardsEditing()) {
+              <div class="mc-card-grip" title="Drag to reorder">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h.01M8 15h.01M12 9h.01M12 15h.01M16 9h.01M16 15h.01" />
+                </svg>
+                <span>Drag to reorder</span>
+              </div>
               <input class="mc-card-name-input" type="text" [ngModel]="card.name"
                 (ngModelChange)="updateMissionControlDraftCardName(card.id, $event)" />
               <div class="mc-card-edit-fields">

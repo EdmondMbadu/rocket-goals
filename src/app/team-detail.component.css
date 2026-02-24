@@ -2440,10 +2440,48 @@
   background: rgba(15, 23, 42, 0.66);
 }
 
+.mc-card-draggable {
+  cursor: grab;
+  user-select: none;
+}
+
+.mc-card-draggable:active {
+  cursor: grabbing;
+}
+
+.mc-card-dragging {
+  opacity: 0.58;
+  transform: scale(0.985);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.mc-card-drop-before {
+  box-shadow: inset 0 3px 0 rgba(248, 113, 113, 0.9);
+}
+
+.mc-card-drop-after {
+  box-shadow: inset 0 -3px 0 rgba(248, 113, 113, 0.9);
+}
+
 .mc-card-top {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.mc-card-grip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .mc-card-edit-fields {
@@ -3346,6 +3384,16 @@
 .light-mode .mc-card-shell {
   border-color: rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.92);
+}
+.light-mode .mc-card-drop-before {
+  box-shadow: inset 0 3px 0 rgba(239, 68, 68, 0.72);
+}
+.light-mode .mc-card-drop-after {
+  box-shadow: inset 0 -3px 0 rgba(239, 68, 68, 0.72);
+}
+.light-mode .mc-card-grip {
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #64748b;
 }
 .light-mode .mc-add-input,
 .light-mode .mc-add-select,

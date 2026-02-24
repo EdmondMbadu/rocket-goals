@@ -183,6 +183,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   missionControlCardsEditing = signal(false);
   showAddMissionControlCardForm = signal(false);
   missionControlDraftCards = signal<TeamMissionControlCard[]>([]);
+  draggingMissionControlCardId = signal<string | null>(null);
+  dragOverMissionControlCardId = signal<string | null>(null);
+  dragOverMissionControlCardPosition = signal<'before' | 'after' | null>(null);
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
   currentUserName = computed(() => {
@@ -473,6 +476,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.showAddMissionControlCardForm.set(false);
       this.missionControlDraftCards.set([]);
       this.missionControlCardsError.set(null);
+      this.draggingMissionControlCardId.set(null);
+      this.dragOverMissionControlCardId.set(null);
+      this.dragOverMissionControlCardPosition.set(null);
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
@@ -610,6 +616,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.newMissionControlCardStyle = 'histogram';
     this.missionControlDraftCards.set(this.missionControlCards().map(card => ({ ...card })));
     this.missionControlCardsEditing.set(true);
+    this.draggingMissionControlCardId.set(null);
+    this.dragOverMissionControlCardId.set(null);
+    this.dragOverMissionControlCardPosition.set(null);
   }
 
   cancelMissionControlEditor() {
@@ -617,6 +626,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.showAddMissionControlCardForm.set(false);
     this.missionControlDraftCards.set([]);
     this.newMissionControlCardName = '';
+    this.draggingMissionControlCardId.set(null);
+    this.dragOverMissionControlCardId.set(null);
+    this.dragOverMissionControlCardPosition.set(null);
   }
 
   showAddMissionControlCard() {
@@ -673,6 +685,99 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   removeMissionControlDraftCard(cardId: string) {
     this.missionControlDraftCards.update(cards => cards.filter(card => card.id !== cardId));
+    if (this.draggingMissionControlCardId() === cardId) {
+      this.draggingMissionControlCardId.set(null);
+    }
+    if (this.dragOverMissionControlCardId() === cardId) {
+      this.dragOverMissionControlCardId.set(null);
+      this.dragOverMissionControlCardPosition.set(null);
+    }
+  }
+
+  onMissionControlCardDragStart(cardId: string, event: DragEvent) {
+    if (!this.missionControlCardsEditing()) {
+      return;
+    }
+    this.draggingMissionControlCardId.set(cardId);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', cardId);
+    }
+  }
+
+  onMissionControlCardDragOver(targetCardId: string, event: DragEvent) {
+    if (!this.missionControlCardsEditing()) {
+      return;
+    }
+    const draggingId = this.draggingMissionControlCardId();
+    if (!draggingId || draggingId === targetCardId) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+
+    const targetEl = event.currentTarget as HTMLElement | null;
+    let position: 'before' | 'after' = 'before';
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      position = event.clientY >= rect.top + rect.height / 2 ? 'after' : 'before';
+    }
+    this.dragOverMissionControlCardId.set(targetCardId);
+    this.dragOverMissionControlCardPosition.set(position);
+  }
+
+  onMissionControlCardDrop(targetCardId: string, event: DragEvent) {
+    if (!this.missionControlCardsEditing()) {
+      return;
+    }
+    event.preventDefault();
+    const sourceCardId = this.draggingMissionControlCardId()
+      || event.dataTransfer?.getData('text/plain')
+      || null;
+
+    const position = this.dragOverMissionControlCardPosition() || 'before';
+    this.reorderMissionControlDraftCards(sourceCardId, targetCardId, position);
+    this.draggingMissionControlCardId.set(null);
+    this.dragOverMissionControlCardId.set(null);
+    this.dragOverMissionControlCardPosition.set(null);
+  }
+
+  onMissionControlCardDragEnd() {
+    this.draggingMissionControlCardId.set(null);
+    this.dragOverMissionControlCardId.set(null);
+    this.dragOverMissionControlCardPosition.set(null);
+  }
+
+  private reorderMissionControlDraftCards(
+    sourceCardId: string | null,
+    targetCardId: string,
+    position: 'before' | 'after'
+  ) {
+    if (!sourceCardId || sourceCardId === targetCardId) {
+      return;
+    }
+    this.missionControlDraftCards.update(cards => {
+      const sourceIndex = cards.findIndex(card => card.id === sourceCardId);
+      const targetIndex = cards.findIndex(card => card.id === targetCardId);
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) {
+        return cards;
+      }
+
+      const next = [...cards];
+      const [moved] = next.splice(sourceIndex, 1);
+      let insertIndex = targetIndex;
+      if (sourceIndex < targetIndex) {
+        insertIndex -= 1;
+      }
+      if (position === 'after') {
+        insertIndex += 1;
+      }
+      insertIndex = Math.max(0, Math.min(next.length, insertIndex));
+      next.splice(insertIndex, 0, moved);
+      return next;
+    });
   }
 
   async saveMissionControlCards() {
@@ -698,6 +803,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.showAddMissionControlCardForm.set(false);
       this.missionControlDraftCards.set([]);
       this.missionControlCardsSuccess.set('Mission Control cards updated.');
+      this.draggingMissionControlCardId.set(null);
+      this.dragOverMissionControlCardId.set(null);
+      this.dragOverMissionControlCardPosition.set(null);
     } catch (error) {
       console.error('Failed to save Mission Control cards:', error);
       this.missionControlCardsError.set('Unable to save Mission Control cards right now.');
