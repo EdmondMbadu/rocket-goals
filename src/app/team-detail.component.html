@@ -110,79 +110,81 @@
       </div>
 
       <div class="hero-body">
-        <div class="hero-identity">
-          <div class="avatar-wrap">
-            <div class="team-avatar-frame">
-              <div class="team-avatar-fallback">{{ team()!.name.charAt(0).toUpperCase() }}</div>
+        <div class="hero-top-row">
+          <div class="hero-identity">
+            <div class="avatar-wrap">
+              <div class="team-avatar-frame">
+                <div class="team-avatar-fallback">{{ team()!.name.charAt(0).toUpperCase() }}</div>
+              </div>
+            </div>
+            <div class="hero-info">
+              <p class="eyebrow">Team</p>
+              <h1 class="title">{{ team()!.name }}</h1>
+              <p class="subtext">{{ team()!.members.length }} {{ team()!.members.length === 1 ? 'member' : 'members' }}
+                @if (team()!.description) {
+                <span class="divider">·</span> {{ team()!.description }}
+                }
+              </p>
             </div>
           </div>
-          <div class="hero-info">
-            <p class="eyebrow">Team</p>
-            <h1 class="title">{{ team()!.name }}</h1>
-            <p class="subtext">{{ team()!.members.length }} {{ team()!.members.length === 1 ? 'member' : 'members' }}
-              @if (team()!.description) {
-              <span class="divider">·</span> {{ team()!.description }}
-              }
-            </p>
-          </div>
-        </div>
 
           @if (teamGoal()) {
           <div class="team-countdown-card">
-          <div class="team-countdown-head">
-            <p class="team-countdown-kicker">Mission Countdown</p>
-            @if (!teamDeadlineEditing() && canEditTeamDeadline()) {
-            <button class="team-countdown-edit" type="button" (click)="startEditingTeamDeadline()">
-              Edit Deadline
-            </button>
+            <div class="team-countdown-head">
+              <p class="team-countdown-kicker">Mission Countdown</p>
+              @if (!teamDeadlineEditing() && canEditTeamDeadline()) {
+              <button class="team-countdown-edit" type="button" (click)="startEditingTeamDeadline()">
+                Edit Deadline
+              </button>
+              }
+            </div>
+            @if (teamDeadlineEditing()) {
+            <div class="team-countdown-edit-row">
+              <input
+                type="date"
+                class="team-deadline-input"
+                [value]="teamDeadlineInputValue()"
+                (input)="teamDeadlineInputValue.set($any($event.target).value)"
+                [min]="getTeamMinDeadlineDate()" />
+              <button class="team-deadline-save" type="button" (click)="saveTeamDeadline()" [disabled]="savingTeamDeadline()">
+                @if (savingTeamDeadline()) { Saving... } @else { Save }
+              </button>
+              <button class="team-deadline-cancel" type="button" (click)="cancelEditingTeamDeadline()" [disabled]="savingTeamDeadline()">
+                Cancel
+              </button>
+            </div>
+            @if (teamDeadlineError()) {
+            <p class="team-deadline-error">{{ teamDeadlineError() }}</p>
+            }
+            } @else {
+            <p class="team-countdown-date">{{ getTeamDeadlineDateDisplay() }}</p>
+            <div class="team-countdown-grid">
+              <div class="team-countdown-box">
+                <span class="team-countdown-value">{{ teamCountdownDays() }}</span>
+                <span class="team-countdown-label">Days</span>
+              </div>
+              <div class="team-countdown-box">
+                <span class="team-countdown-value">{{ teamCountdownHours() }}</span>
+                <span class="team-countdown-label">Hours</span>
+              </div>
+              <div class="team-countdown-box">
+                <span class="team-countdown-value">{{ teamCountdownMinutes() }}</span>
+                <span class="team-countdown-label">Mins</span>
+              </div>
+              <div class="team-countdown-box">
+                <span class="team-countdown-value">{{ teamCountdownSeconds() }}</span>
+                <span class="team-countdown-label">Secs</span>
+              </div>
+            </div>
+            <div class="team-countdown-progress">
+              <span class="team-countdown-progress-fill" [style.width.%]="getTeamCountdownProgress()"></span>
+            </div>
             }
           </div>
+          }
+        </div>
 
-          @if (teamDeadlineEditing()) {
-          <div class="team-countdown-edit-row">
-            <input
-              type="date"
-              class="team-deadline-input"
-              [value]="teamDeadlineInputValue()"
-              (input)="teamDeadlineInputValue.set($any($event.target).value)"
-              [min]="getTeamMinDeadlineDate()" />
-            <button class="team-deadline-save" type="button" (click)="saveTeamDeadline()" [disabled]="savingTeamDeadline()">
-              @if (savingTeamDeadline()) { Saving... } @else { Save }
-            </button>
-            <button class="team-deadline-cancel" type="button" (click)="cancelEditingTeamDeadline()" [disabled]="savingTeamDeadline()">
-              Cancel
-            </button>
-          </div>
-          @if (teamDeadlineError()) {
-          <p class="team-deadline-error">{{ teamDeadlineError() }}</p>
-          }
-          } @else {
-          <p class="team-countdown-date">{{ getTeamDeadlineDateDisplay() }}</p>
-          <div class="team-countdown-grid">
-            <div class="team-countdown-box">
-              <span class="team-countdown-value">{{ teamCountdownDays() }}</span>
-              <span class="team-countdown-label">Days</span>
-            </div>
-            <div class="team-countdown-box">
-              <span class="team-countdown-value">{{ teamCountdownHours() }}</span>
-              <span class="team-countdown-label">Hours</span>
-            </div>
-            <div class="team-countdown-box">
-              <span class="team-countdown-value">{{ teamCountdownMinutes() }}</span>
-              <span class="team-countdown-label">Mins</span>
-            </div>
-            <div class="team-countdown-box">
-              <span class="team-countdown-value">{{ teamCountdownSeconds() }}</span>
-              <span class="team-countdown-label">Secs</span>
-            </div>
-          </div>
-          <div class="team-countdown-progress">
-            <span class="team-countdown-progress-fill" [style.width.%]="getTeamCountdownProgress()"></span>
-          </div>
-          }
-          </div>
-          }
-
+        <div class="hero-bottom-row">
           <div class="team-welcome-card">
             <div class="team-welcome-head">
               <p class="team-welcome-kicker">Team Welcome</p>
@@ -192,7 +194,6 @@
               </button>
               }
             </div>
-
             @if (teamWelcomeEditing()) {
             <div class="team-welcome-edit-wrap">
               <textarea
@@ -224,47 +225,48 @@
           </div>
 
           <div class="hero-actions">
-          @if (showJoinOnboarding()) {
-          <button class="btn solid" (click)="openJoinModal()">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Join Team
-          </button>
-          }
-          @if (canShareTeamLink()) {
-          <button class="btn ghost" (click)="shareTeamLink()">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342a3 3 0 114.632-2.684m-6.948 2.684A3 3 0 005.25 17.25h13.5a3 3 0 00-1.436-2.566m-10.628-1.342L12 9m0 0l5.314 4.342" />
-            </svg>
-            Copy Chat Link
-          </button>
-          }
-          @if (canLeaveTeam()) {
-          <button class="btn ghost" (click)="promptLeaveTeam()">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H7a2 2 0 01-2-2V6a2 2 0 012-2h6" />
-            </svg>
-            Leave Team
-          </button>
-          }
-          @if (canManageTeamInvites()) {
-          <button class="btn solid" (click)="openInviteModal()">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            @if (showJoinOnboarding()) {
+            <button class="btn solid" (click)="openJoinModal()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-            Invite
-          </button>
-          }
-          @if (isCurrentUserMember()) {
-          <button class="btn ghost" (click)="activeTab.set('chat')">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Chat
-          </button>
-          }
+              Join Team
+            </button>
+            }
+            @if (canShareTeamLink()) {
+            <button class="btn ghost" (click)="shareTeamLink()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342a3 3 0 114.632-2.684m-6.948 2.684A3 3 0 005.25 17.25h13.5a3 3 0 00-1.436-2.566m-10.628-1.342L12 9m0 0l5.314 4.342" />
+              </svg>
+              Copy Chat Link
+            </button>
+            }
+            @if (canLeaveTeam()) {
+            <button class="btn ghost" (click)="promptLeaveTeam()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H7a2 2 0 01-2-2V6a2 2 0 012-2h6" />
+              </svg>
+              Leave Team
+            </button>
+            }
+            @if (canManageTeamInvites()) {
+            <button class="btn solid" (click)="openInviteModal()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Invite
+            </button>
+            }
+            @if (isCurrentUserMember()) {
+            <button class="btn ghost" (click)="activeTab.set('chat')">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Chat
+            </button>
+            }
+          </div>
         </div>
       </div>
     </section>
