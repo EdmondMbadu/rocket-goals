@@ -76,6 +76,16 @@ export class TeamService {
     return sanitized;
   }
 
+  private sanitizeWritePayload<T extends Record<string, any>>(payload: T): Record<string, any> {
+    const sanitized: Record<string, any> = {};
+    for (const [key, value] of Object.entries(payload)) {
+      if (value !== undefined) {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+
   private async getFirestore(): Promise<Firestore> {
     if (!this.firestoreInstance) {
       this.firestoreInstance = (async () => {
@@ -479,10 +489,11 @@ export class TeamService {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
     const messagesRef = fm.collection(firestore, 'teams', teamId, 'messages');
-    const docRef = await fm.addDoc(messagesRef, {
+    const payload = this.sanitizeWritePayload({
       ...message,
       timestamp: fm.serverTimestamp()
     });
+    const docRef = await fm.addDoc(messagesRef, payload);
     await fm.updateDoc(docRef, { id: docRef.id });
     return docRef.id;
   }
@@ -520,12 +531,13 @@ export class TeamService {
       participantUserId,
       'messages'
     );
-    const docRef = await fm.addDoc(messagesRef, {
+    const payload = this.sanitizeWritePayload({
       ...message,
       teamId,
       participantUserId,
       timestamp: fm.serverTimestamp()
     });
+    const docRef = await fm.addDoc(messagesRef, payload);
     await fm.updateDoc(docRef, { id: docRef.id });
     return docRef.id;
   }
