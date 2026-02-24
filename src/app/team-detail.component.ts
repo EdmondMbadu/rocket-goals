@@ -202,12 +202,20 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   });
 
   isAdmin = computed(() => this.team()?.adminId === this.currentUserId());
+  currentUserTeamMember = computed(() => this.findCurrentUserTeamMember(this.team()));
   isCurrentUserTeamLead = computed(() => {
     const team = this.team();
     if (!team) {
       return false;
     }
     return this.findCurrentUserTeamMember(team)?.role === 'team-lead';
+  });
+  canManageTeamInvites = computed(() => {
+    if (this.isAdmin()) {
+      return true;
+    }
+    const role = this.currentUserTeamMember()?.role;
+    return role === 'coach' || role === 'captain' || role === 'team-lead';
   });
   canAccessDirectConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
@@ -307,7 +315,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   });
 
   canShareTeamLink = computed(() => {
-    return !!this.team()?.id && this.isCurrentUserMember();
+    return !!this.team()?.id && this.canManageTeamInvites();
   });
 
   isBusyJoining = computed(() => this.authActionLoading() || this.joiningTeam());
@@ -1347,7 +1355,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   async shareTeamLink() {
     const team = this.team();
     const pageUrl = this.teamPageUrl();
-    if (!team?.id || !pageUrl) {
+    if (!team?.id || !pageUrl || !this.canShareTeamLink()) {
       return;
     }
 
@@ -1763,7 +1771,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   openInviteModal() {
-    if (!this.isAdmin()) {
+    if (!this.canManageTeamInvites()) {
       return;
     }
     this.inviteError.set(null);
@@ -1859,7 +1867,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     }
 
     const teamData = this.team();
-    if (!teamData?.id || !this.isAdmin()) return;
+    if (!teamData?.id || !this.canManageTeamInvites()) return;
 
     if (teamData.members.some(m => this.normalizeEmail(m.email) === email)) {
       this.inviteError.set('This person is already a member of the team.');
@@ -1890,7 +1898,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       console.error('Failed to send invite:', err);
       const code = String(err?.code || '');
       if (code.includes('permission-denied')) {
-        this.inviteError.set('Only the team admin can send invites.');
+        this.inviteError.set('Only team admin, team lead, coach, or captain can send invites.');
       } else if (code.includes('invalid-argument')) {
         this.inviteError.set('Enter a valid email address to send an invite.');
       } else if (code.includes('already-exists')) {

@@ -138,7 +138,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342a3 3 0 114.632-2.684m-6.948 2.684A3 3 0 005.25 17.25h13.5a3 3 0 00-1.436-2.566m-10.628-1.342L12 9m0 0l5.314 4.342" />
             </svg>
-            Copy Share Link
+            Copy Chat Link
           </button>
           }
           @if (canLeaveTeam()) {
@@ -149,11 +149,11 @@
             Leave Team
           </button>
           }
-          @if (isAdmin()) {
+          @if (canManageTeamInvites()) {
           <button class="btn solid" (click)="openInviteModal()">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
+              </svg>
             Invite
           </button>
           }
@@ -341,7 +341,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
         </svg>
         <p>No members yet</p>
-        @if (isAdmin()) {
+        @if (canManageTeamInvites()) {
         <button class="btn solid sm" (click)="openInviteModal()">Invite members</button>
         }
       </div>
@@ -1116,7 +1116,7 @@
           <p class="muted tiny" style="margin-bottom: 8px">Team share link</p>
           <div class="invite-row">
             <input type="text" [value]="teamPageUrl()" readonly class="input" />
-            <button (click)="shareTeamLink()" class="btn ghost sm">Copy Share Link</button>
+            <button (click)="shareTeamLink()" class="btn ghost sm">Copy Chat Link</button>
           </div>
           <p class="muted tiny" style="margin-top: 10px">Share this exact team link. Anyone with it can open this page, sign up or log in, then join the team.</p>
         </div>

@@ -3373,7 +3373,7 @@ export const sendWelcomeEmail = functions.runWith({
 
 /**
  * Cloud Function to send team invitation emails
- * Accessible by team admins only
+ * Accessible by team admins, team leads, coaches, and captains
  */
 export const sendTeamInviteEmail = functions.runWith({
     secrets: [sendgridApiKey]
@@ -3416,11 +3416,20 @@ export const sendTeamInviteEmail = functions.runWith({
         }
 
         const teamData = teamDoc.data() || {};
-        if (teamData.adminId !== context.auth.uid) {
-            throw new functions.https.HttpsError('permission-denied', 'Only the team admin can invite members.');
+        const members = Array.isArray(teamData.members) ? teamData.members : [];
+        const inviterFromTeam = members.find((member: any) => member?.userId === context.auth.uid);
+        const inviterRole = String(inviterFromTeam?.role || '').trim().toLowerCase();
+        const canInviteMembers = teamData.adminId === context.auth.uid
+            || inviterRole === 'team-lead'
+            || inviterRole === 'coach'
+            || inviterRole === 'captain';
+        if (!canInviteMembers) {
+            throw new functions.https.HttpsError(
+                'permission-denied',
+                'Only team admin, team lead, coach, or captain can invite members.'
+            );
         }
 
-        const members = Array.isArray(teamData.members) ? teamData.members : [];
         const isAlreadyMember = members.some((member: any) =>
             (member?.email || '').toString().trim().toLowerCase() === inviteeEmail
         );
@@ -3436,11 +3445,10 @@ export const sendTeamInviteEmail = functions.runWith({
         sgMail.setApiKey(apiKey);
 
         const inviterRecord = await admin.auth().getUser(context.auth.uid).catch(() => null);
-        const inviterFromTeam = members.find((member: any) => member?.userId === context.auth.uid);
         const inviterDisplayName = (
             inviterRecord?.displayName?.trim() ||
             `${inviterFromTeam?.firstName || ''} ${inviterFromTeam?.lastName || ''}`.trim() ||
-            'A Rocket Goals admin'
+            'A Rocket Goals leader'
         );
 
         const teamName = (String(data?.teamName || teamData.name || '').trim() || 'your team');
