@@ -672,6 +672,12 @@
   margin-bottom: 14px;
 }
 
+.section-inline-note {
+  margin: -2px 0 10px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
 /* ===== Members Circle Grid ===== */
 .members-circle-grid {
   display: grid;
@@ -692,6 +698,11 @@
   transition: all 0.3s ease;
   width: 100%;
   position: relative;
+}
+
+.member-circle-card.coach-captain-card {
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
 }
 
 .member-circle-card:hover {
@@ -718,6 +729,14 @@
 .member-circle-avatar-wrap.admin-ring::before {
   background: linear-gradient(135deg, #ef4444, #f97316, #ef4444);
   animation: ring-glow 3s ease-in-out infinite;
+}
+
+.member-circle-avatar-wrap.coach-ring::before {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7, #0369a1);
+}
+
+.member-circle-avatar-wrap.captain-ring::before {
+  background: linear-gradient(135deg, #22c55e, #16a34a, #15803d);
 }
 
 @keyframes ring-glow {
@@ -747,6 +766,14 @@
 
 .member-circle-fallback.admin-fallback {
   background: linear-gradient(135deg, #ef4444, #7f1d1d);
+}
+
+.member-circle-fallback.coach-fallback {
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+}
+
+.member-circle-fallback.captain-fallback {
+  background: linear-gradient(135deg, #22c55e, #15803d);
 }
 
 .member-status-dot {
@@ -821,6 +848,18 @@
   background: rgba(250, 204, 21, 0.14);
   color: #fde68a;
   border-color: rgba(250, 204, 21, 0.3);
+}
+
+.role-pill.coach-pill {
+  background: rgba(14, 165, 233, 0.18);
+  color: #7dd3fc;
+  border-color: rgba(14, 165, 233, 0.35);
+}
+
+.role-pill.captain-pill {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.34);
 }
 
 .member-circle-email {
@@ -1708,10 +1747,19 @@
   color: #94a3b8;
 }
 
+.light-mode .section-inline-note {
+  color: #64748b;
+}
+
 .light-mode .member-circle-card {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(15, 23, 42, 0.06);
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.light-mode .member-circle-card.coach-captain-card {
+  border-color: rgba(14, 165, 233, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
 .light-mode .member-circle-card:hover {
@@ -1724,8 +1772,24 @@
   border-color: #ffffff;
 }
 
+.light-mode .member-circle-fallback.coach-fallback {
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+}
+
+.light-mode .member-circle-fallback.captain-fallback {
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+}
+
 .light-mode .member-circle-avatar-wrap::before {
   background: linear-gradient(135deg, #cbd5e1, #e2e8f0);
+}
+
+.light-mode .member-circle-avatar-wrap.coach-ring::before {
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+}
+
+.light-mode .member-circle-avatar-wrap.captain-ring::before {
+  background: linear-gradient(135deg, #4ade80, #16a34a);
 }
 
 .light-mode .member-status-dot {
@@ -1765,6 +1829,18 @@
   background: rgba(250, 204, 21, 0.18);
   color: #a16207;
   border-color: rgba(202, 138, 4, 0.28);
+}
+
+.light-mode .role-pill.coach-pill {
+  background: rgba(14, 165, 233, 0.14);
+  color: #0369a1;
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+.light-mode .role-pill.captain-pill {
+  background: rgba(34, 197, 94, 0.14);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.26);
 }
 
 .light-mode .member-menu-trigger {

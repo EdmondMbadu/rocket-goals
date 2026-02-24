@@ -4,7 +4,7 @@ export interface TeamMember {
   lastName: string;
   email: string;
   profilePictureUrl?: string;
-  role: 'admin' | 'coach' | 'team-lead' | 'member';
+  role: 'admin' | 'coach' | 'captain' | 'team-lead' | 'member';
   joinedAt: number;
 }
 

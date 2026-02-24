@@ -391,7 +391,7 @@ export class TeamService {
           ...existingMember,
           ...sanitizedInput,
           // Preserve elevated roles when re-adding an existing member.
-          role: existingMember.role === 'admin' || existingMember.role === 'coach' || existingMember.role === 'team-lead'
+          role: existingMember.role === 'admin' || existingMember.role === 'coach' || existingMember.role === 'captain' || existingMember.role === 'team-lead'
             ? existingMember.role
             : sanitizedInput.role,
           joinedAt: existingMember.joinedAt || sanitizedInput.joinedAt
@@ -451,6 +451,37 @@ export class TeamService {
       }
 
       return sanitized;
+    });
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const docRef = fm.doc(firestore, 'teams', teamId);
+    await fm.updateDoc(docRef, {
+      members: nextMembers,
+      updatedAt: fm.serverTimestamp()
+    });
+  }
+
+  async assignMemberRole(teamId: string, targetUserId: string, role: 'member' | 'coach' | 'captain'): Promise<void> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      throw new Error('Team not found.');
+    }
+
+    const target = team.members.find(member => member.userId === targetUserId);
+    if (!target) {
+      throw new Error('Selected member was not found in this team.');
+    }
+    if (target.role === 'admin') {
+      throw new Error('Admin role cannot be changed.');
+    }
+
+    const nextMembers = team.members.map(member => {
+      const sanitized = this.sanitizeMemberForWrite(member);
+      if (sanitized.userId !== targetUserId) {
+        return sanitized;
+      }
+      return { ...sanitized, role };
     });
 
     const firestore = await this.getFirestore();

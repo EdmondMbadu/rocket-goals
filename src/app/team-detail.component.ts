@@ -1133,13 +1133,46 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   getAllMembers(): TeamMember[] {
-    const members = this.team()?.members || [];
+    return this.sortMembersByRole(this.team()?.members || []);
+  }
+
+  getCoachesAndCaptains(): TeamMember[] {
+    const members = (this.team()?.members || []).filter(member => member.role === 'coach' || member.role === 'captain');
+    return this.sortMembersByRole(members);
+  }
+
+  getRegularMembers(): TeamMember[] {
+    const members = (this.team()?.members || []).filter(member => member.role !== 'coach' && member.role !== 'captain');
+    return this.sortMembersByRole(members);
+  }
+
+  isCoachOrCaptain(member: TeamMember): boolean {
+    return member.role === 'coach' || member.role === 'captain';
+  }
+
+  getMemberRoleLabel(member: TeamMember): string {
+    switch (member.role) {
+      case 'team-lead':
+        return 'Team Lead';
+      case 'coach':
+        return 'Coach';
+      case 'captain':
+        return 'Captain';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'Member';
+    }
+  }
+
+  private sortMembersByRole(members: TeamMember[]): TeamMember[] {
     return [...members].sort((a, b) => {
       const rank = (role: TeamMember['role']) => {
         if (role === 'admin') return 0;
         if (role === 'coach') return 1;
-        if (role === 'team-lead') return 2;
-        return 3;
+        if (role === 'captain') return 2;
+        if (role === 'team-lead') return 3;
+        return 4;
       };
       return rank(a.role) - rank(b.role);
     });
@@ -1148,7 +1181,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   canManageMemberActions(member: TeamMember): boolean {
     if (!this.isAdmin()) return false;
     if (member.userId === this.currentUserId()) return false;
-    return member.role !== 'admin' && member.role !== 'coach';
+    return member.role !== 'admin';
   }
 
   toggleMemberMenu(member: TeamMember, event?: Event) {
@@ -1170,8 +1203,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (member.role !== 'member') {
-      this.leadActionError.set('Only a member can be assigned as Team Lead.');
+    if (member.role === 'admin' || member.role === 'coach') {
+      this.leadActionError.set('Only members or captains can be assigned as Team Lead.');
       return;
     }
 
@@ -1214,6 +1247,63 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     } finally {
       this.leadUpdatingUserId.set(null);
     }
+  }
+
+  async makeCoach(member: TeamMember) {
+    await this.updateMemberRole(member, 'coach', `${this.getMemberDisplayName(member)} is now a Coach.`);
+  }
+
+  async clearCoach(member: TeamMember) {
+    if (member.role !== 'coach') {
+      return;
+    }
+    await this.updateMemberRole(member, 'member', `${this.getMemberDisplayName(member)} is no longer a Coach.`);
+  }
+
+  async makeCaptain(member: TeamMember) {
+    await this.updateMemberRole(member, 'captain', `${this.getMemberDisplayName(member)} is now a Captain.`);
+  }
+
+  async clearCaptain(member: TeamMember) {
+    if (member.role !== 'captain') {
+      return;
+    }
+    await this.updateMemberRole(member, 'member', `${this.getMemberDisplayName(member)} is no longer a Captain.`);
+  }
+
+  private async updateMemberRole(
+    member: TeamMember,
+    role: 'member' | 'coach' | 'captain',
+    successMessage: string
+  ): Promise<void> {
+    const team = this.team();
+    if (!team?.id || !this.isAdmin() || member.userId === this.currentUserId()) {
+      return;
+    }
+    if (member.role === 'admin') {
+      this.leadActionError.set('Admin role cannot be changed.');
+      return;
+    }
+
+    this.leadUpdatingUserId.set(member.userId);
+    this.leadActionError.set(null);
+    this.leadActionSuccess.set(null);
+    this.closeMemberMenu();
+
+    try {
+      await this.teamService.assignMemberRole(team.id, member.userId, role);
+      await this.loadTeam(team.id);
+      this.leadActionSuccess.set(successMessage);
+    } catch (error: any) {
+      console.error('Failed to update member role:', error);
+      this.leadActionError.set(error?.message || 'Unable to update this role right now.');
+    } finally {
+      this.leadUpdatingUserId.set(null);
+    }
+  }
+
+  private getMemberDisplayName(member: TeamMember): string {
+    return `${member.firstName} ${member.lastName}`.trim() || member.email;
   }
 
   promptRemoveMember(member: TeamMember) {
@@ -2038,7 +2128,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       return false;
     }
     const matchingMember = this.findCurrentUserTeamMember(team);
-    return matchingMember?.role === 'member' || matchingMember?.role === 'team-lead';
+    return matchingMember?.role === 'member' || matchingMember?.role === 'team-lead' || matchingMember?.role === 'captain';
   }
 
   private findCurrentUserTeamMember(team: Team | null): TeamMember | null {
