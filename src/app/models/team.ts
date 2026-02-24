@@ -20,6 +20,40 @@ export interface TeamMessage {
   source?: 'web' | 'telegram';
 }
 
+export interface TeamDirectMessage {
+  id: string;
+  teamId: string;
+  participantUserId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatarUrl?: string;
+  content: string;
+  timestamp: number;
+  type: 'text' | 'system';
+  source?: 'web' | 'telegram';
+}
+
+export interface TeamMemberConversationPreview {
+  memberUserId: string;
+  lastMessage: TeamDirectMessage | null;
+}
+
+export interface TeamMemberActivitySnapshot {
+  memberUserId: string;
+  goalId: string | null;
+  primaryGoal: string | null;
+  missionDay: number | null;
+  totalDays: number | null;
+  completedMilestones: number;
+  totalMilestones: number;
+  completedToday: number;
+  totalToday: number;
+  latestMissionLogAt: number | null;
+  latestIgnitionAt: number | null;
+  latestMilestoneUpdateAt: number | null;
+  latestActivityAt: number | null;
+}
+
 export interface Team {
   id: string;
   name: string;

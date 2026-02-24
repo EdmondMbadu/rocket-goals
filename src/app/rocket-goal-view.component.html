@@ -228,7 +228,7 @@
         
         <!-- LEFT COLUMN: AI Co-Pilot (for owner) or Launch Your Goal (for fans) -->
         <div class="right-column flex flex-col">
-          @if (isGoalOwner()) {
+          @if (isCollaborativeGoalUser()) {
             <!-- Telegram Connect Banner (show if not connected and not dismissed) -->
             @if (showTelegramBanner() && !telegramLoading()) {
               <div class="telegram-connect-banner">
@@ -246,7 +246,7 @@
                 </div>
               </div>
             }
-            <!-- Owner sees the AI Co-Pilot -->
+            <!-- Goal owner or team collaborator sees the AI Co-Pilot -->
             <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
           } @else {
             <!-- Fans/Visitors see Launch Your Goal prompt -->

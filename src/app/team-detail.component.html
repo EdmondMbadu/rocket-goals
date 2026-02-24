@@ -246,6 +246,15 @@
         </svg>
         Chat
       </button>
+      @if (canManageParticipantConversations()) {
+      <button (click)="openDirectConversationsTab()" class="tab" [class.active]="activeTab() === 'direct'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 8h2a2 2 0 012 2v7a2 2 0 01-2 2h-5m-4 0H5a2 2 0 01-2-2v-7a2 2 0 012-2h2m4 0V6a2 2 0 114 0v2m-4 0h4" />
+        </svg>
+        Direct
+      </button>
+      }
       <button (click)="activeTab.set('ai')" class="tab" [class.active]="activeTab() === 'ai'">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -522,6 +531,163 @@
           </button>
         </div>
       </div>
+    </div>
+    }
+
+    @if (activeTab() === 'direct' && canManageParticipantConversations()) {
+    <div class="direct-workspace fade-in">
+      <aside class="direct-members-panel glass">
+        <div class="direct-panel-head">
+          <h3>Participant Conversations</h3>
+          <p>Open a participant thread to coach and follow individual execution.</p>
+        </div>
+        @if (loadingDirectConversations()) {
+        <p class="muted tiny" style="margin: 0; padding: 10px 14px 0;">Loading threads...</p>
+        }
+
+        @if (!participantMembers().length) {
+        <div class="direct-empty">
+          <p class="direct-empty-title">No participants yet</p>
+          <p class="muted tiny">Invite members to unlock individual conversations.</p>
+        </div>
+        } @else {
+        <div class="direct-member-list">
+          @for (member of participantMembers(); track member.userId) {
+          <button class="direct-member-item" type="button" (click)="selectParticipantConversation(member)"
+            [class.active]="selectedDirectMemberUserId() === member.userId">
+            <div class="direct-member-avatar-wrap">
+              @if (member.profilePictureUrl) {
+              <img [src]="member.profilePictureUrl" [alt]="member.firstName" class="direct-member-avatar" />
+              } @else {
+              <div class="direct-member-avatar direct-member-avatar-fallback">{{ member.firstName.charAt(0) }}</div>
+              }
+            </div>
+            <div class="direct-member-copy">
+              <p class="direct-member-name">{{ member.firstName }} {{ member.lastName }}</p>
+              <p class="direct-member-role">{{ member.role === 'team-lead' ? 'Team Lead' : 'Member' }}</p>
+              <p class="direct-member-preview">{{ getConversationPreviewText(member.userId) }}</p>
+            </div>
+            @if (getConversationPreview(member.userId)?.lastMessage?.timestamp) {
+            <span class="direct-member-time">{{ formatRelativeTime(getConversationPreview(member.userId)?.lastMessage?.timestamp) }}</span>
+            }
+          </button>
+          }
+        </div>
+        }
+      </aside>
+
+      <section class="direct-chat-panel glass">
+        @if (directError()) {
+        <p class="alert-inline error">{{ directError() }}</p>
+        }
+
+        @if (!selectedDirectMember()) {
+        <div class="direct-empty">
+          <p class="direct-empty-title">Select a participant</p>
+          <p class="muted tiny">Choose someone on the left to open their activity and direct thread.</p>
+        </div>
+        } @else {
+        <div class="direct-chat-head">
+          <div class="direct-chat-person">
+            <h3>{{ selectedDirectMember()!.firstName }} {{ selectedDirectMember()!.lastName }}</h3>
+            <p>{{ selectedDirectMember()!.email }}</p>
+          </div>
+          @if (loadingDirectActivity()) {
+          <span class="muted tiny">Loading activity...</span>
+          } @else {
+          <span class="direct-activity-stamp">{{ formatRelativeTime(selectedDirectMemberActivity()?.latestActivityAt) }}</span>
+          }
+        </div>
+
+        <div class="direct-activity-grid">
+          <div class="direct-activity-card">
+            <p class="direct-activity-label">Goal</p>
+            <p class="direct-activity-value">{{ selectedDirectMemberActivity()?.primaryGoal || 'No RocketGoal linked yet' }}</p>
+          </div>
+          <div class="direct-activity-card">
+            <p class="direct-activity-label">Mission Day</p>
+            <p class="direct-activity-value">
+              @if (selectedDirectMemberActivity()?.missionDay && selectedDirectMemberActivity()?.totalDays) {
+              Day {{ selectedDirectMemberActivity()!.missionDay }} / {{ selectedDirectMemberActivity()!.totalDays }}
+              } @else {
+              Not started
+              }
+            </p>
+          </div>
+          <div class="direct-activity-card">
+            <p class="direct-activity-label">Milestones</p>
+            <p class="direct-activity-value">
+              {{ selectedDirectMemberActivity()?.completedMilestones || 0 }} / {{ selectedDirectMemberActivity()?.totalMilestones || 0 }}
+            </p>
+            <div class="direct-progress-track">
+              <span class="direct-progress-fill" [style.width.%]="getParticipantCompletionPercent(selectedDirectMemberActivity())"></span>
+            </div>
+          </div>
+          <div class="direct-activity-card">
+            <p class="direct-activity-label">Today</p>
+            <p class="direct-activity-value">
+              {{ selectedDirectMemberActivity()?.completedToday || 0 }} / {{ selectedDirectMemberActivity()?.totalToday || 0 }}
+            </p>
+            <div class="direct-progress-track">
+              <span class="direct-progress-fill today" [style.width.%]="getParticipantTodayPercent(selectedDirectMemberActivity())"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="direct-messages-list" #directMessagesContainer>
+          @if (loadingDirectMessages()) {
+          <div class="direct-empty">
+            <span class="spinner"></span>
+            <p class="muted tiny">Loading conversation...</p>
+          </div>
+          } @else if (directMessages().length === 0) {
+          <div class="direct-empty">
+            <p class="direct-empty-title">No direct messages yet</p>
+            <p class="muted tiny">Send the first message to kick off one-on-one coaching.</p>
+          </div>
+          } @else {
+          @for (msg of directMessages(); track msg.id) {
+          <div class="msg-row" [class.msg-mine]="msg.senderId === currentUserId()">
+            <div class="msg-avatar">
+              @if (msg.senderAvatarUrl) {
+              <img [src]="msg.senderAvatarUrl" class="msg-avatar-img" />
+              } @else {
+              <div class="msg-avatar-fallback">{{ msg.senderName.charAt(0) }}</div>
+              }
+            </div>
+            <div class="msg-content">
+              <div class="msg-meta">
+                <span class="msg-sender">{{ msg.senderName }}</span>
+                <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
+              </div>
+              <div class="msg-bubble" [class.msg-bubble-mine]="msg.senderId === currentUserId()">
+                {{ msg.content }}
+              </div>
+            </div>
+          </div>
+          }
+          }
+        </div>
+
+        @if (directSendError()) {
+        <p class="alert-inline error">{{ directSendError() }}</p>
+        }
+        <div class="chat-input-bar direct-input-bar">
+          <textarea [(ngModel)]="directMessage" placeholder="Type a private coaching message..."
+            rows="1" (keydown.enter)="onDirectEnterKey($event)" class="chat-input"></textarea>
+          <button (click)="sendDirectMessage()" [disabled]="!directMessage.trim() || sendingDirectMessage()" class="chat-send-btn">
+            @if (sendingDirectMessage()) {
+            <span class="spinner small"></span>
+            } @else {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            }
+          </button>
+        </div>
+        }
+      </section>
     </div>
     }
 

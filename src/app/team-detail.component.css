@@ -2161,3 +2161,341 @@
   margin-top: 6px;
   flex-wrap: wrap;
 }
+
+/* ===== Direct Conversations ===== */
+.direct-workspace {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.direct-members-panel {
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+}
+
+.direct-panel-head {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.direct-panel-head h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #f8fafc;
+}
+
+.direct-panel-head p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.direct-member-list {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.direct-member-item {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.direct-member-item:hover {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.direct-member-item.active {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+.direct-member-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.direct-member-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.direct-member-avatar-fallback {
+  background: linear-gradient(135deg, #475569, #1e293b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.direct-member-copy {
+  min-width: 0;
+}
+
+.direct-member-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.direct-member-role {
+  margin: 2px 0 4px;
+  color: #fca5a5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.direct-member-preview {
+  margin: 0;
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.direct-member-time {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.direct-chat-panel {
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+  padding: 14px;
+}
+
+.direct-chat-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.direct-chat-person h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+}
+
+.direct-chat-person p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.direct-activity-stamp {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.direct-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.direct-activity-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.direct-activity-label {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.direct-activity-value {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.direct-progress-track {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+}
+
+.direct-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+}
+
+.direct-progress-fill.today {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.direct-messages-list {
+  flex: 1;
+  min-height: 260px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.44);
+  padding: 12px 12px 14px;
+  overflow-y: auto;
+}
+
+.direct-input-bar {
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.direct-empty {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  color: #94a3b8;
+}
+
+.direct-empty-title {
+  margin: 0;
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* Direct Conversations Light Mode */
+.light-mode .direct-panel-head {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+.light-mode .direct-panel-head h3,
+.light-mode .direct-member-name,
+.light-mode .direct-chat-person h3,
+.light-mode .direct-activity-value,
+.light-mode .direct-empty-title {
+  color: #0f172a;
+}
+
+.light-mode .direct-panel-head p,
+.light-mode .direct-member-preview,
+.light-mode .direct-member-time,
+.light-mode .direct-chat-person p,
+.light-mode .direct-activity-stamp {
+  color: #64748b;
+}
+
+.light-mode .direct-member-item {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.light-mode .direct-member-item:hover {
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.light-mode .direct-member-item.active {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.light-mode .direct-member-avatar-fallback {
+  background: linear-gradient(135deg, #cbd5e1, #e2e8f0);
+  color: #0f172a;
+}
+
+.light-mode .direct-member-role {
+  color: #dc2626;
+}
+
+.light-mode .direct-activity-card {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.light-mode .direct-activity-label {
+  color: #64748b;
+}
+
+.light-mode .direct-progress-track {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.light-mode .direct-messages-list {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+}
+
+.light-mode .direct-input-bar {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+/* Direct Conversations Responsive */
+@media (max-width: 640px) {
+  .direct-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .direct-members-panel,
+  .direct-chat-panel {
+    min-height: 0;
+  }
+
+  .direct-member-list {
+    max-height: 300px;
+  }
+
+  .direct-activity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .direct-messages-list {
+    min-height: 230px;
+  }
+}

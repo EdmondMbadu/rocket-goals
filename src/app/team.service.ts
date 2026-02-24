@@ -1,12 +1,64 @@
 import { Injectable } from '@angular/core';
 import type { Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
-import { CreateTeamInput, Team, TeamMessage } from './models/team';
+import {
+  CreateTeamInput,
+  Team,
+  TeamDirectMessage,
+  TeamMemberActivitySnapshot,
+  TeamMemberConversationPreview,
+  TeamMessage
+} from './models/team';
 import { CreateRocketGoalInput } from './models/rocket-goal';
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
   private firestoreInstance?: Promise<Firestore>;
+
+  private getTimestampMillis(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+    if (value instanceof Date) {
+      return value.getTime();
+    }
+    if (typeof value?.toMillis === 'function') {
+      try {
+        return value.toMillis();
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value?.toDate === 'function') {
+      try {
+        const date = value.toDate();
+        return date instanceof Date ? date.getTime() : null;
+      } catch {
+        return null;
+      }
+    }
+
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private getGoalTotalDays(goal: any): number {
+    const fromAnswers = Number(goal?.answers?.['timeframe_days']);
+    if (Number.isFinite(fromAnswers) && fromAnswers > 0) {
+      return Math.max(1, Math.round(fromAnswers));
+    }
+    return 7;
+  }
+
+  private getMissionDay(goal: any, totalDays: number): number {
+    const startTime = Number(goal?.startTime || Date.now());
+    const dayMs = 24 * 60 * 60 * 1000;
+    const elapsedDays = Math.floor((Date.now() - startTime) / dayMs) + 1;
+    return Math.min(Math.max(1, elapsedDays), Math.max(1, totalDays));
+  }
   private sanitizeMemberForWrite(member: Team['members'][0]): Team['members'][0] {
     const sanitized: Team['members'][0] = {
       userId: member.userId,
@@ -363,6 +415,64 @@ export class TeamService {
       memberIds: team.memberIds.filter(id => id !== userId),
       updatedAt: fm.serverTimestamp()
     });
+
+    try {
+      await this.cleanupRemovedMemberArtifacts(teamId, userId, team.rocketGoalId || null);
+    } catch (error) {
+      console.warn('Unable to fully clean up removed member artifacts:', error);
+    }
+  }
+
+  private async cleanupRemovedMemberArtifacts(teamId: string, userId: string, explicitTeamGoalId: string | null): Promise<void> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+
+    const possibleTeamGoalIds = new Set<string>();
+    const normalizedExplicitGoalId = (explicitTeamGoalId || '').trim();
+    if (normalizedExplicitGoalId) {
+      possibleTeamGoalIds.add(normalizedExplicitGoalId);
+    }
+    possibleTeamGoalIds.add(`team-${teamId}`);
+
+    const profileQuery = fm.query(
+      fm.collection(firestore, 'userProfiles'),
+      fm.where('userId', '==', userId),
+      fm.limit(1)
+    );
+    const profileSnapshot = await fm.getDocs(profileQuery);
+    let profileDoc: any = !profileSnapshot.empty
+      ? profileSnapshot.docs[0]
+      : null;
+
+    if (!profileDoc) {
+      const fallbackProfileRef = fm.doc(firestore, 'userProfiles', userId);
+      const fallbackProfileSnap = await fm.getDoc(fallbackProfileRef);
+      if (fallbackProfileSnap.exists()) {
+        profileDoc = fallbackProfileSnap;
+      }
+    }
+
+    if (profileDoc) {
+      const profileData = profileDoc.data() as Record<string, any>;
+      const selectedGoalId = String(profileData['myOneThingGoalId'] || '').trim();
+      if (selectedGoalId && possibleTeamGoalIds.has(selectedGoalId)) {
+        await fm.updateDoc(profileDoc.ref, {
+          myOneThingGoalId: fm.deleteField()
+        });
+      }
+    }
+
+    const conversationRef = fm.doc(firestore, 'teams', teamId, 'memberConversations', userId);
+    const directMessagesRef = fm.collection(conversationRef, 'messages');
+    const directMessagesSnapshot = await fm.getDocs(directMessagesRef);
+    if (!directMessagesSnapshot.empty) {
+      await Promise.all(directMessagesSnapshot.docs.map(doc => fm.deleteDoc(doc.ref)));
+    }
+    try {
+      await fm.deleteDoc(conversationRef);
+    } catch {
+      // Missing conversation doc is acceptable.
+    }
   }
 
   async sendMessage(teamId: string, message: Omit<TeamMessage, 'id' | 'timestamp'>): Promise<string> {
@@ -393,6 +503,220 @@ export class TeamService {
         .map(doc => ({ id: doc.id, ...doc.data() }) as TeamMessage)
         .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     }
+  }
+
+  async sendDirectMessage(
+    teamId: string,
+    participantUserId: string,
+    message: Omit<TeamDirectMessage, 'id' | 'timestamp' | 'teamId' | 'participantUserId'>
+  ): Promise<string> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const messagesRef = fm.collection(
+      firestore,
+      'teams',
+      teamId,
+      'memberConversations',
+      participantUserId,
+      'messages'
+    );
+    const docRef = await fm.addDoc(messagesRef, {
+      ...message,
+      teamId,
+      participantUserId,
+      timestamp: fm.serverTimestamp()
+    });
+    await fm.updateDoc(docRef, { id: docRef.id });
+    return docRef.id;
+  }
+
+  async getDirectMessages(teamId: string, participantUserId: string, limitCount = 100): Promise<TeamDirectMessage[]> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const messagesRef = fm.collection(
+      firestore,
+      'teams',
+      teamId,
+      'memberConversations',
+      participantUserId,
+      'messages'
+    );
+    try {
+      const q = fm.query(messagesRef, fm.orderBy('timestamp', 'desc'), fm.limit(limitCount));
+      const snapshot = await fm.getDocs(q);
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }) as TeamDirectMessage)
+        .reverse();
+    } catch {
+      const snapshot = await fm.getDocs(fm.query(messagesRef, fm.limit(limitCount)));
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }) as TeamDirectMessage)
+        .sort((a, b) => {
+          const left = this.getTimestampMillis(a.timestamp) || 0;
+          const right = this.getTimestampMillis(b.timestamp) || 0;
+          return left - right;
+        });
+    }
+  }
+
+  async getMemberConversationPreviews(teamId: string, memberUserIds: string[]): Promise<TeamMemberConversationPreview[]> {
+    const uniqueMemberIds = Array.from(new Set(memberUserIds.filter(Boolean)));
+    const previews = await Promise.all(
+      uniqueMemberIds.map(async memberUserId => {
+        const messages = await this.getDirectMessages(teamId, memberUserId, 1);
+        return {
+          memberUserId,
+          lastMessage: messages.length ? messages[0] : null
+        } as TeamMemberConversationPreview;
+      })
+    );
+
+    return previews.sort((a, b) => {
+      const left = this.getTimestampMillis(a.lastMessage?.timestamp) || 0;
+      const right = this.getTimestampMillis(b.lastMessage?.timestamp) || 0;
+      return right - left;
+    });
+  }
+
+  async getMemberActivitySnapshot(teamId: string, memberUserId: string): Promise<TeamMemberActivitySnapshot> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      throw new Error('Team not found.');
+    }
+    const isMember = team.memberIds.includes(memberUserId) || team.members.some(member => member.userId === memberUserId);
+    if (!isMember) {
+      throw new Error('Member not found in this team.');
+    }
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+
+    const profileQuery = fm.query(
+      fm.collection(firestore, 'userProfiles'),
+      fm.where('userId', '==', memberUserId),
+      fm.limit(1)
+    );
+    const profileSnapshot = await fm.getDocs(profileQuery);
+    let profileData: Record<string, any> | null = null;
+    if (!profileSnapshot.empty) {
+      profileData = profileSnapshot.docs[0].data() as Record<string, any>;
+    } else {
+      const profileDoc = await fm.getDoc(fm.doc(firestore, 'userProfiles', memberUserId));
+      if (profileDoc.exists()) {
+        profileData = profileDoc.data() as Record<string, any>;
+      }
+    }
+
+    const goalId = String(profileData?.['myOneThingGoalId'] || '').trim() || null;
+    if (!goalId) {
+      return {
+        memberUserId,
+        goalId: null,
+        primaryGoal: null,
+        missionDay: null,
+        totalDays: null,
+        completedMilestones: 0,
+        totalMilestones: 0,
+        completedToday: 0,
+        totalToday: 0,
+        latestMissionLogAt: null,
+        latestIgnitionAt: null,
+        latestMilestoneUpdateAt: null,
+        latestActivityAt: null
+      };
+    }
+
+    const goalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', goalId));
+    if (!goalDoc.exists()) {
+      return {
+        memberUserId,
+        goalId,
+        primaryGoal: null,
+        missionDay: null,
+        totalDays: null,
+        completedMilestones: 0,
+        totalMilestones: 0,
+        completedToday: 0,
+        totalToday: 0,
+        latestMissionLogAt: null,
+        latestIgnitionAt: null,
+        latestMilestoneUpdateAt: null,
+        latestActivityAt: null
+      };
+    }
+
+    const goal = goalDoc.data() as Record<string, any>;
+    const totalDays = this.getGoalTotalDays(goal);
+    const missionDay = this.getMissionDay(goal, totalDays);
+
+    const actionItemsSnapshot = await fm.getDocs(fm.collection(firestore, 'rocketGoals', goalId, 'actionItems'));
+    const actionItems = actionItemsSnapshot.docs.map(doc => doc.data() as Record<string, any>);
+
+    const totalMilestones = actionItems.length;
+    const completedMilestones = actionItems.filter(item => !!item['completed']).length;
+    const todayItems = actionItems.filter(item => Number(item['dayNumber']) === missionDay);
+    const totalToday = todayItems.length;
+    const completedToday = todayItems.filter(item => !!item['completed']).length;
+    const latestMilestoneUpdateAt = actionItems.reduce<number | null>((latest, item) => {
+      const updatedAt = this.getTimestampMillis(item['updatedAt']) ?? this.getTimestampMillis(item['createdAt']);
+      if (updatedAt === null) {
+        return latest;
+      }
+      if (latest === null) {
+        return updatedAt;
+      }
+      return Math.max(latest, updatedAt);
+    }, null);
+
+    const fetchLatestFromSubcollection = async (subCollection: 'missionLogs' | 'dailyIgnitions'): Promise<number | null> => {
+      const subRef = fm.collection(firestore, 'rocketGoals', goalId, subCollection);
+      try {
+        const q = fm.query(subRef, fm.orderBy('createdAtMs', 'desc'), fm.limit(1));
+        const snapshot = await fm.getDocs(q);
+        if (snapshot.empty) {
+          return null;
+        }
+        const data = snapshot.docs[0].data() as Record<string, any>;
+        return this.getTimestampMillis(data['createdAtMs']) ?? this.getTimestampMillis(data['createdAt']);
+      } catch {
+        const snapshot = await fm.getDocs(fm.query(subRef, fm.limit(25)));
+        let latest: number | null = null;
+        for (const doc of snapshot.docs) {
+          const data = doc.data() as Record<string, any>;
+          const timestamp = this.getTimestampMillis(data['createdAtMs']) ?? this.getTimestampMillis(data['createdAt']);
+          if (timestamp === null) {
+            continue;
+          }
+          latest = latest === null ? timestamp : Math.max(latest, timestamp);
+        }
+        return latest;
+      }
+    };
+
+    const [latestMissionLogAt, latestIgnitionAt] = await Promise.all([
+      fetchLatestFromSubcollection('missionLogs'),
+      fetchLatestFromSubcollection('dailyIgnitions')
+    ]);
+
+    const latestActivityAt = [latestMissionLogAt, latestIgnitionAt, latestMilestoneUpdateAt]
+      .filter((value): value is number => value !== null)
+      .reduce<number | null>((latest, value) => (latest === null ? value : Math.max(latest, value)), null);
+
+    return {
+      memberUserId,
+      goalId,
+      primaryGoal: String(goal['primaryGoal'] || '').trim() || null,
+      missionDay,
+      totalDays,
+      completedMilestones,
+      totalMilestones,
+      completedToday,
+      totalToday,
+      latestMissionLogAt,
+      latestIgnitionAt,
+      latestMilestoneUpdateAt,
+      latestActivityAt
+    };
   }
 
   async uploadTeamCoverImage(teamId: string, file: File): Promise<string> {

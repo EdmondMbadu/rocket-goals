@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, effect, inject, OnInit, OnDestroy, signal, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -296,6 +296,32 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   showTelegramQrModal = signal(false);
   telegramDeepLink = signal<string | null>(null);
   telegramError = signal<string | null>(null);
+  private lastTeamContextResolutionKey: string | null = null;
+
+  constructor() {
+    effect(() => {
+      const goal = this.goal();
+      if (!goal) {
+        return;
+      }
+      const profile = this.authService.profile();
+      const goalId = goal.id || '';
+      if (!goalId) {
+        return;
+      }
+
+      const teamHint = this.teamContextId() || '';
+      const userId = profile?.userId || '';
+      const email = (profile?.email || '').trim().toLowerCase();
+      const resolutionKey = `${goalId}|${teamHint}|${userId}|${email}`;
+      if (resolutionKey === this.lastTeamContextResolutionKey) {
+        return;
+      }
+
+      this.lastTeamContextResolutionKey = resolutionKey;
+      void this.loadTeamContextForGoal(goal);
+    });
+  }
 
   async ngOnInit() {
     const linkedTeamId = this.route.snapshot.queryParamMap.get('teamId');
@@ -860,7 +886,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
         await this.loadFans(currentGoal.id);
         await this.loadFanComments(currentGoal.id);
         await this.loadFanReactions(currentGoal.id);
-        if (!this.isGoalOwner()) {
+        if (!this.isCollaborativeGoalUser()) {
           this.scrollFansIntoView();
         }
 
@@ -1482,6 +1508,10 @@ ${url}`;
     return !!goal?.userId && !!profile?.userId && goal.userId === profile.userId;
   }
 
+  isCollaborativeGoalUser(): boolean {
+    return this.isGoalOwner() || this.teamGoalCollaborator();
+  }
+
   private getFeedbackIdentity(): { email: string; name: string } | null {
     const profile = this.authService.profile();
     if (profile?.email) {
@@ -1904,8 +1934,8 @@ ${url}`;
     const goal = this.goal();
     if (!goal) return;
 
-    // Don't show modal to goal owner
-    if (this.isGoalOwner()) return;
+    // Don't show modal to the goal owner or team collaborators.
+    if (this.isCollaborativeGoalUser()) return;
 
     // Check if user is already an accepted fan
     const profile = this.authService.profile();
@@ -1932,6 +1962,10 @@ ${url}`;
 
     const goal = this.goal();
     if (!goal) return;
+    if (this.isCollaborativeGoalUser()) {
+      sessionStorage.removeItem('pendingFanJoin');
+      return;
+    }
 
     try {
       const { goalId, notificationPreference } = JSON.parse(pendingJoinData);
@@ -1980,6 +2014,10 @@ ${url}`;
   async joinFanbase(): Promise<void> {
     const goal = this.goal();
     if (!goal) return;
+    if (this.isCollaborativeGoalUser()) {
+      this.showFanJoinModal.set(false);
+      return;
+    }
 
     const profile = this.authService.profile();
     const preference = this.fanJoinNotificationPreference();
@@ -2199,10 +2237,10 @@ ${url}`;
 
       const profile = this.authService.profile();
       const normalizedEmail = (profile?.email || '').trim().toLowerCase();
-      const isMember = !!team && !!profile?.userId && (
-        team.memberIds.includes(profile.userId) ||
+      const isMember = !!team && !!profile && (
+        (!!profile.userId && team.memberIds.includes(profile.userId)) ||
         team.members.some(member =>
-          member.userId === profile.userId ||
+          (!!profile.userId && member.userId === profile.userId) ||
           ((member.email || '').trim().toLowerCase() === normalizedEmail)
         )
       );

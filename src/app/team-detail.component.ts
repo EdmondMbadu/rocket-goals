@@ -5,7 +5,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
-import type { Team, TeamMember, TeamMessage } from './models/team';
+import type {
+  Team,
+  TeamDirectMessage,
+  TeamMember,
+  TeamMemberActivitySnapshot,
+  TeamMemberConversationPreview,
+  TeamMessage
+} from './models/team';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import QRCode from 'qrcode';
 
@@ -32,6 +39,7 @@ export class TeamDetailComponent implements OnInit {
   protected theme = inject(ThemeService);
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('directMessagesContainer') directMessagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('coverInput') coverInput?: ElementRef<HTMLInputElement>;
 
   teamId = signal<string | null>(null);
@@ -40,8 +48,18 @@ export class TeamDetailComponent implements OnInit {
   loading = signal(true);
   preparingTeamGoal = signal(false);
   teamGoalError = signal<string | null>(null);
-  activeTab = signal<'members' | 'chat' | 'ai'>('members');
+  activeTab = signal<'members' | 'chat' | 'ai' | 'direct'>('members');
   messages = signal<TeamMessage[]>([]);
+  directMessages = signal<TeamDirectMessage[]>([]);
+  directConversationPreviews = signal<TeamMemberConversationPreview[]>([]);
+  selectedDirectMemberUserId = signal<string | null>(null);
+  selectedDirectMemberActivity = signal<TeamMemberActivitySnapshot | null>(null);
+  loadingDirectConversations = signal(false);
+  loadingDirectMessages = signal(false);
+  loadingDirectActivity = signal(false);
+  sendingDirectMessage = signal(false);
+  directError = signal<string | null>(null);
+  directSendError = signal<string | null>(null);
   showInviteModal = signal(false);
   sendingMessage = signal(false);
   aiResponding = signal(false);
@@ -94,9 +112,11 @@ export class TeamDetailComponent implements OnInit {
   showTelegramBanner = signal(true);
 
   newMessage = '';
+  directMessage = '';
   inviteEmailField = '';
 
   private messagesLoadedForTeamId: string | null = null;
+  private directConversationLoadedForTeamId: string | null = null;
   private inviteSearchTimeout: ReturnType<typeof setTimeout> | null = null;
   private inviteSearchRequestId = 0;
 
@@ -124,7 +144,28 @@ export class TeamDetailComponent implements OnInit {
   });
 
   isAdmin = computed(() => this.team()?.adminId === this.currentUserId());
+  isCurrentUserTeamLead = computed(() => {
+    const userId = this.currentUserId();
+    if (!userId) {
+      return false;
+    }
+    return (this.team()?.members || []).some(member => member.userId === userId && member.role === 'team-lead');
+  });
+  canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
+  participantMembers = computed(() => {
+    const currentUserId = this.currentUserId();
+    return (this.team()?.members || [])
+      .filter(member => member.userId !== currentUserId)
+      .filter(member => member.role !== 'admin' && member.role !== 'coach');
+  });
+  selectedDirectMember = computed(() => {
+    const selectedId = this.selectedDirectMemberUserId();
+    if (!selectedId) {
+      return null;
+    }
+    return this.participantMembers().find(member => member.userId === selectedId) || null;
+  });
 
   coverImageSrc = computed(() => {
     return this.coverImagePreview() || this.team()?.coverImageUrl || '/assets/team-rocket.jpg';
@@ -149,8 +190,12 @@ export class TeamDetailComponent implements OnInit {
     effect(() => {
       const team = this.team();
       const isMember = this.isCurrentUserMember();
+      const canManageParticipantConversations = this.canManageParticipantConversations();
 
       if (!isMember && this.activeTab() !== 'members') {
+        this.activeTab.set('members');
+      }
+      if (!canManageParticipantConversations && this.activeTab() === 'direct') {
         this.activeTab.set('members');
       }
 
@@ -169,6 +214,20 @@ export class TeamDetailComponent implements OnInit {
       if (team?.telegramGroupInviteLink) {
         void this.generateTelegramQr(team.telegramGroupInviteLink);
       }
+
+      if (team?.id && canManageParticipantConversations) {
+        const participants = this.participantMembers();
+        const selectedMemberId = this.selectedDirectMemberUserId();
+        if (!participants.some(member => member.userId === selectedMemberId)) {
+          this.selectedDirectMemberUserId.set(participants[0]?.userId || null);
+        }
+      } else {
+        this.selectedDirectMemberUserId.set(null);
+        this.selectedDirectMemberActivity.set(null);
+        this.directMessages.set([]);
+        this.directConversationPreviews.set([]);
+        this.directConversationLoadedForTeamId = null;
+      }
     });
 
     effect(() => {
@@ -184,6 +243,32 @@ export class TeamDetailComponent implements OnInit {
       }
 
       this.scrollToBottom();
+    });
+
+    effect(() => {
+      const isDirectTab = this.activeTab() === 'direct';
+      const canManageParticipantConversations = this.canManageParticipantConversations();
+      const teamId = this.team()?.id;
+      const selectedMemberId = this.selectedDirectMemberUserId();
+      if (!isDirectTab || !canManageParticipantConversations || !teamId) {
+        return;
+      }
+      if (!selectedMemberId) {
+        return;
+      }
+      void this.loadSelectedParticipantConversation();
+    });
+
+    effect(() => {
+      const isDirectTab = this.activeTab() === 'direct';
+      const messageCount = this.directMessages().length;
+      if (!isDirectTab || !this.canManageParticipantConversations()) {
+        return;
+      }
+      if (messageCount === 0) {
+        return;
+      }
+      this.scrollDirectToBottom();
     });
   }
 
@@ -211,6 +296,7 @@ export class TeamDetailComponent implements OnInit {
       const team = await this.teamService.getTeamById(teamId);
       this.team.set(team);
       this.teamRocketGoalId.set(team?.rocketGoalId || null);
+      this.directConversationLoadedForTeamId = null;
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
@@ -260,6 +346,148 @@ export class TeamDetailComponent implements OnInit {
       this.scrollToBottom();
     } catch (err) {
       console.error('Failed to load messages:', err);
+    }
+  }
+
+  openDirectConversationsTab() {
+    if (!this.canManageParticipantConversations()) {
+      return;
+    }
+    this.activeTab.set('direct');
+    const selectedMember = this.selectedDirectMemberUserId();
+    const participants = this.participantMembers();
+    if (!selectedMember && participants.length) {
+      this.selectedDirectMemberUserId.set(participants[0].userId);
+    }
+  }
+
+  selectParticipantConversation(member: TeamMember) {
+    if (!this.canManageParticipantConversations()) {
+      return;
+    }
+    if (this.selectedDirectMemberUserId() === member.userId) {
+      return;
+    }
+    this.selectedDirectMemberUserId.set(member.userId);
+  }
+
+  getConversationPreview(memberUserId: string): TeamMemberConversationPreview | null {
+    return this.directConversationPreviews().find(item => item.memberUserId === memberUserId) || null;
+  }
+
+  getConversationPreviewText(memberUserId: string): string {
+    const preview = this.getConversationPreview(memberUserId);
+    if (!preview?.lastMessage?.content) {
+      return 'No direct messages yet';
+    }
+    const message = preview.lastMessage.content.trim();
+    if (!message) {
+      return 'No direct messages yet';
+    }
+    if (message.length <= 72) {
+      return message;
+    }
+    return `${message.slice(0, 72)}...`;
+  }
+
+  getParticipantCompletionPercent(activity: TeamMemberActivitySnapshot | null): number {
+    if (!activity?.totalMilestones) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round((activity.completedMilestones / activity.totalMilestones) * 100)));
+  }
+
+  getParticipantTodayPercent(activity: TeamMemberActivitySnapshot | null): number {
+    if (!activity?.totalToday) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round((activity.completedToday / activity.totalToday) * 100)));
+  }
+
+  private async loadDirectConversationPreviews(teamId: string, memberUserIds: string[]) {
+    if (!memberUserIds.length) {
+      this.directConversationPreviews.set([]);
+      this.directConversationLoadedForTeamId = teamId;
+      return;
+    }
+
+    this.loadingDirectConversations.set(true);
+    this.directError.set(null);
+    try {
+      const previews = await this.teamService.getMemberConversationPreviews(teamId, memberUserIds);
+      this.directConversationPreviews.set(previews);
+      this.directConversationLoadedForTeamId = teamId;
+    } catch (err) {
+      console.error('Failed to load direct conversation previews:', err);
+      this.directError.set('Unable to load participant conversations right now.');
+    } finally {
+      this.loadingDirectConversations.set(false);
+    }
+  }
+
+  private async loadSelectedParticipantConversation() {
+    const teamId = this.team()?.id;
+    const memberUserId = this.selectedDirectMemberUserId();
+    if (!teamId || !memberUserId || !this.canManageParticipantConversations()) {
+      return;
+    }
+
+    const participantIds = this.participantMembers().map(member => member.userId);
+    if (this.directConversationLoadedForTeamId !== teamId) {
+      await this.loadDirectConversationPreviews(teamId, participantIds);
+    }
+
+    this.loadingDirectMessages.set(true);
+    this.loadingDirectActivity.set(true);
+    this.directError.set(null);
+    try {
+      const [messages, activity] = await Promise.all([
+        this.teamService.getDirectMessages(teamId, memberUserId),
+        this.teamService.getMemberActivitySnapshot(teamId, memberUserId)
+      ]);
+      this.directMessages.set(messages);
+      this.selectedDirectMemberActivity.set(activity);
+      this.scrollDirectToBottom();
+    } catch (err) {
+      console.error('Failed to load participant conversation:', err);
+      this.directError.set('Unable to load this participant conversation right now.');
+      this.directMessages.set([]);
+      this.selectedDirectMemberActivity.set(null);
+    } finally {
+      this.loadingDirectMessages.set(false);
+      this.loadingDirectActivity.set(false);
+    }
+  }
+
+  async sendDirectMessage() {
+    const content = this.directMessage.trim();
+    const teamId = this.team()?.id;
+    const participantUserId = this.selectedDirectMemberUserId();
+    const profile = this.authService.profile();
+    if (!content || !teamId || !participantUserId || !profile || !this.canManageParticipantConversations()) {
+      return;
+    }
+
+    this.sendingDirectMessage.set(true);
+    this.directSendError.set(null);
+    this.directMessage = '';
+    try {
+      await this.teamService.sendDirectMessage(teamId, participantUserId, {
+        senderId: profile.userId,
+        senderName: `${profile.firstName} ${profile.lastName}`.trim() || profile.email,
+        senderAvatarUrl: profile.profilePictureUrl,
+        content,
+        type: 'text',
+        source: 'web'
+      });
+      await this.loadSelectedParticipantConversation();
+      await this.loadDirectConversationPreviews(teamId, this.participantMembers().map(member => member.userId));
+    } catch (err) {
+      console.error('Failed to send direct message:', err);
+      this.directSendError.set('Unable to send message right now.');
+      this.directMessage = content;
+    } finally {
+      this.sendingDirectMessage.set(false);
     }
   }
 
@@ -1059,6 +1287,14 @@ export class TeamDetailComponent implements OnInit {
     }
   }
 
+  onDirectEnterKey(event: Event) {
+    const ke = event as KeyboardEvent;
+    if (!ke.shiftKey) {
+      ke.preventDefault();
+      void this.sendDirectMessage();
+    }
+  }
+
   formatTime(timestamp: any): string {
     if (!timestamp) return '';
     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -1069,6 +1305,31 @@ export class TeamDetailComponent implements OnInit {
     }
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) +
       ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatRelativeTime(timestamp: any): string {
+    const millis = this.getTimestampMillis(timestamp);
+    if (millis === null) {
+      return 'No recent activity';
+    }
+
+    const diff = Date.now() - millis;
+    if (diff < 60_000) {
+      return 'Just now';
+    }
+    if (diff < 3_600_000) {
+      const minutes = Math.max(1, Math.floor(diff / 60_000));
+      return `${minutes}m ago`;
+    }
+    if (diff < 86_400_000) {
+      const hours = Math.max(1, Math.floor(diff / 3_600_000));
+      return `${hours}h ago`;
+    }
+    if (diff < 604_800_000) {
+      const days = Math.max(1, Math.floor(diff / 86_400_000));
+      return `${days}d ago`;
+    }
+    return this.formatTime(millis);
   }
 
   private scrollToBottom(attempt = 0) {
@@ -1087,6 +1348,53 @@ export class TeamDetailComponent implements OnInit {
         this.scrollToBottom(attempt + 1);
       }
     }, delay);
+  }
+
+  private scrollDirectToBottom(attempt = 0) {
+    const delay = attempt === 0 ? 0 : 60;
+    setTimeout(() => {
+      const el = this.directMessagesContainer?.nativeElement;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+        if (attempt < 2) {
+          this.scrollDirectToBottom(attempt + 1);
+        }
+        return;
+      }
+
+      if (attempt < 8) {
+        this.scrollDirectToBottom(attempt + 1);
+      }
+    }, delay);
+  }
+
+  private getTimestampMillis(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+    if (value instanceof Date) {
+      return value.getTime();
+    }
+    if (typeof value?.toMillis === 'function') {
+      try {
+        return value.toMillis();
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value?.toDate === 'function') {
+      try {
+        const date = value.toDate();
+        return date instanceof Date ? date.getTime() : null;
+      } catch {
+        return null;
+      }
+    }
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private normalizeEmail(email: string | null | undefined): string {
