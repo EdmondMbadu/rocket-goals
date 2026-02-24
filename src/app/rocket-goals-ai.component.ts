@@ -896,9 +896,16 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     }
 
     const answerTeamId = typeof goal.answers?.['teamId'] === 'string' ? goal.answers['teamId'].trim() : '';
-    const deterministicTeamId = typeof goal.id === 'string' && goal.id.startsWith('team-')
-      ? goal.id.slice('team-'.length).trim()
-      : '';
+    const deterministicTeamId = (() => {
+      if (typeof goal.id !== 'string' || !goal.id.startsWith('team-')) {
+        return '';
+      }
+      const memberMatch = goal.id.match(/^team-(.+?)-member-.+$/);
+      if (memberMatch?.[1]) {
+        return memberMatch[1].trim();
+      }
+      return goal.id.slice('team-'.length).trim();
+    })();
     const explicitTeamId = (this.teamContextId || '').trim();
     const teamId = explicitTeamId || answerTeamId || deterministicTeamId;
     if (!teamId) {

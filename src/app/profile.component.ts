@@ -765,8 +765,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
       const candidateTeamGoalIds = new Set<string>();
       for (const team of teamsRaw as Team[]) {
-        const explicitGoalId = String(team?.rocketGoalId || '').trim();
-        const resolvedGoalId = explicitGoalId || (team?.id ? `team-${team.id}` : '');
+        const resolvedGoalId = team?.id
+          ? this.buildMemberTeamGoalId(team.id, profile.userId)
+          : '';
         if (resolvedGoalId) {
           candidateTeamGoalIds.add(resolvedGoalId);
           fallbackTeamGoals.set(resolvedGoalId, this.buildFallbackTeamGoal(team, profile, resolvedGoalId));
@@ -785,6 +786,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
         try {
           const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
           if (goal?.id) {
+            const ownerId = String((goal as any).userId || '').trim();
+            if (ownerId && ownerId !== profile.userId) {
+              continue;
+            }
             mergedGoals.set(goal.id, goal as RocketGoal);
             continue;
           }
@@ -841,6 +846,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     return 0;
   }
 
+  private buildMemberTeamGoalId(teamId: string, userId: string): string {
+    return `team-${teamId}-member-${userId}`;
+  }
+
   private buildFallbackTeamGoal(team: Team, profile: UserProfile, goalId: string): RocketGoal {
     const teamName = String(team.name || 'Team').trim() || 'Team';
     const createdAt = (team.updatedAt || team.createdAt || Date.now()) as unknown;
@@ -855,7 +864,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         goal_support_label: 'Team',
         teamId: team.id,
         teamName,
-        teamGoal: true
+        teamGoal: true,
+        teamMemberGoal: true,
+        teamMemberUserId: profile.userId
       },
       participant: {
         firstName: profile.firstName || teamName,

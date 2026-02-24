@@ -2220,9 +2220,16 @@ ${url}`;
     const idFromGoalAnswers = typeof goalTeamId === 'string' && goalTeamId.trim()
       ? goalTeamId.trim()
       : null;
-    const idFromDeterministicGoal = typeof goal.id === 'string' && goal.id.startsWith('team-')
-      ? goal.id.slice('team-'.length)
-      : null;
+    const idFromDeterministicGoal = (() => {
+      if (typeof goal.id !== 'string' || !goal.id.startsWith('team-')) {
+        return null;
+      }
+      const memberMatch = goal.id.match(/^team-(.+?)-member-.+$/);
+      if (memberMatch?.[1]) {
+        return memberMatch[1].trim();
+      }
+      return goal.id.slice('team-'.length).trim();
+    })();
     const normalizedTeamId = idFromGoalAnswers || this.teamContextId() || idFromDeterministicGoal;
 
     if (!normalizedTeamId) {

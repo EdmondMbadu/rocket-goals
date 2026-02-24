@@ -105,6 +105,60 @@ export class TeamService {
     const elapsedDays = Math.floor((Date.now() - startTime) / dayMs) + 1;
     return Math.min(Math.max(1, elapsedDays), Math.max(1, totalDays));
   }
+
+  private buildMemberTeamGoalId(teamId: string, userId: string): string {
+    return `team-${teamId}-member-${userId}`;
+  }
+
+  private isTeamGoalForTeam(goal: Record<string, any> | null | undefined, teamId: string): boolean {
+    if (!goal || !teamId) {
+      return false;
+    }
+    const answers = (goal['answers'] || {}) as Record<string, any>;
+    const answerTeamId = typeof answers['teamId'] === 'string' ? answers['teamId'].trim() : '';
+    const flaggedTeamGoal = answers['teamGoal'] === true || answers['teamMemberGoal'] === true;
+    return !!answerTeamId && answerTeamId === teamId && flaggedTeamGoal;
+  }
+
+  private buildTeamGoalAnswers(params: {
+    teamId: string;
+    teamName: string;
+    teamSharedGoalId: string;
+    memberUserId: string;
+    sourceAnswers?: Record<string, any>;
+  }): Record<string, any> {
+    const {
+      teamId,
+      teamName,
+      teamSharedGoalId,
+      memberUserId,
+      sourceAnswers = {}
+    } = params;
+    const timeframeDaysCandidate = Number(sourceAnswers['timeframe_days']);
+    const timeframeDays = Number.isFinite(timeframeDaysCandidate) && timeframeDaysCandidate > 0
+      ? Math.max(1, Math.round(timeframeDaysCandidate))
+      : 30;
+    const normalized: Record<string, any> = {
+      goal_title_label: `${teamName} Team Mission`,
+      custom_goal_title: `${teamName} Team Mission`,
+      goal_theme_label: sourceAnswers['goal_theme_label'] || 'Team Mission',
+      goal_support_label: sourceAnswers['goal_support_label'] || 'Team',
+      timeframe: sourceAnswers['timeframe'] || 'month',
+      timeframe_days: timeframeDays,
+      teamId,
+      teamName,
+      teamGoal: true,
+      teamMemberGoal: true,
+      teamSharedGoalId,
+      teamMemberUserId: memberUserId
+    };
+    const sourceDeadline = sourceAnswers['deadlineDate'];
+    if (sourceDeadline !== undefined && sourceDeadline !== null && sourceDeadline !== '') {
+      normalized['deadlineDate'] = sourceDeadline;
+    }
+    return normalized;
+  }
+
   private sanitizeMemberForWrite(member: Team['members'][0]): Team['members'][0] {
     const sanitized: Team['members'][0] = {
       userId: member.userId,
@@ -298,6 +352,122 @@ export class TeamService {
       console.warn('Unable to persist rocketGoalId on team doc:', error);
     }
     return goalId;
+  }
+
+  async ensureMemberTeamRocketGoal(
+    teamId: string,
+    member: { userId: string; firstName?: string; lastName?: string; email?: string }
+  ): Promise<string> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      throw new Error('Team not found.');
+    }
+    const memberUserId = String(member.userId || '').trim();
+    if (!memberUserId) {
+      throw new Error('Member user ID is required.');
+    }
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+
+    const teamName = String(team.name || 'Team').trim() || 'Team';
+    const teamSharedGoalId = String(team.rocketGoalId || '').trim() || `team-${teamId}`;
+    const teamSharedGoalRef = fm.doc(firestore, 'rocketGoals', teamSharedGoalId);
+    const teamSharedGoalSnap = await fm.getDoc(teamSharedGoalRef);
+    const teamSharedGoalData = teamSharedGoalSnap.exists()
+      ? (teamSharedGoalSnap.data() as Record<string, any>)
+      : null;
+
+    const memberGoalId = this.buildMemberTeamGoalId(teamId, memberUserId);
+    const memberGoalRef = fm.doc(firestore, 'rocketGoals', memberGoalId);
+    const memberGoalSnap = await fm.getDoc(memberGoalRef);
+    const teamMemberRecord = team.members.find(item => item.userId === memberUserId);
+    const firstName = String(member.firstName || teamMemberRecord?.firstName || 'Team').trim() || 'Team';
+    const lastName = String(member.lastName || teamMemberRecord?.lastName || 'Member').trim() || 'Member';
+    const email = String(member.email || teamMemberRecord?.email || `member-${memberUserId}@rocketgoals.local`).trim().toLowerCase();
+    const sourceAnswers = (teamSharedGoalData?.['answers'] || {}) as Record<string, any>;
+    const baseAnswers = this.buildTeamGoalAnswers({
+      teamId,
+      teamName,
+      teamSharedGoalId,
+      memberUserId,
+      sourceAnswers
+    });
+
+    if (!memberGoalSnap.exists()) {
+      const payload: CreateRocketGoalInput = {
+        userId: memberUserId,
+        primaryGoal: `${teamName} Team Mission`,
+        answers: baseAnswers,
+        participant: {
+          firstName,
+          lastName,
+          email
+        },
+        status: 'active',
+        entryPoint: 'launch_challenge',
+        startTime: Number(teamSharedGoalData?.['startTime']) || Date.now(),
+        createdAt: fm.serverTimestamp()
+      };
+      await fm.setDoc(memberGoalRef, {
+        id: memberGoalId,
+        ...payload,
+        createdAt: payload.createdAt || fm.serverTimestamp()
+      });
+      return memberGoalId;
+    }
+
+    const existingData = memberGoalSnap.data() as Record<string, any>;
+    const existingAnswers = (existingData['answers'] || {}) as Record<string, any>;
+    const mergedAnswers: Record<string, any> = {
+      ...existingAnswers,
+      teamId,
+      teamName,
+      teamGoal: true,
+      teamMemberGoal: true,
+      teamSharedGoalId,
+      teamMemberUserId: memberUserId
+    };
+    if (!String(mergedAnswers['goal_title_label'] || '').trim()) {
+      mergedAnswers['goal_title_label'] = baseAnswers['goal_title_label'];
+    }
+    if (!String(mergedAnswers['custom_goal_title'] || '').trim()) {
+      mergedAnswers['custom_goal_title'] = baseAnswers['custom_goal_title'];
+    }
+    if (!String(mergedAnswers['goal_theme_label'] || '').trim()) {
+      mergedAnswers['goal_theme_label'] = baseAnswers['goal_theme_label'];
+    }
+    if (!String(mergedAnswers['goal_support_label'] || '').trim()) {
+      mergedAnswers['goal_support_label'] = baseAnswers['goal_support_label'];
+    }
+    if (!String(mergedAnswers['timeframe'] || '').trim()) {
+      mergedAnswers['timeframe'] = baseAnswers['timeframe'];
+    }
+    if (!Number.isFinite(Number(mergedAnswers['timeframe_days'])) || Number(mergedAnswers['timeframe_days']) <= 0) {
+      mergedAnswers['timeframe_days'] = baseAnswers['timeframe_days'];
+    }
+    if (
+      (mergedAnswers['deadlineDate'] === undefined || mergedAnswers['deadlineDate'] === null || mergedAnswers['deadlineDate'] === '')
+      && baseAnswers['deadlineDate'] !== undefined
+    ) {
+      mergedAnswers['deadlineDate'] = baseAnswers['deadlineDate'];
+    }
+    const nextParticipant = {
+      firstName: String(existingData?.['participant']?.['firstName'] || firstName).trim() || firstName,
+      lastName: String(existingData?.['participant']?.['lastName'] || lastName).trim() || lastName,
+      email: String(existingData?.['participant']?.['email'] || email).trim().toLowerCase() || email
+    };
+    const updates = this.sanitizeWritePayload({
+      id: memberGoalId,
+      userId: memberUserId,
+      primaryGoal: existingData['primaryGoal'] || `${teamName} Team Mission`,
+      answers: mergedAnswers,
+      participant: nextParticipant
+    });
+    if (Object.keys(updates).length) {
+      await fm.updateDoc(memberGoalRef, updates);
+    }
+    return memberGoalId;
   }
 
   async findUserByEmail(email: string): Promise<{ userId: string; firstName: string; lastName: string; email: string; profilePictureUrl?: string } | null> {
@@ -506,22 +676,36 @@ export class TeamService {
     });
 
     try {
-      await this.cleanupRemovedMemberArtifacts(teamId, userId, team.rocketGoalId || null);
+      await this.cleanupRemovedMemberArtifacts(teamId, userId);
     } catch (error) {
       console.warn('Unable to fully clean up removed member artifacts:', error);
     }
   }
 
-  private async cleanupRemovedMemberArtifacts(teamId: string, userId: string, explicitTeamGoalId: string | null): Promise<void> {
+  private async cleanupRemovedMemberArtifacts(teamId: string, userId: string): Promise<void> {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
 
-    const possibleTeamGoalIds = new Set<string>();
-    const normalizedExplicitGoalId = (explicitTeamGoalId || '').trim();
-    if (normalizedExplicitGoalId) {
-      possibleTeamGoalIds.add(normalizedExplicitGoalId);
+    const memberGoalIdsToDelete = new Set<string>([
+      this.buildMemberTeamGoalId(teamId, userId)
+    ]);
+    const teamGoalIdsForProfileCleanup = new Set<string>([
+      this.buildMemberTeamGoalId(teamId, userId),
+      `team-${teamId}`
+    ]);
+
+    const userGoalsQuery = fm.query(
+      fm.collection(firestore, 'rocketGoals'),
+      fm.where('userId', '==', userId)
+    );
+    const userGoalsSnapshot = await fm.getDocs(userGoalsQuery);
+    for (const goalDoc of userGoalsSnapshot.docs) {
+      const goalData = goalDoc.data() as Record<string, any>;
+      if (this.isTeamGoalForTeam(goalData, teamId)) {
+        memberGoalIdsToDelete.add(goalDoc.id);
+        teamGoalIdsForProfileCleanup.add(goalDoc.id);
+      }
     }
-    possibleTeamGoalIds.add(`team-${teamId}`);
 
     const profileQuery = fm.query(
       fm.collection(firestore, 'userProfiles'),
@@ -544,12 +728,25 @@ export class TeamService {
     if (profileDoc) {
       const profileData = profileDoc.data() as Record<string, any>;
       const selectedGoalId = String(profileData['myOneThingGoalId'] || '').trim();
-      if (selectedGoalId && possibleTeamGoalIds.has(selectedGoalId)) {
+      if (selectedGoalId && teamGoalIdsForProfileCleanup.has(selectedGoalId)) {
         await fm.updateDoc(profileDoc.ref, {
           myOneThingGoalId: fm.deleteField()
         });
       }
     }
+
+    await Promise.all(
+      Array.from(memberGoalIdsToDelete).map(async goalId => {
+        if (!goalId) {
+          return;
+        }
+        try {
+          await fm.deleteDoc(fm.doc(firestore, 'rocketGoals', goalId));
+        } catch {
+          // Goal may not exist or may already be deleted.
+        }
+      })
+    );
 
     const conversationRef = fm.doc(firestore, 'teams', teamId, 'memberConversations', userId);
     const directMessagesRef = fm.collection(conversationRef, 'messages');
@@ -715,23 +912,50 @@ export class TeamService {
     });
 
     const profileGoalId = String(profileData?.['myOneThingGoalId'] || '').trim();
-    const teamGoalId = String(team.rocketGoalId || '').trim() || `team-${teamId}`;
-
-    let goalId: string | null = profileGoalId || null;
+    let goalId: string | null = null;
     let goalDoc: any = null;
 
-    if (teamGoalId) {
-      const teamGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', teamGoalId));
-      if (teamGoalDoc.exists()) {
-        goalId = teamGoalId;
-        goalDoc = teamGoalDoc;
+    const memberGoalId = this.buildMemberTeamGoalId(teamId, memberUserId);
+    const memberGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', memberGoalId));
+    if (memberGoalDoc.exists()) {
+      const goalData = memberGoalDoc.data() as Record<string, any>;
+      if (this.isTeamGoalForTeam(goalData, teamId)) {
+        goalId = memberGoalId;
+        goalDoc = memberGoalDoc;
       }
     }
 
-    if (!goalDoc && goalId) {
-      const selectedGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', goalId));
+    if (!goalDoc && profileGoalId) {
+      const selectedGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', profileGoalId));
       if (selectedGoalDoc.exists()) {
-        goalDoc = selectedGoalDoc;
+        const selectedGoalData = selectedGoalDoc.data() as Record<string, any>;
+        if (
+          String(selectedGoalData['userId'] || '').trim() === memberUserId
+          && this.isTeamGoalForTeam(selectedGoalData, teamId)
+        ) {
+          goalId = profileGoalId;
+          goalDoc = selectedGoalDoc;
+        }
+      }
+    }
+
+    if (!goalDoc) {
+      try {
+        const memberRecord = team.members.find(member => member.userId === memberUserId);
+        goalId = await this.ensureMemberTeamRocketGoal(teamId, {
+          userId: memberUserId,
+          firstName: memberRecord?.firstName || '',
+          lastName: memberRecord?.lastName || '',
+          email: memberRecord?.email || ''
+        });
+        if (goalId) {
+          const createdGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', goalId));
+          if (createdGoalDoc.exists()) {
+            goalDoc = createdGoalDoc;
+          }
+        }
+      } catch (error) {
+        console.warn('Unable to ensure member-specific team goal for snapshot:', error);
       }
     }
 

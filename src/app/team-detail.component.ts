@@ -98,6 +98,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   teamId = signal<string | null>(null);
   team = signal<Team | null>(null);
   teamRocketGoalId = signal<string | null>(null);
+  memberTeamRocketGoalId = signal<string | null>(null);
   teamGoal = signal<RocketGoal | null>(null);
   loading = signal(true);
   preparingTeamGoal = signal(false);
@@ -340,7 +341,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   isBusyJoining = computed(() => this.authActionLoading() || this.joiningTeam());
 
   readonly teamPageUrl = computed(() => this.buildTeamPageUrl(this.team()?.id || undefined));
-  canOpenTeamRocketGoal = computed(() => !!this.teamRocketGoalId() && !this.preparingTeamGoal());
+  canOpenTeamRocketGoal = computed(() => this.isCurrentUserMember() && !this.preparingTeamGoal());
   hasTelegramGroup = computed(() => !!this.team()?.telegramGroupId);
   telegramInviteLink = computed(() => this.team()?.telegramGroupInviteLink || null);
 
@@ -365,22 +366,24 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         this.showJoinModal.set(true);
       }
 
-      if (team?.id && isMember && this.messagesLoadedForTeamId !== team.id) {
-        void this.loadMessages(team.id);
-      }
-
-      const profile = this.authService.profile();
-      if (team?.id && isMember && profile?.userId && this.shouldLinkCurrentUserTeamGoal(team)) {
-        const teamGoalId = (this.teamRocketGoalId() || team.rocketGoalId || '').trim();
-        const linkedGoalId = (profile.myOneThingGoalId || '').trim();
-        const profileKey = `${team.id}|${profile.userId}|${teamGoalId}|${linkedGoalId}`;
-        if (this.linkedTeamGoalProfileKey !== profileKey) {
-          this.linkedTeamGoalProfileKey = profileKey;
-          void this.linkCurrentUserToTeamGoal(team.id);
+        if (team?.id && isMember && this.messagesLoadedForTeamId !== team.id) {
+          void this.loadMessages(team.id);
         }
-      } else {
-        this.linkedTeamGoalProfileKey = null;
-      }
+
+        const profile = this.authService.profile();
+        if (team?.id && isMember && profile?.userId && this.shouldLinkCurrentUserTeamGoal(team)) {
+          const teamGoalId = (this.teamRocketGoalId() || team.rocketGoalId || '').trim();
+          const memberGoalId = (this.memberTeamRocketGoalId() || '').trim();
+          const linkedGoalId = (profile.myOneThingGoalId || '').trim();
+          const profileKey = `${team.id}|${profile.userId}|${teamGoalId}|${memberGoalId}|${linkedGoalId}`;
+          if (this.linkedTeamGoalProfileKey !== profileKey) {
+            this.linkedTeamGoalProfileKey = profileKey;
+            void this.linkCurrentUserToTeamGoal(team.id);
+          }
+        } else {
+          this.linkedTeamGoalProfileKey = null;
+          this.memberTeamRocketGoalId.set(null);
+        }
 
       // Generate QR code when telegram group is connected
       if (team?.telegramGroupInviteLink) {
@@ -492,6 +495,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   private async loadTeam(teamId: string) {
     this.loading.set(true);
+    this.memberTeamRocketGoalId.set(null);
     try {
       const team = await this.teamService.getTeamById(teamId);
       this.team.set(team);
@@ -514,6 +518,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
+      this.memberTeamRocketGoalId.set(null);
       this.teamGoal.set(null);
       this.teamDeadlineEditing.set(false);
       this.teamDeadlineError.set(null);
@@ -551,15 +556,38 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   openTeamRocketGoalView() {
-    const goalId = this.teamRocketGoalId();
     const teamId = this.team()?.id || this.teamId();
-    if (!goalId || !teamId) {
+    if (!teamId || !this.isCurrentUserMember()) {
       return;
     }
 
-    this.router.navigate(['/rocketgoal', goalId], {
-      queryParams: { teamId }
-    });
+    const openWithGoal = (goalId: string) => {
+      this.router.navigate(['/rocketgoal', goalId], {
+        queryParams: { teamId }
+      });
+    };
+
+    const existingGoalId = (this.memberTeamRocketGoalId() || '').trim();
+    if (existingGoalId) {
+      openWithGoal(existingGoalId);
+      return;
+    }
+
+    if (this.preparingTeamGoal()) {
+      return;
+    }
+
+    this.preparingTeamGoal.set(true);
+    void this.linkCurrentUserToTeamGoal(teamId)
+      .then(() => {
+        const resolvedGoalId = (this.memberTeamRocketGoalId() || '').trim();
+        if (resolvedGoalId) {
+          openWithGoal(resolvedGoalId);
+        }
+      })
+      .finally(() => {
+        this.preparingTeamGoal.set(false);
+      });
   }
 
   private async loadTeamGoal(goalId: string | null): Promise<void> {
@@ -1975,20 +2003,23 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private async linkCurrentUserToTeamGoal(teamId: string): Promise<void> {
     const profile = this.authService.profile();
     if (!profile?.userId) {
+      this.memberTeamRocketGoalId.set(null);
       return;
     }
 
-    let goalId = (this.teamRocketGoalId() || this.team()?.rocketGoalId || '').trim();
-    if (!goalId) {
-      try {
-        goalId = (await this.teamService.ensureTeamRocketGoal(teamId)).trim();
-        if (goalId) {
-          this.teamRocketGoalId.set(goalId);
-        }
-      } catch (error) {
-        console.warn('Unable to ensure team goal while linking member profile:', error);
-        return;
-      }
+    let goalId = '';
+    try {
+      goalId = (await this.teamService.ensureMemberTeamRocketGoal(teamId, {
+        userId: profile.userId,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email
+      })).trim();
+      this.memberTeamRocketGoalId.set(goalId || null);
+    } catch (error) {
+      this.memberTeamRocketGoalId.set(null);
+      console.warn('Unable to ensure member team goal while linking profile:', error);
+      return;
     }
 
     if (!goalId || (profile.myOneThingGoalId || '').trim() === goalId) {
@@ -1998,7 +2029,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     try {
       await this.authService.updateUserProfile({ myOneThingGoalId: goalId });
     } catch (error) {
-      console.warn('Unable to link member profile to team goal:', error);
+      console.warn('Unable to link member profile to personal team goal:', error);
     }
   }
 
@@ -2444,7 +2475,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       return false;
     }
     const matchingMember = this.findCurrentUserTeamMember(team);
-    return matchingMember?.role === 'member' || matchingMember?.role === 'team-lead' || matchingMember?.role === 'captain';
+    return !!matchingMember;
   }
 
   private findCurrentUserTeamMember(team: Team | null): TeamMember | null {
