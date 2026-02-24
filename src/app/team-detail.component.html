@@ -181,13 +181,13 @@
       <button class="view-toggle-btn" type="button" (click)="openTeamRocketGoalView()" [disabled]="!canOpenTeamRocketGoal()">
         @if (preparingTeamGoal()) {
         <span class="spinner small"></span>
-        Preparing RocketGoal...
+        Preparing Individual View...
         } @else {
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-        RocketGoal View
+        Individual View
         }
       </button>
     </div>

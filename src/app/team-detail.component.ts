@@ -502,7 +502,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.team.update(current => (current ? { ...current, rocketGoalId: goalId } : current));
     } catch (err) {
       console.error('Failed to prepare team rocket goal:', err);
-      this.teamGoalError.set('Unable to open Team RocketGoal right now. Please try again.');
+      this.teamGoalError.set('Unable to open Individual View right now. Please try again.');
     } finally {
       this.preparingTeamGoal.set(false);
     }
