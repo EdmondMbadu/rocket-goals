@@ -263,6 +263,57 @@
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
 }
 
+/* ===== TEAM BACK BUTTON ===== */
+.team-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 8px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(248, 113, 113, 0.4);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.team-back-btn:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0.14));
+  border-color: rgba(248, 113, 113, 0.65);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  transform: translateX(-2px);
+}
+
+.team-back-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.team-back-group-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.light-mode .team-back-btn {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.04));
+  color: #b91c1c;
+}
+
+.light-mode .team-back-btn:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.08));
+  border-color: rgba(220, 38, 38, 0.55);
+  box-shadow: 0 0 16px rgba(220, 38, 38, 0.12);
+}
+
 /* Delete goal button */
 .delete-goal-btn {
   border: 1px solid rgba(239, 68, 68, 0.6);
