@@ -662,6 +662,7 @@
                     [class.today]="card.tone === 'today'"
                     [class.engagement]="card.tone === 'engagement'"
                     [class.active]="card.tone === 'active'"
+                    [class.miles]="card.tone === 'miles'"
                     [attr.stroke-dasharray]="card.percent + ', 100'"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 </svg>
@@ -676,21 +677,37 @@
                 [class.today]="card.tone === 'today'"
                 [class.engagement]="card.tone === 'engagement'"
                 [class.participants]="card.tone === 'participants'"
-                [class.active]="card.tone === 'active'">{{ card.percentText }}</strong>
-            </div>
-            <div class="mc-progress-track">
-              <div class="mc-progress-fill"
-                [class.milestones]="card.tone === 'milestones'"
-                [class.today]="card.tone === 'today'"
-                [class.engagement]="card.tone === 'engagement'"
-                [class.participants]="card.tone === 'participants'"
                 [class.active]="card.tone === 'active'"
-                [style.width.%]="card.percent">
-                @if (card.percent > 8) {
-                <span class="mc-progress-text">{{ card.progressText }}</span>
-                }
-              </div>
+                [class.miles]="card.tone === 'miles'">{{ card.percentText }}</strong>
             </div>
+            @if (card.weeklyBars?.length) {
+            <div class="mc-weekly-bars">
+              @for (bar of card.weeklyBars!; track bar.weekId) {
+              <div class="mc-weekly-bar-group">
+                <div class="mc-weekly-bar-track">
+                  <span class="mc-weekly-bar-fill" [style.height.%]="bar.actualPercent"></span>
+                </div>
+                <span class="mc-weekly-bar-label">{{ bar.label }}</span>
+                <span class="mc-weekly-bar-meta">{{ bar.actualMiles }} / {{ bar.targetMiles }}</span>
+              </div>
+              }
+            </div>
+            } @else {
+              <div class="mc-progress-track">
+                <div class="mc-progress-fill"
+                  [class.milestones]="card.tone === 'milestones'"
+                  [class.today]="card.tone === 'today'"
+                  [class.engagement]="card.tone === 'engagement'"
+                  [class.participants]="card.tone === 'participants'"
+                  [class.active]="card.tone === 'active'"
+                  [class.miles]="card.tone === 'miles'"
+                  [style.width.%]="card.percent">
+                  @if (card.percent > 8) {
+                  <span class="mc-progress-text">{{ card.progressText }}</span>
+                  }
+                </div>
+              </div>
+            }
             <p class="mc-progress-footnote">{{ card.footnote }}</p>
             }
           </article>

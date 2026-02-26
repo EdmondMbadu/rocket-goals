@@ -1878,6 +1878,111 @@
                   </div>
                 </div>
 
+                @if (isMileageTrackingGoal()) {
+                <div class="mileage-weekly-panel" [class.light-mode-ui]="!isDarkMode()">
+                  <div class="mileage-weekly-head">
+                    <div>
+                      <h4 class="mileage-weekly-title">Weekly Mileage Progress</h4>
+                      <p class="mileage-weekly-sub">Monday-Sunday actual miles vs target miles.</p>
+                    </div>
+                    <span class="mileage-weekly-badge">Team Bike Mode</span>
+                  </div>
+
+                  @if (loadingMileageEntries()) {
+                  <div class="mileage-loading">Loading weekly mileage...</div>
+                  } @else if (weeklyMileageRows().length === 0) {
+                  <div class="mileage-empty">No weekly mileage data yet. Add milestones with target miles to begin.</div>
+                  } @else {
+                  <div class="mileage-week-grid">
+                    @for (week of weeklyMileageRows(); track week.weekId) {
+                    <button type="button"
+                      class="mileage-week-card"
+                      [class.active]="selectedMileageWeekId() === week.weekId"
+                      (click)="selectMileageWeek(week.weekId)">
+                      <p class="mileage-week-label">{{ week.label }}</p>
+                      <div class="mileage-week-bars">
+                        <div class="mileage-bar-group">
+                          <span class="mileage-bar target"
+                            [style.height.%]="getMileageBarHeight(week.targetMiles, getMileageWeekMaxValue())"></span>
+                          <small>T</small>
+                        </div>
+                        <div class="mileage-bar-group">
+                          <span class="mileage-bar actual"
+                            [style.height.%]="getMileageBarHeight(week.actualMiles, getMileageWeekMaxValue())"></span>
+                          <small>A</small>
+                        </div>
+                      </div>
+                      <p class="mileage-week-values">{{ week.actualMiles }} / {{ week.targetMiles }} mi</p>
+                    </button>
+                    }
+                  </div>
+
+                  <div class="mileage-entry-editor">
+                    <div class="mileage-entry-fields">
+                      <input type="date"
+                        class="task-modal-input date-input"
+                        [ngModel]="mileageEntryDate()"
+                        (ngModelChange)="mileageEntryDate.set($event)"
+                        [min]="getSelectedMileageWeekMinDate()"
+                        [max]="getSelectedMileageWeekMaxDate()" />
+                      <input type="number"
+                        min="0"
+                        step="0.1"
+                        class="task-modal-input"
+                        [ngModel]="mileageEntryMiles()"
+                        (ngModelChange)="mileageEntryMiles.set($event === '' || $event === null ? null : +$event)"
+                        placeholder="Miles ridden" />
+                      <input type="text"
+                        class="task-modal-input"
+                        [ngModel]="mileageEntryNote()"
+                        (ngModelChange)="mileageEntryNote.set($event)"
+                        placeholder="Optional note (route, effort, weather)" />
+                    </div>
+                    <div class="mileage-entry-actions">
+                      <button type="button" class="task-modal-btn save"
+                        [disabled]="savingMileageEntry()"
+                        (click)="saveMileageEntry()">
+                        {{ editingMileageEntryId() ? 'Update Entry' : 'Add Entry' }}
+                      </button>
+                      @if (editingMileageEntryId()) {
+                      <button type="button" class="task-modal-btn cancel"
+                        [disabled]="savingMileageEntry()"
+                        (click)="cancelMileageEntryEdit()">
+                        Cancel
+                      </button>
+                      }
+                    </div>
+                    @if (mileageEntryError()) {
+                    <p class="mileage-entry-error">{{ mileageEntryError() }}</p>
+                    }
+                    @if (mileageEntryNotice()) {
+                    <p class="mileage-entry-notice">{{ mileageEntryNotice() }}</p>
+                    }
+                  </div>
+
+                  <div class="mileage-entry-list">
+                    @for (entry of getMileageEntriesForSelectedWeek(); track entry.id) {
+                    <div class="mileage-entry-row">
+                      <div>
+                        <p class="mileage-entry-date">{{ entry.dateId }}</p>
+                        <p class="mileage-entry-note">{{ entry.note || 'No note' }}</p>
+                      </div>
+                      <div class="mileage-entry-right">
+                        <strong>{{ entry.miles }} mi</strong>
+                        <div class="mileage-entry-row-actions">
+                          <button type="button" (click)="startEditMileageEntry(entry)">Edit</button>
+                          <button type="button" class="danger" (click)="deleteMileageEntry(entry)">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                    } @empty {
+                    <p class="mileage-empty">No rides logged for this week yet.</p>
+                    }
+                  </div>
+                  }
+                </div>
+                }
+
                 <!-- Kanban Board for Milestones -->
                 <div class="milestones-kanban-board">
                   @if (loadingActionItems()) {
@@ -2309,6 +2414,25 @@
           (ngModelChange)="newActionItemNotes.set($event)"
           placeholder="Add any additional details, links, or reminders..."></textarea>
       </div>
+
+      @if (isMileageTrackingGoal()) {
+      <div class="task-modal-field">
+        <label class="task-modal-label">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2m0 18l6-3m-6 3V2m6 15l6 3m-6-3V2m6 18V2m0 0L15 5m6-3L15 5m0 0L9 2" />
+          </svg>
+          Target Miles (Optional)
+        </label>
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          class="task-modal-input"
+          [ngModel]="newActionItemTargetMiles()"
+          (ngModelChange)="newActionItemTargetMiles.set($event === '' || $event === null ? null : +$event)"
+          placeholder="e.g. 18.5" />
+      </div>
+      }
 
       <!-- Completion -->
       <div class="task-modal-field">

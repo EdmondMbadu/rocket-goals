@@ -11,6 +11,7 @@ import {
   TeamMessage
 } from './models/team';
 import { CreateRocketGoalInput } from './models/rocket-goal';
+import { addDays, enumerateWeeks, formatDateId, getStartOfWeekMonday, parseDateId, toDateOnly } from './week-utils';
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
@@ -22,7 +23,11 @@ export class TeamService {
       { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
       { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
       { id: 'mc-active-today', name: 'Active Today', style: 'circular', metricKey: 'active_today' },
+      { id: 'mc-current-week-miles', name: 'Current Week Miles', style: 'circular', metricKey: 'current_week_miles' },
+      { id: 'mc-weekly-miles-total', name: 'Weekly Miles Total', style: 'circular', metricKey: 'weekly_miles_total' },
+      { id: 'mc-overall-miles-total', name: 'Overall Miles Total', style: 'circular', metricKey: 'overall_miles_total' },
       { id: 'mc-overall-progress', name: 'Overall Milestone Progress', style: 'histogram', metricKey: 'overall_milestone_progress' },
+      { id: 'mc-weekly-mileage-progress', name: 'Weekly Mileage Progress', style: 'histogram', metricKey: 'weekly_mileage_progress' },
       { id: 'mc-today-rate', name: "Today's Execution Rate", style: 'histogram', metricKey: 'today_execution_rate' },
       { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
     ];
@@ -40,7 +45,11 @@ export class TeamService {
       'milestones_done',
       'today_execution',
       'active_today',
+      'current_week_miles',
+      'weekly_miles_total',
+      'overall_miles_total',
       'overall_milestone_progress',
+      'weekly_mileage_progress',
       'today_execution_rate',
       'team_engagement_rate'
     ]);
@@ -106,6 +115,75 @@ export class TeamService {
     return Math.min(Math.max(1, elapsedDays), Math.max(1, totalDays));
   }
 
+  private parseNumericValue(value: unknown): number | null {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value.replace(/,/g, '').trim());
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }
+
+  private getGoalStartDate(goal: Record<string, any>): Date {
+    const startTime = Number(goal['startTime']) || Date.now();
+    return toDateOnly(new Date(startTime));
+  }
+
+  private getGoalEndDate(goal: Record<string, any>, totalDays: number): Date {
+    const answers = (goal['answers'] || {}) as Record<string, any>;
+    const deadline = this.getTimestampMillis(answers['deadlineDate']);
+    if (deadline !== null) {
+      return toDateOnly(new Date(deadline));
+    }
+    const start = this.getGoalStartDate(goal);
+    return toDateOnly(addDays(start, Math.max(0, totalDays - 1)));
+  }
+
+  private getGoalTargetMiles(goal: Record<string, any>): number | null {
+    const answers = (goal['answers'] || {}) as Record<string, any>;
+    const direct = this.parseNumericValue(answers['onboarding_one_thing_metric']);
+    if (direct !== null && direct > 0) {
+      return direct;
+    }
+    return null;
+  }
+
+  private isMileageTrackingGoal(goal: Record<string, any>): boolean {
+    const answers = (goal['answers'] || {}) as Record<string, any>;
+    const templateId = String(answers['launchpad_template_id'] || '').trim().toLowerCase();
+    if (templateId === 'my-rocket-ride') {
+      return true;
+    }
+
+    const unit = String(answers['onboarding_one_thing_unit'] || '').trim().toLowerCase();
+    if (unit.includes('mile')) {
+      return true;
+    }
+
+    const label = String(answers['onboarding_one_thing_label'] || '').trim().toLowerCase();
+    if (label.includes('mile') || label.includes('distance')) {
+      return true;
+    }
+
+    const title = String(
+      goal['primaryGoal']
+      || answers['goal_title_label']
+      || answers['custom_goal_title']
+      || ''
+    ).trim().toLowerCase();
+    if (!title) {
+      return false;
+    }
+    return (
+      title.includes('bike')
+      || title.includes('cycling')
+      || title.includes('ride')
+      || title.includes('mile')
+    );
+  }
+
   private buildMemberTeamGoalId(teamId: string, userId: string): string {
     return `team-${teamId}-member-${userId}`;
   }
@@ -157,6 +235,73 @@ export class TeamService {
       normalized['deadlineDate'] = sourceDeadline;
     }
     return normalized;
+  }
+
+  private async cloneSharedMilestonesToMemberGoalIfNeeded(
+    firestore: Firestore,
+    fm: typeof import('firebase/firestore'),
+    teamSharedGoalId: string,
+    memberGoalId: string
+  ): Promise<void> {
+    const memberCollection = fm.collection(firestore, 'rocketGoals', memberGoalId, 'actionItems');
+    const existingMemberItems = await fm.getDocs(fm.query(memberCollection, fm.limit(1)));
+    if (!existingMemberItems.empty) {
+      return;
+    }
+
+    const sharedCollection = fm.collection(firestore, 'rocketGoals', teamSharedGoalId, 'actionItems');
+    const sharedSnapshot = await fm.getDocs(sharedCollection);
+    if (sharedSnapshot.empty) {
+      return;
+    }
+
+    const sorted = sharedSnapshot.docs
+      .map((doc: { data: () => unknown }) => doc.data() as Record<string, any>)
+      .sort((left: Record<string, any>, right: Record<string, any>) => {
+        const leftDay = Number(left['dayNumber'] || 0);
+        const rightDay = Number(right['dayNumber'] || 0);
+        if (leftDay !== rightDay) {
+          return leftDay - rightDay;
+        }
+        return Number(left['order'] || 0) - Number(right['order'] || 0);
+      });
+
+    for (let index = 0; index < sorted.length; index += 1) {
+      const source = sorted[index];
+      const dayNumber = Math.max(1, Math.round(Number(source['dayNumber'] || 1)));
+      const order = Number.isFinite(Number(source['order']))
+        ? Math.round(Number(source['order']))
+        : index;
+
+      const payload: Record<string, any> = {
+        goalId: memberGoalId,
+        title: String(source['title'] || '').trim() || `Day ${dayNumber} milestone`,
+        dayNumber,
+        completed: false,
+        postponed: false,
+        order,
+        createdAt: fm.serverTimestamp(),
+        updatedAt: fm.serverTimestamp()
+      };
+
+      const description = String(source['description'] || '').trim();
+      if (description) {
+        payload['description'] = description;
+      }
+      const notes = String(source['notes'] || '').trim();
+      if (notes) {
+        payload['notes'] = notes;
+      }
+      const metricType = String(source['metricType'] || '').trim();
+      const metricValue = Number(source['metricValue']);
+      if (metricType && Number.isFinite(metricValue)) {
+        payload['metricType'] = metricType;
+        payload['metricValue'] = metricValue;
+      }
+
+      const docRef = await fm.addDoc(memberCollection, payload);
+      await fm.updateDoc(docRef, { id: docRef.id });
+    }
   }
 
   private sanitizeMemberForWrite(member: Team['members'][0]): Team['members'][0] {
@@ -418,6 +563,12 @@ export class TeamService {
         ...payload,
         createdAt: payload.createdAt || fm.serverTimestamp()
       });
+      await this.cloneSharedMilestonesToMemberGoalIfNeeded(
+        firestore,
+        fm,
+        teamSharedGoalId,
+        memberGoalId
+      );
       return memberGoalId;
     }
 
@@ -471,6 +622,12 @@ export class TeamService {
     if (Object.keys(updates).length) {
       await fm.updateDoc(memberGoalRef, updates);
     }
+    await this.cloneSharedMilestonesToMemberGoalIfNeeded(
+      firestore,
+      fm,
+      teamSharedGoalId,
+      memberGoalId
+    );
     return memberGoalId;
   }
 
@@ -912,7 +1069,10 @@ export class TeamService {
       latestMissionLogAt: null,
       latestIgnitionAt: null,
       latestMilestoneUpdateAt: null,
-      latestActivityAt: null
+      latestActivityAt: null,
+      currentWeekMilesActual: 0,
+      currentWeekMilesTarget: 0,
+      weeklyMileageProgress: []
     });
 
     const profileGoalId = String(profileData?.['myOneThingGoalId'] || '').trim();
@@ -993,6 +1153,83 @@ export class TeamService {
       return Math.max(latest, updatedAt);
     }, null);
 
+    let currentWeekMilesActual = 0;
+    let currentWeekMilesTarget = 0;
+    let weeklyMileageProgress: TeamMemberActivitySnapshot['weeklyMileageProgress'] = [];
+
+    if (this.isMileageTrackingGoal(goal)) {
+      const entriesSnapshot = await fm.getDocs(
+        fm.collection(firestore, 'rocketGoals', goalId, 'milestoneEntries')
+      );
+      const entries = entriesSnapshot.docs.map(doc => doc.data() as Record<string, any>);
+      const startDate = this.getGoalStartDate(goal);
+      const endDate = this.getGoalEndDate(goal, totalDays);
+      const weekRanges = enumerateWeeks(startDate, endDate);
+      const targetByWeek = new Map<string, number>();
+      const actualByWeek = new Map<string, number>();
+
+      for (const item of actionItems) {
+        const metricType = String(item['metricType'] || '').trim().toLowerCase();
+        const metricValue = Number(item['metricValue']);
+        if (metricType !== 'miles_target' || !Number.isFinite(metricValue) || metricValue <= 0) {
+          continue;
+        }
+        const dayNumber = Math.max(1, Math.round(Number(item['dayNumber'] || 1)));
+        const milestoneDate = addDays(startDate, dayNumber - 1);
+        const weekId = formatDateId(getStartOfWeekMonday(milestoneDate));
+        targetByWeek.set(weekId, (targetByWeek.get(weekId) || 0) + metricValue);
+      }
+
+      for (const entry of entries) {
+        const miles = Number(entry['miles']);
+        if (!Number.isFinite(miles) || miles <= 0) {
+          continue;
+        }
+        const entryDate = parseDateId(String(entry['dateId'] || ''))
+          || (() => {
+            const fallback = this.getTimestampMillis(entry['updatedAtMs'])
+              ?? this.getTimestampMillis(entry['createdAtMs'])
+              ?? this.getTimestampMillis(entry['updatedAt'])
+              ?? this.getTimestampMillis(entry['createdAt']);
+            return fallback === null ? null : toDateOnly(new Date(fallback));
+          })();
+        if (!entryDate) {
+          continue;
+        }
+        const weekId = formatDateId(getStartOfWeekMonday(entryDate));
+        actualByWeek.set(weekId, (actualByWeek.get(weekId) || 0) + miles);
+      }
+
+      const totalGoalMiles = this.getGoalTargetMiles(goal);
+      const hasExplicitWeeklyTarget = Array.from(targetByWeek.values()).some(value => value > 0);
+      if (!hasExplicitWeeklyTarget && totalGoalMiles && weekRanges.length > 0) {
+        const base = totalGoalMiles / weekRanges.length;
+        for (let index = 0; index < weekRanges.length; index += 1) {
+          const range = weekRanges[index];
+          const rawValue = index === weekRanges.length - 1
+            ? totalGoalMiles - (base * (weekRanges.length - 1))
+            : base;
+          targetByWeek.set(range.weekId, Math.max(0, rawValue));
+        }
+      }
+
+      weeklyMileageProgress = weekRanges.map(range => {
+        const targetMiles = targetByWeek.get(range.weekId) || 0;
+        const actualMiles = actualByWeek.get(range.weekId) || 0;
+        return {
+          weekId: range.weekId,
+          weekStartMs: range.weekStart.getTime(),
+          weekEndMs: range.weekEnd.getTime(),
+          targetMiles: Math.round(targetMiles * 10) / 10,
+          actualMiles: Math.round(actualMiles * 10) / 10
+        };
+      });
+
+      const currentWeekId = formatDateId(getStartOfWeekMonday(new Date()));
+      currentWeekMilesActual = Math.round(((actualByWeek.get(currentWeekId) || 0) + Number.EPSILON) * 10) / 10;
+      currentWeekMilesTarget = Math.round(((targetByWeek.get(currentWeekId) || 0) + Number.EPSILON) * 10) / 10;
+    }
+
     const fetchLatestFromSubcollection = async (subCollection: 'missionLogs' | 'dailyIgnitions'): Promise<number | null> => {
       const subRef = fm.collection(firestore, 'rocketGoals', goalId, subCollection);
       try {
@@ -1040,7 +1277,10 @@ export class TeamService {
       latestMissionLogAt,
       latestIgnitionAt,
       latestMilestoneUpdateAt,
-      latestActivityAt
+      latestActivityAt,
+      currentWeekMilesActual,
+      currentWeekMilesTarget,
+      weeklyMileageProgress
     };
   }
 

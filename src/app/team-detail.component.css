@@ -3566,6 +3566,7 @@
 .mc-ring-fill.today { stroke: #f59e0b; }
 .mc-ring-fill.engagement { stroke: #10b981; }
 .mc-ring-fill.active { stroke: #14b8a6; }
+.mc-ring-fill.miles { stroke: #38bdf8; }
 
 /* Progress Bars Section */
 .mc-progress-section {
@@ -3604,6 +3605,7 @@
 .mc-progress-pct.engagement { color: #10b981; }
 .mc-progress-pct.participants { color: #818cf8; }
 .mc-progress-pct.active { color: #14b8a6; }
+.mc-progress-pct.miles { color: #38bdf8; }
 .mc-progress-track {
   height: 10px;
   border-radius: 8px;
@@ -3636,6 +3638,9 @@
 .mc-progress-fill.active {
   background: linear-gradient(90deg, #0ea5e9, #14b8a6);
 }
+.mc-progress-fill.miles {
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
 .mc-progress-text {
   font-size: 9px;
   font-weight: 800;
@@ -3647,6 +3652,43 @@
   margin: 0;
   font-size: 11px;
   color: #64748b;
+}
+.mc-weekly-bars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mc-weekly-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mc-weekly-bar-track {
+  width: 100%;
+  height: 68px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.mc-weekly-bar-fill {
+  width: 100%;
+  min-height: 2px;
+  background: linear-gradient(180deg, #22d3ee, #0ea5e9);
+  transition: height 0.35s ease;
+}
+.mc-weekly-bar-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+.mc-weekly-bar-meta {
+  font-size: 10px;
+  color: #94a3b8;
 }
 
 /* ── Original team-direct-summary (used in Direct tab) ── */
@@ -4307,8 +4349,17 @@
   background: rgba(255, 255, 255, 0.9);
 }
 .light-mode .mc-progress-label-row { color: #334155; }
-.light-mode .mc-progress-track { background: rgba(15, 23, 42, 0.06); }
+.light-mode .mc-progress-track {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
 .light-mode .mc-progress-footnote { color: #94a3b8; }
+.light-mode .mc-weekly-bar-track {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+.light-mode .mc-weekly-bar-label { color: #334155; }
+.light-mode .mc-weekly-bar-meta { color: #64748b; }
 .light-mode .mc-add-form,
 .light-mode .mc-card-shell {
   border-color: rgba(15, 23, 42, 0.08);

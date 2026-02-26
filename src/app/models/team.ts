@@ -52,6 +52,9 @@ export interface TeamMemberActivitySnapshot {
   latestIgnitionAt: number | null;
   latestMilestoneUpdateAt: number | null;
   latestActivityAt: number | null;
+  currentWeekMilesActual?: number;
+  currentWeekMilesTarget?: number;
+  weeklyMileageProgress?: TeamWeeklyMileageProgress[];
 }
 
 export type TeamMissionControlCardStyle = 'circular' | 'histogram';
@@ -63,7 +66,19 @@ export type TeamMissionControlMetricKey =
   | 'active_today'
   | 'overall_milestone_progress'
   | 'today_execution_rate'
-  | 'team_engagement_rate';
+  | 'team_engagement_rate'
+  | 'current_week_miles'
+  | 'weekly_mileage_progress'
+  | 'weekly_miles_total'
+  | 'overall_miles_total';
+
+export interface TeamWeeklyMileageProgress {
+  weekId: string;
+  weekStartMs: number;
+  weekEndMs: number;
+  targetMiles: number;
+  actualMiles: number;
+}
 
 export interface TeamMissionControlCard {
   id: string;

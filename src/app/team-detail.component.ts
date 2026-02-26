@@ -36,7 +36,14 @@ type MissionControlCardDisplay = TeamMissionControlCard & {
   percentText: string;
   progressText: string;
   footnote: string;
-  tone: 'participants' | 'milestones' | 'today' | 'engagement' | 'active';
+  tone: 'participants' | 'milestones' | 'today' | 'engagement' | 'active' | 'miles';
+  weeklyBars?: Array<{
+    weekId: string;
+    label: string;
+    targetMiles: number;
+    actualMiles: number;
+    actualPercent: number;
+  }>;
 };
 
 type TeamMissionSummary = {
@@ -49,6 +56,17 @@ type TeamMissionSummary = {
   activeTodayCount: number;
   completionPercent: number;
   todayPercent: number;
+  currentWeekMilesActual: number;
+  currentWeekMilesTarget: number;
+  weeklyMilesTotal: number;
+  overallMilesTotal: number;
+  weeklyMileageProgress: Array<{
+    weekId: string;
+    weekStartMs: number;
+    weekEndMs: number;
+    targetMiles: number;
+    actualMiles: number;
+  }>;
 };
 
 const DEFAULT_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
@@ -56,7 +74,11 @@ const DEFAULT_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
   { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
   { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
   { id: 'mc-active-today', name: 'Active Today', style: 'circular', metricKey: 'active_today' },
+  { id: 'mc-current-week-miles', name: 'Current Week Miles', style: 'circular', metricKey: 'current_week_miles' },
+  { id: 'mc-weekly-miles-total', name: 'Weekly Miles Total', style: 'circular', metricKey: 'weekly_miles_total' },
+  { id: 'mc-overall-miles-total', name: 'Overall Miles Total', style: 'circular', metricKey: 'overall_miles_total' },
   { id: 'mc-overall-progress', name: 'Overall Milestone Progress', style: 'histogram', metricKey: 'overall_milestone_progress' },
+  { id: 'mc-weekly-mileage-progress', name: 'Weekly Mileage Progress', style: 'histogram', metricKey: 'weekly_mileage_progress' },
   { id: 'mc-today-rate', name: "Today's Execution Rate", style: 'histogram', metricKey: 'today_execution_rate' },
   { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
 ];
@@ -66,7 +88,11 @@ const MISSION_CONTROL_METRIC_OPTIONS: Array<{ key: TeamMissionControlMetricKey; 
   { key: 'milestones_done', label: 'Milestones Done' },
   { key: 'today_execution', label: "Today's Execution" },
   { key: 'active_today', label: 'Active Today' },
+  { key: 'current_week_miles', label: 'Current Week Miles' },
+  { key: 'weekly_miles_total', label: 'Weekly Miles Total' },
+  { key: 'overall_miles_total', label: 'Overall Miles Total' },
   { key: 'overall_milestone_progress', label: 'Overall Milestone Progress' },
+  { key: 'weekly_mileage_progress', label: 'Weekly Mileage Progress' },
   { key: 'today_execution_rate', label: "Today's Execution Rate" },
   { key: 'team_engagement_rate', label: 'Team Engagement Rate' }
 ];
@@ -302,6 +328,50 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const activeTodayCount = rows.filter(row => (row.activity?.totalToday || 0) > 0).length;
     const completionPercent = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
     const todayPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+    const currentWeekMilesActual = rows.reduce((sum, row) => sum + (row.activity?.currentWeekMilesActual || 0), 0);
+    const currentWeekMilesTarget = rows.reduce((sum, row) => sum + (row.activity?.currentWeekMilesTarget || 0), 0);
+    const weeklyMap = new Map<string, {
+      weekId: string;
+      weekStartMs: number;
+      weekEndMs: number;
+      targetMiles: number;
+      actualMiles: number;
+    }>();
+
+    for (const row of rows) {
+      const weekly = row.activity?.weeklyMileageProgress || [];
+      for (const week of weekly) {
+        const existing = weeklyMap.get(week.weekId);
+        if (existing) {
+          existing.targetMiles += week.targetMiles || 0;
+          existing.actualMiles += week.actualMiles || 0;
+          existing.weekStartMs = Math.min(existing.weekStartMs, week.weekStartMs || existing.weekStartMs);
+          existing.weekEndMs = Math.max(existing.weekEndMs, week.weekEndMs || existing.weekEndMs);
+        } else {
+          weeklyMap.set(week.weekId, {
+            weekId: week.weekId,
+            weekStartMs: week.weekStartMs || 0,
+            weekEndMs: week.weekEndMs || 0,
+            targetMiles: week.targetMiles || 0,
+            actualMiles: week.actualMiles || 0
+          });
+        }
+      }
+    }
+
+    const weeklyMileageProgress = Array.from(weeklyMap.values())
+      .sort((left, right) => left.weekStartMs - right.weekStartMs)
+      .slice(-8)
+      .map(week => ({
+        ...week,
+        targetMiles: Math.round((week.targetMiles + Number.EPSILON) * 10) / 10,
+        actualMiles: Math.round((week.actualMiles + Number.EPSILON) * 10) / 10
+      }));
+    const weeklyMilesTotal = Math.round((currentWeekMilesActual + Number.EPSILON) * 10) / 10;
+    const overallMilesTotal = Math.round(
+      (weeklyMileageProgress.reduce((sum, week) => sum + week.actualMiles, 0) + Number.EPSILON) * 10
+    ) / 10;
+
     return {
       totalParticipants,
       goalsStarted,
@@ -311,7 +381,12 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       completedToday,
       activeTodayCount,
       completionPercent: Math.max(0, Math.min(100, completionPercent)),
-      todayPercent: Math.max(0, Math.min(100, todayPercent))
+      todayPercent: Math.max(0, Math.min(100, todayPercent)),
+      currentWeekMilesActual: Math.round((currentWeekMilesActual + Number.EPSILON) * 10) / 10,
+      currentWeekMilesTarget: Math.round((currentWeekMilesTarget + Number.EPSILON) * 10) / 10,
+      weeklyMilesTotal,
+      overallMilesTotal,
+      weeklyMileageProgress
     };
   });
   missionControlCards = computed(() => this.resolveMissionControlCards(this.team()?.missionControlCards));
@@ -1326,7 +1401,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     if (!team?.id) {
       return;
     }
-    const normalizedCards = this.normalizeMissionControlCards(this.missionControlDraftCards());
+    const normalizedCards = this.ensureMileageAggregationCards(
+      this.normalizeMissionControlCards(this.missionControlDraftCards())
+    );
     if (!normalizedCards.length) {
       this.missionControlCardsError.set('Add at least one card before saving.');
       return;
@@ -1360,7 +1437,72 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     if (!Array.isArray(cards) || cards.length === 0) {
       return DEFAULT_MISSION_CONTROL_CARDS.map(card => ({ ...card }));
     }
-    return this.normalizeMissionControlCards(cards);
+    return this.ensureMileageAggregationCards(
+      this.upgradeLegacyMissionControlCards(this.normalizeMissionControlCards(cards))
+    );
+  }
+
+  private ensureMileageAggregationCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    const next = [...cards];
+    const required: Array<{ metricKey: TeamMissionControlMetricKey; style: TeamMissionControlCardStyle }> = [
+      { metricKey: 'weekly_miles_total', style: 'circular' },
+      { metricKey: 'overall_miles_total', style: 'circular' }
+    ];
+
+    for (const item of required) {
+      const exists = next.some(card => card.metricKey === item.metricKey);
+      if (!exists) {
+        next.push({
+          id: this.createMissionControlCardId(),
+          name: this.getMissionControlMetricLabel(item.metricKey),
+          metricKey: item.metricKey,
+          style: item.style
+        });
+      }
+    }
+    return next;
+  }
+
+  private upgradeLegacyMissionControlCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    const legacyDefaultMetrics = new Set<TeamMissionControlMetricKey>([
+      'total_members',
+      'milestones_done',
+      'today_execution',
+      'active_today',
+      'current_week_miles',
+      'overall_milestone_progress',
+      'weekly_mileage_progress',
+      'today_execution_rate',
+      'team_engagement_rate'
+    ]);
+    const keys = cards.map(card => card.metricKey);
+    const looksLikeLegacyDefault =
+      keys.length === legacyDefaultMetrics.size
+      && keys.every(key => legacyDefaultMetrics.has(key));
+    if (!looksLikeLegacyDefault) {
+      return cards;
+    }
+
+    const hasWeeklyMilesTotal = cards.some(card => card.metricKey === 'weekly_miles_total');
+    const hasOverallMilesTotal = cards.some(card => card.metricKey === 'overall_miles_total');
+    const upgraded = [...cards];
+    if (!hasWeeklyMilesTotal) {
+      upgraded.push({
+        id: this.createMissionControlCardId(),
+        name: this.getMissionControlMetricLabel('weekly_miles_total'),
+        style: 'circular',
+        metricKey: 'weekly_miles_total'
+      });
+    }
+    if (!hasOverallMilesTotal) {
+      upgraded.push({
+        id: this.createMissionControlCardId(),
+        name: this.getMissionControlMetricLabel('overall_miles_total'),
+        style: 'circular',
+        metricKey: 'overall_miles_total'
+      });
+    }
+    return upgraded;
   }
 
   private normalizeMissionControlCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
@@ -1370,7 +1512,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       'milestones_done',
       'today_execution',
       'active_today',
+      'current_week_miles',
+      'weekly_miles_total',
+      'overall_miles_total',
       'overall_milestone_progress',
+      'weekly_mileage_progress',
       'today_execution_rate',
       'team_engagement_rate'
     ]);
@@ -1402,6 +1548,31 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const activeTodayPercent = totalMembers > 0
       ? Math.round((summary.activeTodayCount / totalMembers) * 100)
       : 0;
+    const currentWeekMilesPercent = summary.currentWeekMilesTarget > 0
+      ? Math.round((summary.currentWeekMilesActual / summary.currentWeekMilesTarget) * 100)
+      : 0;
+    const weeklyMilesTotalPercent = summary.weeklyMilesTotal > 0
+      ? this.clampPercent(summary.weeklyMilesTotal)
+      : 0;
+    const overallMilesTotalPercent = summary.overallMilesTotal > 0
+      ? this.clampPercent(summary.overallMilesTotal)
+      : 0;
+    const weeklyBars = summary.weeklyMileageProgress
+      .slice(-6)
+      .map(week => {
+        const startDate = new Date(week.weekStartMs);
+        const label = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const actualPercent = week.targetMiles > 0
+          ? this.clampPercent((week.actualMiles / week.targetMiles) * 100)
+          : 0;
+        return {
+          weekId: week.weekId,
+          label,
+          targetMiles: week.targetMiles,
+          actualMiles: week.actualMiles,
+          actualPercent
+        };
+      });
 
     switch (card.metricKey) {
       case 'total_members':
@@ -1448,6 +1619,39 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
           progressText: `${summary.activeTodayCount} members`,
           footnote: `${summary.activeTodayCount} of ${summary.totalParticipants} members have tasks scheduled today`
         };
+      case 'current_week_miles':
+        return {
+          ...card,
+          tone: 'miles',
+          valueText: `${summary.currentWeekMilesActual} / ${summary.currentWeekMilesTarget} mi`,
+          subtitle: 'Current week mileage',
+          percent: this.clampPercent(currentWeekMilesPercent),
+          percentText: `${this.clampPercent(currentWeekMilesPercent)}%`,
+          progressText: `${summary.currentWeekMilesActual} mi`,
+          footnote: `${summary.currentWeekMilesActual} of ${summary.currentWeekMilesTarget} miles logged this week`
+        };
+      case 'weekly_miles_total':
+        return {
+          ...card,
+          tone: 'miles',
+          valueText: `${summary.weeklyMilesTotal} mi`,
+          subtitle: 'Total miles logged this week',
+          percent: weeklyMilesTotalPercent,
+          percentText: `${weeklyMilesTotalPercent}%`,
+          progressText: `${summary.weeklyMilesTotal} mi`,
+          footnote: `Team logged ${summary.weeklyMilesTotal} miles this week`
+        };
+      case 'overall_miles_total':
+        return {
+          ...card,
+          tone: 'miles',
+          valueText: `${summary.overallMilesTotal} mi`,
+          subtitle: 'Total miles logged overall',
+          percent: overallMilesTotalPercent,
+          percentText: `${overallMilesTotalPercent}%`,
+          progressText: `${summary.overallMilesTotal} mi`,
+          footnote: `Team logged ${summary.overallMilesTotal} miles across all weeks`
+        };
       case 'overall_milestone_progress':
         return {
           ...card,
@@ -1481,6 +1685,22 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
           progressText: `${summary.goalsStarted} active`,
           footnote: `${summary.goalsStarted} of ${summary.totalParticipants} members have started their goals`
         };
+      case 'weekly_mileage_progress': {
+        const totalTarget = weeklyBars.reduce((sum, bar) => sum + bar.targetMiles, 0);
+        const totalActual = weeklyBars.reduce((sum, bar) => sum + bar.actualMiles, 0);
+        const percent = totalTarget > 0 ? this.clampPercent((totalActual / totalTarget) * 100) : 0;
+        return {
+          ...card,
+          tone: 'miles',
+          valueText: `${percent}%`,
+          subtitle: `${Math.round(totalActual * 10) / 10}/${Math.round(totalTarget * 10) / 10} mi`,
+          percent,
+          percentText: `${percent}%`,
+          progressText: `${Math.round(totalActual * 10) / 10} mi`,
+          footnote: 'Weekly mileage actual vs target',
+          weeklyBars
+        };
+      }
       default:
         return {
           ...card,

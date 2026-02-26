@@ -11,6 +11,7 @@ import { EventModalComponent } from './event-modal.component';
 import { CalendarEventsService } from './calendar-events.service';
 import { ActionItemsService, ActionItem } from './action-items.service';
 import { CheckInsService } from './check-ins.service';
+import { MileageEntriesService, type MileageEntry } from './mileage-entries.service';
 import { TelegramQrModalComponent } from './telegram-qr-modal.component';
 import { TeamService } from './team.service';
 import type { RocketGoal, CareerQuestMetrics } from './models/rocket-goal';
@@ -48,6 +49,15 @@ type CheckinDashboardStats = {
   feelingDistribution: Record<string, number>;
   actionDistribution: Record<string, number>;
 };
+
+type WeeklyMileageRow = {
+  weekId: string;
+  weekStartMs: number;
+  weekEndMs: number;
+  label: string;
+  targetMiles: number;
+  actualMiles: number;
+};
 import type { CalendarEvent } from './mission-calendar.component';
 import type { CalendarEventData } from './calendar-events.service';
 import { ThemeService } from './theme.service';
@@ -56,6 +66,14 @@ import { VisualizationService } from './visualization.service';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
 import { MilestoneCompleteModalComponent, MilestoneCompletionData } from './milestone-complete-modal.component';
 import { LAUNCHPAD_TEMPLATES, DashboardConfig } from './launchpad/launchpad.types';
+import {
+  addDays,
+  enumerateWeeks,
+  formatDateId,
+  getStartOfWeekMonday,
+  parseDateId,
+  toDateOnly
+} from './week-utils';
 
 @Component({
   selector: 'app-rocket-goal-view',
@@ -71,6 +89,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   private calendarEventsService = inject(CalendarEventsService);
   private actionItemsService = inject(ActionItemsService);
   private checkInsService = inject(CheckInsService);
+  private mileageEntriesService = inject(MileageEntriesService);
   private fansService = inject(FansService);
   private teamService = inject(TeamService);
   private visualizationService = inject(VisualizationService);
@@ -278,6 +297,20 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
 
   // Add Milestone modal - date selection
   selectedDateForNewTask = signal<string>(''); // ISO date string YYYY-MM-DD
+  newActionItemTargetMiles = signal<number | null>(null);
+
+  // Mileage tracking (bike/team goals)
+  mileageEntries = signal<MileageEntry[]>([]);
+  loadingMileageEntries = signal(false);
+  weeklyMileageRows = signal<WeeklyMileageRow[]>([]);
+  selectedMileageWeekId = signal<string | null>(null);
+  mileageEntryDate = signal<string>('');
+  mileageEntryMiles = signal<number | null>(null);
+  mileageEntryNote = signal('');
+  editingMileageEntryId = signal<string | null>(null);
+  savingMileageEntry = signal(false);
+  mileageEntryError = signal<string | null>(null);
+  mileageEntryNotice = signal<string | null>(null);
 
   // Fan Join Modal state
   showFanJoinModal = signal(false);
@@ -881,6 +914,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
       if (currentGoal?.id) {
         await this.loadCalendarEvents(currentGoal.id);
         await this.loadActionItems(currentGoal.id);
+        await this.loadMileageEntries(currentGoal.id);
         // Sync milestone colors after both are loaded
         this.syncMilestoneCalendarColors();
         await this.loadCheckIns(currentGoal.id);
@@ -1497,6 +1531,7 @@ ${url}`;
       await Promise.all([
         this.loadCalendarEvents(goal.id),
         this.loadActionItems(goal.id),
+        this.loadMileageEntries(goal.id),
         this.loadCheckIns(goal.id)
       ]);
       console.log('Goal data refreshed');
@@ -2094,12 +2129,412 @@ ${url}`;
     try {
       const items = await this.actionItemsService.getActionItemsByGoalId(goalId);
       this.actionItems.set(items);
+      this.refreshWeeklyMileageRows();
       this.scheduleTodayMilestoneScroll();
     } catch (error) {
       console.error('Error loading action items:', error);
     } finally {
       this.loadingActionItems.set(false);
     }
+  }
+
+  async loadMileageEntries(goalId: string) {
+    this.loadingMileageEntries.set(true);
+    this.mileageEntryError.set(null);
+    try {
+      const entries = await this.mileageEntriesService.getEntriesByGoalId(goalId);
+      this.mileageEntries.set(entries);
+      this.refreshWeeklyMileageRows();
+    } catch (error: any) {
+      console.error('Error loading mileage entries:', error);
+      this.mileageEntryError.set(error?.message || 'Unable to load mileage entries.');
+    } finally {
+      this.loadingMileageEntries.set(false);
+    }
+  }
+
+  isMileageTrackingGoal(): boolean {
+    const goal = this.goal();
+    if (!goal) {
+      return false;
+    }
+    const answers = goal.answers || {};
+    const templateId = String(answers['launchpad_template_id'] || '').trim().toLowerCase();
+    if (templateId === 'my-rocket-ride') {
+      return true;
+    }
+    const unit = String(answers['onboarding_one_thing_unit'] || '').trim().toLowerCase();
+    if (unit.includes('mile')) {
+      return true;
+    }
+    const label = String(answers['onboarding_one_thing_label'] || '').trim().toLowerCase();
+    if (label.includes('distance') || label.includes('mileage') || label.includes('mile')) {
+      return true;
+    }
+    const title = String(
+      goal.primaryGoal
+      || answers['goal_title_label']
+      || answers['custom_goal_title']
+      || ''
+    ).trim().toLowerCase();
+    return (
+      title.includes('bike')
+      || title.includes('cycling')
+      || title.includes('ride')
+      || title.includes('mile')
+    );
+  }
+
+  getMileageEntriesForSelectedWeek(): MileageEntry[] {
+    const selectedWeekId = this.selectedMileageWeekId();
+    if (!selectedWeekId) {
+      return [];
+    }
+    return this.mileageEntries()
+      .filter(entry => {
+        const date = this.getMileageEntryDate(entry);
+        if (!date) {
+          return false;
+        }
+        return formatDateId(getStartOfWeekMonday(date)) === selectedWeekId;
+      })
+      .sort((left, right) => {
+        if (left.dateId === right.dateId) {
+          return (right.updatedAtMs || 0) - (left.updatedAtMs || 0);
+        }
+        return left.dateId > right.dateId ? -1 : 1;
+      });
+  }
+
+  getMileageWeekMaxValue(): number {
+    const rows = this.weeklyMileageRows();
+    return rows.reduce((max, row) => Math.max(max, row.targetMiles, row.actualMiles), 0);
+  }
+
+  getMileageBarHeight(value: number, max: number): number {
+    if (max <= 0) {
+      return 0;
+    }
+    return Math.round((value / max) * 100);
+  }
+
+  selectMileageWeek(weekId: string) {
+    this.selectedMileageWeekId.set(weekId);
+    this.mileageEntryError.set(null);
+    this.mileageEntryNotice.set(null);
+    this.editingMileageEntryId.set(null);
+    this.mileageEntryMiles.set(null);
+    this.mileageEntryNote.set('');
+    const selected = this.weeklyMileageRows().find(week => week.weekId === weekId) || null;
+    if (selected) {
+      this.mileageEntryDate.set(this.getDefaultMileageEntryDateForWeek(selected));
+    }
+  }
+
+  startEditMileageEntry(entry: MileageEntry) {
+    this.editingMileageEntryId.set(entry.id);
+    this.mileageEntryDate.set(entry.dateId);
+    this.mileageEntryMiles.set(entry.miles);
+    this.mileageEntryNote.set(entry.note || '');
+    this.mileageEntryError.set(null);
+    this.mileageEntryNotice.set(null);
+    const weekId = formatDateId(getStartOfWeekMonday(this.getMileageEntryDate(entry) || new Date()));
+    this.selectedMileageWeekId.set(weekId);
+  }
+
+  cancelMileageEntryEdit() {
+    this.editingMileageEntryId.set(null);
+    this.mileageEntryMiles.set(null);
+    this.mileageEntryNote.set('');
+    const selected = this.weeklyMileageRows().find(week => week.weekId === this.selectedMileageWeekId()) || null;
+    if (selected) {
+      this.mileageEntryDate.set(this.getDefaultMileageEntryDateForWeek(selected));
+    }
+  }
+
+  async saveMileageEntry() {
+    const goal = this.goal();
+    if (!goal?.id || !this.isMileageTrackingGoal()) {
+      return;
+    }
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
+
+    const selectedWeekId = this.selectedMileageWeekId();
+    if (!selectedWeekId) {
+      this.mileageEntryError.set('Select a week first.');
+      return;
+    }
+
+    const dateId = this.mileageEntryDate().trim();
+    const date = parseDateId(dateId);
+    if (!date) {
+      this.mileageEntryError.set('Pick a valid date.');
+      return;
+    }
+    if (formatDateId(getStartOfWeekMonday(date)) !== selectedWeekId) {
+      this.mileageEntryError.set('Date must be inside the selected week.');
+      return;
+    }
+
+    const miles = Number(this.mileageEntryMiles());
+    if (!Number.isFinite(miles) || miles <= 0) {
+      this.mileageEntryError.set('Miles must be greater than 0.');
+      return;
+    }
+
+    this.savingMileageEntry.set(true);
+    this.mileageEntryError.set(null);
+    this.mileageEntryNotice.set(null);
+    const note = this.mileageEntryNote().trim();
+    const actionItemId = this.getMileageMilestoneIdForDate(date) || undefined;
+    const editingId = this.editingMileageEntryId();
+
+    try {
+      if (editingId) {
+        await this.mileageEntriesService.updateEntry(goal.id, editingId, {
+          actionItemId,
+          dateId,
+          miles: Math.round((miles + Number.EPSILON) * 10) / 10,
+          note: note || undefined
+        });
+        this.mileageEntries.update(entries =>
+          entries.map(entry => (
+            entry.id === editingId
+              ? {
+                  ...entry,
+                  actionItemId,
+                  dateId,
+                  miles: Math.round((miles + Number.EPSILON) * 10) / 10,
+                  note: note || undefined,
+                  updatedAtMs: Date.now()
+                }
+              : entry
+          ))
+        );
+        this.mileageEntryNotice.set('Entry updated.');
+      } else {
+        const createdId = await this.mileageEntriesService.createEntry({
+          goalId: goal.id,
+          actionItemId,
+          dateId,
+          miles: Math.round((miles + Number.EPSILON) * 10) / 10,
+          note: note || undefined
+        });
+        this.mileageEntries.update(entries => [{
+          id: createdId,
+          goalId: goal.id,
+          actionItemId,
+          dateId,
+          miles: Math.round((miles + Number.EPSILON) * 10) / 10,
+          note: note || undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdAtMs: Date.now(),
+          updatedAtMs: Date.now()
+        }, ...entries]);
+        this.mileageEntryNotice.set('Entry added.');
+      }
+
+      this.refreshWeeklyMileageRows();
+      this.cancelMileageEntryEdit();
+    } catch (error: any) {
+      console.error('Error saving mileage entry:', error);
+      this.mileageEntryError.set(error?.message || 'Could not save mileage entry.');
+    } finally {
+      this.savingMileageEntry.set(false);
+    }
+  }
+
+  async deleteMileageEntry(entry: MileageEntry) {
+    const goal = this.goal();
+    if (!goal?.id || !this.isMileageTrackingGoal()) {
+      return;
+    }
+    if (!this.ensureMilestoneLogin()) {
+      return;
+    }
+    if (!confirm('Delete this mileage entry?')) {
+      return;
+    }
+
+    try {
+      await this.mileageEntriesService.deleteEntry(goal.id, entry.id);
+      this.mileageEntries.update(entries => entries.filter(item => item.id !== entry.id));
+      this.refreshWeeklyMileageRows();
+      if (this.editingMileageEntryId() === entry.id) {
+        this.cancelMileageEntryEdit();
+      }
+      this.mileageEntryNotice.set('Entry deleted.');
+      this.mileageEntryError.set(null);
+    } catch (error: any) {
+      console.error('Error deleting mileage entry:', error);
+      this.mileageEntryError.set(error?.message || 'Could not delete mileage entry.');
+    }
+  }
+
+  getSelectedMileageWeekMinDate(): string {
+    const selected = this.weeklyMileageRows().find(week => week.weekId === this.selectedMileageWeekId()) || null;
+    if (!selected) {
+      return '';
+    }
+    return formatDateId(new Date(selected.weekStartMs));
+  }
+
+  getSelectedMileageWeekMaxDate(): string {
+    const selected = this.weeklyMileageRows().find(week => week.weekId === this.selectedMileageWeekId()) || null;
+    if (!selected) {
+      return '';
+    }
+    return formatDateId(new Date(selected.weekEndMs));
+  }
+
+  private refreshWeeklyMileageRows() {
+    if (!this.isMileageTrackingGoal()) {
+      this.weeklyMileageRows.set([]);
+      this.selectedMileageWeekId.set(null);
+      return;
+    }
+    const goal = this.goal();
+    if (!goal) {
+      return;
+    }
+
+    const startDate = toDateOnly(new Date(goal.startTime || Date.now()));
+    const deadlineTimestamp = this.getDeadlineTimestamp();
+    const endDate = deadlineTimestamp
+      ? toDateOnly(new Date(deadlineTimestamp))
+      : toDateOnly(addDays(startDate, this.getTimeframeDays() - 1));
+    const weeks = enumerateWeeks(startDate, endDate);
+    const targetByWeek = new Map<string, number>();
+    const actualByWeek = new Map<string, number>();
+
+    for (const item of this.actionItems()) {
+      const target = this.getMilestoneTargetMiles(item);
+      if (target <= 0) {
+        continue;
+      }
+      const itemDate = toDateOnly(this.getDateFromDayNumber(item.dayNumber));
+      const weekId = formatDateId(getStartOfWeekMonday(itemDate));
+      targetByWeek.set(weekId, (targetByWeek.get(weekId) || 0) + target);
+    }
+
+    for (const entry of this.mileageEntries()) {
+      const entryDate = this.getMileageEntryDate(entry);
+      if (!entryDate) {
+        continue;
+      }
+      const weekId = formatDateId(getStartOfWeekMonday(entryDate));
+      actualByWeek.set(weekId, (actualByWeek.get(weekId) || 0) + (entry.miles || 0));
+    }
+
+    const totalGoalMiles = this.getGoalTargetMiles();
+    const hasTargetValues = Array.from(targetByWeek.values()).some(value => value > 0);
+    if (!hasTargetValues && totalGoalMiles > 0 && weeks.length > 0) {
+      const basePerWeek = totalGoalMiles / weeks.length;
+      for (let index = 0; index < weeks.length; index += 1) {
+        const week = weeks[index];
+        const target = index === weeks.length - 1
+          ? totalGoalMiles - (basePerWeek * (weeks.length - 1))
+          : basePerWeek;
+        targetByWeek.set(week.weekId, Math.max(0, target));
+      }
+    }
+
+    const rows: WeeklyMileageRow[] = weeks.map(week => {
+      const targetMiles = Math.round(((targetByWeek.get(week.weekId) || 0) + Number.EPSILON) * 10) / 10;
+      const actualMiles = Math.round(((actualByWeek.get(week.weekId) || 0) + Number.EPSILON) * 10) / 10;
+      const label = `${new Date(week.weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(week.weekEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      return {
+        weekId: week.weekId,
+        weekStartMs: week.weekStart.getTime(),
+        weekEndMs: week.weekEnd.getTime(),
+        label,
+        targetMiles,
+        actualMiles
+      };
+    });
+
+    this.weeklyMileageRows.set(rows);
+    const selectedWeekId = this.selectedMileageWeekId();
+    if (!selectedWeekId || !rows.some(row => row.weekId === selectedWeekId)) {
+      const currentWeekId = formatDateId(getStartOfWeekMonday(new Date()));
+      const defaultRow = rows.find(row => row.weekId === currentWeekId) || rows[rows.length - 1] || null;
+      this.selectedMileageWeekId.set(defaultRow?.weekId || null);
+      this.mileageEntryDate.set(defaultRow ? this.getDefaultMileageEntryDateForWeek(defaultRow) : '');
+    }
+  }
+
+  private getDefaultMileageEntryDateForWeek(week: WeeklyMileageRow): string {
+    const today = toDateOnly(new Date());
+    const weekStart = toDateOnly(new Date(week.weekStartMs));
+    const weekEnd = toDateOnly(new Date(week.weekEndMs));
+    let selected = today;
+    if (today.getTime() < weekStart.getTime()) {
+      selected = weekStart;
+    }
+    if (today.getTime() > weekEnd.getTime()) {
+      selected = weekEnd;
+    }
+    return formatDateId(selected);
+  }
+
+  private getMileageMilestoneIdForDate(date: Date): string | null {
+    const weekId = formatDateId(getStartOfWeekMonday(date));
+    const match = this.actionItems().find(item => {
+      if (!this.isMileageMilestone(item)) {
+        return false;
+      }
+      const milestoneDate = toDateOnly(this.getDateFromDayNumber(item.dayNumber));
+      return formatDateId(getStartOfWeekMonday(milestoneDate)) === weekId;
+    });
+    return match?.id || null;
+  }
+
+  private getMileageEntryDate(entry: MileageEntry): Date | null {
+    const parsed = parseDateId(entry.dateId);
+    if (parsed) {
+      return parsed;
+    }
+    const fallback = this.getDateFromValue(entry.updatedAtMs || entry.createdAtMs || entry.updatedAt || entry.createdAt);
+    return fallback ? toDateOnly(fallback) : null;
+  }
+
+  private getMilestoneTargetMiles(item: ActionItem): number {
+    if (!this.isMileageMilestone(item)) {
+      return 0;
+    }
+    const miles = Number(item.metricValue);
+    return Number.isFinite(miles) && miles > 0 ? miles : 0;
+  }
+
+  private isMileageMilestone(item: ActionItem): boolean {
+    return String(item.metricType || '').trim().toLowerCase() === 'miles_target';
+  }
+
+  private getGoalTargetMiles(): number {
+    const goal = this.goal();
+    if (!goal) {
+      return 0;
+    }
+    const raw = goal.answers?.['onboarding_one_thing_metric'];
+    if (typeof raw === 'number') {
+      return Number.isFinite(raw) && raw > 0 ? raw : 0;
+    }
+    if (typeof raw === 'string') {
+      const parsed = Number(raw.replace(/,/g, '').trim());
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    }
+    return 0;
+  }
+
+  private getDefaultMileageTargetForDay(totalDays: number): number | null {
+    const goalMiles = this.getGoalTargetMiles();
+    if (goalMiles <= 0 || totalDays <= 0) {
+      return null;
+    }
+    return Math.round(((goalMiles / totalDays) + Number.EPSILON) * 10) / 10;
   }
 
   // Sync milestone completion status with calendar event colors
@@ -3451,6 +3886,7 @@ ${url}`;
       await this.actionItemsService.deleteActionItem(goal.id, item.id);
       // Update local state
       this.actionItems.update(items => items.filter(i => i.id !== item.id));
+      this.refreshWeeklyMileageRows();
 
       // Also delete the corresponding calendar event (if it exists)
       await this.deleteCalendarEventForMilestone(goal.id, item.title);
@@ -3499,6 +3935,7 @@ ${url}`;
 
       // Clear local state
       this.actionItems.set([]);
+      this.refreshWeeklyMileageRows();
       this.showDeleteAllConfirm.set(false);
     } catch (error) {
       console.error('Error deleting all milestones:', error);
@@ -3515,6 +3952,7 @@ ${url}`;
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
     this.newActionItemCompleted.set(false);
+    this.newActionItemTargetMiles.set(null);
     this.taskModalEditingItem.set(null);
     // Set default date to today or current mission day
     const currentDayDate = this.getDateFromDayNumber(this.getCurrentMissionDay());
@@ -3527,6 +3965,7 @@ ${url}`;
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
     this.newActionItemCompleted.set(false);
+    this.newActionItemTargetMiles.set(null);
     this.taskModalEditingItem.set(null);
     this.selectedDateForNewTask.set('');
   }
@@ -3573,6 +4012,10 @@ ${url}`;
     const selectedDay = this.selectedDayForNewTask();
     const notes = this.newActionItemNotes().trim();
     const completed = this.newActionItemCompleted();
+    const targetMilesRaw = Number(this.newActionItemTargetMiles());
+    const targetMiles = this.isMileageTrackingGoal() && Number.isFinite(targetMilesRaw) && targetMilesRaw > 0
+      ? Math.round((targetMilesRaw + Number.EPSILON) * 10) / 10
+      : null;
     const editingItem = this.taskModalEditingItem();
     const existingItems = this.getActionItemsForDay(selectedDay);
     const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
@@ -3580,7 +4023,14 @@ ${url}`;
     try {
       if (editingItem) {
         const wasCompleted = editingItem.completed;
-        const updates: { title: string; dayNumber: number; completed: boolean; notes?: string } = {
+        const updates: {
+          title: string;
+          dayNumber: number;
+          completed: boolean;
+          notes?: string;
+          metricType?: string;
+          metricValue?: number;
+        } = {
           title,
           dayNumber: selectedDay,
           completed
@@ -3588,11 +4038,16 @@ ${url}`;
         if (notes) {
           updates.notes = notes;
         }
+        if (targetMiles !== null) {
+          updates.metricType = 'miles_target';
+          updates.metricValue = targetMiles;
+        }
 
         await this.actionItemsService.updateActionItem(goal.id, editingItem.id, updates);
         this.actionItems.update(items =>
           items.map(i => i.id === editingItem.id ? { ...i, ...updates } : i)
         );
+        this.refreshWeeklyMileageRows();
 
         await this.updateCalendarEventForMilestone(goal.id, editingItem, {
           title,
@@ -3619,6 +4074,10 @@ ${url}`;
       if (notes) {
         itemData.notes = notes;
       }
+      if (targetMiles !== null) {
+        itemData.metricType = 'miles_target';
+        itemData.metricValue = targetMiles;
+      }
 
       const newId = await this.actionItemsService.createActionItem(itemData);
 
@@ -3636,7 +4095,12 @@ ${url}`;
       if (notes) {
         newItem.notes = notes;
       }
+      if (targetMiles !== null) {
+        newItem.metricType = 'miles_target';
+        newItem.metricValue = targetMiles;
+      }
       this.actionItems.update(items => [...items, newItem]);
+      this.refreshWeeklyMileageRows();
 
       // Also create a calendar event for this milestone
       const milestoneDate = this.getDateFromDayNumber(selectedDay);
@@ -4087,6 +4551,7 @@ Generate the milestones now (JSON array only, no other text):`;
     this.newActionItemTitle.set(item.title);
     this.newActionItemNotes.set(item.notes || '');
     this.newActionItemCompleted.set(item.completed);
+    this.newActionItemTargetMiles.set(this.getMilestoneTargetMiles(item) || null);
     this.selectedDayForNewTask.set(item.dayNumber);
     this.selectedDateForNewTask.set(this.formatDateISO(this.getDateFromDayNumber(item.dayNumber)));
     if (autoOpened) {
@@ -4212,19 +4677,28 @@ Generate the milestones now (JSON array only, no other text):`;
     if (selectedMilestones.length === 0) return;
 
     this.addingGeneratedMilestones.set(true);
+    const mileageEnabled = this.isMileageTrackingGoal();
+    const defaultDailyMileage = this.getDefaultMileageTargetForDay(this.getTimeframeDays());
 
     try {
       for (const milestone of selectedMilestones) {
         const existingItems = this.getActionItemsForDay(milestone.dayNumber);
         const nextOrder = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.order)) + 1 : 0;
-
-        const newId = await this.actionItemsService.createActionItem({
+        const metricType = mileageEnabled && defaultDailyMileage !== null ? 'miles_target' : undefined;
+        const metricValue = mileageEnabled && defaultDailyMileage !== null ? defaultDailyMileage : undefined;
+        const createInput: any = {
           goalId: goal.id,
           title: milestone.title,
           dayNumber: milestone.dayNumber,
           completed: false,
           order: nextOrder
-        });
+        };
+        if (metricType && metricValue !== undefined) {
+          createInput.metricType = metricType;
+          createInput.metricValue = metricValue;
+        }
+
+        const newId = await this.actionItemsService.createActionItem(createInput);
 
         // Update local action items state
         const newItem: ActionItem = {
@@ -4234,6 +4708,8 @@ Generate the milestones now (JSON array only, no other text):`;
           dayNumber: milestone.dayNumber,
           completed: false,
           order: nextOrder,
+          metricType,
+          metricValue,
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -4244,6 +4720,7 @@ Generate the milestones now (JSON array only, no other text):`;
         await this.createCalendarEventForMilestone(goal.id, milestone.title, milestoneDate);
       }
 
+      this.refreshWeeklyMileageRows();
       this.closeGenerateMilestonesModal();
     } catch (error) {
       console.error('Error adding milestones:', error);
@@ -4258,6 +4735,8 @@ Generate the milestones now (JSON array only, no other text):`;
     if (!goal?.id) return;
 
     const orderByDay = new Map<number, number>();
+    const mileageEnabled = this.isMileageTrackingGoal();
+    const defaultDailyMileage = this.getDefaultMileageTargetForDay(this.getTimeframeDays());
 
     for (const milestone of items) {
       const title = milestone.title.trim();
@@ -4277,6 +4756,10 @@ Generate the milestones now (JSON array only, no other text):`;
         completed: false,
         order: nextOrder
       };
+      if (mileageEnabled && defaultDailyMileage !== null) {
+        itemData.metricType = 'miles_target';
+        itemData.metricValue = defaultDailyMileage;
+      }
 
       const newId = await this.actionItemsService.createActionItem(itemData);
       const newItem: ActionItem = {
@@ -4286,6 +4769,8 @@ Generate the milestones now (JSON array only, no other text):`;
         dayNumber: milestone.dayNumber,
         completed: false,
         order: nextOrder,
+        metricType: itemData.metricType,
+        metricValue: itemData.metricValue,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -4296,6 +4781,7 @@ Generate the milestones now (JSON array only, no other text):`;
 
       orderByDay.set(milestone.dayNumber, nextOrder + 1);
     }
+    this.refreshWeeklyMileageRows();
   }
 
   // Get tasks to display based on view mode
@@ -4449,7 +4935,9 @@ Generate the milestones now (JSON array only, no other text):`;
     this.newActionItemTitle.set('');
     this.newActionItemNotes.set('');
     this.newActionItemCompleted.set(false);
+    this.newActionItemTargetMiles.set(null);
     this.taskModalEditingItem.set(null);
+    this.selectedDateForNewTask.set(this.formatDateISO(this.getDateFromDayNumber(day)));
   }
 
   // Get tasks positioned between timeline markers

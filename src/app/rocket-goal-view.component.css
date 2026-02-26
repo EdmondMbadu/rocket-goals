@@ -14344,3 +14344,366 @@
     white-space: normal;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Weekly Mileage Tracker
+   ───────────────────────────────────────────────────────────────────── */
+.mileage-weekly-panel {
+  margin: 0 0 1.25rem 0;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: linear-gradient(160deg, rgba(2, 132, 199, 0.12), rgba(15, 23, 42, 0.44));
+}
+
+.mileage-weekly-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.mileage-weekly-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #e0f2fe;
+}
+
+.mileage-weekly-sub {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.78rem;
+  color: rgba(224, 242, 254, 0.75);
+}
+
+.mileage-weekly-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.52rem;
+  border-radius: 999px;
+  color: #082f49;
+  background: linear-gradient(90deg, #7dd3fc, #38bdf8);
+}
+
+.mileage-week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+}
+
+.mileage-week-card {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 12px;
+  padding: 0.6rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.mileage-week-card:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-1px);
+}
+
+.mileage-week-card.active {
+  border-color: rgba(56, 189, 248, 0.85);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35) inset;
+}
+
+.mileage-week-label {
+  margin: 0 0 0.42rem 0;
+  font-size: 0.68rem;
+  color: #bae6fd;
+}
+
+.mileage-week-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 66px;
+}
+
+.mileage-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.mileage-bar-group small {
+  font-size: 0.62rem;
+  color: rgba(186, 230, 253, 0.8);
+}
+
+.mileage-bar {
+  display: block;
+  width: 16px;
+  min-height: 2px;
+  border-radius: 7px;
+  transition: height 0.3s ease;
+}
+
+.mileage-bar.target {
+  background: linear-gradient(180deg, #f97316, #ea580c);
+}
+
+.mileage-bar.actual {
+  background: linear-gradient(180deg, #22d3ee, #0ea5e9);
+}
+
+.mileage-week-values {
+  margin: 0.45rem 0 0 0;
+  font-size: 0.74rem;
+  color: #e0f2fe;
+  font-weight: 700;
+}
+
+.mileage-entry-editor {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding-top: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.mileage-entry-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.55rem;
+}
+
+.mileage-entry-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.mileage-entry-error {
+  margin: 0.45rem 0 0 0;
+  color: #fecaca;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mileage-entry-notice {
+  margin: 0.45rem 0 0 0;
+  color: #bbf7d0;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mileage-entry-list {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.mileage-entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 0.55rem 0.62rem;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.mileage-entry-date {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e0f2fe;
+}
+
+.mileage-entry-note {
+  margin: 0.16rem 0 0 0;
+  font-size: 0.72rem;
+  color: rgba(224, 242, 254, 0.72);
+}
+
+.mileage-entry-right {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mileage-entry-right strong {
+  color: #f8fafc;
+  font-size: 0.78rem;
+}
+
+.mileage-entry-row-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.mileage-entry-row-actions button {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.68);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 0.22rem 0.45rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.mileage-entry-row-actions button.danger {
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+.mileage-empty,
+.mileage-loading {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.82);
+  padding: 0.55rem 0.2rem;
+}
+
+:host-context(.light-mode) .mileage-weekly-panel {
+  background: linear-gradient(160deg, rgba(56, 189, 248, 0.16), rgba(255, 255, 255, 0.92));
+  border-color: rgba(14, 116, 144, 0.25);
+}
+
+:host-context(.light-mode) .mileage-weekly-title {
+  color: #0f172a;
+}
+
+:host-context(.light-mode) .mileage-weekly-sub {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+:host-context(.light-mode) .mileage-week-card,
+:host-context(.light-mode) .mileage-entry-row {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+:host-context(.light-mode) .mileage-week-label,
+:host-context(.light-mode) .mileage-week-values,
+:host-context(.light-mode) .mileage-entry-date {
+  color: #0f172a;
+}
+
+:host-context(.light-mode) .mileage-entry-note,
+:host-context(.light-mode) .mileage-empty,
+:host-context(.light-mode) .mileage-loading {
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.mission-control-dashboard.light-mode .mileage-weekly-panel {
+  background: linear-gradient(160deg, rgba(56, 189, 248, 0.12), rgba(255, 255, 255, 0.98));
+  border-color: rgba(14, 116, 144, 0.22);
+}
+
+.mission-control-dashboard.light-mode .mileage-weekly-badge {
+  color: #0c4a6e;
+}
+
+.mission-control-dashboard.light-mode .mileage-week-card.active {
+  border-color: rgba(14, 116, 144, 0.55);
+  box-shadow: 0 0 0 1px rgba(14, 116, 144, 0.2) inset;
+}
+
+.mission-control-dashboard.light-mode .mileage-bar-group small {
+  color: rgba(51, 65, 85, 0.85);
+}
+
+.mission-control-dashboard.light-mode .mileage-entry-editor {
+  border-top-color: rgba(15, 23, 42, 0.14);
+}
+
+.mission-control-dashboard.light-mode .mileage-entry-right strong {
+  color: #0f172a;
+}
+
+.mission-control-dashboard.light-mode .mileage-entry-notice {
+  color: #166534;
+}
+
+.mission-control-dashboard.light-mode .mileage-entry-row-actions button {
+  border-color: rgba(148, 163, 184, 0.6);
+  background: rgba(248, 250, 252, 0.95);
+  color: #1e293b;
+}
+
+.mission-control-dashboard.light-mode .mileage-entry-row-actions button.danger {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
+}
+
+/* Explicit light-mode styling for mileage panel (independent of ancestor selectors) */
+.mileage-weekly-panel.light-mode-ui {
+  background: linear-gradient(160deg, rgba(56, 189, 248, 0.12), rgba(255, 255, 255, 0.98));
+  border-color: rgba(14, 116, 144, 0.22);
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-weekly-title {
+  color: #0f172a;
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-weekly-sub {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-weekly-badge {
+  color: #0c4a6e;
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-week-card,
+.mileage-weekly-panel.light-mode-ui .mileage-entry-row {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-week-label,
+.mileage-weekly-panel.light-mode-ui .mileage-week-values,
+.mileage-weekly-panel.light-mode-ui .mileage-entry-date,
+.mileage-weekly-panel.light-mode-ui .mileage-entry-right strong {
+  color: #0f172a;
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-bar-group small,
+.mileage-weekly-panel.light-mode-ui .mileage-entry-note,
+.mileage-weekly-panel.light-mode-ui .mileage-empty,
+.mileage-weekly-panel.light-mode-ui .mileage-loading {
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-week-card.active {
+  border-color: rgba(14, 116, 144, 0.55);
+  box-shadow: 0 0 0 1px rgba(14, 116, 144, 0.2) inset;
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-entry-editor {
+  border-top-color: rgba(15, 23, 42, 0.14);
+}
+
+.mileage-weekly-panel.light-mode-ui .task-modal-input {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.55);
+  color: #0f172a;
+}
+
+.mileage-weekly-panel.light-mode-ui .task-modal-input::placeholder {
+  color: #64748b;
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-entry-row-actions button {
+  border-color: rgba(148, 163, 184, 0.6);
+  background: rgba(248, 250, 252, 0.95);
+  color: #1e293b;
+}
+
+.mileage-weekly-panel.light-mode-ui .mileage-entry-row-actions button.danger {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
+}
