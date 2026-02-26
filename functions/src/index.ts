@@ -1899,6 +1899,14 @@ export const sendTestEmail = functions.runWith({
         }
         sgMail.setApiKey(apiKey);
 
+        const suppressionReason = await getSendgridSuppressionReason(apiKey, email);
+        if (suppressionReason) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                `SendGrid suppression prevents delivery to ${email}: ${suppressionReason}. Remove the suppression in SendGrid and retry.`
+            );
+        }
+
         // Create email message
         const msg = {
             to: to,
@@ -2207,6 +2215,43 @@ function dedupeGroupedReminderGoals(goals: GroupedGoalReminderItem[]): GroupedGo
     return keyOrder
         .map(key => deduped.get(key))
         .filter((goal): goal is GroupedGoalReminderItem => !!goal);
+}
+
+type SendgridSuppressionCategory = 'bounces' | 'blocks' | 'spam_reports' | 'invalid_emails' | 'unsubscribes';
+
+async function getSendgridSuppressionReason(apiKey: string, email: string): Promise<string | null> {
+    const encodedEmail = encodeURIComponent(email);
+    const checks: Array<{ category: SendgridSuppressionCategory; label: string }> = [
+        { category: 'bounces', label: 'bounce' },
+        { category: 'blocks', label: 'block' },
+        { category: 'spam_reports', label: 'spam report' },
+        { category: 'invalid_emails', label: 'invalid email' },
+        { category: 'unsubscribes', label: 'unsubscribe' }
+    ];
+
+    for (const check of checks) {
+        const response = await fetch(`https://api.sendgrid.com/v3/suppression/${check.category}/${encodedEmail}`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${apiKey}`
+            }
+        });
+
+        if (response.status === 404) {
+            continue;
+        }
+
+        if (!response.ok) {
+            const body = await response.text();
+            throw new Error(`Failed suppression check (${check.category}): ${response.status} ${body}`);
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        const reason = (payload?.reason || payload?.status || '').toString().trim();
+        return reason ? `${check.label} (${reason})` : check.label;
+    }
+
+    return null;
 }
 
 function getCoachInfoFromGoalData(goalData: FirebaseFirestore.DocumentData): { coachName: string; coachAvatarUrl: string } | null {
@@ -2950,12 +2995,24 @@ export const sendTestDailyReminder = functions.runWith({
             html
         };
 
-        await sgMail.send(msg);
+        const [sendgridResponse] = await sgMail.send(msg);
+        const providerStatus = Number(sendgridResponse?.statusCode || 0);
+        const messageIdHeader = sendgridResponse?.headers?.['x-message-id'];
+        const messageId = Array.isArray(messageIdHeader) ? messageIdHeader[0] : messageIdHeader;
+        console.log('✅ sendTestDailyReminder queued', {
+            email,
+            reminderType,
+            goals: orderedGoals.length,
+            providerStatus,
+            messageId: messageId || null
+        });
 
         return {
             success: true,
             message: `Test ${reminderType === 'ignition' ? 'Daily Ignition' : 'Mission Log'} reminder sent to ${email}.`,
-            goals: orderedGoals.length
+            goals: orderedGoals.length,
+            providerStatus,
+            messageId: messageId || null
         };
     } catch (error: any) {
         console.error('❌ Error sending test daily reminder email:', error);

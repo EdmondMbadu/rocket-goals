@@ -594,10 +594,19 @@ export class AdminComponent implements OnInit {
       const sendTestDaily = httpsCallable(functions, 'sendTestDailyReminder');
 
       const result = await sendTestDaily({ email, reminderType });
-      const data = result.data as { success: boolean; message: string };
+      const data = result.data as {
+        success: boolean;
+        message: string;
+        providerStatus?: number;
+        messageId?: string | null;
+      };
 
       if (data.success) {
-        this.success.set(`✅ ${data.message}`);
+        const deliveryMeta = [
+          data.providerStatus ? `provider ${data.providerStatus}` : '',
+          data.messageId ? `msg ${data.messageId}` : ''
+        ].filter(Boolean).join(' · ');
+        this.success.set(`✅ ${data.message}${deliveryMeta ? ` (${deliveryMeta})` : ''}`);
       } else {
         this.error.set('Failed to send test daily reminder');
       }
