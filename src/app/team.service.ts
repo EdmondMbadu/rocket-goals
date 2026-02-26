@@ -367,11 +367,15 @@ export class TeamService {
       throw new Error('Member user ID is required.');
     }
 
+    const teamSharedGoalId = await this.ensureTeamRocketGoal(teamId);
+    if (memberUserId === team.adminId) {
+      return teamSharedGoalId;
+    }
+
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
 
     const teamName = String(team.name || 'Team').trim() || 'Team';
-    const teamSharedGoalId = String(team.rocketGoalId || '').trim() || `team-${teamId}`;
     const teamSharedGoalRef = fm.doc(firestore, 'rocketGoals', teamSharedGoalId);
     const teamSharedGoalSnap = await fm.getDoc(teamSharedGoalRef);
     const teamSharedGoalData = teamSharedGoalSnap.exists()

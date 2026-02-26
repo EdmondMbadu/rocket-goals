@@ -71,6 +71,11 @@ type UserGoalSummary = {
   title: string;
   createdAt?: unknown;
 };
+type UserGoalSummaryCandidate = {
+  summary: UserGoalSummary;
+  createdAtMs: number;
+  isTeamMemberGoal: boolean;
+};
 type AdminUser = UserProfile & { lastSignInAt?: unknown; lastSignIn?: unknown; goals?: UserGoalSummary[] };
 type AiAnalytics = {
   path: string;
@@ -1057,27 +1062,41 @@ export class AdminComponent implements OnInit {
         firestoreModule.getDocs(goalsCollectionRef)
       ]);
 
-      const goalsByUserId = new Map<string, UserGoalSummary[]>();
+      const goalsByUserId = new Map<string, Map<string, UserGoalSummaryCandidate>>();
       goalsSnapshot.docs.forEach((doc) => {
-        const payload = doc.data() as { userId?: string; primaryGoal?: string; createdAt?: unknown };
+        const payload = doc.data() as {
+          userId?: string;
+          primaryGoal?: string;
+          createdAt?: unknown;
+          answers?: Record<string, unknown>;
+        };
         const userId = payload.userId;
         if (!userId) return;
 
-        const title = (payload.primaryGoal ?? '').toString().trim() || 'Untitled goal';
-        const userGoals = goalsByUserId.get(userId) ?? [];
-        userGoals.push({ id: doc.id, title, createdAt: payload.createdAt });
-        goalsByUserId.set(userId, userGoals);
-      });
+        const answers = (payload.answers || {}) as Record<string, unknown>;
+        const title = (payload.primaryGoal ?? answers['goal_title_label'] ?? answers['custom_goal_title'] ?? '').toString().trim() || 'Untitled goal';
+        const dedupeKey = this.getGoalDedupeKey(doc.id, answers);
+        const candidate: UserGoalSummaryCandidate = {
+          summary: { id: doc.id, title, createdAt: payload.createdAt },
+          createdAtMs: this.getTimestampMillis(payload.createdAt),
+          isTeamMemberGoal: answers['teamMemberGoal'] === true
+        };
 
-      goalsByUserId.forEach((goals, userId) => {
-        goals.sort((a, b) => this.getTimestampMillis(b.createdAt) - this.getTimestampMillis(a.createdAt));
-        goalsByUserId.set(userId, goals);
+        const userGoals = goalsByUserId.get(userId) ?? new Map<string, UserGoalSummaryCandidate>();
+        const existing = userGoals.get(dedupeKey);
+        if (!existing || this.shouldReplaceGoalSummary(existing, candidate)) {
+          userGoals.set(dedupeKey, candidate);
+        }
+        goalsByUserId.set(userId, userGoals);
       });
 
       const data = usersSnapshot.docs.map((doc) => {
         const payload = doc.data() as AdminUser;
         const userId = payload.userId || doc.id;
-        return { ...payload, id: doc.id, userId, goals: goalsByUserId.get(userId) ?? [] };
+        const goals = Array.from((goalsByUserId.get(userId) ?? new Map<string, UserGoalSummaryCandidate>()).values())
+          .sort((a, b) => b.createdAtMs - a.createdAtMs)
+          .map(entry => entry.summary);
+        return { ...payload, id: doc.id, userId, goals };
       });
       const enriched = await this.enrichWithAuthMetadata(data);
       this.users.set(this.sortUsersByLatest(enriched));
@@ -1157,6 +1176,52 @@ export class AdminComponent implements OnInit {
 
       return (a.firstName || '').localeCompare(b.firstName || '', undefined, { sensitivity: 'base' });
     });
+  }
+
+  private getGoalDedupeKey(goalId: string, answers: Record<string, unknown>): string {
+    const answerTeamId = typeof answers['teamId'] === 'string' ? answers['teamId'].trim() : '';
+    if (answerTeamId) {
+      return `team:${answerTeamId}`;
+    }
+
+    const teamSharedGoalId = typeof answers['teamSharedGoalId'] === 'string'
+      ? answers['teamSharedGoalId'].trim()
+      : '';
+    if (teamSharedGoalId) {
+      const parsedFromSharedGoalId = this.extractTeamIdFromGoalId(teamSharedGoalId);
+      return parsedFromSharedGoalId ? `team:${parsedFromSharedGoalId}` : `team-shared:${teamSharedGoalId}`;
+    }
+
+    const teamIdFromGoalId = this.extractTeamIdFromGoalId(goalId);
+    if (teamIdFromGoalId) {
+      return `team:${teamIdFromGoalId}`;
+    }
+
+    return `goal:${goalId}`;
+  }
+
+  private extractTeamIdFromGoalId(goalId: string): string {
+    if (!goalId.startsWith('team-')) {
+      return '';
+    }
+
+    const memberMarker = '-member-';
+    const memberIndex = goalId.indexOf(memberMarker);
+    if (memberIndex > 5) {
+      return goalId.slice(5, memberIndex).trim();
+    }
+
+    return goalId.slice(5).trim();
+  }
+
+  private shouldReplaceGoalSummary(existing: UserGoalSummaryCandidate, candidate: UserGoalSummaryCandidate): boolean {
+    if (existing.isTeamMemberGoal !== candidate.isTeamMemberGoal) {
+      return !candidate.isTeamMemberGoal;
+    }
+    if (existing.createdAtMs !== candidate.createdAtMs) {
+      return candidate.createdAtMs > existing.createdAtMs;
+    }
+    return candidate.summary.id < existing.summary.id;
   }
 
   private getTimestampMillis(value: unknown): number {

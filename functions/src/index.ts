@@ -2078,6 +2078,8 @@ type GroupedGoalReminderItem = {
     id: string;
     title: string;
     url: string;
+    dedupeKey?: string;
+    isTeamMemberGoal?: boolean;
     milestones?: MilestoneEmailItem[];
     activeMilestone?: string;
     oneThing?: string;
@@ -2106,6 +2108,89 @@ const APP_SUITE_COACHES: Record<string, { name: string; avatar: string }> = {
 };
 
 const BASE_URL = 'https://www.rocketgoals.com';
+
+function extractTeamIdFromGoalId(goalId: string): string {
+    if (!goalId.startsWith('team-')) {
+        return '';
+    }
+
+    const memberMarker = '-member-';
+    const memberIndex = goalId.indexOf(memberMarker);
+    if (memberIndex > 5) {
+        return goalId.slice(5, memberIndex).trim();
+    }
+
+    return goalId.slice(5).trim();
+}
+
+function getGoalReminderDedupeKey(goalId: string, goalData: FirebaseFirestore.DocumentData): string {
+    const answers = (goalData?.answers || {}) as Record<string, unknown>;
+    const answerTeamId = typeof answers['teamId'] === 'string' ? answers['teamId'].trim() : '';
+    if (answerTeamId) {
+        return `team:${answerTeamId}`;
+    }
+
+    const teamSharedGoalId = typeof answers['teamSharedGoalId'] === 'string'
+        ? answers['teamSharedGoalId'].trim()
+        : '';
+    if (teamSharedGoalId) {
+        const parsedFromSharedGoalId = extractTeamIdFromGoalId(teamSharedGoalId);
+        return parsedFromSharedGoalId ? `team:${parsedFromSharedGoalId}` : `team-shared:${teamSharedGoalId}`;
+    }
+
+    const teamIdFromGoalId = extractTeamIdFromGoalId(goalId);
+    if (teamIdFromGoalId) {
+        return `team:${teamIdFromGoalId}`;
+    }
+
+    return `goal:${goalId}`;
+}
+
+function isTeamMemberGoal(goalData: FirebaseFirestore.DocumentData): boolean {
+    const answers = (goalData?.answers || {}) as Record<string, unknown>;
+    return answers['teamMemberGoal'] === true;
+}
+
+function shouldReplaceDedupedGoal(existing: GroupedGoalReminderItem, candidate: GroupedGoalReminderItem): boolean {
+    const existingMember = existing.isTeamMemberGoal === true;
+    const candidateMember = candidate.isTeamMemberGoal === true;
+    if (existingMember !== candidateMember) {
+        return !candidateMember;
+    }
+
+    const existingCreatedAt = existing.createdAtMs || 0;
+    const candidateCreatedAt = candidate.createdAtMs || 0;
+    if (existingCreatedAt !== candidateCreatedAt) {
+        return candidateCreatedAt > existingCreatedAt;
+    }
+
+    return candidate.id < existing.id;
+}
+
+function dedupeGroupedReminderGoals(goals: GroupedGoalReminderItem[]): GroupedGoalReminderItem[] {
+    if (goals.length <= 1) return goals;
+
+    const keyOrder: string[] = [];
+    const deduped = new Map<string, GroupedGoalReminderItem>();
+
+    for (const goal of goals) {
+        const key = goal.dedupeKey || `goal:${goal.id}`;
+        const existing = deduped.get(key);
+        if (!existing) {
+            keyOrder.push(key);
+            deduped.set(key, goal);
+            continue;
+        }
+
+        if (shouldReplaceDedupedGoal(existing, goal)) {
+            deduped.set(key, goal);
+        }
+    }
+
+    return keyOrder
+        .map(key => deduped.get(key))
+        .filter((goal): goal is GroupedGoalReminderItem => !!goal);
+}
 
 function getCoachInfoFromGoalData(goalData: FirebaseFirestore.DocumentData): { coachName: string; coachAvatarUrl: string } | null {
     const templateId = goalData.answers?.launchpad_template_id
@@ -2793,6 +2878,8 @@ export const sendTestDailyReminder = functions.runWith({
                 id: goalDoc.id,
                 title: goalTitle,
                 url: goalUrl,
+                dedupeKey: getGoalReminderDedupeKey(goalDoc.id, goalData),
+                isTeamMemberGoal: isTeamMemberGoal(goalData),
                 milestones: milestones.slice(0, 3),
                 activeMilestone,
                 oneThing,
@@ -2829,7 +2916,8 @@ export const sendTestDailyReminder = functions.runWith({
             };
         }
 
-        const orderedGoals = sortGoalsByOneThing(goals, oneThingGoalId);
+        const dedupedGoals = dedupeGroupedReminderGoals(goals);
+        const orderedGoals = sortGoalsByOneThing(dedupedGoals, oneThingGoalId);
         const { subject, text, html } = buildGroupedReminderEmailContent(
             reminderType,
             participantName,
@@ -2850,7 +2938,7 @@ export const sendTestDailyReminder = functions.runWith({
         return {
             success: true,
             message: `Test ${reminderType === 'ignition' ? 'Daily Ignition' : 'Mission Log'} reminder sent to ${email}.`,
-            goals: goals.length
+            goals: orderedGoals.length
         };
     } catch (error: any) {
         console.error('❌ Error sending test daily reminder email:', error);
@@ -2972,6 +3060,8 @@ export const sendBulkGoalReminders = functions.runWith({
                             id: goalId,
                             title: goalTitle,
                             url: goalUrl,
+                            dedupeKey: getGoalReminderDedupeKey(goalId, goalData),
+                            isTeamMemberGoal: isTeamMemberGoal(goalData),
                             milestones,
                             imageUrl: bulkCoachInfo ? undefined : (goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl),
                             coachName: bulkCoachInfo?.coachName,
@@ -3049,7 +3139,8 @@ export const sendBulkGoalReminders = functions.runWith({
                                 console.warn('Unable to load My One THING for bulk reminder:', error);
                             }
                         }
-                        const orderedGoals = sortGoalsByOneThing(recipient.goals, oneThingGoalId);
+                        const dedupedGoals = dedupeGroupedReminderGoals(recipient.goals);
+                        const orderedGoals = sortGoalsByOneThing(dedupedGoals, oneThingGoalId);
                         const emailContent = generateGroupedGoalReminderEmail(
                             recipient.name,
                             orderedGoals,
@@ -6014,6 +6105,8 @@ export const processScheduledReminders = functions.runWith({
                                     id: goalDoc.id,
                                     title: goalTitle,
                                     url: goalUrl,
+                                    dedupeKey: getGoalReminderDedupeKey(goalDoc.id, goalData),
+                                    isTeamMemberGoal: isTeamMemberGoal(goalData),
                                     milestones: milestones.slice(0, 3),
                                     activeMilestone,
                                     oneThing,
@@ -6074,7 +6167,8 @@ export const processScheduledReminders = functions.runWith({
                                         console.warn('Unable to load My One THING for scheduled reminder:', error);
                                     }
                                 }
-                                const orderedGoals = sortGoalsByOneThing(recipient.goals, oneThingGoalId);
+                                const dedupedGoals = dedupeGroupedReminderGoals(recipient.goals);
+                                const orderedGoals = sortGoalsByOneThing(dedupedGoals, oneThingGoalId);
                                 const { subject, text, html } = buildGroupedReminderEmailContent(
                                     reminderType,
                                     recipient.name,
