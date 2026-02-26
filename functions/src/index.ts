@@ -2171,6 +2171,14 @@ function getGoalReminderDedupeKey(goalId: string, goalData: FirebaseFirestore.Do
     return `goal:${goalId}`;
 }
 
+function getReminderTargetKeyFromGoalId(goalId: string): string {
+    const teamIdFromGoalId = extractTeamIdFromGoalId(goalId);
+    if (teamIdFromGoalId) {
+        return `team:${teamIdFromGoalId}`;
+    }
+    return `goal:${goalId}`;
+}
+
 function isTeamMemberGoal(goalData: FirebaseFirestore.DocumentData): boolean {
     const answers = (goalData?.answers || {}) as Record<string, unknown>;
     return answers['teamMemberGoal'] === true;
@@ -5663,7 +5671,17 @@ function applyGroupedEmailTemplate(
 
 function sortGoalsByOneThing(goals: GroupedGoalReminderItem[], oneThingGoalId?: string): GroupedGoalReminderItem[] {
     let targetId = oneThingGoalId;
-    const hasTarget = targetId ? goals.some(goal => goal.id === targetId) : false;
+    let hasTarget = targetId ? goals.some(goal => goal.id === targetId) : false;
+
+    if (!hasTarget && targetId) {
+        const targetKey = getReminderTargetKeyFromGoalId(targetId);
+        const dedupedMatch = goals.find(goal => (goal.dedupeKey || `goal:${goal.id}`) === targetKey);
+        if (dedupedMatch) {
+            targetId = dedupedMatch.id;
+            hasTarget = true;
+        }
+    }
+
     if (!hasTarget) {
         const withTimestamp = goals
             .filter(goal => typeof goal.createdAtMs === 'number')

@@ -291,7 +291,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.myOneThingGoalId.set(preferredGoalId || null);
       } else {
         this.myOneThingGoalId.set(defaultGoalId);
-        if (defaultGoalId && !preferredGoalId) {
+        if (defaultGoalId && preferredGoalId !== defaultGoalId) {
           try {
             await this.authService.updateUserProfile({ myOneThingGoalId: defaultGoalId });
           } catch (error) {

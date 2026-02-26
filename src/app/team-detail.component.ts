@@ -2022,7 +2022,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!goalId || (profile.myOneThingGoalId || '').trim() === goalId) {
+    const currentMyOneThingGoalId = (profile.myOneThingGoalId || '').trim();
+    if (!goalId || currentMyOneThingGoalId || currentMyOneThingGoalId === goalId) {
       return;
     }
 
