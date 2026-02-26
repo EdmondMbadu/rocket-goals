@@ -2,10 +2,20 @@ import { Injectable } from '@angular/core';
 import type { Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 import { CreateRocketGoalInput } from './models/rocket-goal';
+import { dedupeGoals, getGoalTimestampMillis } from './goal-dedupe.util';
 
 @Injectable({ providedIn: 'root' })
 export class RocketGoalsService {
   private firestoreInstance?: Promise<Firestore>;
+
+  private dedupeAndSortGoals(goals: any[]): any[] {
+    const deduped = dedupeGoals(
+      goals as Array<{ id: string; answers?: Record<string, unknown>; primaryGoal?: unknown; createdAt?: unknown }>
+    );
+    return deduped.sort(
+      (a, b) => getGoalTimestampMillis((b as any).createdAt) - getGoalTimestampMillis((a as any).createdAt)
+    );
+  }
 
   private async getFirestore(): Promise<Firestore> {
     if (!this.firestoreInstance) {
@@ -64,10 +74,11 @@ export class RocketGoalsService {
         firestoreModule.orderBy('createdAt', 'desc')
       );
       const querySnapshot = await firestoreModule.getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const goals = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as any[];
+      return this.dedupeAndSortGoals(goals);
     } catch (error: any) {
       // If orderBy fails (missing index), try without it
       if (error.code === 'failed-precondition') {
@@ -81,12 +92,7 @@ export class RocketGoalsService {
           id: doc.id,
           ...doc.data()
         })) as any[];
-        // Sort manually by createdAt if available
-        return goals.sort((a, b) => {
-          const aTime = a.createdAt?.toMillis?.() || 0;
-          const bTime = b.createdAt?.toMillis?.() || 0;
-          return bTime - aTime;
-        });
+        return this.dedupeAndSortGoals(goals);
       }
       throw error;
     }

@@ -11,6 +11,7 @@ import type { RocketGoal } from './models/rocket-goal';
 import type { Team } from './models/team';
 import { ThemeService } from './theme.service';
 import { TelegramQrModalComponent } from './telegram-qr-modal.component';
+import { dedupeGoals } from './goal-dedupe.util';
 
 type ProfileVisibilityKey = keyof ProfileVisibilitySettings;
 
@@ -806,7 +807,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
       }
 
-      const mergedList = Array.from(mergedGoals.values()).sort((a, b) => this.getGoalSortTime(b) - this.getGoalSortTime(a));
+      const mergedList = dedupeGoals(Array.from(mergedGoals.values()))
+        .sort((a, b) => this.getGoalSortTime(b) - this.getGoalSortTime(a));
       this.goals.set(mergedList);
     } catch (err) {
       console.error('Error loading goals:', err);
