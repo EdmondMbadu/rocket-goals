@@ -1070,6 +1070,7 @@ export class TeamService {
       latestIgnitionAt: null,
       latestMilestoneUpdateAt: null,
       latestActivityAt: null,
+      totalMilesLogged: 0,
       currentWeekMilesActual: 0,
       currentWeekMilesTarget: 0,
       weeklyMileageProgress: []
@@ -1078,18 +1079,40 @@ export class TeamService {
     const profileGoalId = String(profileData?.['myOneThingGoalId'] || '').trim();
     let goalId: string | null = null;
     let goalDoc: any = null;
+    const isAdminMember = memberUserId === team.adminId;
 
-    const memberGoalId = this.buildMemberTeamGoalId(teamId, memberUserId);
-    const memberGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', memberGoalId));
-    if (memberGoalDoc.exists()) {
-      const goalData = memberGoalDoc.data() as Record<string, any>;
-      if (this.isTeamGoalForTeam(goalData, teamId)) {
-        goalId = memberGoalId;
-        goalDoc = memberGoalDoc;
+    if (isAdminMember) {
+      const sharedGoalCandidates = Array.from(new Set([
+        String(team.rocketGoalId || '').trim(),
+        `team-${teamId}`
+      ].filter(Boolean)));
+      for (const candidateGoalId of sharedGoalCandidates) {
+        const sharedGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', candidateGoalId));
+        if (!sharedGoalDoc.exists()) {
+          continue;
+        }
+        const sharedGoalData = sharedGoalDoc.data() as Record<string, any>;
+        if (this.isTeamGoalForTeam(sharedGoalData, teamId) || candidateGoalId === `team-${teamId}`) {
+          goalId = candidateGoalId;
+          goalDoc = sharedGoalDoc;
+          break;
+        }
       }
     }
 
-    if (!goalDoc && profileGoalId) {
+    if (!goalDoc && !isAdminMember) {
+      const memberGoalId = this.buildMemberTeamGoalId(teamId, memberUserId);
+      const memberGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', memberGoalId));
+      if (memberGoalDoc.exists()) {
+        const goalData = memberGoalDoc.data() as Record<string, any>;
+        if (this.isTeamGoalForTeam(goalData, teamId)) {
+          goalId = memberGoalId;
+          goalDoc = memberGoalDoc;
+        }
+      }
+    }
+
+    if (!goalDoc && profileGoalId && !isAdminMember) {
       const selectedGoalDoc = await fm.getDoc(fm.doc(firestore, 'rocketGoals', profileGoalId));
       if (selectedGoalDoc.exists()) {
         const selectedGoalData = selectedGoalDoc.data() as Record<string, any>;
@@ -1153,15 +1176,30 @@ export class TeamService {
       return Math.max(latest, updatedAt);
     }, null);
 
+    let totalMilesLogged = 0;
     let currentWeekMilesActual = 0;
     let currentWeekMilesTarget = 0;
     let weeklyMileageProgress: TeamMemberActivitySnapshot['weeklyMileageProgress'] = [];
 
     if (this.isMileageTrackingGoal(goal)) {
-      const entriesSnapshot = await fm.getDocs(
-        fm.collection(firestore, 'rocketGoals', goalId, 'milestoneEntries')
-      );
-      const entries = entriesSnapshot.docs.map(doc => doc.data() as Record<string, any>);
+      let entries: Record<string, any>[] = [];
+      try {
+        const entriesSnapshot = await fm.getDocs(
+          fm.collection(firestore, 'rocketGoals', goalId, 'milestoneEntries')
+        );
+        entries = entriesSnapshot.docs.map((doc: { data: () => unknown }) => doc.data() as Record<string, any>);
+      } catch (error) {
+        console.warn('Unable to read mileage entries for team member snapshot:', error);
+      }
+      totalMilesLogged = Math.round(
+        (entries.reduce((sum, entry) => {
+          const miles = Number(entry['miles']);
+          if (!Number.isFinite(miles) || miles <= 0) {
+            return sum;
+          }
+          return sum + miles;
+        }, 0) + Number.EPSILON) * 10
+      ) / 10;
       const startDate = this.getGoalStartDate(goal);
       const endDate = this.getGoalEndDate(goal, totalDays);
       const weekRanges = enumerateWeeks(startDate, endDate);
@@ -1278,6 +1316,7 @@ export class TeamService {
       latestIgnitionAt,
       latestMilestoneUpdateAt,
       latestActivityAt,
+      totalMilesLogged,
       currentWeekMilesActual,
       currentWeekMilesTarget,
       weeklyMileageProgress

@@ -52,6 +52,7 @@ export interface TeamMemberActivitySnapshot {
   latestIgnitionAt: number | null;
   latestMilestoneUpdateAt: number | null;
   latestActivityAt: number | null;
+  totalMilesLogged?: number;
   currentWeekMilesActual?: number;
   currentWeekMilesTarget?: number;
   weeklyMileageProgress?: TeamWeeklyMileageProgress[];

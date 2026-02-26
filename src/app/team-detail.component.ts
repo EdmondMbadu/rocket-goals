@@ -69,6 +69,12 @@ type TeamMissionSummary = {
   }>;
 };
 
+type TeamMilesLeaderboardRow = {
+  member: TeamMember;
+  totalMiles: number;
+  latestActivityAt: number | null;
+};
+
 const DEFAULT_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
   { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
   { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
@@ -285,7 +291,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   readonly missionControlMetricOptions = MISSION_CONTROL_METRIC_OPTIONS;
   readonly missionControlStyleOptions = MISSION_CONTROL_STYLE_OPTIONS;
   summaryMembers = computed(() => {
-    return (this.team()?.members || []).filter(member => member.role !== 'admin' && member.role !== 'coach');
+    return (this.team()?.members || []).filter(member => !!member.userId);
+  });
+  leaderboardMembers = computed(() => {
+    return (this.team()?.members || []).filter(member => !!member.userId);
   });
   participantMembers = computed(() => {
     const currentUserId = this.currentUserId();
@@ -368,8 +377,14 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         actualMiles: Math.round((week.actualMiles + Number.EPSILON) * 10) / 10
       }));
     const weeklyMilesTotal = Math.round((currentWeekMilesActual + Number.EPSILON) * 10) / 10;
+    const overallMilesFromEntries = rows.reduce((sum, row) => sum + (row.activity?.totalMilesLogged || 0), 0);
     const overallMilesTotal = Math.round(
-      (weeklyMileageProgress.reduce((sum, week) => sum + week.actualMiles, 0) + Number.EPSILON) * 10
+      (
+        (overallMilesFromEntries > 0
+          ? overallMilesFromEntries
+          : weeklyMileageProgress.reduce((sum, week) => sum + week.actualMiles, 0)
+        ) + Number.EPSILON
+      ) * 10
     ) / 10;
 
     return {
@@ -398,6 +413,34 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   missionControlCardViews = computed<MissionControlCardDisplay[]>(() => {
     const summary = this.teamDirectSummary();
     return this.renderedMissionControlCards().map(card => this.buildMissionControlCardView(card, summary));
+  });
+  milesLeaderboardRows = computed<TeamMilesLeaderboardRow[]>(() => {
+    const activityMap = this.participantActivityMap();
+    return this.leaderboardMembers()
+      .map(member => {
+        const activity = activityMap[member.userId] || null;
+        const weekly = activity?.weeklyMileageProgress || [];
+        const fallbackMiles = weekly.reduce((sum, week) => sum + (week.actualMiles || 0), 0);
+        const milesSource = typeof activity?.totalMilesLogged === 'number' && Number.isFinite(activity.totalMilesLogged)
+          ? activity.totalMilesLogged
+          : fallbackMiles;
+        const totalMiles = Math.round(
+          (milesSource + Number.EPSILON) * 10
+        ) / 10;
+        return {
+          member,
+          totalMiles,
+          latestActivityAt: activity?.latestActivityAt || null
+        };
+      })
+      .sort((left, right) => {
+        if (right.totalMiles !== left.totalMiles) {
+          return right.totalMiles - left.totalMiles;
+        }
+        const leftName = `${left.member.firstName} ${left.member.lastName}`.trim().toLowerCase();
+        const rightName = `${right.member.firstName} ${right.member.lastName}`.trim().toLowerCase();
+        return leftName.localeCompare(rightName);
+      });
   });
   selectedConversationOverview = computed(() => {
     const member = this.activeDirectParticipant();
@@ -510,11 +553,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       }
 
       if (team?.id && isMember) {
-        const summaryMembers = this.summaryMembers();
-        const summaryKey = `${team.id}|${summaryMembers.map(member => member.userId).join(',')}`;
+        const membersForSnapshots = this.leaderboardMembers();
+        const summaryKey = `${team.id}|${membersForSnapshots.map(member => member.userId).join(',')}`;
         if (summaryKey !== this.participantSummaryLoadedKey) {
           this.participantSummaryLoadedKey = summaryKey;
-          void this.loadParticipantActivitySummaries(team.id, summaryMembers);
+          void this.loadParticipantActivitySummaries(team.id, membersForSnapshots);
         }
 
         if (canAccessDirectConversations && canManageParticipantConversations) {
