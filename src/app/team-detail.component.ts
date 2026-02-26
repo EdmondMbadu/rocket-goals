@@ -71,7 +71,7 @@ type TeamMissionSummary = {
 
 type TeamMilesLeaderboardRow = {
   member: TeamMember;
-  totalMiles: number;
+  miles: number;
   latestActivityAt: number | null;
 };
 
@@ -248,6 +248,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   missionControlCardsEditing = signal(false);
   showAddMissionControlCardForm = signal(false);
   missionControlDraftCards = signal<TeamMissionControlCard[]>([]);
+  leaderboardMileageMode = signal<'total' | 'weekly'>('total');
   draggingMissionControlCardId = signal<string | null>(null);
   dragOverMissionControlCardId = signal<string | null>(null);
   dragOverMissionControlCardPosition = signal<'before' | 'after' | null>(null);
@@ -415,6 +416,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     return this.renderedMissionControlCards().map(card => this.buildMissionControlCardView(card, summary));
   });
   milesLeaderboardRows = computed<TeamMilesLeaderboardRow[]>(() => {
+    const mode = this.leaderboardMileageMode();
     const activityMap = this.participantActivityMap();
     return this.leaderboardMembers()
       .map(member => {
@@ -427,15 +429,18 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         const totalMiles = Math.round(
           (milesSource + Number.EPSILON) * 10
         ) / 10;
+        const currentWeekMiles = Math.round(
+          (((activity?.currentWeekMilesActual || 0) + Number.EPSILON) * 10)
+        ) / 10;
         return {
           member,
-          totalMiles,
+          miles: mode === 'weekly' ? currentWeekMiles : totalMiles,
           latestActivityAt: activity?.latestActivityAt || null
         };
       })
       .sort((left, right) => {
-        if (right.totalMiles !== left.totalMiles) {
-          return right.totalMiles - left.totalMiles;
+        if (right.miles !== left.miles) {
+          return right.miles - left.miles;
         }
         const leftName = `${left.member.firstName} ${left.member.lastName}`.trim().toLowerCase();
         const rightName = `${right.member.firstName} ${right.member.lastName}`.trim().toLowerCase();
@@ -1258,6 +1263,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   getParticipantActivity(memberUserId: string): TeamMemberActivitySnapshot | null {
     return this.participantActivityMap()[memberUserId] || null;
+  }
+
+  setLeaderboardMileageMode(mode: 'total' | 'weekly') {
+    this.leaderboardMileageMode.set(mode);
   }
 
   openMissionControlEditor() {

@@ -3458,23 +3458,30 @@
 
 .mc-leaderboard {
   margin-top: 14px;
-  border: 1px solid rgba(56, 189, 248, 0.22);
+  border: 1px solid rgba(245, 158, 11, 0.28);
   border-radius: 14px;
-  background: linear-gradient(165deg, rgba(2, 132, 199, 0.1), rgba(15, 23, 42, 0.52));
+  background: linear-gradient(165deg, rgba(217, 119, 6, 0.16), rgba(15, 23, 42, 0.56));
   padding: 14px;
+}
+
+.mc-leaderboard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .mc-leaderboard-head h4 {
   margin: 0;
   font-size: 17px;
   font-weight: 900;
-  color: #e0f2fe;
+  color: #fef3c7;
 }
 
 .mc-leaderboard-head p {
   margin: 4px 0 0;
   font-size: 12px;
-  color: rgba(186, 230, 253, 0.82);
+  color: rgba(254, 243, 199, 0.84);
 }
 
 .mc-leaderboard-kicker {
@@ -3483,7 +3490,39 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 800;
-  color: #7dd3fc;
+  color: #fbbf24;
+}
+
+.mc-leaderboard-toggle {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(245, 158, 11, 0.26);
+  background: rgba(120, 53, 15, 0.36);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.mc-leaderboard-toggle button {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  color: #fcd34d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mc-leaderboard-toggle button:hover {
+  background: rgba(217, 119, 6, 0.22);
+}
+
+.mc-leaderboard-toggle button.active {
+  background: rgba(245, 158, 11, 0.28);
+  color: #fff7ed;
 }
 
 .mc-leaderboard-list {
@@ -3507,9 +3546,9 @@
   min-width: 42px;
   text-align: center;
   border-radius: 999px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  background: rgba(14, 116, 144, 0.24);
-  color: #bae6fd;
+  border: 1px solid rgba(245, 158, 11, 0.44);
+  background: rgba(146, 64, 14, 0.35);
+  color: #fef3c7;
   font-size: 11px;
   font-weight: 800;
   padding: 5px 8px;
@@ -3537,7 +3576,7 @@
   font-size: 12px;
   font-weight: 900;
   color: #f8fafc;
-  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+  background: linear-gradient(135deg, #d97706, #f59e0b);
 }
 
 .mc-leaderboard-name {
@@ -3562,7 +3601,7 @@
 .mc-leaderboard-miles {
   font-size: 14px;
   font-weight: 900;
-  color: #7dd3fc;
+  color: #fbbf24;
   letter-spacing: -0.01em;
 }
 
@@ -4510,12 +4549,12 @@
 }
 
 .light-mode .mc-leaderboard {
-  border-color: rgba(14, 116, 144, 0.2);
-  background: linear-gradient(165deg, rgba(56, 189, 248, 0.12), rgba(255, 255, 255, 0.96));
+  border-color: rgba(217, 119, 6, 0.24);
+  background: linear-gradient(165deg, rgba(245, 158, 11, 0.14), rgba(255, 255, 255, 0.96));
 }
 
 .light-mode .mc-leaderboard-kicker {
-  color: #0369a1;
+  color: #b45309;
 }
 
 .light-mode .mc-leaderboard-head h4 {
@@ -4526,15 +4565,33 @@
   color: #475569;
 }
 
+.light-mode .mc-leaderboard-toggle {
+  border-color: rgba(217, 119, 6, 0.3);
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.light-mode .mc-leaderboard-toggle button {
+  color: #92400e;
+}
+
+.light-mode .mc-leaderboard-toggle button:hover {
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.light-mode .mc-leaderboard-toggle button.active {
+  background: rgba(245, 158, 11, 0.24);
+  color: #7c2d12;
+}
+
 .light-mode .mc-leaderboard-row {
   border-color: rgba(15, 23, 42, 0.12);
   background: #ffffff;
 }
 
 .light-mode .mc-leaderboard-rank {
-  border-color: rgba(14, 116, 144, 0.28);
-  background: rgba(14, 116, 144, 0.1);
-  color: #075985;
+  border-color: rgba(217, 119, 6, 0.32);
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
 }
 
 .light-mode .mc-leaderboard-name {
@@ -4546,7 +4603,7 @@
 }
 
 .light-mode .mc-leaderboard-miles {
-  color: #0284c7;
+  color: #b45309;
 }
 
 .light-mode .mc-leaderboard-empty {
@@ -4672,6 +4729,17 @@
   .mc-header {
     flex-direction: column;
     gap: 10px;
+  }
+  .mc-leaderboard-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mc-leaderboard-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .mc-leaderboard-toggle button {
+    flex: 1;
   }
   .mc-stat-ring {
     width: 42px;

@@ -601,6 +601,62 @@
         </div>
         }
 
+        <section class="mc-leaderboard">
+          <div class="mc-leaderboard-head">
+            <div>
+              <p class="mc-leaderboard-kicker">Leaderboard</p>
+              <h4>{{ leaderboardMileageMode() === 'weekly' ? 'Miles This Week' : 'Miles Driven So Far' }}</h4>
+              <p>
+                {{
+                  leaderboardMileageMode() === 'weekly'
+                    ? 'Current Monday-Sunday mileage by member.'
+                    : "From each member's individual bike-mile entries."
+                }}
+              </p>
+            </div>
+            <div class="mc-leaderboard-toggle" role="tablist" aria-label="Leaderboard mileage view">
+              <button
+                type="button"
+                [class.active]="leaderboardMileageMode() === 'total'"
+                (click)="setLeaderboardMileageMode('total')">
+                Total
+              </button>
+              <button
+                type="button"
+                [class.active]="leaderboardMileageMode() === 'weekly'"
+                (click)="setLeaderboardMileageMode('weekly')">
+                Current Week
+              </button>
+            </div>
+          </div>
+
+          @if (loadingParticipantSummaries()) {
+          <p class="mc-leaderboard-empty">Syncing leaderboard...</p>
+          } @else if (milesLeaderboardRows().length === 0) {
+          <p class="mc-leaderboard-empty">No member mileage data yet.</p>
+          } @else {
+          <div class="mc-leaderboard-list">
+            @for (row of milesLeaderboardRows(); track row.member.userId; let index = $index) {
+            <div class="mc-leaderboard-row">
+              <span class="mc-leaderboard-rank">#{{ index + 1 }}</span>
+              <div class="mc-leaderboard-member">
+                @if (row.member.profilePictureUrl) {
+                <img [src]="row.member.profilePictureUrl" [alt]="row.member.firstName" class="mc-leaderboard-avatar" />
+                } @else {
+                <div class="mc-leaderboard-avatar fallback">{{ (row.member.firstName || '?').charAt(0) }}</div>
+                }
+                <div>
+                  <p class="mc-leaderboard-name">{{ row.member.firstName }} {{ row.member.lastName }}</p>
+                  <p class="mc-leaderboard-role">{{ getMemberRoleLabel(row.member) }}</p>
+                </div>
+              </div>
+              <strong class="mc-leaderboard-miles">{{ row.miles }} mi</strong>
+            </div>
+            }
+          </div>
+          }
+        </section>
+
         <div class="mc-cards-grid">
           @for (card of missionControlCardViews(); track card.id) {
           <article class="mc-card-shell"
@@ -713,40 +769,6 @@
           </article>
           }
         </div>
-
-        <section class="mc-leaderboard">
-          <div class="mc-leaderboard-head">
-            <p class="mc-leaderboard-kicker">Leaderboard</p>
-            <h4>Miles Driven So Far</h4>
-            <p>From each member's individual bike-mile entries.</p>
-          </div>
-
-          @if (loadingParticipantSummaries()) {
-          <p class="mc-leaderboard-empty">Syncing leaderboard...</p>
-          } @else if (milesLeaderboardRows().length === 0) {
-          <p class="mc-leaderboard-empty">No member mileage data yet.</p>
-          } @else {
-          <div class="mc-leaderboard-list">
-            @for (row of milesLeaderboardRows(); track row.member.userId; let index = $index) {
-            <div class="mc-leaderboard-row">
-              <span class="mc-leaderboard-rank">#{{ index + 1 }}</span>
-              <div class="mc-leaderboard-member">
-                @if (row.member.profilePictureUrl) {
-                <img [src]="row.member.profilePictureUrl" [alt]="row.member.firstName" class="mc-leaderboard-avatar" />
-                } @else {
-                <div class="mc-leaderboard-avatar fallback">{{ (row.member.firstName || '?').charAt(0) }}</div>
-                }
-                <div>
-                  <p class="mc-leaderboard-name">{{ row.member.firstName }} {{ row.member.lastName }}</p>
-                  <p class="mc-leaderboard-role">{{ getMemberRoleLabel(row.member) }}</p>
-                </div>
-              </div>
-              <strong class="mc-leaderboard-miles">{{ row.totalMiles }} mi</strong>
-            </div>
-            }
-          </div>
-          }
-        </section>
 
         @if (missionControlCardViews().length === 0) {
         <p class="mc-empty-state">No Mission Control cards configured yet.</p>
