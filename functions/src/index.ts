@@ -10,7 +10,6 @@ import twilio = require("twilio");
 import { getToolRegistry, type AgentResponse, type SideEffect } from "./tools";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import * as crypto from "crypto";
-import { JWT } from "google-auth-library";
 
 // Re-export HeyGen functions
 export { initiateHeyGenVideo, checkHeyGenVideoStatus, listHeyGenAvatars } from "./heygen.functions";
@@ -43,8 +42,6 @@ const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const twilioAccountSid = defineSecret('TWILIO_ACCOUNT_SID');
 const twilioAuthToken = defineSecret('TWILIO_AUTH_TOKEN');
 const twilioPhoneNumber = defineSecret('TWILIO_PHONE_NUMBER');
-const googleWorkspaceServiceAccountJson = defineSecret('GOOGLE_WORKSPACE_SERVICE_ACCOUNT_JSON');
-const googleWorkspaceHostEmail = defineSecret('GOOGLE_WORKSPACE_HOST_EMAIL');
 
 const stripeSubscriptionEvents = new Set([
     'customer.subscription.created',
@@ -242,113 +239,6 @@ const resolveTeamInviteUrl = (candidate: unknown, teamId: string) => {
     }
 };
 
-const getGoogleWorkspaceServiceAccount = () => {
-    const raw = (googleWorkspaceServiceAccountJson.value() || '').trim();
-    if (!raw) {
-        throw new HttpsError('failed-precondition', 'Google Workspace service account is not configured.');
-    }
-
-    let parsed: any;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        throw new HttpsError('failed-precondition', 'Google Workspace service account secret is invalid JSON.');
-    }
-
-    const clientEmail = String(parsed?.client_email || '').trim();
-    const privateKey = String(parsed?.private_key || '').replace(/\\n/g, '\n').trim();
-    if (!clientEmail || !privateKey) {
-        throw new HttpsError('failed-precondition', 'Google Workspace service account is missing required fields.');
-    }
-
-    return { clientEmail, privateKey };
-};
-
-const getGoogleWorkspaceHost = () => {
-    const hostEmail = String(googleWorkspaceHostEmail.value() || '').trim().toLowerCase();
-    if (!hostEmail) {
-        throw new HttpsError('failed-precondition', 'Google Workspace host email is not configured.');
-    }
-    return hostEmail;
-};
-
-const getGoogleWorkspaceAccessToken = async (scopes: string[]) => {
-    const { clientEmail, privateKey } = getGoogleWorkspaceServiceAccount();
-    const subject = getGoogleWorkspaceHost();
-
-    const jwtClient = new JWT({
-        email: clientEmail,
-        key: privateKey,
-        scopes,
-        subject
-    });
-
-    const token = await jwtClient.authorize();
-    const accessToken = token?.access_token;
-    if (!accessToken) {
-        throw new HttpsError('internal', 'Unable to authorize Google Workspace credentials.');
-    }
-    return accessToken;
-};
-
-const createGoogleMeetRoomForTeam = async (teamId: string, teamName: string) => {
-    const accessToken = await getGoogleWorkspaceAccessToken([
-        'https://www.googleapis.com/auth/calendar.events'
-    ]);
-
-    const now = Date.now();
-    const startTime = new Date(now + 5 * 60 * 1000);
-    const endTime = new Date(now + (3650 * 24 * 60 * 60 * 1000)); // ~10 years
-    const requestId = `team-room-${teamId}-${now}`;
-
-    const response = await fetch(
-        'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=none',
-        {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                summary: `${teamName} Team Room`,
-                description: `Persistent team meeting room for ${teamName} (${teamId}).`,
-                start: { dateTime: startTime.toISOString(), timeZone: 'UTC' },
-                end: { dateTime: endTime.toISOString(), timeZone: 'UTC' },
-                conferenceData: {
-                    createRequest: {
-                        requestId,
-                        conferenceSolutionKey: { type: 'hangoutsMeet' }
-                    }
-                },
-                guestsCanModify: false,
-                anyoneCanAddSelf: true
-            })
-        }
-    );
-
-    if (!response.ok) {
-        const details = await response.text().catch(() => '');
-        console.error('Google Calendar conference creation failed:', response.status, details);
-        throw new HttpsError('internal', 'Unable to create Google Meet room from Workspace credentials.');
-    }
-
-    const payload = await response.json() as any;
-    const entryPoint = Array.isArray(payload?.conferenceData?.entryPoints)
-        ? payload.conferenceData.entryPoints.find((item: any) => item?.entryPointType === 'video')
-        : null;
-    const meetingRoomLink = String(payload?.hangoutLink || entryPoint?.uri || '').trim();
-    const meetingRoomEventId = String(payload?.id || '').trim() || null;
-
-    if (!meetingRoomLink) {
-        console.error('Google Calendar event did not return a Meet link:', payload);
-        throw new HttpsError('internal', 'Google Workspace did not return a Google Meet link.');
-    }
-
-    return {
-        meetingRoomLink,
-        meetingRoomEventId
-    };
-};
 
 export const stripeWebhookRocketGoals = functions.runWith({
     secrets: [stripeWebhookSecretGoals]
@@ -5178,85 +5068,7 @@ export const getAuthMetadata = onCall({}, async (request) => {
     return { users };
 });
 
-export const createTeamMeetingRoom = onCall({
-    secrets: [googleWorkspaceServiceAccountJson, googleWorkspaceHostEmail]
-}, async (request) => {
-    if (!request.auth?.uid) {
-        throw new HttpsError('unauthenticated', 'You must be signed in to create a team meeting room.');
-    }
-
-    const teamId = String(request.data?.teamId || '').trim();
-    if (!teamId) {
-        throw new HttpsError('invalid-argument', 'A valid teamId is required.');
-    }
-
-    const teamRef = admin.firestore().collection('teams').doc(teamId);
-    const teamSnap = await teamRef.get();
-    if (!teamSnap.exists) {
-        throw new HttpsError('not-found', 'Team not found.');
-    }
-
-    const teamData = teamSnap.data() || {};
-    const uid = request.auth.uid;
-    const memberIds = Array.isArray(teamData.memberIds)
-        ? teamData.memberIds.map((value: any) => String(value || '').trim()).filter(Boolean)
-        : [];
-    const members = Array.isArray(teamData.members) ? teamData.members : [];
-    const isMember = memberIds.includes(uid) || members.some((member: any) => String(member?.userId || '').trim() === uid);
-    if (!isMember) {
-        throw new HttpsError('permission-denied', 'Only team members can create this meeting room.');
-    }
-
-    const existingLink = String(teamData.meetingRoomLink || '').trim();
-    if (existingLink) {
-        return {
-            success: true,
-            created: false,
-            meetingRoomLink: existingLink,
-            meetingRoomEventId: String(teamData.meetingRoomEventId || '').trim() || null,
-            meetingRoomProvider: String(teamData.meetingRoomProvider || 'google-meet')
-        };
-    }
-
-    const teamName = String(teamData.name || 'Team').trim() || 'Team';
-    const createdRoom = await createGoogleMeetRoomForTeam(teamId, teamName);
-
-    const persisted = await admin.firestore().runTransaction(async (transaction) => {
-        const latest = await transaction.get(teamRef);
-        if (!latest.exists) {
-            throw new HttpsError('not-found', 'Team not found.');
-        }
-        const latestData = latest.data() || {};
-        const alreadyLink = String(latestData.meetingRoomLink || '').trim();
-        if (alreadyLink) {
-            return {
-                success: true,
-                created: false,
-                meetingRoomLink: alreadyLink,
-                meetingRoomEventId: String(latestData.meetingRoomEventId || '').trim() || null,
-                meetingRoomProvider: String(latestData.meetingRoomProvider || 'google-meet')
-            };
-        }
-
-        transaction.update(teamRef, {
-            meetingRoomLink: createdRoom.meetingRoomLink,
-            meetingRoomEventId: createdRoom.meetingRoomEventId,
-            meetingRoomProvider: 'google-meet',
-            meetingRoomCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        return {
-            success: true,
-            created: true,
-            meetingRoomLink: createdRoom.meetingRoomLink,
-            meetingRoomEventId: createdRoom.meetingRoomEventId,
-            meetingRoomProvider: 'google-meet'
-        };
-    });
-
-    return persisted;
-});
+// createTeamMeetingRoom is temporarily disabled until Google Workspace admin setup is completed.
 
 /**
  * Cloud Function to send demo scheduling confirmation emails
