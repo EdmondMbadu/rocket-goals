@@ -5,9 +5,9 @@
   <header class="ai-header flex items-center justify-between px-5 py-4">
     <div class="flex items-center gap-3">
       <!-- Copilot Avatar (from app-suite) or default rocket -->
-      @if (copilot()?.avatar) {
+      @if (activeCoachAvatar()) {
         <div class="copilot-avatar-wrapper">
-          <img [src]="copilot()!.avatar" [alt]="copilot()!.name" class="copilot-avatar-img" />
+          <img [src]="activeCoachAvatar()!" [alt]="activeCoachName()" class="copilot-avatar-img" />
           <span class="copilot-pulse"></span>
         </div>
       } @else {
@@ -20,22 +20,14 @@
         </div>
       }
       <div>
-        @if (copilot()?.name) {
-          <h2 class="ai-title text-lg font-bold tracking-tight">{{ copilot()!.name }}</h2>
-          <p class="ai-subtitle text-xs font-medium flex items-center gap-2">
-            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            Your Strategic Coach
-          </p>
-        } @else {
-          <h2 class="ai-title text-lg font-bold tracking-tight">Mission Control AI</h2>
-          <p class="text-xs text-gray-400" *ngIf="currentSessionTitle() || currentSessionCreatedAt()">
-            {{ currentSessionTitle() || 'New chat' }} • {{ formatSessionTimestamp(currentSessionCreatedAt()) || 'Now' }}
-          </p>
-          <p class="ai-subtitle text-xs font-medium flex items-center gap-2">
-            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            Online & Ready
-          </p>
-        }
+        <h2 class="ai-title text-lg font-bold tracking-tight">{{ activeCoachName() }}</h2>
+        <p class="text-xs text-gray-400" *ngIf="currentSessionTitle() || currentSessionCreatedAt()">
+          {{ currentSessionTitle() || 'New chat' }} • {{ formatSessionTimestamp(currentSessionCreatedAt()) || 'Now' }}
+        </p>
+        <p class="ai-subtitle text-xs font-medium flex items-center gap-2">
+          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          {{ activeCoachSubtitle() }}
+        </p>
       </div>
     </div>
     <div class="relative group">
@@ -74,7 +66,7 @@
           </div>
         </div>
       </div>
-      <h3 class="mb-2 text-lg font-bold text-white">Your AI Coach</h3>
+      <h3 class="mb-2 text-lg font-bold text-white">{{ activeCoachName() }}</h3>
       <p class="max-w-[280px] text-sm text-gray-400 mb-6">
         I'm here to help you crush your goals. Ask me anything about strategy, motivation, or tracking progress.
       </p>
@@ -105,9 +97,9 @@
             </div>
           } @else {
             <!-- Copilot message avatar or default rocket -->
-            @if (copilot()?.avatar) {
+            @if (activeCoachAvatar()) {
               <div class="copilot-message-avatar-wrapper shrink-0">
-                <img [src]="copilot()!.avatar" [alt]="copilot()!.name" class="copilot-message-avatar-img" />
+                <img [src]="activeCoachAvatar()!" [alt]="activeCoachName()" class="copilot-message-avatar-img" />
               </div>
             } @else {
               <div class="ai-message-avatar flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
@@ -156,9 +148,9 @@
       <!-- Loading Indicator -->
       <div *ngIf="isLoading()" class="flex gap-3">
         <!-- Copilot loading avatar or default rocket -->
-        @if (copilot()?.avatar) {
+        @if (activeCoachAvatar()) {
           <div class="copilot-message-avatar-wrapper shrink-0">
-            <img [src]="copilot()!.avatar" [alt]="copilot()!.name" class="copilot-message-avatar-img" />
+            <img [src]="activeCoachAvatar()!" [alt]="activeCoachName()" class="copilot-message-avatar-img" />
           </div>
         } @else {
           <div class="ai-message-avatar flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
@@ -174,7 +166,7 @@
             <span class="h-2 w-2 animate-bounce rounded-full bg-red-500" style="animation-delay: 150ms;"></span>
             <span class="h-2 w-2 animate-bounce rounded-full bg-red-500" style="animation-delay: 300ms;"></span>
           </div>
-          <span class="text-xs text-gray-500">{{ copilot()?.name ? copilot()!.name + ' is thinking...' : 'Analyzing...' }}</span>
+          <span class="text-xs text-gray-500">{{ activeCoachName() + ' is thinking...' }}</span>
         </div>
       </div>
     </div>

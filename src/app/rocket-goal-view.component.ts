@@ -2798,11 +2798,13 @@ ${url}`;
 
   // Coach helper methods
   getCoachName(): string {
-    return this.goal()?.copilot?.name || 'Your Coach';
+    const teamCoachName = String(this.teamContext()?.aiSettings?.displayName || '').trim();
+    return teamCoachName || this.goal()?.copilot?.name || 'Your Coach';
   }
 
   getCoachAvatar(): string | null {
-    return this.goal()?.copilot?.avatar || null;
+    const teamCoachAvatar = String(this.teamContext()?.aiSettings?.avatarUrl || '').trim();
+    return teamCoachAvatar || this.goal()?.copilot?.avatar || null;
   }
 
   getIgnitionCoachQuestion(): string {

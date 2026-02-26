@@ -833,6 +833,57 @@ This blueprint embodies your unique approach to achieving opulence through both 
 /**
  * Build system prompt for the AI with calendar + progress context
  */
+function extractTeamIdFromGoalContext(goalContext: any): string | null {
+    if (!goalContext || typeof goalContext !== 'object') {
+        return null;
+    }
+
+    const answers = goalContext.answers || {};
+    const answerTeamId = typeof answers?.teamId === 'string' ? answers.teamId.trim() : '';
+    if (answerTeamId) {
+        return answerTeamId;
+    }
+
+    const goalId = typeof goalContext.id === 'string' ? goalContext.id.trim() : '';
+    if (!goalId.startsWith('team-')) {
+        return null;
+    }
+
+    const memberMatch = goalId.match(/^team-(.+?)-member-.+$/);
+    if (memberMatch?.[1]) {
+        return memberMatch[1].trim();
+    }
+
+    return goalId.slice('team-'.length).trim() || null;
+}
+
+async function resolveTeamAiSettingsFromGoalContext(goalContext: any): Promise<{ displayName: string; personality: string } | null> {
+    const teamId = extractTeamIdFromGoalContext(goalContext);
+    if (!teamId) {
+        return null;
+    }
+
+    try {
+        const teamDoc = await admin.firestore().collection('teams').doc(teamId).get();
+        if (!teamDoc.exists) {
+            return null;
+        }
+
+        const teamData = teamDoc.data() || {};
+        const aiSettings = (teamData.aiSettings || {}) as Record<string, any>;
+        const displayName = String(aiSettings.displayName || '').trim().slice(0, 60);
+        const personality = String(aiSettings.personality || '').trim().slice(0, 8000);
+        if (!displayName && !personality) {
+            return null;
+        }
+
+        return { displayName, personality };
+    } catch (error) {
+        console.warn('Unable to resolve team AI settings for goal context:', error);
+        return null;
+    }
+}
+
 async function buildSystemPrompt(goalContext: any, calendarEvents: any[], actionItems: any[], latestMissionLog: any): Promise<string> {
     // Get current date information for AI awareness
     const now = new Date();
@@ -853,12 +904,32 @@ async function buildSystemPrompt(goalContext: any, calendarEvents: any[], action
     const sharedPhilosophyBlock = sharedPhilosophy
         ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}`
         : '';
+    const teamAiSettings = await resolveTeamAiSettingsFromGoalContext(goalContext);
+    const teamAiDisplayName = teamAiSettings?.displayName || '';
+    const teamAiPersonality = teamAiSettings?.personality || '';
+    const teamAiPersonalityBlock = teamAiPersonality
+        ? `\n\nTEAM AI PERSONALITY (ADMIN CUSTOMIZED):\n${teamAiPersonality}`
+        : '';
 
     // Check if there's a custom copilot persona from app-suite
     const copilot = goalContext?.copilot;
     let baseIdentity: string;
 
-    if (copilot && copilot.name && copilot.role) {
+    if (teamAiDisplayName) {
+        const teamName = String(goalContext?.answers?.teamName || 'the team').trim();
+        const fallbackRole = (copilot && copilot.role) ? String(copilot.role).trim() : 'the dedicated strategic AI coach';
+        baseIdentity = `You are ${teamAiDisplayName}, ${fallbackRole}.
+
+You are still powered by RocketGoals core coaching intelligence, but for this mission you MUST present and communicate as ${teamAiDisplayName}. Be personable and address the user as if you've been assigned specifically to help them succeed.
+
+Your mission is to guide individuals using the ROCKET Goal framework while bringing your unique expertise and perspective. You also help users manage their calendar and schedule for achieving their goals.
+
+${teamName ? `TEAM CONTEXT: This goal is linked to team "${teamName}".` : ''}
+
+CURRENT DATE AND TIME:
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.
+Use this information when users ask about dates, scheduling, or time-related questions. When they say "today", "tomorrow", "next week", etc., interpret these relative to this date.${sharedPhilosophyBlock}${teamAiPersonalityBlock}`;
+    } else if (copilot && copilot.name && copilot.role) {
         // Custom copilot persona from app-suite launch
         baseIdentity = `You are ${copilot.name}, ${copilot.role}
 
@@ -894,6 +965,7 @@ Use this information when users ask about dates, scheduling, or time-related que
 - Be conversational and natural - don't be robotic
 - If there are multiple events with similar names and it's ambiguous, ask which one
 - After taking an action, briefly confirm what was done
+${teamAiPersonality ? '- Team AI personality is provided above. Follow it strictly for tone and communication style.' : ''}
 
 IMPORTANT FOR DELETE/UPDATE: You MUST use IDs from the context lists (event IDs for calendar, item IDs for milestones), not titles.`;
 

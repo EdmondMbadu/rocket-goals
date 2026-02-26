@@ -6,7 +6,7 @@ import { RocketGoalsAIService, ChatMessage } from './rocket-goals-ai.service';
 import { AuthService } from './auth.service';
 import { TeamService } from './team.service';
 import type { RocketGoal, RocketGoalCopilot } from './models/rocket-goal';
-import type { TeamDirectMessage } from './models/team';
+import type { Team, TeamDirectMessage } from './models/team';
 
 type DisplayChatMessage = ChatMessage & {
   source?: 'ai' | 'team-direct';
@@ -26,8 +26,19 @@ type DisplayChatMessage = ChatMessage & {
 export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChanges, OnDestroy {
   @Input() goalContext: RocketGoal | null = null;
   @Input() embedded: boolean = false; // New: embedded mode (always visible, no floating)
-  @Input() teamContextId: string | null = null;
+  @Input()
+  set teamContextId(value: string | null) {
+    const normalized = String(value || '').trim() || null;
+    this.teamContextIdInput.set(normalized);
+  }
+  get teamContextId(): string | null {
+    return this.teamContextIdInput();
+  }
   @Input() teamParticipantUserId: string | null = null;
+  @Input()
+  set teamContext(value: Team | null | undefined) {
+    this.teamContextInput.set(value || null);
+  }
   @Input()
   set teamDirectMessages(value: TeamDirectMessage[] | null | undefined) {
     this.teamDirectMessagesInput.set(value || []);
@@ -44,6 +55,9 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   readonly isOpen = this.aiService.isOpen;
   readonly inputMessage = signal('');
   private readonly aiMessages = this.aiService.messages;
+  private readonly teamContextIdInput = signal<string | null>(null);
+  private readonly teamContextInput = signal<Team | null>(null);
+  private readonly fallbackTeamContext = signal<Team | null>(null);
   private readonly teamDirectMessagesInput = signal<TeamDirectMessage[]>([]);
   readonly messages = computed<DisplayChatMessage[]>(() => {
     const aiMessages = this.aiMessages().map(message => ({
@@ -121,14 +135,93 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
   readonly copilot = computed<RocketGoalCopilot | null>(() => {
     return this.goalContext?.copilot || null;
   });
+  readonly resolvedTeamContext = computed(() => {
+    return this.teamContextInput() || this.fallbackTeamContext();
+  });
+  readonly teamAiDisplayName = computed(() => {
+    return String(this.resolvedTeamContext()?.aiSettings?.displayName || '').trim();
+  });
+  readonly teamAiAvatarUrl = computed(() => {
+    const value = String(this.resolvedTeamContext()?.aiSettings?.avatarUrl || '').trim();
+    return value || null;
+  });
+  readonly activeCoachName = computed(() => {
+    if (this.teamAiDisplayName()) {
+      return this.teamAiDisplayName();
+    }
+    if (this.copilot()?.name) {
+      return this.copilot()!.name;
+    }
+    if (this.resolvedTeamContext()) {
+      return 'Team AI';
+    }
+    return 'Mission Control AI';
+  });
+  readonly activeCoachAvatar = computed(() => {
+    return this.teamAiAvatarUrl() || this.copilot()?.avatar || null;
+  });
+  readonly activeCoachSubtitle = computed(() => {
+    if (this.teamAiDisplayName()) {
+      return 'Online & Ready';
+    }
+    if (this.copilot()?.name) {
+      return 'Your Strategic Coach';
+    }
+    return 'Online & Ready';
+  });
 
   private shouldScrollToBottom = false;
   private scrollInterval: any = null;
   private scrollRetryTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastAutoPrompt: string | null = null;
+  private lastFetchedTeamContextId: string | null = null;
+  private loadingFallbackTeamContext = false;
   private greetingTimeout: any = null; // Track greeting timeout to cancel it if auto-launch happens
 
   constructor() {
+    effect(() => {
+      const provided = this.teamContextInput();
+      if (provided) {
+        this.fallbackTeamContext.set(provided);
+      }
+
+      const teamId = this.teamContextIdInput();
+      if (!teamId) {
+        this.lastFetchedTeamContextId = null;
+        if (!provided) {
+          this.fallbackTeamContext.set(null);
+        }
+        return;
+      }
+      if (provided?.id === teamId) {
+        return;
+      }
+      if (this.loadingFallbackTeamContext) {
+        return;
+      }
+      if (this.lastFetchedTeamContextId === teamId && this.fallbackTeamContext()?.id === teamId) {
+        return;
+      }
+
+      this.loadingFallbackTeamContext = true;
+      this.lastFetchedTeamContextId = teamId;
+      void this.teamService.getTeamById(teamId)
+        .then(team => {
+          if (this.teamContextIdInput() !== teamId) {
+            return;
+          }
+          if (!this.teamContextInput()) {
+            this.fallbackTeamContext.set(team);
+          }
+        })
+        .catch(error => {
+          console.warn('Unable to load fallback team context for AI panel:', error);
+        })
+        .finally(() => {
+          this.loadingFallbackTeamContext = false;
+        });
+    });
+
     effect(() => {
       const panelVisible = this.embedded || this.isOpen();
       const loading = this.isLoading();
@@ -838,7 +931,7 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
     if (this.isPrivateTeamMessage(message)) {
       return message.senderName?.trim() || 'Team Lead';
     }
-    return this.copilot()?.name || 'Mission Control AI';
+    return this.activeCoachName();
   }
 
   getMessageSenderInitials(message: DisplayChatMessage): string {
@@ -941,11 +1034,11 @@ export class RocketGoalsAIComponent implements OnInit, AfterViewChecked, OnChang
       if (!aiContent) {
         return;
       }
-      const aiSenderName = this.copilot()?.name || 'Rocket AI';
+      const aiSenderName = this.activeCoachName() || 'Rocket AI';
       await this.teamService.sendDirectMessage(context.teamId, context.participantUserId, {
         senderId: 'rocket-ai',
         senderName: aiSenderName,
-        senderAvatarUrl: this.copilot()?.avatar,
+        senderAvatarUrl: this.activeCoachAvatar() || undefined,
         content: aiContent,
         type: 'text',
         source: 'web'

@@ -197,18 +197,68 @@ async function getAllActiveGoals(userId: string): Promise<any[]> {
 
     if (goalsSnapshot.empty) return [];
 
-    return goalsSnapshot.docs.map((doc) => {
+    const goals = await Promise.all(goalsSnapshot.docs.map(async (doc) => {
       const data = doc.data();
+      const teamAiSettings = await resolveTeamAiSettingsForGoal(doc.id, data?.answers || {});
       return {
         id: doc.id,
         title: data.primaryGoal || data.answers?.primary_goal || "Untitled Goal",
         copilot: data.copilot,
+        teamAiSettings,
         createdAt: data.createdAt?.toMillis?.() || 0,
       };
-    }).sort((a, b) => b.createdAt - a.createdAt);
+    }));
+
+    return goals.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
     console.error("Error getting all goals:", error);
     return [];
+  }
+}
+
+function extractTeamIdFromGoal(goalId: string, answers: any): string | null {
+  const answerTeamId = typeof answers?.teamId === 'string' ? answers.teamId.trim() : '';
+  if (answerTeamId) {
+    return answerTeamId;
+  }
+
+  const normalizedGoalId = String(goalId || '').trim();
+  if (!normalizedGoalId.startsWith('team-')) {
+    return null;
+  }
+
+  const memberMatch = normalizedGoalId.match(/^team-(.+?)-member-.+$/);
+  if (memberMatch?.[1]) {
+    return memberMatch[1].trim();
+  }
+  return normalizedGoalId.slice('team-'.length).trim() || null;
+}
+
+async function resolveTeamAiSettingsForGoal(goalId: string, answers: any): Promise<{ displayName: string; avatarUrl: string; personality: string } | null> {
+  const teamId = extractTeamIdFromGoal(goalId, answers);
+  if (!teamId) {
+    return null;
+  }
+
+  try {
+    const teamDoc = await admin.firestore().collection('teams').doc(teamId).get();
+    if (!teamDoc.exists) {
+      return null;
+    }
+
+    const teamData = teamDoc.data() || {};
+    const aiSettings = (teamData.aiSettings || {}) as Record<string, any>;
+    const displayName = String(aiSettings.displayName || '').trim().slice(0, 60);
+    const avatarUrl = String(aiSettings.avatarUrl || '').trim().slice(0, 2000);
+    const personality = String(aiSettings.personality || '').trim().slice(0, 8000);
+    if (!displayName && !avatarUrl && !personality) {
+      return null;
+    }
+
+    return { displayName, avatarUrl, personality };
+  } catch (error) {
+    console.warn('Unable to resolve team AI settings for Telegram goal:', error);
+    return null;
   }
 }
 
@@ -247,6 +297,8 @@ async function getGoalById(goalId: string, userId: string): Promise<any> {
       console.log("Could not fetch calendar events:", e);
     }
 
+    const teamAiSettings = await resolveTeamAiSettingsForGoal(goalDoc.id, goalData?.answers || {});
+
     return {
       id: goalDoc.id,
       title: goalData?.primaryGoal || goalData?.answers?.primary_goal || "Your Goal",
@@ -254,6 +306,7 @@ async function getGoalById(goalId: string, userId: string): Promise<any> {
       status: goalData?.status,
       answers: goalData?.answers || {},
       copilot: goalData?.copilot,
+      teamAiSettings,
       startTimeMs: getTimestampMs(goalData?.startTime) ?? getTimestampMs(goalData?.createdAt),
       calendarEvents,
     };
@@ -321,6 +374,7 @@ async function getActiveGoalContext(userId: string, selectedGoalId?: string | nu
 
     const goalDoc = sortedDocs[0];
     const goalData = goalDoc.data();
+    const teamAiSettings = await resolveTeamAiSettingsForGoal(goalDoc.id, goalData?.answers || {});
 
     // Get calendar events for this goal (no ordering to avoid index)
     let calendarEvents: any[] = [];
@@ -347,6 +401,7 @@ async function getActiveGoalContext(userId: string, selectedGoalId?: string | nu
       status: goalData.status,
       answers: goalData.answers || {},
       copilot: goalData.copilot,
+      teamAiSettings,
       startTimeMs: getTimestampMs(goalData?.startTime) ?? getTimestampMs(goalData?.createdAt),
       calendarEvents,
     };
@@ -617,12 +672,26 @@ async function buildTelegramSystemPrompt(goalContext: any): Promise<string> {
   const sharedPhilosophyBlock = sharedPhilosophy
     ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}`
     : '';
+  const teamAiSettings = goalContext?.teamAiSettings || null;
+  const teamAiDisplayName = String(teamAiSettings?.displayName || '').trim();
+  const teamAiPersonality = String(teamAiSettings?.personality || '').trim();
+  const teamAiPersonalityBlock = teamAiPersonality
+    ? `\n\nTEAM AI PERSONALITY (ADMIN CUSTOMIZED):\n${teamAiPersonality}`
+    : '';
 
   // Check if there's a custom copilot persona
   const copilot = goalContext?.copilot;
   let baseIdentity: string;
 
-  if (copilot && copilot.name && copilot.role) {
+  if (teamAiDisplayName) {
+    const teamName = String(goalContext?.answers?.teamName || 'the team').trim();
+    baseIdentity = `You are ${teamAiDisplayName}, the dedicated AI coach for ${teamName || 'this team'} on RocketGoals.
+
+You are still powered by RocketGoals core coaching intelligence, but for this conversation you MUST present and communicate as ${teamAiDisplayName}.
+
+CURRENT DATE AND TIME:
+Today is ${currentDateStr}. The current time is ${currentTimeStr}.${sharedPhilosophyBlock}${teamAiPersonalityBlock}`;
+  } else if (copilot && copilot.name && copilot.role) {
     baseIdentity = `You are ${copilot.name}, ${copilot.role}
 
 You are the user's dedicated strategic co-pilot for this mission. Embody this persona fully - your expertise, communication style, and guidance should reflect your role as ${copilot.name}. Be personable and address the user as if you've been assigned specifically to help them succeed.
@@ -645,6 +714,7 @@ TELEGRAM CONVERSATION GUIDELINES:
 - Be conversational and supportive
 - Use emojis sparingly but warmly
 - If the user seems to be checking in, encourage them
+- ${teamAiPersonality ? 'If TEAM AI PERSONALITY is provided, follow it strictly for tone and communication style' : 'Keep your tone encouraging and practical'}
 - Maximum 2-3 short paragraphs per response`;
 
   let contextualPrompt = `${baseIdentity}\n${telegramGuidelines}`;
@@ -1283,7 +1353,7 @@ export const telegramWebhook = onRequest({
 
         goals.forEach((goal, index) => {
           const isSelected = goal.id === selectedGoalId || (index === 0 && !selectedGoalId);
-          const coachName = goal.copilot?.name || 'AI Coach';
+          const coachName = goal.teamAiSettings?.displayName || goal.copilot?.name || 'AI Coach';
           message += `${isSelected ? '✅' : '⚪️'} *${index + 1}.* ${goal.title}\n`;
           message += `   Coach: ${coachName}\n\n`;
         });
@@ -1326,8 +1396,8 @@ export const telegramWebhook = onRequest({
       const selectedGoal = goals[goalNumber - 1];
       await setSelectedGoalId(telegramId, selectedGoal.id);
 
-      const coachName = selectedGoal.copilot?.name || 'AI Coach';
-      const coachAvatar = selectedGoal.copilot?.avatar;
+      const coachName = selectedGoal.teamAiSettings?.displayName || selectedGoal.copilot?.name || 'AI Coach';
+      const coachAvatar = selectedGoal.teamAiSettings?.avatarUrl || selectedGoal.copilot?.avatar;
 
       const message = `Switched to: *${selectedGoal.title}*\nCoach: ${coachName}\n\nHow can I help you with this goal?`;
 
@@ -1353,8 +1423,8 @@ export const telegramWebhook = onRequest({
           botToken
         );
       } else {
-        const coachName = goalContext.copilot?.name || 'AI Coach';
-        const coachAvatar = goalContext.copilot?.avatar;
+        const coachName = goalContext.teamAiSettings?.displayName || goalContext.copilot?.name || 'AI Coach';
+        const coachAvatar = goalContext.teamAiSettings?.avatarUrl || goalContext.copilot?.avatar;
 
         const message = `*Current Goal:* ${goalContext.title}\n*Coach:* ${coachName}\n\nUse /goals to switch to a different goal.`;
 
@@ -1390,7 +1460,12 @@ export const telegramWebhook = onRequest({
     await storeMessages(userId, sessionId, userMessage, aiResponse);
 
     // Send response to Telegram (with coach avatar on first message of conversation)
-    await sendTelegramMessage(chatId, aiResponse, botToken);
+    const coachAvatar = goalContext?.teamAiSettings?.avatarUrl || goalContext?.copilot?.avatar;
+    if (coachAvatar && history.length === 0) {
+      await sendTelegramPhoto(chatId, coachAvatar, aiResponse, botToken);
+    } else {
+      await sendTelegramMessage(chatId, aiResponse, botToken);
+    }
 
     console.log(`✅ Telegram response sent to ${firstName}`);
     res.sendStatus(200);
