@@ -94,6 +94,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('directMessagesContainer') directMessagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('coverInput') coverInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('aiAvatarInput') aiAvatarInput?: ElementRef<HTMLInputElement>;
 
   teamId = signal<string | null>(null);
   team = signal<Team | null>(null);
@@ -175,6 +176,17 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   coverImagePreview = signal<string | null>(null);
   uploadingCover = signal(false);
   private coverImageFile: File | null = null;
+
+  // Team AI settings (admin-only for now)
+  aiSettingsEditing = signal(false);
+  savingAiSettings = signal(false);
+  aiSettingsError = signal<string | null>(null);
+  aiSettingsSuccess = signal<string | null>(null);
+  aiDisplayNameDraft = '';
+  aiAvatarUrlDraft = '';
+  aiPersonalityDraft = '';
+  aiAvatarPreview = signal<string | null>(null);
+  private aiAvatarFile: File | null = null;
 
   // Telegram group
   connectingTelegram = signal(false);
@@ -331,6 +343,20 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   coverImageSrc = computed(() => {
     return this.coverImagePreview() || this.team()?.coverImageUrl || '/assets/team-rocket.jpg';
+  });
+  teamAiDisplayName = computed(() => {
+    const name = String(this.team()?.aiSettings?.displayName || '').trim();
+    return name || 'Rocket AI';
+  });
+  teamAiAvatarUrl = computed(() => {
+    const avatarUrl = String(this.team()?.aiSettings?.avatarUrl || '').trim();
+    return avatarUrl || '/assets/rocket-goals.png';
+  });
+  teamAiAvatarPreviewSrc = computed(() => {
+    return this.aiAvatarPreview() || this.teamAiAvatarUrl();
+  });
+  teamAiPersonality = computed(() => {
+    return String(this.team()?.aiSettings?.personality || '').trim();
   });
 
   showJoinOnboarding = computed(() => {
@@ -526,6 +552,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.draggingMissionControlCardId.set(null);
       this.dragOverMissionControlCardId.set(null);
       this.dragOverMissionControlCardPosition.set(null);
+      this.aiSettingsEditing.set(false);
+      this.savingAiSettings.set(false);
+      this.aiSettingsError.set(null);
+      this.aiSettingsSuccess.set(null);
+      this.resetAiAvatarUploadState();
     } catch (err) {
       console.error('Failed to load team:', err);
       this.joinError.set('Unable to load this team right now. Please refresh and try again.');
@@ -538,6 +569,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.creatingMeetingRoom.set(false);
       this.meetingRoomError.set(null);
       this.meetingRoomNotice.set(null);
+      this.aiSettingsEditing.set(false);
+      this.savingAiSettings.set(false);
+      this.aiSettingsError.set(null);
+      this.aiSettingsSuccess.set(null);
+      this.resetAiAvatarUploadState();
       this.stopTeamCountdown();
       this.setTeamCountdownValues(0, 0, 0, 0);
     } finally {
@@ -797,6 +833,140 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   cancelEditingTeamWelcome(): void {
     this.teamWelcomeEditing.set(false);
     this.teamWelcomeError.set(null);
+  }
+
+  startEditingTeamAiSettings(): void {
+    if (!this.isAdmin()) {
+      return;
+    }
+    const team = this.team();
+    if (!team?.id) {
+      return;
+    }
+
+    const currentSettings = team.aiSettings || {};
+    this.aiDisplayNameDraft = String(currentSettings.displayName || '').trim();
+    this.aiAvatarUrlDraft = String(currentSettings.avatarUrl || '').trim();
+    this.aiPersonalityDraft = String(currentSettings.personality || '').trim();
+    this.resetAiAvatarUploadState();
+    this.aiSettingsError.set(null);
+    this.aiSettingsSuccess.set(null);
+    this.aiSettingsEditing.set(true);
+  }
+
+  cancelEditingTeamAiSettings(): void {
+    this.aiSettingsEditing.set(false);
+    this.aiSettingsError.set(null);
+    this.resetAiAvatarUploadState();
+  }
+
+  onAiAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      this.aiSettingsError.set('Please select an image file.');
+      this.resetAiAvatarUploadState();
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.aiSettingsError.set('AI avatar image should be smaller than 10MB.');
+      this.resetAiAvatarUploadState();
+      return;
+    }
+
+    this.aiSettingsError.set(null);
+    this.aiAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.aiAvatarPreview.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearAiAvatarSelection(): void {
+    this.resetAiAvatarUploadState();
+  }
+
+  private resetAiAvatarUploadState(): void {
+    this.aiAvatarFile = null;
+    this.aiAvatarPreview.set(null);
+    if (this.aiAvatarInput?.nativeElement) {
+      this.aiAvatarInput.nativeElement.value = '';
+    }
+  }
+
+  private isValidAiAvatarUrl(value: string): boolean {
+    if (!value) {
+      return true;
+    }
+    if (value.startsWith('/')) {
+      return true;
+    }
+    return value.startsWith('http://') || value.startsWith('https://');
+  }
+
+  async saveTeamAiSettings(): Promise<void> {
+    if (!this.isAdmin() || this.savingAiSettings()) {
+      return;
+    }
+
+    const team = this.team();
+    if (!team?.id) {
+      return;
+    }
+
+    const displayName = this.aiDisplayNameDraft.trim();
+    const avatarUrlFromField = this.aiAvatarUrlDraft.trim();
+    const personality = this.aiPersonalityDraft.trim();
+
+    if (displayName.length > 60) {
+      this.aiSettingsError.set('AI display name should stay under 60 characters.');
+      return;
+    }
+    if (!this.aiAvatarFile && !this.isValidAiAvatarUrl(avatarUrlFromField)) {
+      this.aiSettingsError.set('Avatar URL should start with https://, http://, or /.');
+      return;
+    }
+    if (personality.length > 12000) {
+      this.aiSettingsError.set('Personality text should stay under 12,000 characters.');
+      return;
+    }
+
+    this.savingAiSettings.set(true);
+    this.aiSettingsError.set(null);
+    this.aiSettingsSuccess.set(null);
+    try {
+      let resolvedAvatarUrl = avatarUrlFromField;
+      if (this.aiAvatarFile) {
+        resolvedAvatarUrl = await this.teamService.uploadTeamAiAvatar(team.id, this.aiAvatarFile);
+      }
+
+      const nextAiSettings: Team['aiSettings'] = {};
+      if (displayName) {
+        nextAiSettings.displayName = displayName;
+      }
+      if (resolvedAvatarUrl) {
+        nextAiSettings.avatarUrl = resolvedAvatarUrl;
+      }
+      if (personality) {
+        nextAiSettings.personality = personality;
+      }
+
+      await this.teamService.updateTeam(team.id, { aiSettings: nextAiSettings } as Partial<Team>);
+      this.team.update(current => (current ? { ...current, aiSettings: nextAiSettings } : current));
+      this.aiSettingsEditing.set(false);
+      this.aiSettingsSuccess.set('AI settings saved.');
+      this.resetAiAvatarUploadState();
+    } catch (error) {
+      console.error('Failed to save team AI settings:', error);
+      this.aiSettingsError.set('Could not save AI settings right now.');
+    } finally {
+      this.savingAiSettings.set(false);
+    }
   }
 
   async saveTeamWelcome(): Promise<void> {

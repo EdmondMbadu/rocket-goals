@@ -1785,14 +1785,21 @@ export const askTeamAiCoach = onCall({
 
   const teamName = teamData.name || 'this team';
   const teamDesc = teamData.description || '';
+  const rawAiDisplayName = (teamData?.aiSettings?.displayName || '').toString().trim();
+  const aiDisplayName = rawAiDisplayName ? rawAiDisplayName.slice(0, 60) : 'Rocket AI';
+  const rawAiPersonality = (teamData?.aiSettings?.personality || '').toString().trim();
+  const aiPersonality = rawAiPersonality ? rawAiPersonality.slice(0, 8000) : '';
+  const aiPersonalityBlock = aiPersonality
+    ? `\n\nTEAM AI PERSONALITY (ADMIN CUSTOMIZED):\n${aiPersonality}`
+    : '';
 
-  const systemPrompt = `You are Rocket, the AI coach for the team "${teamName}" on RocketGoals.
+  const systemPrompt = `You are Rocket, the core RocketGoals AI coach for the team "${teamName}" on RocketGoals. For this team, present yourself as "${aiDisplayName}".
 
 CURRENT DATE: ${dateStr}${sharedBlock}
 
 TEAM CONTEXT:
 - Team name: "${teamName}"
-${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}
+${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}${aiPersonalityBlock}
 
 YOUR ROLE:
 You are the dedicated AI coach for THIS TEAM. The team itself is the goal. Focus entirely on what this team is working toward together based on the team name, purpose, and what members discuss in chat.
@@ -1806,6 +1813,7 @@ IMPORTANT RULES:
 - Keep responses concise (2-4 short paragraphs max)
 - Reference team members by name to make it personal
 - Use a warm, motivational coaching tone
+- If TEAM AI PERSONALITY is provided, follow it strictly for tone and communication style
 - Use emojis sparingly
 - If asked about something unrelated, be helpful but steer back to the team's mission`;
 

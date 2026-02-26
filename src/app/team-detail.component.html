@@ -703,6 +703,112 @@
       </section>
       }
 
+      @if (isAdmin()) {
+      <section class="ai-settings-panel glass">
+        <div class="ai-settings-head">
+          <div class="ai-settings-head-copy">
+            <p class="ai-settings-kicker">Team AI Settings</p>
+            <h3 class="ai-settings-title">Face and Personality</h3>
+            <p class="ai-settings-subtitle">
+              Keep Rocket AI as your engine, but choose your team AI face and coaching personality.
+            </p>
+          </div>
+          <div class="ai-settings-head-actions">
+            @if (!aiSettingsEditing()) {
+            <button type="button" class="mc-admin-btn" (click)="startEditingTeamAiSettings()">
+              Edit Settings
+            </button>
+            } @else {
+            <button type="button" class="mc-admin-btn secondary" (click)="cancelEditingTeamAiSettings()" [disabled]="savingAiSettings()">
+              Cancel
+            </button>
+            <button type="button" class="mc-admin-btn primary" (click)="saveTeamAiSettings()" [disabled]="savingAiSettings()">
+              @if (savingAiSettings()) {
+              Saving...
+              } @else {
+              Save
+              }
+            </button>
+            }
+          </div>
+        </div>
+
+        @if (aiSettingsError()) {
+        <p class="alert-inline error">{{ aiSettingsError() }}</p>
+        }
+        @if (aiSettingsSuccess()) {
+        <p class="alert-inline success">{{ aiSettingsSuccess() }}</p>
+        }
+
+        <div class="ai-settings-preview">
+          <div class="ai-settings-preview-avatar-wrap">
+            <img [src]="teamAiAvatarPreviewSrc()" [alt]="teamAiDisplayName()" class="ai-settings-preview-avatar" />
+          </div>
+          <div class="ai-settings-preview-copy">
+            <p class="ai-settings-preview-name">{{ teamAiDisplayName() }}</p>
+            <p class="ai-settings-preview-role">Current team AI persona</p>
+          </div>
+        </div>
+
+        <div class="ai-settings-form-grid">
+          <label class="ai-settings-field">
+            <span>AI Display Name</span>
+            @if (aiSettingsEditing()) {
+            <input
+              type="text"
+              class="input"
+              maxlength="60"
+              [(ngModel)]="aiDisplayNameDraft"
+              placeholder="Rocket AI" />
+            } @else {
+            <div class="ai-settings-readonly">{{ teamAiDisplayName() }}</div>
+            }
+          </label>
+
+          <label class="ai-settings-field">
+            <span>AI Avatar URL</span>
+            @if (aiSettingsEditing()) {
+            <div class="ai-settings-upload-row">
+              <label class="btn ghost sm ai-settings-upload-btn">
+                Upload Face Image
+                <input #aiAvatarInput type="file" accept="image/*" (change)="onAiAvatarSelected($event)" class="hidden" />
+              </label>
+              @if (aiAvatarPreview()) {
+              <button type="button" class="btn ghost sm" (click)="clearAiAvatarSelection()">Remove Selected</button>
+              }
+            </div>
+            <input
+              type="text"
+              class="input"
+              maxlength="2048"
+              [(ngModel)]="aiAvatarUrlDraft"
+              placeholder="https://... or /assets/..." />
+            <p class="muted tiny" style="margin: 8px 0 0;">Use any image URL, or a local path like <code>/assets/your-ai.png</code>.</p>
+            } @else {
+            <div class="ai-settings-readonly">{{ team()?.aiSettings?.avatarUrl || '/assets/rocket-goals.png' }}</div>
+            }
+          </label>
+
+          <label class="ai-settings-field full">
+            <span>AI Personality (Markdown or plain text)</span>
+            @if (aiSettingsEditing()) {
+            <textarea
+              class="ai-settings-textarea"
+              rows="10"
+              maxlength="12000"
+              [(ngModel)]="aiPersonalityDraft"
+              placeholder="Define tone, communication style, and behavior for your team AI..."></textarea>
+            <p class="muted tiny" style="margin: 8px 0 0;">
+              This personality is injected into the team AI prompt and can be changed anytime.
+            </p>
+            } @else {
+            <pre class="ai-settings-personality-preview">{{ teamAiPersonality() || 'No custom personality yet.' }}</pre>
+            }
+          </label>
+        </div>
+      </section>
+      }
+
     </div>
     }
 
@@ -817,7 +923,7 @@
             <div class="msg-avatar">
               @if (msg.type === 'ai-response') {
               <div class="msg-avatar-ai">
-                <img src="/assets/rocket-goals.png" alt="Rocket AI" class="msg-avatar-ai-img" />
+                <img [src]="teamAiAvatarUrl()" [alt]="teamAiDisplayName()" class="msg-avatar-ai-img" />
               </div>
               } @else if (msg.senderAvatarUrl) {
               <img [src]="msg.senderAvatarUrl" class="msg-avatar-img" />
@@ -827,7 +933,9 @@
             </div>
             <div class="msg-content">
               <div class="msg-meta">
-                <span class="msg-sender" [class.msg-sender-ai]="msg.type === 'ai-response'">{{ msg.senderName || 'Unknown sender' }}</span>
+                <span class="msg-sender" [class.msg-sender-ai]="msg.type === 'ai-response'">
+                  {{ msg.type === 'ai-response' ? teamAiDisplayName() : (msg.senderName || 'Unknown sender') }}
+                </span>
                 <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
               </div>
               <div class="msg-bubble" [class.msg-bubble-mine]="msg.senderId === currentUserId()"

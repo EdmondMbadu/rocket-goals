@@ -1062,6 +1062,21 @@ export class TeamService {
     return downloadUrl;
   }
 
+  async uploadTeamAiAvatar(teamId: string, file: File): Promise<string> {
+    const appModule = await import('firebase/app');
+    const storageModule = await import('firebase/storage');
+    const app = appModule.getApps().length === 0
+      ? appModule.initializeApp(firebaseConfig)
+      : appModule.getApp();
+    const storage = storageModule.getStorage(app);
+
+    const ext = file.name.split('.').pop() || 'jpg';
+    const fileName = `ai-avatar-${Date.now()}.${ext}`;
+    const storageRef = storageModule.ref(storage, `teams/${teamId}/ai/${fileName}`);
+    await storageModule.uploadBytes(storageRef, file);
+    return storageModule.getDownloadURL(storageRef);
+  }
+
   async setupTeamTelegramGroup(teamId: string): Promise<{
     success: boolean;
     needsGroupCreation?: boolean;

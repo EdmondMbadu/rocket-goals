@@ -1458,6 +1458,184 @@
   font-size: 12px;
 }
 
+/* ===== Team AI Settings ===== */
+.ai-settings-panel {
+  margin-top: 18px;
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.ai-settings-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ai-settings-head-copy {
+  max-width: 720px;
+}
+
+.ai-settings-kicker {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fca5a5;
+  font-weight: 800;
+}
+
+.ai-settings-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.ai-settings-subtitle {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.ai-settings-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-settings-preview {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-settings-preview-avatar-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 10px 26px rgba(239, 68, 68, 0.24);
+  flex-shrink: 0;
+}
+
+.ai-settings-preview-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ai-settings-preview-copy {
+  min-width: 0;
+}
+
+.ai-settings-preview-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.ai-settings-preview-role {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.ai-settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ai-settings-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ai-settings-field > span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.ai-settings-field.full {
+  grid-column: 1 / -1;
+}
+
+.ai-settings-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-settings-upload-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-settings-readonly {
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.ai-settings-textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 180px;
+}
+
+.ai-settings-textarea:focus {
+  outline: none;
+  border-color: rgba(248, 113, 113, 0.72);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.ai-settings-personality-preview {
+  margin: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow: auto;
+}
+
+@media (max-width: 900px) {
+  .ai-settings-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Empty State ===== */
 .empty-state {
   border-radius: 16px;
@@ -2500,6 +2678,40 @@
 
 .light-mode .ai-coach-sub {
   color: #64748b;
+}
+
+.light-mode .ai-settings-kicker {
+  color: #dc2626;
+}
+
+.light-mode .ai-settings-title {
+  color: #0f172a;
+}
+
+.light-mode .ai-settings-subtitle {
+  color: #64748b;
+}
+
+.light-mode .ai-settings-preview {
+  border-color: rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.light-mode .ai-settings-preview-name {
+  color: #0f172a;
+}
+
+.light-mode .ai-settings-preview-role,
+.light-mode .ai-settings-field > span {
+  color: #475569;
+}
+
+.light-mode .ai-settings-readonly,
+.light-mode .ai-settings-textarea,
+.light-mode .ai-settings-personality-preview {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
 }
 
 .light-mode .muted {

@@ -72,6 +72,12 @@ export interface TeamMissionControlCard {
   metricKey: TeamMissionControlMetricKey;
 }
 
+export interface TeamAiSettings {
+  displayName?: string;
+  avatarUrl?: string;
+  personality?: string;
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -88,6 +94,7 @@ export interface Team {
   members: TeamMember[];
   memberIds: string[];
   aiCoachEnabled: boolean;
+  aiSettings?: TeamAiSettings;
   missionControlCards?: TeamMissionControlCard[];
   telegramGroupId?: number;
   telegramGroupInviteLink?: string;
