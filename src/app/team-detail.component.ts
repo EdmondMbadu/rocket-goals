@@ -358,6 +358,16 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   teamAiPersonality = computed(() => {
     return String(this.team()?.aiSettings?.personality || '').trim();
   });
+  teamAiMentionHandle = computed(() => this.resolveTeamAiMentionHandle(this.teamAiDisplayName()));
+  teamAiSummonHandles = computed(() => {
+    const handles = ['@rocket'];
+    const customHandle = this.teamAiMentionHandle();
+    if (customHandle && customHandle !== 'rocket') {
+      handles.push(`@${customHandle}`);
+    }
+    return handles;
+  });
+  teamAiSummonHint = computed(() => this.teamAiSummonHandles().join(' or '));
 
   showJoinOnboarding = computed(() => {
     return !!this.team() && !this.isCurrentUserMember();
@@ -2356,6 +2366,13 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const profile = this.authService.profile();
     if (!content || !teamId || !profile || !this.isCurrentUserMember()) return;
 
+    const senderName = `${profile.firstName} ${profile.lastName}`.trim() || profile.firstName || 'Team member';
+    const shouldSummonAi = this.team()?.aiCoachEnabled !== false && this.shouldSummonTeamAi(content);
+    const recentMessages = shouldSummonAi
+      ? this.buildRecentTeamChatContext({ senderName, content, type: 'text' })
+      : undefined;
+    const aiPrompt = shouldSummonAi ? this.buildTeamAiPromptText(content) : '';
+
     this.sendingMessage.set(true);
     this.newMessage = '';
 
@@ -2363,12 +2380,33 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       await this.teamService.sendMessage(teamId, {
         teamId,
         senderId: profile.userId,
-        senderName: `${profile.firstName} ${profile.lastName}`.trim(),
+        senderName,
         senderAvatarUrl: profile.profilePictureUrl,
         content,
         type: 'text',
         source: 'web'
       });
+
+      if (shouldSummonAi) {
+        try {
+          const aiResponse = await this.teamService.askTeamAiCoach(teamId, aiPrompt, recentMessages);
+          const aiContent = String(aiResponse || '').trim();
+          if (aiContent) {
+            await this.teamService.sendMessage(teamId, {
+              teamId,
+              senderId: 'rocket-ai',
+              senderName: this.teamAiDisplayName(),
+              senderAvatarUrl: this.teamAiAvatarUrl(),
+              content: aiContent,
+              type: 'ai-response',
+              source: 'web'
+            });
+          }
+        } catch (err) {
+          console.error('Failed to get team AI coach response:', err);
+        }
+      }
+
       await this.loadMessages(teamId);
     } catch (err) {
       console.error('Failed to send message:', err);
@@ -2376,6 +2414,79 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     } finally {
       this.sendingMessage.set(false);
     }
+  }
+
+  private shouldSummonTeamAi(content: string): boolean {
+    const handles = ['rocket', this.teamAiMentionHandle()].filter((value, index, arr) => !!value && arr.indexOf(value) === index);
+    return handles.some(handle => this.isTeamAiMentioned(content, handle));
+  }
+
+  private buildTeamAiPromptText(content: string): string {
+    const handles = ['rocket', this.teamAiMentionHandle()].filter((value, index, arr) => !!value && arr.indexOf(value) === index);
+    let cleaned = content;
+    for (const handle of handles) {
+      const escapedHandle = this.escapeRegExp(handle);
+      const mentionPattern = new RegExp(`(^|\\s)@${escapedHandle}(?=$|\\s|[.,!?;:])`, 'ig');
+      cleaned = cleaned.replace(mentionPattern, '$1');
+    }
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    return cleaned || 'The team mentioned you without a specific question. Ask what they need help with right now.';
+  }
+
+  private buildRecentTeamChatContext(
+    pendingMessage: { senderName: string; content: string; type: TeamMessage['type'] }
+  ): Array<{ senderName: string; content: string; type: string }> {
+    const recent = this.messages()
+      .filter(msg => (msg.type === 'text' || msg.type === 'ai-response') && !!String(msg.content || '').trim())
+      .slice(-9)
+      .map(msg => ({
+        senderName: msg.type === 'ai-response'
+          ? this.teamAiDisplayName()
+          : (String(msg.senderName || '').trim() || 'Team member'),
+        content: String(msg.content || '').trim(),
+        type: msg.type
+      }));
+
+    const pending = {
+      senderName: String(pendingMessage.senderName || '').trim() || 'Team member',
+      content: String(pendingMessage.content || '').trim(),
+      type: pendingMessage.type
+    };
+
+    return [...recent, pending]
+      .filter(item => !!item.content)
+      .slice(-10)
+      .map(item => ({
+        senderName: item.senderName,
+        content: item.content,
+        type: item.type
+      }));
+  }
+
+  private isTeamAiMentioned(content: string, handle: string): boolean {
+    const mentionPattern = new RegExp(`(^|\\s)@${this.escapeRegExp(handle)}(?=$|\\s|[.,!?;:])`, 'i');
+    return mentionPattern.test(content);
+  }
+
+  private resolveTeamAiMentionHandle(displayName: string): string {
+    const trimmedName = String(displayName || '').trim();
+    if (!trimmedName) {
+      return 'rocket';
+    }
+
+    const firstToken = trimmedName.split(/\s+/)[0] || '';
+    const firstName = firstToken.split(/[-_]/)[0] || firstToken;
+    const normalized = firstName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '');
+
+    return normalized || 'rocket';
+  }
+
+  private escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   openInviteModal() {

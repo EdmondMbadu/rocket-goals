@@ -1125,6 +1125,7 @@ export const telegramWebhook = onRequest({
         if (!teamsSnapshot.empty) {
           const teamDoc = teamsSnapshot.docs[0];
           const teamId = teamDoc.id;
+          const teamData = teamDoc.data() || {};
           const senderTelegramId = update.message.from?.id?.toString();
 
           // Resolve sender identity
@@ -1167,6 +1168,85 @@ export const telegramWebhook = onRequest({
           await msgRef.update({ id: msgRef.id });
 
           console.log(`📨 Synced Telegram group message to team ${teamId}`);
+
+          const configuredAiName = String(teamData?.aiSettings?.displayName || '').trim();
+          const aiMentionHandle = resolveTeamAiMentionHandle(configuredAiName || 'Rocket AI');
+          const summonHandles = Array.from(new Set(['rocket', aiMentionHandle].filter(Boolean)));
+          const shouldSummonTeamAi = teamData?.aiCoachEnabled !== false
+            && summonHandles.some((handle) => isTeamAiMentioned(messageText, handle));
+
+          if (shouldSummonTeamAi) {
+            const apiKey = geminiApiKey.value();
+            if (apiKey) {
+              try {
+                const recentSnapshot = await admin.firestore()
+                  .collection('teams')
+                  .doc(teamId)
+                  .collection('messages')
+                  .orderBy('timestamp', 'desc')
+                  .limit(8)
+                  .get();
+
+                const recentMessages = recentSnapshot.docs
+                  .map((doc) => ({ id: doc.id, ...(doc.data() || {}) as Record<string, any> }))
+                  .filter((msg) => msg.id !== msgRef.id && (msg.type === 'text' || msg.type === 'ai-response'))
+                  .reverse()
+                  .map((msg) => ({
+                    senderName: msg.type === 'ai-response'
+                      ? (String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI')
+                      : (String(msg.senderName || '').trim() || 'Team member'),
+                    content: String(msg.content || '').trim(),
+                    type: String(msg.type || 'text')
+                  }))
+                  .filter((msg) => !!msg.content);
+
+                recentMessages.push({
+                  senderName: String(senderName || '').trim() || 'Team member',
+                  content: messageText,
+                  type: 'text'
+                });
+
+                const aiPrompt = buildTeamAiPromptText(messageText, summonHandles);
+                const aiText = await generateTeamAiCoachResponse(teamData, aiPrompt, recentMessages, apiKey);
+                const aiContent = String(aiText || '').trim();
+
+                if (aiContent) {
+                  const aiDisplayName = String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI';
+                  const aiAvatarUrl = String(teamData?.aiSettings?.avatarUrl || '').trim();
+                  const aiMsgData: Record<string, any> = {
+                    teamId,
+                    senderId: 'rocket-ai',
+                    senderName: aiDisplayName,
+                    content: aiContent,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                    type: 'ai-response',
+                    source: 'telegram'
+                  };
+                  if (aiAvatarUrl) {
+                    aiMsgData.senderAvatarUrl = aiAvatarUrl;
+                  }
+
+                  const aiRef = await admin.firestore()
+                    .collection('teams')
+                    .doc(teamId)
+                    .collection('messages')
+                    .add(aiMsgData);
+                  await aiRef.update({ id: aiRef.id });
+
+                  await sendTelegramMessage(
+                    groupChatId,
+                    `🤖 *${escapeMarkdown(aiDisplayName)}:*\n${aiContent}`,
+                    botToken
+                  );
+                  console.log(`🤖 Team AI replied in Telegram group for team ${teamId}`);
+                }
+              } catch (aiError) {
+                console.error(`Failed to generate team AI reply for Telegram group ${groupChatId}:`, aiError);
+              }
+            } else {
+              console.warn('GEMINI_API_KEY not configured; skipping team AI summon in Telegram group');
+            }
+          }
         }
       }
 
@@ -1788,6 +1868,146 @@ export const syncTeamMessageToTelegram = onDocumentCreated({
   console.log(`📤 Synced web message to Telegram group ${groupChatId}`);
 });
 
+function escapeRegExp(value: string): string {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveTeamAiMentionHandle(displayName: string): string {
+  const trimmedName = String(displayName || '').trim();
+  if (!trimmedName) {
+    return 'rocket';
+  }
+
+  const firstToken = trimmedName.split(/\s+/)[0] || '';
+  const firstName = firstToken.split(/[-_]/)[0] || firstToken;
+  const normalized = firstName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '');
+
+  return normalized || 'rocket';
+}
+
+function isTeamAiMentioned(content: string, handle: string): boolean {
+  if (!content || !handle) {
+    return false;
+  }
+  const pattern = new RegExp(`(^|\\s)@${escapeRegExp(handle)}(?=$|\\s|[.,!?;:])`, 'i');
+  return pattern.test(content);
+}
+
+function buildTeamAiPromptText(content: string, handles: string[]): string {
+  let cleaned = String(content || '').trim();
+  const uniqueHandles = Array.from(new Set(handles.filter(Boolean)));
+  for (const handle of uniqueHandles) {
+    const mentionPattern = new RegExp(`(^|\\s)@${escapeRegExp(handle)}(?=$|\\s|[.,!?;:])`, 'ig');
+    cleaned = cleaned.replace(mentionPattern, '$1');
+  }
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned || 'The team mentioned you without a specific question. Ask what they need help with right now.';
+}
+
+async function generateTeamAiCoachResponse(
+  teamData: any,
+  message: string,
+  recentMessages: Array<{ senderName: string; content: string; type: string }> = [],
+  apiKey?: string
+): Promise<string> {
+  const resolvedApiKey = String(apiKey || '').trim();
+  if (!resolvedApiKey) {
+    throw new Error('AI service not configured');
+  }
+
+  const teamName = String(teamData?.name || 'this team').trim() || 'this team';
+  const teamDesc = String(teamData?.description || '').trim();
+  const rawAiDisplayName = String(teamData?.aiSettings?.displayName || '').trim();
+  const aiDisplayName = rawAiDisplayName ? rawAiDisplayName.slice(0, 60) : 'Rocket AI';
+  const rawAiPersonality = String(teamData?.aiSettings?.personality || '').trim();
+  const aiPersonality = rawAiPersonality ? rawAiPersonality.slice(0, 8000) : '';
+  const aiPersonalityBlock = aiPersonality
+    ? `\n\nTEAM AI PERSONALITY (ADMIN CUSTOMIZED):\n${aiPersonality}`
+    : '';
+
+  const membersLines = (teamData?.members || []).slice(0, 20).map((m: any) => {
+    const role = m.role === 'admin'
+      ? ' (Admin)'
+      : m.role === 'coach'
+        ? ' (Coach)'
+        : m.role === 'team-lead'
+          ? ' (Team Lead)'
+          : '';
+    return `- ${String(m.firstName || '').trim()} ${String(m.lastName || '').trim()}${role}`.trim();
+  }).filter(Boolean);
+  const membersContext = membersLines.length > 0
+    ? `\n\nTEAM MEMBERS (${membersLines.length}):\n${membersLines.join('\n')}`
+    : '';
+
+  let chatContext = '';
+  if (recentMessages.length > 0) {
+    const lines = recentMessages.slice(-10).map(m => {
+      const text = String(m.content || '').trim();
+      if (!text) return '';
+      if (m.type === 'ai-response') {
+        return `${aiDisplayName} (AI): ${text}`;
+      }
+      const sender = String(m.senderName || '').trim() || 'Team member';
+      return `${sender}: ${text}`;
+    }).filter(Boolean);
+
+    if (lines.length > 0) {
+      chatContext = `\n\nRECENT CHAT MESSAGES:\n${lines.join('\n')}`;
+    }
+  }
+
+  const sharedPhilosophy = await getSharedCoachPhilosophy();
+  const sharedBlock = sharedPhilosophy ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}` : '';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const systemPrompt = `You are Rocket, the core RocketGoals AI coach for the team "${teamName}" on RocketGoals. For this team, present yourself as "${aiDisplayName}".
+
+CURRENT DATE: ${dateStr}${sharedBlock}
+
+TEAM CONTEXT:
+- Team name: "${teamName}"
+${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}${aiPersonalityBlock}
+
+YOUR ROLE:
+You are the dedicated AI coach for THIS TEAM. The team itself is the goal. Focus entirely on what this team is working toward together based on the team name, purpose, and what members discuss in chat.
+
+IMPORTANT RULES:
+- NEVER reference members' personal/individual goals from outside this team
+- Focus on the TEAM's collective mission, collaboration, and what they discuss in chat
+- If the team name or description hints at a goal (e.g. "City to Shore Training"), treat THAT as the team's mission
+- Coach the team as a unit — encourage teamwork, accountability between members, and shared progress
+- Be encouraging, supportive, and actionable
+- Keep responses concise (2-4 short paragraphs max)
+- Reference team members by name to make it personal
+- Use a warm, motivational coaching tone
+- If TEAM AI PERSONALITY is provided, follow it strictly for tone and communication style
+- Use emojis sparingly
+- If asked about something unrelated, be helpful but steer back to the team's mission`;
+
+  const genAI = new GoogleGenerativeAI(resolvedApiKey);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    systemInstruction: systemPrompt,
+    generationConfig: {
+      temperature: 0.8,
+      topP: 0.95,
+      topK: 40,
+      maxOutputTokens: 600,
+    }
+  });
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: message }] }],
+  });
+  return result.response.text() || "I'm here to help the team! What would you like to work on together?";
+}
+
 /**
  * Callable function: Team AI Coach (@rocket mentions in team chat)
  * Takes a user message and team context, returns an AI coaching response.
@@ -1814,8 +2034,9 @@ export const askTeamAiCoach = onCall({
     message: string;
     recentMessages?: Array<{ senderName: string; content: string; type: string }>;
   };
+  const rawMessage = String(message || '').trim();
 
-  if (!teamId || !message) {
+  if (!teamId || !rawMessage) {
     throw new HttpsError('invalid-argument', 'teamId and message are required');
   }
 
@@ -1834,84 +2055,9 @@ export const askTeamAiCoach = onCall({
     throw new HttpsError('internal', 'AI service not configured');
   }
 
-  // Build team members list (names + roles only — no personal goals)
-  const membersLines = (teamData.members || []).slice(0, 20).map((m: any) => {
-    const role = m.role === 'admin' ? ' (Admin)' : m.role === 'coach' ? ' (Coach)' : m.role === 'team-lead' ? ' (Team Lead)' : '';
-    return `- ${m.firstName} ${m.lastName}${role}`;
-  });
-  const membersContext = membersLines.length > 0
-    ? `\n\nTEAM MEMBERS (${membersLines.length}):\n${membersLines.join('\n')}`
-    : '';
-
-  // Build recent chat context
-  let chatContext = '';
-  if (recentMessages && recentMessages.length > 0) {
-    const lines = recentMessages.slice(-10).map(m =>
-      m.type === 'ai-response' ? `Rocket (AI): ${m.content}` : `${m.senderName}: ${m.content}`
-    );
-    chatContext = `\n\nRECENT CHAT MESSAGES:\n${lines.join('\n')}`;
-  }
-
-  const sharedPhilosophy = await getSharedCoachPhilosophy();
-  const sharedBlock = sharedPhilosophy ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}` : '';
-
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-  const teamName = teamData.name || 'this team';
-  const teamDesc = teamData.description || '';
-  const rawAiDisplayName = (teamData?.aiSettings?.displayName || '').toString().trim();
-  const aiDisplayName = rawAiDisplayName ? rawAiDisplayName.slice(0, 60) : 'Rocket AI';
-  const rawAiPersonality = (teamData?.aiSettings?.personality || '').toString().trim();
-  const aiPersonality = rawAiPersonality ? rawAiPersonality.slice(0, 8000) : '';
-  const aiPersonalityBlock = aiPersonality
-    ? `\n\nTEAM AI PERSONALITY (ADMIN CUSTOMIZED):\n${aiPersonality}`
-    : '';
-
-  const systemPrompt = `You are Rocket, the core RocketGoals AI coach for the team "${teamName}" on RocketGoals. For this team, present yourself as "${aiDisplayName}".
-
-CURRENT DATE: ${dateStr}${sharedBlock}
-
-TEAM CONTEXT:
-- Team name: "${teamName}"
-${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}${aiPersonalityBlock}
-
-YOUR ROLE:
-You are the dedicated AI coach for THIS TEAM. The team itself is the goal. Focus entirely on what this team is working toward together based on the team name, purpose, and what members discuss in chat.
-
-IMPORTANT RULES:
-- NEVER reference members' personal/individual goals from outside this team
-- Focus on the TEAM's collective mission, collaboration, and what they discuss in chat
-- If the team name or description hints at a goal (e.g. "City to Shore Training"), treat THAT as the team's mission
-- Coach the team as a unit — encourage teamwork, accountability between members, and shared progress
-- Be encouraging, supportive, and actionable
-- Keep responses concise (2-4 short paragraphs max)
-- Reference team members by name to make it personal
-- Use a warm, motivational coaching tone
-- If TEAM AI PERSONALITY is provided, follow it strictly for tone and communication style
-- Use emojis sparingly
-- If asked about something unrelated, be helpful but steer back to the team's mission`;
-
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      systemInstruction: systemPrompt,
-      generationConfig: {
-        temperature: 0.8,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 600,
-      }
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: message }] }],
-    });
-
-    const aiText = result.response.text() || "I'm here to help the team! What would you like to work on together?";
+    const aiText = await generateTeamAiCoachResponse(teamData, rawMessage, recentMessages || [], apiKey);
     console.log(`🤖 Team AI Coach responded for team ${teamId}`);
-
     return { success: true, response: aiText };
   } catch (err) {
     console.error('Team AI Coach error:', err);
