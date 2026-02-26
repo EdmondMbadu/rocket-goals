@@ -214,6 +214,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   savingAiSettings = signal(false);
   aiSettingsError = signal<string | null>(null);
   aiSettingsSuccess = signal<string | null>(null);
+  addingAiMember = signal(false);
   aiDisplayNameDraft = '';
   aiAvatarUrlDraft = '';
   aiPersonalityDraft = '';
@@ -491,6 +492,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     return handles;
   });
   teamAiSummonHint = computed(() => this.teamAiSummonHandles().join(' or '));
+  teamAiRosterMember = computed(() => this.findTeamAiRosterMember(this.team()));
+  canAddTeamAiAsMember = computed(() => this.isAdmin() && !!this.team()?.id && !this.teamAiRosterMember());
 
   showJoinOnboarding = computed(() => {
     return !!this.team() && !this.isCurrentUserMember();
@@ -966,6 +969,120 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   cancelEditingTeamWelcome(): void {
     this.teamWelcomeEditing.set(false);
     this.teamWelcomeError.set(null);
+  }
+
+  private buildTeamAiMemberUserId(teamId: string): string {
+    return 'rocket-ai';
+  }
+
+  private buildTeamAiMemberEmail(teamId: string): string {
+    return `team-ai+${teamId}@rocketgoals.local`;
+  }
+
+  private splitTeamAiDisplayName(displayName: string): { firstName: string; lastName: string } {
+    const cleaned = String(displayName || '').trim().replace(/\s+/g, ' ');
+    if (!cleaned) {
+      return { firstName: 'Rocket', lastName: 'AI' };
+    }
+    const parts = cleaned.split(' ');
+    if (parts.length === 1) {
+      return { firstName: parts[0], lastName: 'AI' };
+    }
+    return {
+      firstName: parts[0],
+      lastName: parts.slice(1).join(' ')
+    };
+  }
+
+  private findTeamAiRosterMember(team: Team | null): TeamMember | null {
+    if (!team?.id) {
+      return null;
+    }
+    const expectedUserIds = new Set<string>([
+      this.buildTeamAiMemberUserId(team.id),
+      `team-ai-${team.id}`
+    ]);
+    const expectedEmails = new Set<string>([
+      this.normalizeEmail(this.buildTeamAiMemberEmail(team.id)),
+      this.normalizeEmail(`rocket-ai+${team.id}@rocketgoals.local`)
+    ]);
+    const expectedDisplayName = this.teamAiDisplayName().trim().toLowerCase();
+    return (team.members || []).find(member => {
+      const memberUserId = String(member.userId || '').trim();
+      const memberEmail = this.normalizeEmail(member.email);
+      const memberDisplayName = `${String(member.firstName || '').trim()} ${String(member.lastName || '').trim()}`
+        .trim()
+        .toLowerCase();
+      return expectedUserIds.has(memberUserId)
+        || expectedEmails.has(memberEmail)
+        || (!!expectedDisplayName && memberDisplayName === expectedDisplayName);
+    }) || null;
+  }
+
+  private buildTeamAiFallbackMember(team: Team | null): TeamMember | null {
+    if (!team?.id) {
+      return null;
+    }
+    if (this.findTeamAiRosterMember(team)) {
+      return null;
+    }
+    const displayName = this.teamAiDisplayName();
+    const { firstName, lastName } = this.splitTeamAiDisplayName(displayName);
+    const avatarUrl = this.teamAiAvatarUrl();
+    return {
+      userId: this.buildTeamAiMemberUserId(team.id),
+      firstName,
+      lastName,
+      email: this.buildTeamAiMemberEmail(team.id),
+      profilePictureUrl: avatarUrl || undefined,
+      role: 'member',
+      joinedAt: Date.now()
+    };
+  }
+
+  async addTeamAiAsMember(): Promise<void> {
+    if (!this.isAdmin() || this.addingAiMember()) {
+      return;
+    }
+
+    const team = this.team();
+    if (!team?.id) {
+      return;
+    }
+
+    const existingAiMember = this.findTeamAiRosterMember(team);
+    if (existingAiMember) {
+      this.aiSettingsSuccess.set('Team AI is already in members list.');
+      this.aiSettingsError.set(null);
+      return;
+    }
+
+    const displayName = this.teamAiDisplayName();
+    const { firstName, lastName } = this.splitTeamAiDisplayName(displayName);
+    const profilePictureUrl = this.teamAiAvatarUrl();
+
+    this.addingAiMember.set(true);
+    this.aiSettingsError.set(null);
+    this.aiSettingsSuccess.set(null);
+
+    try {
+      await this.teamService.addMemberToTeam(team.id, {
+        userId: this.buildTeamAiMemberUserId(team.id),
+        firstName,
+        lastName,
+        email: this.buildTeamAiMemberEmail(team.id),
+        profilePictureUrl: profilePictureUrl || undefined,
+        role: 'member',
+        joinedAt: Date.now()
+      });
+      await this.loadTeam(team.id);
+      this.aiSettingsSuccess.set('Team AI added as a member. You can now promote it to Coach.');
+    } catch (error) {
+      console.error('Failed to add team AI as member:', error);
+      this.aiSettingsError.set('Could not add Team AI as member right now.');
+    } finally {
+      this.addingAiMember.set(false);
+    }
   }
 
   startEditingTeamAiSettings(): void {
@@ -1952,12 +2069,42 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   getRegularMembers(): TeamMember[] {
-    const members = (this.team()?.members || []).filter(member => member.role !== 'coach' && member.role !== 'captain');
+    const team = this.team();
+    const members = (team?.members || []).filter(member => member.role !== 'coach' && member.role !== 'captain');
+    const fallbackAiMember = this.buildTeamAiFallbackMember(team);
+    if (fallbackAiMember) {
+      members.push(fallbackAiMember);
+    }
     return this.sortMembersByRole(members);
   }
 
   isCoachOrCaptain(member: TeamMember): boolean {
     return member.role === 'coach' || member.role === 'captain';
+  }
+
+  isTeamAiMember(member: TeamMember): boolean {
+    const teamId = String(this.team()?.id || '').trim();
+    const memberUserId = String(member.userId || '').trim();
+    const memberEmail = this.normalizeEmail(member.email);
+    const memberDisplayName = `${String(member.firstName || '').trim()} ${String(member.lastName || '').trim()}`
+      .trim()
+      .toLowerCase();
+    const expectedDisplayName = this.teamAiDisplayName().trim().toLowerCase();
+
+    const expectedUserIds = new Set<string>(['rocket-ai']);
+    if (teamId) {
+      expectedUserIds.add(`team-ai-${teamId}`);
+    }
+
+    const expectedEmails = new Set<string>();
+    if (teamId) {
+      expectedEmails.add(this.normalizeEmail(this.buildTeamAiMemberEmail(teamId)));
+      expectedEmails.add(this.normalizeEmail(`rocket-ai+${teamId}@rocketgoals.local`));
+    }
+
+    return expectedUserIds.has(memberUserId)
+      || expectedEmails.has(memberEmail)
+      || (!!expectedDisplayName && memberDisplayName === expectedDisplayName);
   }
 
   getMemberRoleLabel(member: TeamMember): string {
@@ -2086,22 +2233,61 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     role: 'member' | 'coach' | 'captain',
     successMessage: string
   ): Promise<void> {
-    const team = this.team();
+    let team = this.team();
     if (!team?.id || !this.isAdmin() || member.userId === this.currentUserId()) {
       return;
     }
-    if (member.role === 'admin') {
+
+    const matchingMember = team.members.find(existing => {
+      if (existing.userId === member.userId) {
+        return true;
+      }
+      return this.normalizeEmail(existing.email) === this.normalizeEmail(member.email);
+    });
+
+    if (!matchingMember) {
+      try {
+        await this.teamService.addMemberToTeam(team.id, {
+          userId: member.userId,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          email: member.email,
+          profilePictureUrl: member.profilePictureUrl,
+          role: 'member',
+          joinedAt: member.joinedAt || Date.now()
+        });
+        await this.loadTeam(team.id);
+        team = this.team();
+      } catch (error) {
+        console.error('Failed to persist member before role update:', error);
+        this.leadActionError.set('Unable to add this member before role update.');
+        return;
+      }
+    }
+
+    const targetMember = (team?.members || []).find(existing => {
+      if (existing.userId === member.userId) {
+        return true;
+      }
+      return this.normalizeEmail(existing.email) === this.normalizeEmail(member.email);
+    });
+
+    if (!team?.id || !targetMember) {
+      this.leadActionError.set('Selected member was not found in this team.');
+      return;
+    }
+    if (targetMember.role === 'admin') {
       this.leadActionError.set('Admin role cannot be changed.');
       return;
     }
 
-    this.leadUpdatingUserId.set(member.userId);
+    this.leadUpdatingUserId.set(targetMember.userId);
     this.leadActionError.set(null);
     this.leadActionSuccess.set(null);
     this.closeMemberMenu();
 
     try {
-      await this.teamService.assignMemberRole(team.id, member.userId, role);
+      await this.teamService.assignMemberRole(team.id, targetMember.userId, role);
       await this.loadTeam(team.id);
       this.leadActionSuccess.set(successMessage);
     } catch (error: any) {

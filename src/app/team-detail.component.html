@@ -418,7 +418,12 @@
               }
               <span class="member-status-dot" [class.online]="member.role !== 'member'"></span>
             </div>
-            <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
+            <p class="member-circle-name">
+              {{ member.firstName }} {{ member.lastName }}
+              @if (isTeamAiMember(member)) {
+              <span class="member-ai-badge">AI</span>
+              }
+            </p>
           </button>
           <span
             class="role-pill"
@@ -500,7 +505,12 @@
               }
               <span class="member-status-dot" [class.online]="member.role !== 'member'"></span>
             </div>
-            <p class="member-circle-name">{{ member.firstName }} {{ member.lastName }}</p>
+            <p class="member-circle-name">
+              {{ member.firstName }} {{ member.lastName }}
+              @if (isTeamAiMember(member)) {
+              <span class="member-ai-badge">AI</span>
+              }
+            </p>
           </button>
           <span
             class="role-pill"
@@ -646,7 +656,12 @@
                 <div class="mc-leaderboard-avatar fallback">{{ (row.member.firstName || '?').charAt(0) }}</div>
                 }
                 <div>
-                  <p class="mc-leaderboard-name">{{ row.member.firstName }} {{ row.member.lastName }}</p>
+                  <p class="mc-leaderboard-name">
+                    {{ row.member.firstName }} {{ row.member.lastName }}
+                    @if (isTeamAiMember(row.member)) {
+                    <span class="mc-ai-badge">AI</span>
+                    }
+                  </p>
                   <p class="mc-leaderboard-role">{{ getMemberRoleLabel(row.member) }}</p>
                 </div>
               </div>
@@ -791,6 +806,21 @@
             <button type="button" class="mc-admin-btn" (click)="startEditingTeamAiSettings()">
               Edit Settings
             </button>
+            @if (canAddTeamAiAsMember()) {
+            <button
+              type="button"
+              class="mc-admin-btn secondary"
+              (click)="addTeamAiAsMember()"
+              [disabled]="addingAiMember()">
+              @if (addingAiMember()) {
+              Adding AI...
+              } @else {
+              Add AI As Member
+              }
+            </button>
+            } @else if (teamAiRosterMember()) {
+            <span class="ai-member-status-pill">AI in team members</span>
+            }
             } @else {
             <button type="button" class="mc-admin-btn secondary" (click)="cancelEditingTeamAiSettings()" [disabled]="savingAiSettings()">
               Cancel
