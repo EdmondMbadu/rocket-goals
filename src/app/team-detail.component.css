@@ -348,6 +348,131 @@
   flex-shrink: 0;
 }
 
+.team-meeting-card {
+  flex: 0 0 auto;
+  min-width: 280px;
+  max-width: 340px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(52, 211, 153, 0.2), transparent 50%),
+    linear-gradient(135deg, rgba(2, 6, 23, 0.85), rgba(15, 23, 42, 0.78));
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.14);
+}
+
+.team-meeting-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-meeting-kicker {
+  margin: 0;
+  color: #bbf7d0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.team-meeting-badge {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #bbf7d0;
+  border: 1px solid rgba(110, 231, 183, 0.45);
+  background: rgba(16, 185, 129, 0.14);
+}
+
+.team-meeting-link,
+.team-meeting-empty {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.team-meeting-link {
+  color: #ecfdf5;
+  word-break: break-all;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+.team-meeting-empty {
+  color: #d1fae5;
+}
+
+.team-meeting-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.team-meeting-btn {
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.team-meeting-btn.primary {
+  color: #ecfdf5;
+  background: rgba(16, 185, 129, 0.26);
+  border-color: rgba(110, 231, 183, 0.46);
+}
+
+.team-meeting-btn.primary:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.35);
+}
+
+.team-meeting-btn.secondary {
+  color: #d1fae5;
+  background: rgba(15, 23, 42, 0.68);
+  border-color: rgba(110, 231, 183, 0.26);
+}
+
+.team-meeting-btn.secondary:hover:not(:disabled) {
+  border-color: rgba(110, 231, 183, 0.5);
+}
+
+.team-meeting-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.team-meeting-hint {
+  margin: 8px 0 0;
+  color: #6ee7b7;
+  font-size: 11px;
+}
+
+.team-meeting-notice,
+.team-meeting-error {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.team-meeting-notice {
+  color: #86efac;
+}
+
+.team-meeting-error {
+  color: #fca5a5;
+}
+
 .team-countdown-card {
   flex: 0 0 auto;
   min-width: 340px;
@@ -1964,6 +2089,53 @@
   color: #b91c1c;
 }
 
+.light-mode .team-meeting-card {
+  background:
+    radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.18), transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(248, 250, 252, 0.99));
+  border-color: rgba(5, 150, 105, 0.26);
+  box-shadow: 0 12px 26px rgba(5, 150, 105, 0.12);
+}
+
+.light-mode .team-meeting-kicker {
+  color: #047857;
+}
+
+.light-mode .team-meeting-badge {
+  color: #047857;
+  border-color: rgba(5, 150, 105, 0.36);
+  background: rgba(5, 150, 105, 0.12);
+}
+
+.light-mode .team-meeting-link {
+  color: #065f46;
+}
+
+.light-mode .team-meeting-empty,
+.light-mode .team-meeting-hint {
+  color: #065f46;
+}
+
+.light-mode .team-meeting-btn.primary {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(5, 150, 105, 0.32);
+}
+
+.light-mode .team-meeting-btn.secondary {
+  color: #065f46;
+  background: rgba(240, 253, 250, 0.92);
+  border-color: rgba(5, 150, 105, 0.24);
+}
+
+.light-mode .team-meeting-notice {
+  color: #047857;
+}
+
+.light-mode .team-meeting-error {
+  color: #b91c1c;
+}
+
 .light-mode .team-countdown-edit {
   color: #b91c1c;
   background: rgba(239, 68, 68, 0.1);
@@ -2493,6 +2665,11 @@
   }
 
   .team-countdown-card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .team-meeting-card {
     min-width: 0;
     max-width: 100%;
   }

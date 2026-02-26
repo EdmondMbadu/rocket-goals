@@ -77,6 +77,10 @@ export interface Team {
   name: string;
   description?: string;
   welcomeMessage?: string;
+  meetingRoomLink?: string;
+  meetingRoomEventId?: string;
+  meetingRoomProvider?: 'google-meet';
+  meetingRoomCreatedAt?: unknown;
   avatarUrl?: string;
   coverImageUrl?: string;
   rocketGoalId?: string;

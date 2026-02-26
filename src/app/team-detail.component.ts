@@ -160,6 +160,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   verificationNotice = signal<string | null>(null);
   shareNotice = signal<string | null>(null);
   shareError = signal<string | null>(null);
+  creatingMeetingRoom = signal(false);
+  meetingRoomError = signal<string | null>(null);
+  meetingRoomNotice = signal<string | null>(null);
 
   signupName = '';
   signupEmail = '';
@@ -342,6 +345,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   readonly teamPageUrl = computed(() => this.buildTeamPageUrl(this.team()?.id || undefined));
   canOpenTeamRocketGoal = computed(() => this.isCurrentUserMember() && !this.preparingTeamGoal());
+  canCreateMeetingRoom = computed(() => this.isCurrentUserMember());
+  meetingRoomLink = computed(() => {
+    const raw = String(this.team()?.meetingRoomLink || '').trim();
+    return raw || null;
+  });
   hasTelegramGroup = computed(() => !!this.team()?.telegramGroupId);
   telegramInviteLink = computed(() => this.team()?.telegramGroupInviteLink || null);
 
@@ -504,6 +512,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       void this.loadTeamGoal(resolvedGoalId);
       this.teamWelcomeEditing.set(false);
       this.teamWelcomeError.set(null);
+      this.creatingMeetingRoom.set(false);
+      this.meetingRoomError.set(null);
+      this.meetingRoomNotice.set(null);
       this.directConversationLoadedForTeamId = null;
       this.participantSummaryLoadedKey = null;
       this.participantActivityMap.set({});
@@ -524,6 +535,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.teamDeadlineError.set(null);
       this.teamWelcomeEditing.set(false);
       this.teamWelcomeError.set(null);
+      this.creatingMeetingRoom.set(false);
+      this.meetingRoomError.set(null);
+      this.meetingRoomNotice.set(null);
       this.stopTeamCountdown();
       this.setTeamCountdownValues(0, 0, 0, 0);
     } finally {
@@ -1709,6 +1723,90 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error('Failed to copy team URL:', err);
       this.shareError.set('Unable to copy the share link right now. Please try again.');
+    }
+  }
+
+  async createMeetingRoom() {
+    const team = this.team();
+    if (!team?.id || !this.canCreateMeetingRoom() || this.creatingMeetingRoom()) {
+      return;
+    }
+
+    const existingLink = this.meetingRoomLink();
+    if (existingLink) {
+      this.openMeetingRoom(existingLink);
+      return;
+    }
+
+    this.creatingMeetingRoom.set(true);
+    this.meetingRoomError.set(null);
+    this.meetingRoomNotice.set(null);
+
+    try {
+      const result = await this.teamService.createTeamMeetingRoom(team.id);
+      const meetingRoomLink = String(result.meetingRoomLink || '').trim();
+      if (!meetingRoomLink) {
+        throw new Error('Meeting room link was not returned.');
+      }
+
+      this.team.update(current => {
+        if (!current) {
+          return current;
+        }
+        return {
+          ...current,
+          meetingRoomLink,
+          meetingRoomEventId: result.meetingRoomEventId || current.meetingRoomEventId,
+          meetingRoomProvider: (result.meetingRoomProvider as Team['meetingRoomProvider']) || 'google-meet'
+        };
+      });
+
+      this.meetingRoomNotice.set(result.created ? 'Meeting room created for this team.' : 'Existing meeting room loaded.');
+      this.openMeetingRoom(meetingRoomLink);
+    } catch (err: any) {
+      console.error('Failed to create meeting room:', err);
+      const code = String(err?.code || '');
+      if (code.includes('failed-precondition')) {
+        this.meetingRoomError.set('Google Workspace meeting setup is not configured yet.');
+      } else if (code.includes('permission-denied')) {
+        this.meetingRoomError.set('Only team members can create this meeting room.');
+      } else {
+        this.meetingRoomError.set(err?.message || 'Unable to create a meeting room right now.');
+      }
+    } finally {
+      this.creatingMeetingRoom.set(false);
+    }
+  }
+
+  openMeetingRoom(link?: string | null) {
+    const meetingRoomLink = String(link || this.meetingRoomLink() || '').trim();
+    if (!meetingRoomLink) {
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      window.open(meetingRoomLink, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  async copyMeetingRoomLink() {
+    const meetingRoomLink = this.meetingRoomLink();
+    if (!meetingRoomLink) {
+      return;
+    }
+
+    this.meetingRoomError.set(null);
+    this.meetingRoomNotice.set(null);
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(meetingRoomLink);
+        this.meetingRoomNotice.set('Meeting room link copied to clipboard.');
+        return;
+      }
+      this.meetingRoomError.set('Copy is not available on this device right now.');
+    } catch (err) {
+      console.error('Failed to copy meeting room link:', err);
+      this.meetingRoomError.set('Unable to copy the meeting room link right now.');
     }
   }
 

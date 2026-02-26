@@ -1092,6 +1092,32 @@ export class TeamService {
     };
   }
 
+  async createTeamMeetingRoom(teamId: string): Promise<{
+    success: boolean;
+    created: boolean;
+    meetingRoomLink: string;
+    meetingRoomEventId?: string | null;
+    meetingRoomProvider?: string | null;
+  }> {
+    const appModule = await import('firebase/app');
+    const app =
+      appModule.getApps().length === 0
+        ? appModule.initializeApp(firebaseConfig)
+        : appModule.getApp();
+
+    const functionsModule = await import('firebase/functions');
+    const functions = functionsModule.getFunctions(app, 'us-central1');
+    const createRoom = functionsModule.httpsCallable(functions, 'createTeamMeetingRoom');
+    const result = await createRoom({ teamId });
+    return result.data as {
+      success: boolean;
+      created: boolean;
+      meetingRoomLink: string;
+      meetingRoomEventId?: string | null;
+      meetingRoomProvider?: string | null;
+    };
+  }
+
   async askTeamAiCoach(teamId: string, message: string, recentMessages?: Array<{ senderName: string; content: string; type: string }>): Promise<string> {
     const appModule = await import('firebase/app');
     const app =
