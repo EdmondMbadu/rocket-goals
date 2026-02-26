@@ -2123,7 +2123,14 @@ function extractTeamIdFromGoalId(goalId: string): string {
     return goalId.slice(5).trim();
 }
 
-function getGoalReminderDedupeKey(goalId: string, goalData: FirebaseFirestore.DocumentData): string {
+function normalizeGoalTitleForKey(value: unknown): string {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+}
+
+function getGoalReminderDedupeKey(goalId: string, goalData: FirebaseFirestore.DocumentData, goalTitle?: string): string {
     const answers = (goalData?.answers || {}) as Record<string, unknown>;
     const answerTeamId = typeof answers['teamId'] === 'string' ? answers['teamId'].trim() : '';
     if (answerTeamId) {
@@ -2141,6 +2148,16 @@ function getGoalReminderDedupeKey(goalId: string, goalData: FirebaseFirestore.Do
     const teamIdFromGoalId = extractTeamIdFromGoalId(goalId);
     if (teamIdFromGoalId) {
         return `team:${teamIdFromGoalId}`;
+    }
+
+    const normalizedTitle = normalizeGoalTitleForKey(
+        goalTitle
+        || goalData?.primaryGoal
+        || answers['goal_title_label']
+        || answers['custom_goal_title']
+    );
+    if (normalizedTitle.endsWith(' team mission')) {
+        return `team-title:${normalizedTitle}`;
     }
 
     return `goal:${goalId}`;
@@ -2878,7 +2895,7 @@ export const sendTestDailyReminder = functions.runWith({
                 id: goalDoc.id,
                 title: goalTitle,
                 url: goalUrl,
-                dedupeKey: getGoalReminderDedupeKey(goalDoc.id, goalData),
+                dedupeKey: getGoalReminderDedupeKey(goalDoc.id, goalData, goalTitle),
                 isTeamMemberGoal: isTeamMemberGoal(goalData),
                 milestones: milestones.slice(0, 3),
                 activeMilestone,
@@ -3060,7 +3077,7 @@ export const sendBulkGoalReminders = functions.runWith({
                             id: goalId,
                             title: goalTitle,
                             url: goalUrl,
-                            dedupeKey: getGoalReminderDedupeKey(goalId, goalData),
+                            dedupeKey: getGoalReminderDedupeKey(goalId, goalData, goalTitle),
                             isTeamMemberGoal: isTeamMemberGoal(goalData),
                             milestones,
                             imageUrl: bulkCoachInfo ? undefined : (goalData.visualizationImageUrl || goalData.visualizationImage || goalData.answers?.visualizationImageUrl),
@@ -6105,7 +6122,7 @@ export const processScheduledReminders = functions.runWith({
                                     id: goalDoc.id,
                                     title: goalTitle,
                                     url: goalUrl,
-                                    dedupeKey: getGoalReminderDedupeKey(goalDoc.id, goalData),
+                                    dedupeKey: getGoalReminderDedupeKey(goalDoc.id, goalData, goalTitle),
                                     isTeamMemberGoal: isTeamMemberGoal(goalData),
                                     milestones: milestones.slice(0, 3),
                                     activeMilestone,
