@@ -253,79 +253,22 @@
             <!-- Goal owner or team collaborator sees the AI Co-Pilot -->
             <app-rocket-goals-ai [goalContext]="goal()" [embedded]="true" [teamContextId]="teamContextId()" [teamContext]="teamContext()" [teamParticipantUserId]="teamParticipantUserId()" [teamDirectMessages]="teamDirectMessages()" (eventAction)="onAICalendarAction()" class="flex-1 flex ai-embedded-wrapper"></app-rocket-goals-ai>
           } @else {
-            <!-- Fans/Visitors see Launch Your Goal prompt -->
-            <div class="fan-launch-goal-card hud-card shimmer flex-1 flex flex-col p-6 relative">
+            <!-- Fans/Visitors see compact Launch Your Goal prompt -->
+            <div class="fan-launch-goal-card hud-card shimmer flex flex-col p-5 relative">
               <div class="scanline"></div>
-
-              <!-- Header -->
-              <div class="fan-launch-header">
+              <div class="fan-launch-header" style="text-align: center;">
                 <div class="fan-launch-icon">
                   <span class="launch-rocket">🚀</span>
                 </div>
                 <h2 class="fan-launch-title">Ready to Launch Your Own Goal?</h2>
                 <p class="fan-launch-subtitle">You're supporting {{ getGoalOwnerName() }}'s journey. Now it's time to start yours!</p>
               </div>
-
-              <!-- LAUNCH Framework - Scrollable -->
-              <div class="fan-launch-benefits">
-                <div class="benefit-item">
-                  <span class="benefit-icon">🔒</span>
-                  <div class="benefit-text">
-                    <span class="benefit-title"><span class="benefit-acronym">L:</span> Lock In Your Future Outcome</span>
-                    <span class="benefit-desc">Write a clear outcome statement & visualize success</span>
-                  </div>
-                </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">🎯</span>
-                  <div class="benefit-text">
-                    <span class="benefit-title"><span class="benefit-acronym">A:</span> Align with One Priority</span>
-                    <span class="benefit-desc">Translate your ONE Thing into a daily executable task</span>
-                  </div>
-                </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">📊</span>
-                  <div class="benefit-text">
-                    <span class="benefit-title"><span class="benefit-acronym">U:</span> Unpack Milestones & Metrics</span>
-                    <span class="benefit-desc">Break your goal into phases with clear proof of done</span>
-                  </div>
-                </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">⛓️</span>
-                  <div class="benefit-text">
-                    <span class="benefit-title"><span class="benefit-acronym">N:</span> Name Your Constraints</span>
-                    <span class="benefit-desc">Identify bottlenecks & set boundaries that protect flow</span>
-                  </div>
-                </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">⚙️</span>
-                  <div class="benefit-text">
-                    <span class="benefit-title"><span class="benefit-acronym">C:</span> Create an Action Ritual</span>
-                    <span class="benefit-desc">Choose a trigger + action + reward to hardwire habit</span>
-                  </div>
-                </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">🤝</span>
-                  <div class="benefit-text">
-                    <span class="benefit-title"><span class="benefit-acronym">H:</span> Harness Accountability & CREW Support</span>
-                    <span class="benefit-desc">Name your accountability partner & schedule check-ins</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- CTA Button -->
-              <div class="fan-launch-cta">
+              <div class="fan-launch-cta" style="margin-top: 16px;">
                 <a [routerLink]="['/ai']" [queryParams]="{ launchGoal: 'true' }" class="launch-goal-btn">
                   <span>🚀</span>
                   <span>Launch Your Goal</span>
                 </a>
                 <p class="launch-hint">It only takes 2 minutes to get started</p>
-              </div>
-
-              <!-- Decorative elements -->
-              <div class="fan-launch-decoration">
-                <div class="decoration-ring ring-1"></div>
-                <div class="decoration-ring ring-2"></div>
-                <div class="decoration-ring ring-3"></div>
               </div>
             </div>
           }
@@ -334,43 +277,146 @@
         <!-- RIGHT COLUMN: Mission Info -->
         <div class="left-column flex flex-col gap-3 sm:gap-5 md:gap-6 overflow-y-auto overflow-x-hidden pb-4">
           
-          <!-- ==================== REDESIGNED MISSION HERO SECTION ==================== -->
-          <div class="mission-hero-section grid grid-cols-1 gap-3 md:gap-4">
-            <div class="mission-stats-panel flex flex-col gap-3">
-              <div class="mission-header-card hud-card shimmer p-2 md:p-3 relative">
-                <div class="scanline"></div>
-                <div class="mission-header-top flex flex-col md:flex-row md:items-start md:justify-between gap-2">
-                  <div class="owner-profile-header flex items-center gap-3">
-                    <div class="owner-avatar">
-                      @if (hasOwnerAvatar()) {
-                        <img [src]="getGoalOwnerAvatarUrl()"
-                             alt="Profile"
-                             class="owner-avatar-img"
-                             (error)="$any($event.target).style.display='none'">
-                      } @else {
-                        <span class="owner-initials">{{ getGoalOwnerInitials() }}</span>
+          <!-- ==================== SIMPLIFIED MISSION HERO SECTION ==================== -->
+          <div class="mission-hero-section">
+            <div class="mission-header-card hud-card shimmer p-3 md:p-4 relative">
+              <div class="scanline"></div>
+
+              <!-- Compact summary row - always visible -->
+              <div class="mission-compact-row" (click)="showMissionDetails.set(!showMissionDetails())">
+                <div class="mission-compact-left">
+                  <div class="owner-avatar owner-avatar-sm">
+                    @if (hasOwnerAvatar()) {
+                      <img [src]="getGoalOwnerAvatarUrl()" alt="Profile" class="owner-avatar-img" (error)="$any($event.target).style.display='none'">
+                    } @else {
+                      <span class="owner-initials">{{ getGoalOwnerInitials() }}</span>
+                    }
+                  </div>
+                  <div class="mission-compact-info">
+                    <h2 class="mission-title text-base md:text-lg font-black leading-tight" style="font-family: 'Exo 2', sans-serif;">
+                      {{ getGoalTitleDisplay() }}
+                    </h2>
+                    <div class="mission-compact-meta">
+                      <span class="mission-compact-progress">{{ getCompletionPercentage() }}%</span>
+                      <span class="mission-compact-divider">·</span>
+                      <span class="mission-compact-days">{{ countdownDays() }}d left</span>
+                      @if (getTargetMetricDisplay(); as targetMetric) {
+                        <span class="mission-compact-divider">·</span>
+                        <span class="mission-compact-target">{{ targetMetric.formattedValue }} {{ targetMetric.unit }}</span>
                       }
                     </div>
-                    <span class="owner-goal-title">{{ getGoalOwnerDisplayTitle() }}</span>
+                  </div>
+                </div>
+                <div class="mission-compact-right">
+                  <div class="mission-compact-progress-bar">
+                    <div class="countdown-progress-fill" [style.width.%]="getCompletionPercentage()"></div>
+                  </div>
+                  <button type="button" class="section-expand-chevron" [class.expanded]="showMissionDetails()">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Expanded details - hidden by default -->
+              @if (showMissionDetails()) {
+              <div class="mission-expanded-details">
+                <div class="mission-expanded-inner">
+                  <!-- Edit title -->
+                  @if (isGoalOwner()) {
+                    @if (isEditingGoalTitle()) {
+                    <div class="flex flex-col gap-2 mb-3">
+                      <input #goalTitleInput type="text"
+                        [ngModel]="editingGoalTitleValue()" (ngModelChange)="editingGoalTitleValue.set($event)"
+                        (keydown.enter)="saveGoalTitle()" (keydown.escape)="cancelEditingGoalTitle()"
+                        class="goal-title-input mission-title-input text-lg font-black border rounded-lg px-3 py-2 w-full focus:outline-none"
+                        style="font-family: 'Exo 2', sans-serif;" placeholder="Enter goal title..." />
+                      <div class="flex gap-2">
+                        <button (click)="saveGoalTitle()" class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-white text-xs font-semibold rounded-lg transition-colors">Save</button>
+                        <button (click)="cancelEditingGoalTitle()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-lg transition-colors">Cancel</button>
+                      </div>
+                    </div>
+                    } @else {
+                    <button (click)="startEditingGoalTitle(); $event.stopPropagation()"
+                      class="edit-title-btn mb-3 text-xs flex items-center gap-1 transition-colors">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit title
+                    </button>
+                    }
+                  }
+
+                  <!-- Target + Countdown -->
+                  <div class="mission-detail-grid">
+                    <div class="mission-target-block">
+                      @if (getTargetMetricDisplay(); as targetMetric) {
+                        <h3 class="mission-command-label">Target</h3>
+                        <div class="mission-target-stats-row">
+                          <div class="mission-target-value-row">
+                            <span class="mission-target-value">{{ targetMetric.formattedValue }}</span>
+                            @if (targetMetric.unit) {
+                              <span class="mission-target-unit">{{ targetMetric.unit }}</span>
+                            }
+                          </div>
+                          <div class="mission-completion-inline">
+                            <span class="mission-completion-value">{{ getCompletionPercentage() }}%</span>
+                            <span class="mission-completion-label">COMPLETE</span>
+                          </div>
+                        </div>
+                        <p class="mission-target-caption">{{ targetMetric.label }}</p>
+                      } @else {
+                        <h3 class="mission-command-label">Mission Progress</h3>
+                        <div class="mission-completion-inline mission-completion-inline-fallback">
+                          <span class="mission-completion-value">{{ getCompletionPercentage() }}%</span>
+                          <span class="mission-completion-label">COMPLETE</span>
+                        </div>
+                        <p class="mission-target-caption">
+                          {{ getGoalDescription() || getGoalThemeDisplay() || 'Stay focused on your mission.' }}
+                        </p>
+                      }
+                    </div>
+
+                    <div class="mission-timer-wrap mission-timer-top">
+                      <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-2" style="font-family: 'Orbitron', monospace;">
+                        <span class="text-gray-400">TIME TO REACH THE GOAL</span>
+                      </h3>
+                      <div class="countdown-boxes-container mission-countdown-boxes flex justify-center items-center gap-2 md:gap-3">
+                        <div class="countdown-box mission-countdown-box">
+                          <span class="countdown-box-value">{{ countdownDays() }}</span>
+                          <span class="countdown-box-label">DAYS</span>
+                        </div>
+                        <span class="countdown-separator">:</span>
+                        <div class="countdown-box mission-countdown-box">
+                          <span class="countdown-box-value">{{ countdownHours() }}</span>
+                          <span class="countdown-box-label">HOURS</span>
+                        </div>
+                        <span class="countdown-separator">:</span>
+                        <div class="countdown-box mission-countdown-box">
+                          <span class="countdown-box-value">{{ countdownMinutes() }}</span>
+                          <span class="countdown-box-label">MINS</span>
+                        </div>
+                        <span class="countdown-separator">:</span>
+                        <div class="countdown-box mission-countdown-box">
+                          <span class="countdown-box-value">{{ countdownSeconds() }}</span>
+                          <span class="countdown-box-label">SECS</span>
+                        </div>
+                      </div>
+                      <div class="countdown-progress-bar mt-3">
+                        <div class="countdown-progress-fill" [style.width.%]="getTimelineProgress()"></div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="mission-header-actions flex flex-wrap items-center gap-2">
+                  <!-- Vision board / visualization actions -->
+                  <div class="mission-detail-actions">
                     @if (hasVisualization()) {
-                    <button
-                      type="button"
-                      (click)="openVisualizationModal()"
-                      class="vision-toggle-btn"
-                    >
-                      Show vision board
-                    </button>
+                    <button type="button" (click)="openVisualizationModal(); $event.stopPropagation()" class="vision-toggle-btn">Show vision board</button>
                     }
                     @if (isGoalOwner() && hasVisualization() && canUploadVisualization()) {
                     <label class="upload-visualization-btn cursor-pointer" [class.uploading]="uploadingVisualization()" title="Upload your own image">
-                      <input type="file"
-                        accept="image/*"
-                        class="hidden"
-                        (change)="onVisualizationImageSelected($event)"
-                        [disabled]="uploadingVisualization()" />
+                      <input type="file" accept="image/*" class="hidden" (change)="onVisualizationImageSelected($event)" [disabled]="uploadingVisualization()" />
                       @if (uploadingVisualization()) {
                         <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       } @else {
@@ -380,148 +426,49 @@
                       }
                     </label>
                     }
+                    @if (!hasVisualization() && visualizationLoading()) {
+                      <p class="text-red-300 text-sm font-medium">Creating your vision...</p>
+                    } @else if (!hasVisualization() && canGenerateVisualization()) {
+                    <button (click)="generateVisualization(); $event.stopPropagation()"
+                      class="generate-visualization-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Generate Vision Image
+                    </button>
+                    }
                   </div>
                 </div>
-
-                <div class="mission-top-cluster mt-2">
-                  <div class="mission-top-left">
-                    <div class="mission-title-block">
-                      @if (isEditingGoalTitle()) {
-                      <div class="flex flex-col gap-2">
-                        <input
-                          #goalTitleInput
-                          type="text"
-                          [ngModel]="editingGoalTitleValue()"
-                          (ngModelChange)="editingGoalTitleValue.set($event)"
-                          (keydown.enter)="saveGoalTitle()"
-                          (keydown.escape)="cancelEditingGoalTitle()"
-                          class="goal-title-input mission-title-input text-2xl md:text-3xl lg:text-4xl font-black border rounded-lg px-3 py-2 w-full focus:outline-none"
-                          style="font-family: 'Exo 2', sans-serif;"
-                          placeholder="Enter goal title..."
-                        />
-                        <div class="flex gap-2">
-                          <button
-                            (click)="saveGoalTitle()"
-                            class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-white text-xs font-semibold rounded-lg transition-colors">
-                            Save
-                          </button>
-                          <button
-                            (click)="cancelEditingGoalTitle()"
-                            class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-lg transition-colors">
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                      } @else {
-                      <h2 class="mission-title text-lg md:text-xl font-black leading-tight" style="font-family: 'Exo 2', sans-serif;">
-                        {{ getGoalTitleDisplay() }}
-                      </h2>
-                      @if (isGoalOwner()) {
-                      <button (click)="startEditingGoalTitle()"
-                        class="edit-title-btn mt-1 text-xs flex items-center gap-1 transition-colors">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit title
-                      </button>
-                      }
-                      }
-                    </div>
-
-                    <div class="mission-command-row mission-command-row-compact">
-                      <div class="mission-target-block">
-                        @if (getTargetMetricDisplay(); as targetMetric) {
-                          <h3 class="mission-command-label">Target</h3>
-                          <div class="mission-target-stats-row">
-                            <div class="mission-target-value-row">
-                              <span class="mission-target-value">{{ targetMetric.formattedValue }}</span>
-                              @if (targetMetric.unit) {
-                                <span class="mission-target-unit">{{ targetMetric.unit }}</span>
-                              }
-                            </div>
-                            <div class="mission-completion-inline">
-                              <span class="mission-completion-value">{{ getCompletionPercentage() }}%</span>
-                              <span class="mission-completion-label">COMPLETE</span>
-                            </div>
-                          </div>
-                          <p class="mission-target-caption">{{ targetMetric.label }}</p>
-                        } @else {
-                          <h3 class="mission-command-label">Mission Progress</h3>
-                          <div class="mission-completion-inline mission-completion-inline-fallback">
-                            <span class="mission-completion-value">{{ getCompletionPercentage() }}%</span>
-                            <span class="mission-completion-label">COMPLETE</span>
-                          </div>
-                          <p class="mission-target-caption">
-                            {{ getGoalDescription() || getGoalThemeDisplay() || 'Stay focused on your mission.' }}
-                          </p>
-                        }
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mission-top-right">
-                    <div class="mission-timer-wrap mission-timer-top">
-                    <h3 class="time-destination-label text-xs font-bold tracking-wider text-center mb-2" style="font-family: 'Orbitron', monospace;">
-                      <span class="text-gray-400">TIME TO REACH THE GOAL</span>
-                    </h3>
-                    <div class="countdown-boxes-container mission-countdown-boxes flex justify-center items-center gap-2 md:gap-3">
-                      <div class="countdown-box mission-countdown-box">
-                        <span class="countdown-box-value">{{ countdownDays() }}</span>
-                        <span class="countdown-box-label">DAYS</span>
-                      </div>
-                      <span class="countdown-separator">:</span>
-                      <div class="countdown-box mission-countdown-box">
-                        <span class="countdown-box-value">{{ countdownHours() }}</span>
-                        <span class="countdown-box-label">HOURS</span>
-                      </div>
-                      <span class="countdown-separator">:</span>
-                      <div class="countdown-box mission-countdown-box">
-                        <span class="countdown-box-value">{{ countdownMinutes() }}</span>
-                        <span class="countdown-box-label">MINS</span>
-                      </div>
-                      <span class="countdown-separator">:</span>
-                      <div class="countdown-box mission-countdown-box">
-                        <span class="countdown-box-value">{{ countdownSeconds() }}</span>
-                        <span class="countdown-box-label">SECS</span>
-                      </div>
-                    </div>
-                    <div class="countdown-progress-bar mt-3">
-                      <div class="countdown-progress-fill" [style.width.%]="getTimelineProgress()"></div>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-
-                @if (!hasVisualization() && visualizationLoading()) {
-                <div class="mission-vision-empty mt-4">
-                  <p class="text-red-300 text-sm font-medium">Creating your vision...</p>
-                </div>
-                } @else if (!hasVisualization() && canGenerateVisualization()) {
-                <div class="mission-vision-empty mt-4">
-                  <button (click)="generateVisualization()"
-                    class="generate-visualization-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Generate Vision Image
-                  </button>
-                </div>
-                }
               </div>
-              
+              }
             </div>
           </div>
 
           <!-- ==================== DAILY PROGRESS TIMELINE ==================== -->
-          <div class="daily-progression-card hud-card shimmer p-6 md:p-8 relative">
+          <div class="daily-progression-card hud-card shimmer relative" [class.collapsed-section]="!showDailyMomentum()">
             <div class="scanline"></div>
             
+            <!-- Collapsible header -->
+            <div class="section-collapse-header" (click)="showDailyMomentum.set(!showDailyMomentum())">
+              <div class="section-collapse-left">
+                <h3 class="daily-progression-title text-base font-black" style="font-family: 'Exo 2', sans-serif;">
+                  <span class="title-icon">📊</span> Daily Momentum
+                </h3>
+                <span class="section-collapse-summary">Day {{ getCurrentMissionDay() }} of {{ getTimeframeDays() }} · {{ getCompletedItemsCount() }}/{{ getTotalItemsCount() }} milestones</span>
+              </div>
+              <button type="button" class="section-expand-chevron" [class.expanded]="showDailyMomentum()">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            @if (showDailyMomentum()) {
+            <div class="section-collapse-body p-4 md:p-6">
             <!-- Header with view toggle buttons -->
             <div class="daily-progress-top flex items-center justify-between mb-4">
               <div class="daily-progress-header-left flex items-center gap-4">
-                <h3 class="daily-progression-title text-xl font-black" style="font-family: 'Exo 2', sans-serif;">
-                  <span class="title-icon">📊</span> Daily Momentum
-                </h3>
+                <span class="daily-progress-header-label"></span>
                 <!-- Deadline Badge - Clickable to Edit -->
                 @if (!isEditingDeadline()) {
                 <div class="deadline-badge flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -864,6 +811,8 @@
                   <span class="text-xs text-gray-400">No milestones</span>
                 </div>
               </div>
+            </div>
+            }
             </div>
             }
           </div>
@@ -1894,7 +1843,7 @@
                   <div class="mileage-empty">No weekly mileage data yet. Add milestones with target miles to begin.</div>
                   } @else {
                   <div class="mileage-week-grid">
-                    @for (week of weeklyMileageRows(); track week.weekId) {
+                    @for (week of visibleWeeklyMileageRows(); track week.weekId) {
                     <button type="button"
                       class="mileage-week-card"
                       [class.active]="selectedMileageWeekId() === week.weekId"
@@ -1916,6 +1865,11 @@
                     </button>
                     }
                   </div>
+                  @if (weeklyMileageRows().length > 4) {
+                  <button type="button" class="show-all-weeks-btn" (click)="showAllWeeks.set(!showAllWeeks())">
+                    {{ showAllWeeks() ? 'Show fewer weeks' : 'Show all ' + weeklyMileageRows().length + ' weeks' }}
+                  </button>
+                  }
 
                   <div class="mileage-entry-editor">
                     <div class="mileage-entry-fields">

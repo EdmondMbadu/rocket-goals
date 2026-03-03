@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnInit, OnDestroy, signal, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, OnDestroy, signal, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -130,6 +130,9 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   expandedTimelineDay = signal<number | null>(null);
   // Timeline view mode: 'daily' for day-by-day navigation, 'goal' for full timeline snapshot
   timelineViewMode = signal<'daily' | 'goal'>('daily');
+  showMissionDetails = signal(false);
+  showDailyMomentum = signal(false);
+  showAllWeeks = signal(false);
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
   calendarEvents = signal<CalendarEvent[]>([]);
@@ -303,6 +306,15 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   mileageEntries = signal<MileageEntry[]>([]);
   loadingMileageEntries = signal(false);
   weeklyMileageRows = signal<WeeklyMileageRow[]>([]);
+  visibleWeeklyMileageRows = computed(() => {
+    const rows = this.weeklyMileageRows();
+    if (this.showAllWeeks() || rows.length <= 4) return rows;
+    const now = Date.now();
+    const currentIdx = rows.findIndex(r => r.weekStartMs <= now && r.weekEndMs >= now);
+    const center = currentIdx >= 0 ? currentIdx : 0;
+    const start = Math.max(0, center - 1);
+    return rows.slice(start, start + 4);
+  });
   selectedMileageWeekId = signal<string | null>(null);
   mileageEntryDate = signal<string>('');
   mileageEntryMiles = signal<number | null>(null);

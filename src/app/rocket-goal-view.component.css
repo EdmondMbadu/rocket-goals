@@ -14707,3 +14707,277 @@
   background: rgba(254, 242, 242, 0.95);
   color: #b91c1c;
 }
+
+/* ===== SIMPLIFIED / COLLAPSIBLE SECTIONS ===== */
+
+/* Compact mission row */
+.mission-compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mission-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.owner-avatar-sm {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  font-size: 14px;
+}
+
+.mission-compact-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.mission-compact-info .mission-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mission-compact-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.dark-mode .mission-compact-meta {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.light-mode .mission-compact-meta {
+  color: #64748b;
+}
+
+.mission-compact-progress {
+  color: #ef4444;
+  font-weight: 800;
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+}
+
+.mission-compact-divider {
+  opacity: 0.4;
+}
+
+.mission-compact-days {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+}
+
+.mission-compact-target {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.mission-compact-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.mission-compact-progress-bar {
+  width: 80px;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dark-mode .mission-compact-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.light-mode .mission-compact-progress-bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.mission-compact-progress-bar .countdown-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  transition: width 0.5s ease;
+}
+
+/* Chevron toggle */
+.section-expand-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dark-mode .section-expand-chevron {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.light-mode .section-expand-chevron {
+  color: #94a3b8;
+}
+
+.section-expand-chevron:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.section-expand-chevron svg {
+  transition: transform 0.3s ease;
+}
+
+.section-expand-chevron.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* Expanded details */
+.mission-expanded-details {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 12px;
+  padding-top: 12px;
+  animation: slideDown 0.25s ease-out;
+}
+
+.light-mode .mission-expanded-details {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+.mission-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .mission-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mission-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Collapsible section header */
+.section-collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-collapse-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.section-collapse-summary {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 0.02em;
+}
+
+.dark-mode .section-collapse-summary {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.light-mode .section-collapse-summary {
+  color: #94a3b8;
+}
+
+.collapsed-section {
+  padding: 0 !important;
+}
+
+.section-collapse-body {
+  animation: slideDown 0.25s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+/* Show all weeks button */
+.show-all-weeks-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  margin-top: 8px;
+  border: 1px dashed rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dark-mode .show-all-weeks-btn {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.dark-mode .show-all-weeks-btn:hover {
+  color: #f8fafc;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.light-mode .show-all-weeks-btn {
+  color: #64748b;
+}
+
+.light-mode .show-all-weeks-btn:hover {
+  color: #1e293b;
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+/* Remove excess spacing on collapsed daily card */
+.daily-progression-card.collapsed-section .scanline {
+  display: none;
+}
+
+/* Make header clickable without scanline showing through */
+.section-collapse-header {
+  position: relative;
+  z-index: 2;
+}
