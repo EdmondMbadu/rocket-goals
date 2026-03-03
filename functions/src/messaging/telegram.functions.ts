@@ -98,7 +98,8 @@ async function sendTelegramMessage(
   chatId: number,
   text: string,
   botToken: string,
-  parseMode: 'Markdown' | 'MarkdownV2' | 'HTML' | null = 'Markdown'
+  parseMode: 'Markdown' | 'MarkdownV2' | 'HTML' | null = 'Markdown',
+  messageThreadId: number | null = null
 ): Promise<boolean> {
   try {
     const payload: Record<string, any> = {
@@ -107,6 +108,9 @@ async function sendTelegramMessage(
     };
     if (parseMode) {
       payload.parse_mode = parseMode;
+    }
+    if (Number.isFinite(messageThreadId) && Number(messageThreadId) > 0) {
+      payload.message_thread_id = Number(messageThreadId);
     }
 
     const response = await fetch(
@@ -138,7 +142,8 @@ async function sendTelegramPhoto(
   chatId: number,
   photoUrl: string,
   caption: string,
-  botToken: string
+  botToken: string,
+  messageThreadId: number | null = null
 ): Promise<boolean> {
   try {
     const response = await fetch(
@@ -150,7 +155,10 @@ async function sendTelegramPhoto(
           chat_id: chatId,
           photo: photoUrl,
           caption: caption,
-          parse_mode: 'Markdown'
+          parse_mode: 'Markdown',
+          ...(Number.isFinite(messageThreadId) && Number(messageThreadId) > 0
+            ? { message_thread_id: Number(messageThreadId) }
+            : {})
         })
       }
     );
@@ -159,15 +167,144 @@ async function sendTelegramPhoto(
       const errorData = await response.json();
       console.error('Telegram API error (photo):', errorData);
       // Fallback to text-only message
-      return sendTelegramMessage(chatId, caption, botToken);
+      return sendTelegramMessage(chatId, caption, botToken, 'Markdown', messageThreadId);
     }
 
     return true;
   } catch (error) {
     console.error('Error sending Telegram photo:', error);
     // Fallback to text-only message
-    return sendTelegramMessage(chatId, caption, botToken);
+    return sendTelegramMessage(chatId, caption, botToken, 'Markdown', messageThreadId);
   }
+}
+
+type TelegramThreadContext =
+  | { type: 'general' }
+  | { type: 'participant'; participantUserId: string };
+
+function sanitizeTopicTitle(value: string, fallback: string): string {
+  const raw = String(value || '').replace(/\s+/g, ' ').trim();
+  const candidate = raw || fallback;
+  return candidate.slice(0, 120);
+}
+
+function buildParticipantThreadDocId(participantUserId: string): string {
+  const normalized = String(participantUserId || '').trim().replace(/[^\w-]/g, '_');
+  return `participant_${normalized || 'unknown'}`;
+}
+
+function getTelegramMessageThreadId(message: any): number | null {
+  const value = Number(message?.message_thread_id);
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  return value;
+}
+
+function getTeamMemberDisplayName(teamData: any, userId: string, fallback = 'Participant'): string {
+  const members = Array.isArray(teamData?.members) ? teamData.members : [];
+  const member = members.find((item: any) => String(item?.userId || '').trim() === String(userId || '').trim());
+  if (!member) {
+    return fallback;
+  }
+  const fullName = `${String(member.firstName || '').trim()} ${String(member.lastName || '').trim()}`.trim();
+  return fullName || member.email || fallback;
+}
+
+async function createTelegramForumTopic(chatId: number, title: string, botToken: string): Promise<number | null> {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/createForumTopic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        name: title
+      })
+    });
+    const data = await response.json();
+    if (!data?.ok) {
+      console.warn(`Unable to create Telegram forum topic "${title}" in chat ${chatId}:`, data);
+      return null;
+    }
+    const threadId = Number(data?.result?.message_thread_id);
+    if (!Number.isFinite(threadId) || threadId <= 0) {
+      return null;
+    }
+    return threadId;
+  } catch (error) {
+    console.warn(`Unable to create Telegram forum topic "${title}" in chat ${chatId}:`, error);
+    return null;
+  }
+}
+
+async function getOrCreateParticipantThreadId(params: {
+  teamId: string;
+  groupChatId: number;
+  participantUserId: string;
+  participantName: string;
+  botToken: string;
+}): Promise<number | null> {
+  const { teamId, groupChatId, participantUserId, participantName, botToken } = params;
+  const threadDocId = buildParticipantThreadDocId(participantUserId);
+  const threadRef = admin.firestore()
+    .collection('teams')
+    .doc(teamId)
+    .collection('telegramThreads')
+    .doc(threadDocId);
+
+  const existing = await threadRef.get();
+  const existingThreadId = Number(existing.data()?.threadId);
+  if (Number.isFinite(existingThreadId) && existingThreadId > 0) {
+    return existingThreadId;
+  }
+
+  const topicTitle = sanitizeTopicTitle(`Direct • ${participantName}`, 'Direct • Participant');
+  const createdThreadId = await createTelegramForumTopic(groupChatId, topicTitle, botToken);
+  if (!createdThreadId) {
+    return null;
+  }
+
+  const payload: Record<string, any> = {
+    id: threadDocId,
+    type: 'participant',
+    participantUserId,
+    title: topicTitle,
+    threadId: createdThreadId,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  if (!existing.exists) {
+    payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+  }
+  await threadRef.set(payload, { merge: true });
+  return createdThreadId;
+}
+
+async function resolveTelegramThreadContext(teamId: string, messageThreadId: number | null): Promise<TelegramThreadContext> {
+  if (!Number.isFinite(messageThreadId) || Number(messageThreadId) <= 0) {
+    return { type: 'general' };
+  }
+
+  const threadSnapshot = await admin.firestore()
+    .collection('teams')
+    .doc(teamId)
+    .collection('telegramThreads')
+    .where('threadId', '==', Number(messageThreadId))
+    .limit(1)
+    .get();
+
+  if (threadSnapshot.empty) {
+    return { type: 'general' };
+  }
+
+  const data = threadSnapshot.docs[0].data() || {};
+  if (data.type === 'participant' && typeof data.participantUserId === 'string' && data.participantUserId.trim()) {
+    return {
+      type: 'participant',
+      participantUserId: data.participantUserId.trim()
+    };
+  }
+
+  return { type: 'general' };
 }
 
 /**
@@ -1127,6 +1264,7 @@ export const telegramWebhook = onRequest({
           const teamId = teamDoc.id;
           const teamData = teamDoc.data() || {};
           const senderTelegramId = update.message.from?.id?.toString();
+          const messageThreadId = getTelegramMessageThreadId(update.message);
 
           // Resolve sender identity
           let senderName = update.message.from?.first_name || 'Telegram User';
@@ -1135,9 +1273,10 @@ export const telegramWebhook = onRequest({
           }
           let senderAvatarUrl: string | undefined;
           let senderId = `tg_${senderTelegramId}`;
+          let linkedUser: TelegramToUser | null = null;
 
           if (senderTelegramId) {
-            const linkedUser = await findUserByTelegramId(senderTelegramId);
+            linkedUser = await findUserByTelegramId(senderTelegramId);
             if (linkedUser) {
               senderId = linkedUser.userId;
               const userProfile = await admin.firestore().collection('userProfiles').doc(linkedUser.userId).get();
@@ -1149,102 +1288,149 @@ export const telegramWebhook = onRequest({
             }
           }
 
-          const msgData: Record<string, any> = {
-            teamId,
-            senderId,
-            senderName,
-            content: messageText,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            type: 'text',
-            source: 'telegram'
-          };
-          if (senderAvatarUrl) {
-            msgData.senderAvatarUrl = senderAvatarUrl;
-          }
+          const threadContext = await resolveTelegramThreadContext(teamId, messageThreadId);
+          if (threadContext.type === 'participant') {
+            const participantUserId = threadContext.participantUserId;
+            const teamMembers = Array.isArray(teamData?.members) ? teamData.members : [];
+            const participantExists = teamMembers.some((member: any) => String(member?.userId || '').trim() === participantUserId);
+            const linkedSenderUserId = linkedUser?.userId || null;
+            const senderMember = linkedSenderUserId
+              ? teamMembers.find((member: any) => String(member?.userId || '').trim() === linkedSenderUserId)
+              : null;
+            const senderRole = String(senderMember?.role || '').trim();
+            const canPostToParticipantThread = !!linkedSenderUserId && (
+              linkedSenderUserId === participantUserId
+              || senderRole === 'admin'
+              || senderRole === 'team-lead'
+              || senderRole === 'coach'
+              || senderRole === 'captain'
+            );
 
-          const msgRef = await admin.firestore()
-            .collection('teams').doc(teamId)
-            .collection('messages').add(msgData);
-          await msgRef.update({ id: msgRef.id });
+            if (participantExists && canPostToParticipantThread) {
+              const directData: Record<string, any> = {
+                teamId,
+                participantUserId,
+                senderId,
+                senderName,
+                content: messageText,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                type: 'text',
+                source: 'telegram'
+              };
+              if (senderAvatarUrl) {
+                directData.senderAvatarUrl = senderAvatarUrl;
+              }
 
-          console.log(`📨 Synced Telegram group message to team ${teamId}`);
+              const directRef = await admin.firestore()
+                .collection('teams').doc(teamId)
+                .collection('memberConversations').doc(participantUserId)
+                .collection('messages')
+                .add(directData);
+              await directRef.update({ id: directRef.id });
+              console.log(`📨 Synced Telegram participant thread message to team ${teamId}, participant ${participantUserId}`);
+            } else {
+              console.warn(`Ignoring Telegram thread message for team ${teamId}: unauthorized or unknown participant thread`);
+            }
+          } else {
+            const msgData: Record<string, any> = {
+              teamId,
+              senderId,
+              senderName,
+              content: messageText,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              type: 'text',
+              source: 'telegram'
+            };
+            if (senderAvatarUrl) {
+              msgData.senderAvatarUrl = senderAvatarUrl;
+            }
 
-          const configuredAiName = String(teamData?.aiSettings?.displayName || '').trim();
-          const aiMentionHandle = resolveTeamAiMentionHandle(configuredAiName || 'Rocket AI');
-          const summonHandles = Array.from(new Set(['rocket', aiMentionHandle].filter(Boolean)));
-          const shouldSummonTeamAi = teamData?.aiCoachEnabled !== false
-            && summonHandles.some((handle) => isTeamAiMentioned(messageText, handle));
+            const msgRef = await admin.firestore()
+              .collection('teams').doc(teamId)
+              .collection('messages').add(msgData);
+            await msgRef.update({ id: msgRef.id });
 
-          if (shouldSummonTeamAi) {
-            const apiKey = geminiApiKey.value();
-            if (apiKey) {
-              try {
-                const recentSnapshot = await admin.firestore()
-                  .collection('teams')
-                  .doc(teamId)
-                  .collection('messages')
-                  .orderBy('timestamp', 'desc')
-                  .limit(8)
-                  .get();
+            console.log(`📨 Synced Telegram group message to team ${teamId}`);
 
-                const recentMessages = recentSnapshot.docs
-                  .map((doc) => ({ id: doc.id, ...(doc.data() || {}) as Record<string, any> }))
-                  .filter((msg) => msg.id !== msgRef.id && (msg.type === 'text' || msg.type === 'ai-response'))
-                  .reverse()
-                  .map((msg) => ({
-                    senderName: msg.type === 'ai-response'
-                      ? (String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI')
-                      : (String(msg.senderName || '').trim() || 'Team member'),
-                    content: String(msg.content || '').trim(),
-                    type: String(msg.type || 'text')
-                  }))
-                  .filter((msg) => !!msg.content);
+            const configuredAiName = String(teamData?.aiSettings?.displayName || '').trim();
+            const aiMentionHandle = resolveTeamAiMentionHandle(configuredAiName || 'Rocket AI');
+            const summonHandles = Array.from(new Set(['rocket', aiMentionHandle].filter(Boolean)));
+            const shouldSummonTeamAi = teamData?.aiCoachEnabled !== false
+              && summonHandles.some((handle) => isTeamAiMentioned(messageText, handle));
 
-                recentMessages.push({
-                  senderName: String(senderName || '').trim() || 'Team member',
-                  content: messageText,
-                  type: 'text'
-                });
-
-                const aiPrompt = buildTeamAiPromptText(messageText, summonHandles);
-                const aiText = await generateTeamAiCoachResponse(teamData, aiPrompt, recentMessages, apiKey);
-                const aiContent = String(aiText || '').trim();
-
-                if (aiContent) {
-                  const aiDisplayName = String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI';
-                  const aiAvatarUrl = String(teamData?.aiSettings?.avatarUrl || '').trim();
-                  const aiMsgData: Record<string, any> = {
-                    teamId,
-                    senderId: 'rocket-ai',
-                    senderName: aiDisplayName,
-                    content: aiContent,
-                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-                    type: 'ai-response',
-                    source: 'telegram'
-                  };
-                  if (aiAvatarUrl) {
-                    aiMsgData.senderAvatarUrl = aiAvatarUrl;
-                  }
-
-                  const aiRef = await admin.firestore()
+            if (shouldSummonTeamAi) {
+              const apiKey = geminiApiKey.value();
+              if (apiKey) {
+                try {
+                  const recentSnapshot = await admin.firestore()
                     .collection('teams')
                     .doc(teamId)
                     .collection('messages')
-                    .add(aiMsgData);
-                  await aiRef.update({ id: aiRef.id });
+                    .orderBy('timestamp', 'desc')
+                    .limit(8)
+                    .get();
 
-                  await sendTelegramMessage(
-                    groupChatId,
-                    `🤖 *${escapeMarkdown(aiDisplayName)}:*\n${aiContent}`,
-                    botToken
-                  );
-                  console.log(`🤖 Team AI replied in Telegram group for team ${teamId}`);
+                  const recentMessages = recentSnapshot.docs
+                    .map((doc) => ({ id: doc.id, ...(doc.data() || {}) as Record<string, any> }))
+                    .filter((msg) => msg.id !== msgRef.id && (msg.type === 'text' || msg.type === 'ai-response'))
+                    .reverse()
+                    .map((msg) => ({
+                      senderName: msg.type === 'ai-response'
+                        ? (String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI')
+                        : (String(msg.senderName || '').trim() || 'Team member'),
+                      content: String(msg.content || '').trim(),
+                      type: String(msg.type || 'text')
+                    }))
+                    .filter((msg) => !!msg.content);
+
+                  recentMessages.push({
+                    senderName: String(senderName || '').trim() || 'Team member',
+                    content: messageText,
+                    type: 'text'
+                  });
+
+                  const aiPrompt = buildTeamAiPromptText(messageText, summonHandles);
+                  const aiText = await generateTeamAiCoachResponse(teamData, aiPrompt, recentMessages, apiKey);
+                  const aiContent = String(aiText || '').trim();
+
+                  if (aiContent) {
+                    const aiDisplayName = String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI';
+                    const aiAvatarUrl = String(teamData?.aiSettings?.avatarUrl || '').trim();
+                    const aiMsgData: Record<string, any> = {
+                      teamId,
+                      senderId: 'rocket-ai',
+                      senderName: aiDisplayName,
+                      content: aiContent,
+                      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                      type: 'ai-response',
+                      source: 'telegram'
+                    };
+                    if (aiAvatarUrl) {
+                      aiMsgData.senderAvatarUrl = aiAvatarUrl;
+                    }
+
+                    const aiRef = await admin.firestore()
+                      .collection('teams')
+                      .doc(teamId)
+                      .collection('messages')
+                      .add(aiMsgData);
+                    await aiRef.update({ id: aiRef.id });
+
+                    await sendTelegramMessage(
+                      groupChatId,
+                      `🤖 *${escapeMarkdown(aiDisplayName)}:*\n${aiContent}`,
+                      botToken,
+                      'Markdown',
+                      messageThreadId
+                    );
+                    console.log(`🤖 Team AI replied in Telegram group for team ${teamId}`);
+                  }
+                } catch (aiError) {
+                  console.error(`Failed to generate team AI reply for Telegram group ${groupChatId}:`, aiError);
                 }
-              } catch (aiError) {
-                console.error(`Failed to generate team AI reply for Telegram group ${groupChatId}:`, aiError);
+              } else {
+                console.warn('GEMINI_API_KEY not configured; skipping team AI summon in Telegram group');
               }
-            } else {
-              console.warn('GEMINI_API_KEY not configured; skipping team AI summon in Telegram group');
             }
           }
         }
@@ -1866,6 +2052,70 @@ export const syncTeamMessageToTelegram = onDocumentCreated({
   );
 
   console.log(`📤 Synced web message to Telegram group ${groupChatId}`);
+});
+
+/**
+ * Firestore trigger: Sync web app direct participant messages to Telegram topics
+ */
+export const syncTeamDirectMessageToTelegram = onDocumentCreated({
+  document: 'teams/{teamId}/memberConversations/{participantUserId}/messages/{messageId}',
+  region: 'us-central1',
+  secrets: [telegramBotToken]
+}, async (event) => {
+  const data = event.data?.data();
+  if (!data) return;
+
+  // Skip messages that came from Telegram (prevent echo loop)
+  if (data.source === 'telegram') return;
+
+  // Skip non-text messages
+  if (data.type !== 'text') return;
+
+  const teamId = event.params.teamId;
+  const participantUserId = String(event.params.participantUserId || '').trim();
+  if (!participantUserId) return;
+
+  const teamDoc = await admin.firestore().collection('teams').doc(teamId).get();
+  if (!teamDoc.exists) return;
+
+  const teamData = teamDoc.data() || {};
+  const groupChatId = teamData?.telegramGroupId;
+  if (!groupChatId) return;
+
+  const botToken = telegramBotToken.value();
+  if (!botToken) return;
+
+  const participantName = getTeamMemberDisplayName(teamData, participantUserId, 'Participant');
+  const senderNameRaw = String(data.senderName || 'Someone').trim() || 'Someone';
+  const content = String(data.content || '').trim();
+  if (!content) return;
+
+  const threadId = await getOrCreateParticipantThreadId({
+    teamId,
+    groupChatId,
+    participantUserId,
+    participantName,
+    botToken
+  });
+
+  // Fallback to main chat if topics are unavailable, with a visible private-thread marker.
+  const formattedMsg = threadId
+    ? `*${escapeMarkdown(senderNameRaw)}:*\n${content}`
+    : `🔒 *Direct • ${escapeMarkdown(participantName)}*\n*${escapeMarkdown(senderNameRaw)}:*\n${content}`;
+
+  await sendTelegramMessage(
+    groupChatId,
+    formattedMsg,
+    botToken,
+    'Markdown',
+    threadId
+  );
+
+  if (threadId) {
+    console.log(`📤 Synced direct web message to Telegram participant topic ${threadId} (team ${teamId}, participant ${participantUserId})`);
+  } else {
+    console.warn(`Synced direct web message without dedicated topic (team ${teamId}, participant ${participantUserId}). Telegram topics may be disabled.`);
+  }
 });
 
 function escapeRegExp(value: string): string {

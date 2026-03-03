@@ -19,6 +19,7 @@ export {
   telegramWebhook,
   setupTeamTelegramGroup,
   syncTeamMessageToTelegram,
+  syncTeamDirectMessageToTelegram,
   configureTelegramWebhook,
   askTeamAiCoach,
   linkTelegramAccount,

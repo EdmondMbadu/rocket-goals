@@ -3,6 +3,7 @@ export {
   telegramWebhook,
   setupTeamTelegramGroup,
   syncTeamMessageToTelegram,
+  syncTeamDirectMessageToTelegram,
   configureTelegramWebhook,
   askTeamAiCoach,
 } from "./telegram.functions";
