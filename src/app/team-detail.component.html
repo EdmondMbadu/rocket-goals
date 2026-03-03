@@ -950,6 +950,15 @@
               </svg>
               Open in Telegram
             </a>
+            <ul class="telegram-onboarding-steps">
+              <li><strong>Join once:</strong> Scan the QR code or tap the Telegram button above.</li>
+              <li><strong>Team chat:</strong> Use the main Telegram chat for updates visible to everyone.</li>
+              <li><strong>Private coaching:</strong> Use Telegram Topics for one-on-one participant threads.</li>
+              <li><strong>If private threads are missing:</strong> Ask an admin to keep Topics enabled and give <strong>&#64;RocketGoalsBot</strong> admin rights with <strong>Manage Topics</strong>.</li>
+            </ul>
+            @if (isAdmin()) {
+            <p class="telegram-admin-tip">Admin tip: after changing Telegram permissions, send one new private message from this page to create the participant topic.</p>
+            }
           </div>
         </div>
       </div>

@@ -2968,10 +2968,16 @@
   }
 
   .telegram-banner-info {
-    align-items: center;
+    align-items: stretch;
+    width: 100%;
+    text-align: left;
   }
 
   .telegram-setup-steps {
+    text-align: left;
+  }
+
+  .telegram-onboarding-steps {
     text-align: left;
   }
 }
@@ -3051,6 +3057,30 @@
   color: #94a3b8;
   line-height: 1.5;
   margin: 0;
+}
+
+.telegram-onboarding-steps {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #a8b6c8;
+  line-height: 1.6;
+}
+
+.telegram-onboarding-steps li {
+  margin-bottom: 4px;
+}
+
+.telegram-onboarding-steps strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.telegram-admin-tip {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #38bdf8;
 }
 
 .telegram-open-btn {
@@ -3140,6 +3170,18 @@
 .light-mode .telegram-banner-desc,
 .light-mode .telegram-setup-steps {
   color: #64748b;
+}
+
+.light-mode .telegram-onboarding-steps {
+  color: #64748b;
+}
+
+.light-mode .telegram-onboarding-steps strong {
+  color: #0f172a;
+}
+
+.light-mode .telegram-admin-tip {
+  color: #0c4a6e;
 }
 
 .telegram-waiting-indicator {
