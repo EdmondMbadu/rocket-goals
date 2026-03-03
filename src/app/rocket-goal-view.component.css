@@ -2739,9 +2739,258 @@
   transform: none;
 }
 
+/* ===== SUBTLE GENERATE ICON BUTTON ===== */
+.generate-milestones-icon-btn {
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.generate-milestones-icon-btn .generate-label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: max-width 0.3s ease, opacity 0.2s ease, margin 0.3s ease;
+  margin-left: 0;
+}
+
+.generate-milestones-icon-btn:hover:not(:disabled) {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 0 10px;
+}
+
+.generate-milestones-icon-btn:hover:not(:disabled) .generate-label {
+  max-width: 80px;
+  opacity: 1;
+  margin-left: 5px;
+}
+
+.generate-milestones-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.light-mode .generate-milestones-icon-btn {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.04);
+  color: rgba(15, 23, 42, 0.4);
+}
+
+.light-mode .generate-milestones-icon-btn:hover:not(:disabled) {
+  color: #b45309;
+  border-color: rgba(180, 83, 9, 0.3);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* ===== CLEAN EMPTY STATE ===== */
+.empty-tasks-state-clean {
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.empty-tasks-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: -0.01em;
+}
+
+.empty-tasks-hint {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+  line-height: 1.6;
+}
+
+.empty-tasks-hint strong {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+}
+
+.empty-tasks-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #f59e0b;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.empty-tasks-link:hover {
+  color: #fbbf24;
+}
+
+.empty-tasks-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.light-mode .empty-tasks-title {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+.light-mode .empty-tasks-hint {
+  color: rgba(15, 23, 42, 0.3);
+}
+
+.light-mode .empty-tasks-hint strong {
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.light-mode .empty-tasks-link {
+  color: #d97706;
+}
+
+.light-mode .empty-tasks-link:hover {
+  color: #b45309;
+}
+
 /* ===== GENERATE MILESTONES MODAL ===== */
 .generate-milestones-modal {
   max-width: 550px;
+}
+
+/* Generate Intro Screen */
+.generate-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 8px 16px;
+}
+
+.generate-intro-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fbbf24;
+  margin-bottom: 16px;
+}
+
+.generate-intro-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.generate-intro-desc {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #94a3b8;
+  max-width: 380px;
+}
+
+.generate-intro-desc strong {
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.generate-intro-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  max-width: 340px;
+  width: 100%;
+}
+
+.generate-intro-list li {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+  padding-left: 20px;
+  position: relative;
+}
+
+.generate-intro-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #34d399;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.generate-intro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+
+.generate-intro-btn:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+}
+
+/* Light mode */
+.light-mode .generate-intro-title {
+  color: #0f172a;
+}
+
+.light-mode .generate-intro-desc {
+  color: #64748b;
+}
+
+.light-mode .generate-intro-desc strong {
+  color: #334155;
+}
+
+.light-mode .generate-intro-list li {
+  color: #64748b;
+}
+
+.light-mode .generate-intro-list li::before {
+  color: #059669;
+}
+
+.light-mode .generate-intro-icon {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.06));
+  border-color: rgba(217, 119, 6, 0.2);
+  color: #d97706;
 }
 
 .task-modal-icon.generate-icon {
@@ -3871,22 +4120,56 @@
 }
 
 .kanban-add-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(239, 68, 68, 0.2);
-  border: none;
-  color: #f87171;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: rgba(248, 113, 113, 0.7);
+  padding: 0 7px;
+  gap: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.kanban-add-btn .kanban-add-label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: max-width 0.3s ease, opacity 0.2s ease, margin 0.3s ease;
+  margin-left: 0;
 }
 
 .kanban-add-btn:hover {
-  background: rgba(239, 68, 68, 0.3);
-  transform: scale(1.05);
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 0 9px;
+}
+
+.kanban-add-btn:hover .kanban-add-label {
+  max-width: 100px;
+  opacity: 1;
+  margin-left: 4px;
+}
+
+.light-mode .kanban-add-btn {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: rgba(220, 38, 38, 0.5);
+}
+
+.light-mode .kanban-add-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.28);
+  color: #dc2626;
 }
 
 /* Column Content */
@@ -14013,19 +14296,20 @@
   }
 
   .kanban-add-btn {
-    width: 26px;
+    height: 24px;
+    padding: 0 5px;
+  }
+
+  .kanban-add-btn .kanban-add-label {
+    display: none;
+  }
+
+  .generate-milestones-icon-btn {
     height: 26px;
+    padding: 0 6px;
   }
 
-  /* Milestone buttons */
-  .generate-milestones-btn,
-  .add-milestone-btn {
-    padding: 8px 12px;
-    font-size: 0.7rem;
-  }
-
-  .generate-milestones-btn span,
-  .add-milestone-btn span {
+  .generate-milestones-icon-btn .generate-label {
     display: none;
   }
 

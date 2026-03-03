@@ -1791,27 +1791,17 @@
                       </svg>
                       {{ viewAllTasks() ? 'Today' : 'All' }}
                     </button>
-                    <!-- Generate Milestones Button -->
                     <button (click)="openGenerateMilestonesModal()"
-                      class="generate-milestones-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                      class="generate-milestones-icon-btn"
                       [disabled]="generatingMilestones()">
                       @if (generatingMilestones()) {
-                        <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        <span>Generating...</span>
+                        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       } @else {
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        <span>Generate Milestones</span>
                       }
-                    </button>
-                    <!-- Add Milestone Button -->
-                    <button (click)="openAddActionItem()"
-                      class="add-task-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Milestone
+                      <span class="generate-label">Generate</span>
                     </button>
                     <!-- Delete All Milestones Button (subtle) -->
                     @if (actionItems().length > 0) {
@@ -1944,39 +1934,19 @@
                     <div class="w-8 h-8 border-3 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
                   </div>
                   } @else if (getDisplayedTasks().length === 0) {
-                  <div class="empty-tasks-state text-center py-10">
-                    <div class="text-6xl mb-4">🎯</div>
-                    <h4 class="text-lg font-bold text-white mb-2">No milestones yet</h4>
-                    <p class="text-gray-400 mb-6">
+                  <div class="empty-tasks-state-clean">
+                    <h4 class="empty-tasks-title">No milestones yet</h4>
+                    <p class="empty-tasks-hint">
                       @if (viewAllTasks()) {
-                        Start planning your mission by adding milestones!
+                        Use the <strong>+</strong> in the To Do column to add one, or
+                        <button type="button" class="empty-tasks-link" (click)="openGenerateMilestonesModal()" [disabled]="generatingMilestones()">
+                          @if (generatingMilestones()) { generating... } @else { let AI generate them }
+                        </button>.
                       } @else {
                         No milestones for Day {{ getCurrentMissionDay() }}.
+                        <button type="button" class="empty-tasks-link" (click)="toggleViewAllTasks()">View all milestones</button>
                       }
                     </p>
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-                      <button (click)="openGenerateMilestonesModal()"
-                        class="generate-milestones-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
-                        [disabled]="generatingMilestones()">
-                        @if (generatingMilestones()) {
-                          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span>Generating...</span>
-                        } @else {
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          <span>Generate Milestones for My Goal</span>
-                        }
-                      </button>
-                      <span class="text-gray-500">or</span>
-                      <button (click)="openAddActionItem()"
-                        class="add-first-task-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Your Milestone
-                      </button>
-                    </div>
                   </div>
                   } @else {
                   <!-- Kanban Three-Column Layout -->
@@ -2067,10 +2037,11 @@
                       <div class="kanban-column-header pending">
                         <span class="kanban-column-count">{{ getPendingMilestones().length }}</span>
                         <span class="kanban-column-title">TO DO</span>
-                        <button (click)="openAddActionItem()" class="kanban-add-btn" title="Add milestone">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button (click)="openAddActionItem()" class="kanban-add-btn">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                           </svg>
+                          <span class="kanban-add-label">Add Milestone</span>
                         </button>
                       </div>
                       <div class="kanban-column-content">
@@ -2660,10 +2631,29 @@
           </p>
         </div>
       } @else {
-        <!-- Empty State -->
-        <div class="flex flex-col items-center justify-center py-8">
-          <div class="text-5xl mb-4">🎯</div>
-          <p class="text-gray-400 text-center">No milestones generated yet.</p>
+        <!-- Intro / Clarification Screen -->
+        <div class="generate-intro">
+          <div class="generate-intro-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="generate-intro-title">What this does</h3>
+          <p class="generate-intro-desc">
+            AI will analyze your goal, deadline, and current progress to create a set of
+            <strong>daily milestones</strong> tailored to your mission.
+          </p>
+          <ul class="generate-intro-list">
+            <li>One actionable milestone per day</li>
+            <li>Paced to match your timeline</li>
+            <li>You can review, edit, or remove any of them before adding</li>
+          </ul>
+          <button (click)="generateMilestones()" class="generate-intro-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Generate My Milestones
+          </button>
         </div>
       }
     </div>

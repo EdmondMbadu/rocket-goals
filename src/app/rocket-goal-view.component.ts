@@ -4264,7 +4264,6 @@ ${url}`;
     this.showGenerateMilestonesModal.set(true);
     this.generatedMilestones.set([]);
     this.milestoneGenerationError.set(null);
-    this.generateMilestones();
   }
 
   closeGenerateMilestonesModal() {
