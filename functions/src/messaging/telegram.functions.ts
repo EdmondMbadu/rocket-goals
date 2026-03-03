@@ -2098,24 +2098,24 @@ export const syncTeamDirectMessageToTelegram = onDocumentCreated({
     botToken
   });
 
-  // Fallback to main chat if topics are unavailable, with a visible private-thread marker.
-  const formattedMsg = threadId
-    ? `*${escapeMarkdown(senderNameRaw)}:*\n${content}`
-    : `🔒 *Direct • ${escapeMarkdown(participantName)}*\n*${escapeMarkdown(senderNameRaw)}:*\n${content}`;
+  if (!threadId) {
+    // Fail closed: never leak direct conversation content into general team chat.
+    console.warn(
+      `Skipped Telegram sync for direct message because no participant topic exists (team ${teamId}, participant ${participantUserId}). ` +
+      `Enable Telegram Topics and grant bot topic-management permissions.`
+    );
+    return;
+  }
 
   await sendTelegramMessage(
     groupChatId,
-    formattedMsg,
+    `*${escapeMarkdown(senderNameRaw)}:*\n${content}`,
     botToken,
     'Markdown',
     threadId
   );
 
-  if (threadId) {
-    console.log(`📤 Synced direct web message to Telegram participant topic ${threadId} (team ${teamId}, participant ${participantUserId})`);
-  } else {
-    console.warn(`Synced direct web message without dedicated topic (team ${teamId}, participant ${participantUserId}). Telegram topics may be disabled.`);
-  }
+  console.log(`📤 Synced direct web message to Telegram participant topic ${threadId} (team ${teamId}, participant ${participantUserId})`);
 });
 
 function escapeRegExp(value: string): string {
