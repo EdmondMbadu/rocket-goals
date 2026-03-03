@@ -2,6 +2,7 @@
 // @ts-nocheck
 import * as functions from "firebase-functions/v1";
 import { onRequest } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -1356,7 +1357,8 @@ export const telegramWebhook = onRequest({
             const aiMentionHandle = resolveTeamAiMentionHandle(configuredAiName || 'Rocket AI');
             const summonHandles = Array.from(new Set(['rocket', aiMentionHandle].filter(Boolean)));
             const shouldSummonTeamAi = teamData?.aiCoachEnabled !== false
-              && summonHandles.some((handle) => isTeamAiMentioned(messageText, handle));
+              && (summonHandles.some((handle) => isTeamAiMentioned(messageText, handle))
+                || isBareFirstNameMention(messageText, configuredAiName));
 
             if (shouldSummonTeamAi) {
               const apiKey = geminiApiKey.value();
@@ -1389,7 +1391,7 @@ export const telegramWebhook = onRequest({
                     type: 'text'
                   });
 
-                  const aiPrompt = buildTeamAiPromptText(messageText, summonHandles);
+                  const aiPrompt = buildTeamAiPromptText(messageText, summonHandles, configuredAiName);
                   const aiText = await generateTeamAiCoachResponse(teamData, aiPrompt, recentMessages, apiKey);
                   const aiContent = String(aiText || '').trim();
 
@@ -2147,12 +2149,41 @@ function isTeamAiMentioned(content: string, handle: string): boolean {
   return pattern.test(content);
 }
 
-function buildTeamAiPromptText(content: string, handles: string[]): string {
+function getAiBareFirstNames(displayName: string): string[] {
+  const trimmed = String(displayName || '').trim();
+  if (!trimmed) return [];
+  const firstName = trimmed.split(/\s+/)[0] || '';
+  if (!firstName || firstName.toLowerCase() === 'rocket') return [];
+  const names = new Set<string>();
+  names.add(firstName.toLowerCase());
+  const lower = firstName.toLowerCase();
+  if (lower === 'tom') {
+    names.add('toom');
+  } else if (lower === 'toom') {
+    names.add('tom');
+  }
+  return Array.from(names);
+}
+
+function isBareFirstNameMention(content: string, displayName: string): boolean {
+  const names = getAiBareFirstNames(displayName);
+  if (names.length === 0) return false;
+  return names.some((name) => {
+    const pattern = new RegExp(`(^|\\s)${escapeRegExp(name)}(?=$|\\s|[.,!?;:])`, 'i');
+    return pattern.test(content);
+  });
+}
+
+function buildTeamAiPromptText(content: string, handles: string[], displayName?: string): string {
   let cleaned = String(content || '').trim();
   const uniqueHandles = Array.from(new Set(handles.filter(Boolean)));
   for (const handle of uniqueHandles) {
     const mentionPattern = new RegExp(`(^|\\s)@${escapeRegExp(handle)}(?=$|\\s|[.,!?;:])`, 'ig');
     cleaned = cleaned.replace(mentionPattern, '$1');
+  }
+  for (const name of getAiBareFirstNames(displayName || '')) {
+    const namePattern = new RegExp(`(^|\\s)${escapeRegExp(name)}(?=$|\\s|[.,!?;:])`, 'ig');
+    cleaned = cleaned.replace(namePattern, '$1');
   }
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
   return cleaned || 'The team mentioned you without a specific question. Ask what they need help with right now.';
@@ -2313,4 +2344,208 @@ export const askTeamAiCoach = onCall({
     console.error('Team AI Coach error:', err);
     throw new HttpsError('internal', 'AI coach is temporarily unavailable. Please try again.');
   }
+});
+
+// ─── Scheduled Daily AI Team Messages (6 AM + 6 PM EST) ────────────────────
+
+async function generateDailyInsightPrompt(
+  teamData: any,
+  recentMessages: Array<{ senderName: string; content: string; type: string }>,
+  timeOfDay: 'morning' | 'evening',
+  apiKey: string
+): Promise<string> {
+  const resolvedApiKey = String(apiKey || '').trim();
+  if (!resolvedApiKey) throw new Error('AI service not configured');
+
+  const teamName = String(teamData?.name || 'this team').trim() || 'this team';
+  const teamDesc = String(teamData?.description || '').trim();
+  const rawAiDisplayName = String(teamData?.aiSettings?.displayName || '').trim();
+  const aiDisplayName = rawAiDisplayName ? rawAiDisplayName.slice(0, 60) : 'Rocket AI';
+  const rawAiPersonality = String(teamData?.aiSettings?.personality || '').trim();
+  const aiPersonality = rawAiPersonality ? rawAiPersonality.slice(0, 8000) : '';
+  const aiPersonalityBlock = aiPersonality
+    ? `\n\nTEAM AI PERSONALITY (ADMIN CUSTOMIZED):\n${aiPersonality}`
+    : '';
+
+  const membersLines = (teamData?.members || []).slice(0, 20).map((m: any) => {
+    const role = m.role === 'admin' ? ' (Admin)' : m.role === 'coach' ? ' (Coach)' : m.role === 'team-lead' ? ' (Team Lead)' : '';
+    return `- ${String(m.firstName || '').trim()} ${String(m.lastName || '').trim()}${role}`.trim();
+  }).filter(Boolean);
+  const membersContext = membersLines.length > 0
+    ? `\n\nTEAM MEMBERS (${membersLines.length}):\n${membersLines.join('\n')}`
+    : '';
+
+  let chatContext = '';
+  if (recentMessages.length > 0) {
+    const lines = recentMessages.slice(-10).map(m => {
+      const text = String(m.content || '').trim();
+      if (!text) return '';
+      if (m.type === 'ai-response') return `${aiDisplayName} (AI): ${text}`;
+      return `${String(m.senderName || '').trim() || 'Team member'}: ${text}`;
+    }).filter(Boolean);
+    if (lines.length > 0) chatContext = `\n\nRECENT CHAT MESSAGES:\n${lines.join('\n')}`;
+  }
+
+  const sharedPhilosophy = await getSharedCoachPhilosophy();
+  const sharedBlock = sharedPhilosophy ? `\n\nROCKETGOALS SHARED PHILOSOPHY:\n${sharedPhilosophy}` : '';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const timeContext = timeOfDay === 'morning'
+    ? 'It is early morning (6 AM EST). This is the MORNING check-in. Help the team set their intention and focus for the day ahead.'
+    : 'It is evening (6 PM EST). This is the EVENING check-in. Help the team reflect on what they accomplished today and wind down with intention.';
+
+  const systemPrompt = `You are "${aiDisplayName}", the dedicated AI coach for team "${teamName}" on RocketGoals.
+
+CURRENT DATE: ${dateStr}
+${timeContext}${sharedBlock}
+
+TEAM CONTEXT:
+- Team name: "${teamName}"
+${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}${aiPersonalityBlock}
+
+YOUR TASK:
+Send a brief, insightful daily ${timeOfDay} message to the team. This is an automatic check-in.
+
+GUIDELINES:
+- Keep it SHORT (2-4 sentences max)
+- Ask ONE thought-provoking question relevant to the team's purpose, recent conversations, or current progress
+- ${timeOfDay === 'morning' ? 'In the morning: focus on intention-setting, energy, focus, or the day\'s priority' : 'In the evening: focus on reflection, wins, lessons learned, or gratitude'}
+- Reference specific things from recent conversations when possible to show you\'re paying attention
+- Be warm, concise, and actionable
+- Do NOT use markdown formatting
+- Do NOT start with "Good morning" or "Good evening" every time — vary your openings
+- Address the team naturally, sometimes by name, sometimes generally
+- Sign off with your name naturally (e.g. "– ${aiDisplayName}" or "- ${aiDisplayName}")`;
+
+  const genAI = new GoogleGenerativeAI(resolvedApiKey);
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash',
+    generationConfig: { maxOutputTokens: 300, temperature: 0.9 }
+  });
+
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: `Generate the ${timeOfDay} check-in message now.` }] }],
+    systemInstruction: { role: 'model', parts: [{ text: systemPrompt }] }
+  });
+
+  return String(result?.response?.text?.() || '').trim();
+}
+
+export const sendDailyTeamAiMessages = onSchedule({
+  schedule: "every 1 hours",
+  timeZone: "America/New_York",
+  region: "us-central1",
+  secrets: [geminiApiKey, telegramBotToken]
+}, async () => {
+  const apiKey = geminiApiKey.value();
+  const botToken = telegramBotToken.value();
+  if (!apiKey) { console.error('Gemini API key not configured'); return; }
+
+  const estNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const currentHour = estNow.getHours();
+
+  const isMorning = currentHour === 6;
+  const isEvening = currentHour === 18;
+
+  if (!isMorning && !isEvening) return;
+
+  const timeOfDay = isMorning ? 'morning' : 'evening';
+  console.log(`🤖 Running daily team AI ${timeOfDay} check-in (EST hour: ${currentHour})`);
+
+  const teamsSnapshot = await admin.firestore()
+    .collection('teams')
+    .where('aiCoachEnabled', '!=', false)
+    .get();
+
+  let sentCount = 0;
+
+  for (const teamDoc of teamsSnapshot.docs) {
+    const teamData = { id: teamDoc.id, ...teamDoc.data() };
+    const teamId = teamDoc.id;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const checkKey = `dailyAi_${timeOfDay}_${todayKey}`;
+
+    const metaDoc = await admin.firestore()
+      .collection('teams').doc(teamId)
+      .collection('_meta').doc('scheduledMessages')
+      .get();
+
+    if (metaDoc.exists && metaDoc.data()?.[checkKey]) {
+      console.log(`⏭️ Already sent ${timeOfDay} message for team ${teamId} today`);
+      continue;
+    }
+
+    try {
+      const recentSnapshot = await admin.firestore()
+        .collection('teams').doc(teamId)
+        .collection('messages')
+        .orderBy('timestamp', 'desc')
+        .limit(10)
+        .get();
+
+      const recentMessages = recentSnapshot.docs
+        .map(doc => ({ id: doc.id, ...(doc.data() || {}) as Record<string, any> }))
+        .filter(msg => msg.type === 'text' || msg.type === 'ai-response')
+        .reverse()
+        .map(msg => ({
+          senderName: msg.type === 'ai-response'
+            ? (String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI')
+            : (String(msg.senderName || '').trim() || 'Team member'),
+          content: String(msg.content || '').trim(),
+          type: String(msg.type || 'text')
+        }))
+        .filter(msg => !!msg.content);
+
+      const aiContent = await generateDailyInsightPrompt(teamData, recentMessages, timeOfDay, apiKey);
+      if (!aiContent) continue;
+
+      const aiDisplayName = String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI';
+      const aiAvatarUrl = String(teamData?.aiSettings?.avatarUrl || '').trim();
+
+      const aiMsgData: Record<string, any> = {
+        teamId,
+        senderId: 'rocket-ai',
+        senderName: aiDisplayName,
+        content: aiContent,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        type: 'ai-response',
+        source: 'web'
+      };
+      if (aiAvatarUrl) aiMsgData.senderAvatarUrl = aiAvatarUrl;
+
+      const aiRef = await admin.firestore()
+        .collection('teams').doc(teamId)
+        .collection('messages').add(aiMsgData);
+      await aiRef.update({ id: aiRef.id });
+
+      if (botToken && teamData?.telegramGroupId) {
+        await sendTelegramMessage(
+          teamData.telegramGroupId,
+          aiContent,
+          botToken,
+          null,
+          null
+        );
+      }
+
+      await admin.firestore()
+        .collection('teams').doc(teamId)
+        .collection('_meta').doc('scheduledMessages')
+        .set({ [checkKey]: true }, { merge: true });
+
+      sentCount++;
+      console.log(`✅ Sent ${timeOfDay} AI message for team "${teamData?.name || teamId}"`);
+    } catch (err) {
+      console.error(`❌ Failed to send ${timeOfDay} AI message for team ${teamId}:`, err);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+
+  console.log(`🏁 Daily team AI ${timeOfDay} check-in complete: ${sentCount} teams`);
 });

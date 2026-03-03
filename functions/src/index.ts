@@ -28,7 +28,8 @@ export {
   generateTelegramDeepLink,
   sendTelegramDailyCheckins,
   sendTelegramMissionLogReminders,
-  sendTelegramGoalNudge
+  sendTelegramGoalNudge,
+  sendDailyTeamAiMessages
 } from "./messaging";
 
 // Initialize Firebase Admin

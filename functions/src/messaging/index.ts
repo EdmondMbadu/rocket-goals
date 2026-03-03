@@ -6,6 +6,7 @@ export {
   syncTeamDirectMessageToTelegram,
   configureTelegramWebhook,
   askTeamAiCoach,
+  sendDailyTeamAiMessages,
 } from "./telegram.functions";
 export {
   linkTelegramAccount,

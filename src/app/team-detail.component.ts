@@ -2876,7 +2876,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   private shouldSummonTeamAi(content: string): boolean {
     const handles = ['rocket', this.teamAiMentionHandle()].filter((value, index, arr) => !!value && arr.indexOf(value) === index);
-    return handles.some(handle => this.isTeamAiMentioned(content, handle));
+    if (handles.some(handle => this.isTeamAiMentioned(content, handle))) {
+      return true;
+    }
+    return this.isBareFirstNameMention(content);
   }
 
   private buildTeamAiPromptText(content: string): string {
@@ -2886,6 +2889,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       const escapedHandle = this.escapeRegExp(handle);
       const mentionPattern = new RegExp(`(^|\\s)@${escapedHandle}(?=$|\\s|[.,!?;:])`, 'ig');
       cleaned = cleaned.replace(mentionPattern, '$1');
+    }
+    for (const name of this.getAiBareFirstNames()) {
+      const namePattern = new RegExp(`(^|\\s)${this.escapeRegExp(name)}(?=$|\\s|[.,!?;:])`, 'ig');
+      cleaned = cleaned.replace(namePattern, '$1');
     }
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     return cleaned || 'The team mentioned you without a specific question. Ask what they need help with right now.';
@@ -2924,6 +2931,31 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private isTeamAiMentioned(content: string, handle: string): boolean {
     const mentionPattern = new RegExp(`(^|\\s)@${this.escapeRegExp(handle)}(?=$|\\s|[.,!?;:])`, 'i');
     return mentionPattern.test(content);
+  }
+
+  private getAiBareFirstNames(): string[] {
+    const displayName = String(this.team()?.aiSettings?.displayName || '').trim();
+    if (!displayName) return [];
+    const firstName = displayName.split(/\s+/)[0] || '';
+    if (!firstName || firstName.toLowerCase() === 'rocket') return [];
+    const names = new Set<string>();
+    names.add(firstName);
+    const lower = firstName.toLowerCase();
+    if (lower === 'tom') {
+      names.add('toom');
+    } else if (lower === 'toom') {
+      names.add('tom');
+    }
+    return Array.from(names);
+  }
+
+  private isBareFirstNameMention(content: string): boolean {
+    const names = this.getAiBareFirstNames();
+    if (names.length === 0) return false;
+    return names.some(name => {
+      const pattern = new RegExp(`(^|\\s)${this.escapeRegExp(name)}(?=$|\\s|[.,!?;:])`, 'i');
+      return pattern.test(content);
+    });
   }
 
   private resolveTeamAiMentionHandle(displayName: string): string {
