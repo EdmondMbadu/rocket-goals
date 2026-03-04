@@ -12,6 +12,7 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { stripMarkdownForTTS } from './text-utils';
 import { ThemeService } from './theme.service';
 import { BlogService } from './blog.service';
+import { CoachPromptsService } from './coach-prompts.service';
 import type * as THREE from 'three';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -105,7 +106,15 @@ export class App implements AfterViewInit, OnDestroy {
   private rocketGoalsService = inject(RocketGoalsService);
   private themeService = inject(ThemeService);
   protected blogService = inject(BlogService);
+  private coachPromptsService = inject(CoachPromptsService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
+
+  protected coachAvatars = signal<Record<string, { name: string; avatar: string }>>({
+    'hustle-orbit': { name: 'Marcus Chen', avatar: '/assets/ogilvy.jpg' },
+    'opti-human': { name: 'Dr. Elena Vance', avatar: '/assets/a-2.jpg' },
+    'pipeline-pilot': { name: 'Jordan Blake', avatar: '/assets/jordan-blake.jpg' },
+    'apex-ascend': { name: 'Robert Sterling', avatar: '/assets/a-5.jpg' },
+  });
   private router = inject(Router);
   private titleService = inject(Title);
   private metaService = inject(Meta);
@@ -164,6 +173,7 @@ export class App implements AfterViewInit, OnDestroy {
     // Fetch blog posts when component initializes (only on landing page)
     if (!this.isAuthRoute()) {
       this.blogService.fetchBlogPosts();
+      this.loadCoachAvatars();
     }
 
     this.routerSubscription = this.router.events
@@ -1284,6 +1294,24 @@ export class App implements AfterViewInit, OnDestroy {
   // Countdown State
   countdown = signal('23:59:59');
   private countdownInterval: any;
+
+  private async loadCoachAvatars() {
+    try {
+      const configs = await this.coachPromptsService.getAllConfigs();
+      const defaults = this.coachAvatars();
+      const updated = { ...defaults };
+      for (const key of Object.keys(updated)) {
+        const saved = configs[key];
+        if (saved) {
+          if (saved.coachName) updated[key] = { ...updated[key], name: saved.coachName };
+          if (saved.avatar) updated[key] = { ...updated[key], avatar: saved.avatar };
+        }
+      }
+      this.coachAvatars.set(updated);
+    } catch (err) {
+      console.warn('Failed to load coach avatars for landing page:', err);
+    }
+  }
 
   startCountdown() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);

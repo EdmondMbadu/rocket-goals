@@ -6,6 +6,7 @@ import { RocketGoalsService } from './rocket-goals.service';
 import { ThemeService } from './theme.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { VisualizationService } from './visualization.service';
+import { CoachPromptsService } from './coach-prompts.service';
 
 export interface PrebuiltTemplate {
   id: string;
@@ -39,6 +40,7 @@ export class AppSuiteComponent implements OnInit {
   private readonly goalsService = inject(RocketGoalsService);
   private readonly theme = inject(ThemeService);
   private readonly visualizationService = inject(VisualizationService);
+  private readonly coachPromptsService = inject(CoachPromptsService);
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
@@ -285,12 +287,27 @@ export class AppSuiteComponent implements OnInit {
   ];
 
   async ngOnInit() {
-    // Scroll to top when component loads
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Check for pending prebuilt creation after login/signup
+    this.loadCoachOverrides();
+
     if (this.isLoggedIn()) {
       await this.checkPendingPrebuilt();
+    }
+  }
+
+  private async loadCoachOverrides() {
+    try {
+      const configs = await this.coachPromptsService.getAllConfigs();
+      for (const template of this.prebuiltTemplates) {
+        const saved = configs[template.id];
+        if (saved) {
+          if (saved.coachName) template.coPilotName = saved.coachName;
+          if (saved.avatar) template.coPilotAvatar = saved.avatar;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load coach overrides:', err);
     }
   }
 

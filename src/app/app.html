@@ -1442,11 +1442,11 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img src="/assets/ogilvy.jpg" alt="Marcus Chen" class="coach-avatar">
+                  <img [src]="coachAvatars()['hustle-orbit'].avatar" [alt]="coachAvatars()['hustle-orbit'].name" class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
-                  <span class="coach-chip-name">Marcus Chen</span>
+                  <span class="coach-chip-name">{{ coachAvatars()['hustle-orbit'].name }}</span>
                 </div>
               </div>
               <div class="flex items-center gap-2 mb-2">
@@ -1473,11 +1473,11 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img src="/assets/a-2.jpg" alt="Dr. Elena Vance" class="coach-avatar">
+                  <img [src]="coachAvatars()['opti-human'].avatar" [alt]="coachAvatars()['opti-human'].name" class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
-                  <span class="coach-chip-name">Dr. Elena Vance</span>
+                  <span class="coach-chip-name">{{ coachAvatars()['opti-human'].name }}</span>
                 </div>
               </div>
               <div class="flex items-center gap-2 mb-2">
@@ -1503,11 +1503,11 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img src="/assets/jordan-blake.jpg" alt="Jordan Blake" class="coach-avatar">
+                  <img [src]="coachAvatars()['pipeline-pilot'].avatar" [alt]="coachAvatars()['pipeline-pilot'].name" class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
-                  <span class="coach-chip-name">Jordan Blake</span>
+                  <span class="coach-chip-name">{{ coachAvatars()['pipeline-pilot'].name }}</span>
                 </div>
               </div>
               <div class="flex items-center gap-2 mb-2">
@@ -1534,11 +1534,11 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img src="/assets/a-5.jpg" alt="Robert Sterling" class="coach-avatar">
+                  <img [src]="coachAvatars()['apex-ascend'].avatar" [alt]="coachAvatars()['apex-ascend'].name" class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
-                  <span class="coach-chip-name">Robert Sterling</span>
+                  <span class="coach-chip-name">{{ coachAvatars()['apex-ascend'].name }}</span>
                 </div>
               </div>
               <div class="flex items-center gap-2 mb-2">
