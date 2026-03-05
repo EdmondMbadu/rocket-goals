@@ -283,8 +283,35 @@
         </div>
 
       </div>
+
+      <!-- CTA Button -->
+      <div class="text-center mt-16">
+        <a routerLink="/app-suite"
+          class="group relative inline-flex items-center gap-3 px-10 py-5 text-lg font-bold text-white rounded-full overflow-hidden shadow-[0_8px_32px_rgba(220,38,38,0.4)] hover:shadow-[0_12px_48px_rgba(220,38,38,0.6)] transition-all duration-500 hover:-translate-y-1.5 active:scale-[0.98]"
+          style="background: linear-gradient(135deg, #dc2626 0%, #f97316 50%, #dc2626 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite;">
+          <span class="relative z-10 flex items-center gap-3 tracking-wide">
+            Choose Your Coach — Start Now!
+            <svg class="w-5 h-5 transform group-hover:translate-x-1.5 transition-transform duration-300" fill="none"
+              stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out">
+          </div>
+        </a>
+      </div>
+
     </div>
   </section>
+
+  <style>
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  </style>
 
   <!-- Hero Section (commented out for now)
   <div
