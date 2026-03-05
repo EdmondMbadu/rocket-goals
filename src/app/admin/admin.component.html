@@ -978,6 +978,38 @@
         </div>
         @if (sectionOpen('sms')) {
         <div class="border-t border-slate-200 p-6 space-y-6">
+          <!-- Credential Set -->
+          <div class="space-y-2">
+            <label class="block text-slate-700 font-semibold text-sm">
+              SMS Credential Set
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button type="button" (click)="smsCredentialSet.set('primary')"
+                class="px-4 py-3 rounded-xl border text-left transition-all"
+                [class.border-rose-400]="smsCredentialSet() === 'primary'"
+                [class.bg-rose-50]="smsCredentialSet() === 'primary'"
+                [class.text-rose-700]="smsCredentialSet() === 'primary'"
+                [class.border-slate-200]="smsCredentialSet() !== 'primary'"
+                [class.text-slate-700]="smsCredentialSet() !== 'primary'">
+                <p class="font-semibold">Primary</p>
+                <p class="text-xs mt-1">Uses <span class="font-mono">TWILIO_*</span></p>
+              </button>
+              <button type="button" (click)="smsCredentialSet.set('alternate')"
+                class="px-4 py-3 rounded-xl border text-left transition-all"
+                [class.border-rose-400]="smsCredentialSet() === 'alternate'"
+                [class.bg-rose-50]="smsCredentialSet() === 'alternate'"
+                [class.text-rose-700]="smsCredentialSet() === 'alternate'"
+                [class.border-slate-200]="smsCredentialSet() !== 'alternate'"
+                [class.text-slate-700]="smsCredentialSet() !== 'alternate'">
+                <p class="font-semibold">Alternate (_2)</p>
+                <p class="text-xs mt-1">Uses <span class="font-mono">TWILIO_*_2</span></p>
+              </button>
+            </div>
+            <p class="text-xs text-slate-500">
+              Current selection: <span class="font-semibold">{{ smsCredentialSet() === 'alternate' ? 'Alternate (_2)' : 'Primary' }}</span>
+            </p>
+          </div>
+
           <!-- Recipient Phone Number -->
           <div class="space-y-2">
             <label class="block text-slate-700 font-semibold text-sm">
@@ -1043,6 +1075,10 @@
                   <li><span class="font-mono text-slate-800">TWILIO_ACCOUNT_SID</span> - Your Twilio Account SID</li>
                   <li><span class="font-mono text-slate-800">TWILIO_AUTH_TOKEN</span> - Your Twilio Auth Token</li>
                   <li><span class="font-mono text-slate-800">TWILIO_PHONE_NUMBER</span> - Your Twilio phone number
+                    (E.164 format)</li>
+                  <li><span class="font-mono text-slate-800">TWILIO_ACCOUNT_SID_2</span> - Alternate Twilio Account SID</li>
+                  <li><span class="font-mono text-slate-800">TWILIO_AUTH_TOKEN_2</span> - Alternate Twilio Auth Token</li>
+                  <li><span class="font-mono text-slate-800">TWILIO_PHONE_NUMBER_2</span> - Alternate Twilio phone number
                     (E.164 format)</li>
                 </ul>
                 <p class="mt-2 text-xs text-slate-500">Note: For trial accounts, you can only send SMS to verified phone

@@ -120,6 +120,7 @@ export class AdminComponent implements OnInit {
   // SMS form state
   smsPhoneNumber = signal('');
   smsMessage = signal('Hello! This is a test SMS from Rocket Goals Admin Panel to verify Twilio integration is working correctly.');
+  smsCredentialSet = signal<'primary' | 'alternate'>('primary');
 
   // Reminder OS form state
   reminderGoalTitle = signal('Complete my fitness challenge');
@@ -339,6 +340,7 @@ export class AdminComponent implements OnInit {
   async sendTestSMS() {
     const phoneNumber = this.smsPhoneNumber().trim();
     const message = this.smsMessage().trim();
+    const credentialSet = this.smsCredentialSet();
 
     // Validation
     if (!phoneNumber) {
@@ -385,8 +387,14 @@ export class AdminComponent implements OnInit {
       const functions = getFunctions(app);
       const sendSMS = httpsCallable(functions, 'sendTestSMS');
 
-      const result = await sendSMS({ phoneNumber, message });
-      const data = result.data as { success: boolean; message: string; sid?: string; status?: string };
+      const result = await sendSMS({ phoneNumber, message, credentialSet });
+      const data = result.data as {
+        success: boolean;
+        message: string;
+        sid?: string;
+        status?: string;
+        credentialSet?: 'primary' | 'alternate';
+      };
 
       if (data.success) {
         this.success.set(`✅ ${data.message}${data.sid ? ` (SID: ${data.sid})` : ''}`);

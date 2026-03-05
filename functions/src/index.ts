@@ -44,6 +44,9 @@ const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const twilioAccountSid = defineSecret('TWILIO_ACCOUNT_SID');
 const twilioAuthToken = defineSecret('TWILIO_AUTH_TOKEN');
 const twilioPhoneNumber = defineSecret('TWILIO_PHONE_NUMBER');
+const twilioAccountSid2 = defineSecret('TWILIO_ACCOUNT_SID_2');
+const twilioAuthToken2 = defineSecret('TWILIO_AUTH_TOKEN_2');
+const twilioPhoneNumber2 = defineSecret('TWILIO_PHONE_NUMBER_2');
 
 const stripeSubscriptionEvents = new Set([
     'customer.subscription.created',
@@ -2041,8 +2044,18 @@ export const sendTestEmail = functions.runWith({
  * Only accessible by admin users
  */
 export const sendTestSMS = functions.runWith({
-    secrets: [twilioAccountSid, twilioAuthToken, twilioPhoneNumber]
-}).https.onCall(async (data: { phoneNumber: string; message: string }, context: functions.https.CallableContext) => {
+    secrets: [
+        twilioAccountSid,
+        twilioAuthToken,
+        twilioPhoneNumber,
+        twilioAccountSid2,
+        twilioAuthToken2,
+        twilioPhoneNumber2
+    ]
+}).https.onCall(async (
+    data: { phoneNumber: string; message: string; credentialSet?: 'primary' | 'alternate' },
+    context: functions.https.CallableContext
+) => {
     // Verify the user is authenticated
     if (!context.auth) {
         throw new functions.https.HttpsError(
@@ -2067,6 +2080,7 @@ export const sendTestSMS = functions.runWith({
 
     // Validate input
     const { phoneNumber, message } = data;
+    const credentialSet = data?.credentialSet === 'alternate' ? 'alternate' : 'primary';
     if (!phoneNumber || !message) {
         throw new functions.https.HttpsError(
             'invalid-argument',
@@ -2093,13 +2107,20 @@ export const sendTestSMS = functions.runWith({
     }
 
     try {
-        // Get Twilio credentials
-        const accountSid = twilioAccountSid.value();
-        const authToken = twilioAuthToken.value();
-        const fromNumber = twilioPhoneNumber.value();
+        // Get Twilio credentials (primary or alternate set)
+        const accountSid = credentialSet === 'alternate'
+            ? twilioAccountSid2.value()
+            : twilioAccountSid.value();
+        const authToken = credentialSet === 'alternate'
+            ? twilioAuthToken2.value()
+            : twilioAuthToken.value();
+        const fromNumber = credentialSet === 'alternate'
+            ? twilioPhoneNumber2.value()
+            : twilioPhoneNumber.value();
 
         if (!accountSid || !authToken || !fromNumber) {
-            throw new Error('Twilio credentials are not set. Please set them using: firebase functions:secrets:set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER');
+            const suffix = credentialSet === 'alternate' ? '_2' : '';
+            throw new Error(`Twilio credentials are not set for ${credentialSet} set. Please set: TWILIO_ACCOUNT_SID${suffix}, TWILIO_AUTH_TOKEN${suffix}, TWILIO_PHONE_NUMBER${suffix}`);
         }
 
         // Initialize Twilio client
@@ -2112,13 +2133,14 @@ export const sendTestSMS = functions.runWith({
             to: cleanedPhone
         });
 
-        console.log(`✅ Test SMS sent successfully to ${cleanedPhone}. SID: ${result.sid}`);
+        console.log(`✅ Test SMS sent successfully using ${credentialSet} credentials to ${cleanedPhone}. SID: ${result.sid}`);
 
         return {
             success: true,
-            message: `SMS sent successfully to ${cleanedPhone}`,
+            message: `SMS sent successfully to ${cleanedPhone} using ${credentialSet} credentials`,
             sid: result.sid,
-            status: result.status
+            status: result.status,
+            credentialSet
         };
     } catch (error: any) {
         console.error('❌ Error sending SMS:', error);
