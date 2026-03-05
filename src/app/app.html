@@ -95,76 +95,6 @@
   </div>
   }
 
-  <!-- Hero Section -->
-  <div
-    class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white dark:bg-slate-950">
-    <!-- Deep Space Starfield Background (Dark Mode Only) -->
-    <div class="hero-starfield"></div>
-    <!-- Background Animation -->
-    <div class="absolute inset-0 z-0">
-      <canvas #rocketCanvas class="w-full h-full object-cover"></canvas>
-    </div>
-
-    <!-- Content Overlay -->
-    <div class="container mx-auto px-4 relative z-10 text-center">
-      <div class="max-w-5xl mx-auto space-y-8">
-        <!-- Trust Badge -->
-        <div
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-black/5 shadow-sm mb-4 animate-fade-in-up dark:bg-white/10 dark:border-white/10">
-          <div class="flex -space-x-2">
-            <div class="w-6 h-6 rounded-full bg-gray-200 border-2 border-white"></div>
-            <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"></div>
-            <div class="w-6 h-6 rounded-full bg-gray-400 border-2 border-white"></div>
-          </div>
-          <span class="text-xs font-bold text-black/70 dark:text-slate-200">Trusted by 10,000+ Achievers</span>
-        </div>
-
-        <!-- Headline -->
-        <h1
-          class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none mb-6 text-black dark:text-white">
-          IGNITE YOUR <br />
-          <span class="hero-gradient-text">
-            POTENTIAL
-          </span>
-        </h1>
-
-        <!-- Subheadline -->
-        <p
-          class="text-xl md:text-2xl text-black/70 max-w-3xl mx-auto leading-relaxed font-medium mb-10 dark:text-slate-300">
-          The world's most advanced AI-powered goal tracking platform.<br />
-          Turn your ambitions into achievements at warp speed.
-        </p>
-
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <a [routerLink]="['/']" [queryParams]="{startChallenge: 'true'}"
-            class="group relative px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full overflow-hidden shadow-[0_10px_20px_rgba(220,38,38,0.3)] hover:shadow-[0_15px_30px_rgba(220,38,38,0.5)] transition-all duration-300 hover:-translate-y-1 inline-flex items-center justify-center">
-            <span class="relative z-10 flex items-center gap-2">
-              Launch Your Goals
-              <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </span>
-            <div
-              class="absolute inset-0 bg-gradient-to-r from-red-700 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
-            </div>
-          </a>
-          <a routerLink="/schedule"
-            class="group px-8 py-4 bg-white text-black font-bold text-lg rounded-full border-2 border-black/10 hover:border-black hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1 inline-flex items-center justify-center dark:bg-transparent dark:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-black">
-            <span class="flex items-center gap-2">
-              Schedule a Demo
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Magnificent Visual Goals Section -->
   <section
     class="py-14 bg-slate-50 text-black relative overflow-hidden dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 border-y border-black/5 dark:border-white/5">
@@ -189,14 +119,10 @@
         </div>
 
         <h2 class="text-5xl md:text-7xl font-black tracking-tighter mb-6 text-black dark:text-white leading-tight">
-          DESTINATIONS BEYOND<br />
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">THE ORDINARY</span>
+          ELITE COACHING<br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">EXPONENTIAL RESULTS</span>
         </h2>
 
-        <p class="text-xl md:text-2xl text-black/60 dark:text-slate-400 font-medium leading-relaxed">
-          See the summit before you climb it — then fall in love with the climb itself.
-          Visualize the peak and embrace the process, because both are necessary to achieve extraordinary outcomes.
-        </p>
       </div>
 
       <!-- Grid of Visuals -->
@@ -359,6 +285,66 @@
       </div>
     </div>
   </section>
+
+  <!-- Hero Section (commented out for now)
+  <div
+    class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white dark:bg-slate-950">
+    <div class="hero-starfield"></div>
+    <div class="absolute inset-0 z-0">
+      <canvas #rocketCanvas class="w-full h-full object-cover"></canvas>
+    </div>
+    <div class="container mx-auto px-4 relative z-10 text-center">
+      <div class="max-w-5xl mx-auto space-y-8">
+        <div
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-black/5 shadow-sm mb-4 animate-fade-in-up dark:bg-white/10 dark:border-white/10">
+          <div class="flex -space-x-2">
+            <div class="w-6 h-6 rounded-full bg-gray-200 border-2 border-white"></div>
+            <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"></div>
+            <div class="w-6 h-6 rounded-full bg-gray-400 border-2 border-white"></div>
+          </div>
+          <span class="text-xs font-bold text-black/70 dark:text-slate-200">Trusted by 10,000+ Achievers</span>
+        </div>
+        <h1
+          class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none mb-6 text-black dark:text-white">
+          IGNITE YOUR <br />
+          <span class="hero-gradient-text">
+            POTENTIAL
+          </span>
+        </h1>
+        <p
+          class="text-xl md:text-2xl text-black/70 max-w-3xl mx-auto leading-relaxed font-medium mb-10 dark:text-slate-300">
+          The world's most advanced AI-powered goal tracking platform.<br />
+          Turn your ambitions into achievements at warp speed.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <a [routerLink]="['/']" [queryParams]="{startChallenge: 'true'}"
+            class="group relative px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full overflow-hidden shadow-[0_10px_20px_rgba(220,38,38,0.3)] hover:shadow-[0_15px_30px_rgba(220,38,38,0.5)] transition-all duration-300 hover:-translate-y-1 inline-flex items-center justify-center">
+            <span class="relative z-10 flex items-center gap-2">
+              Launch Your Goals
+              <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-red-700 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
+            </div>
+          </a>
+          <a routerLink="/schedule"
+            class="group px-8 py-4 bg-white text-black font-bold text-lg rounded-full border-2 border-black/10 hover:border-black hover:bg-black hover:text-white transition-all duration-300 hover:-translate-y-1 inline-flex items-center justify-center dark:bg-transparent dark:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-black">
+            <span class="flex items-center gap-2">
+              Schedule a Demo
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  -->
 
   <!-- Surge Book Section -->
   <section
