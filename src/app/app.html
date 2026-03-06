@@ -120,7 +120,8 @@
 
         <h2 class="text-5xl md:text-7xl font-black tracking-tighter mb-6 text-black dark:text-white leading-tight">
           ELITE COACHING<br />
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">EXPONENTIAL RESULTS</span>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">EXPONENTIAL
+            RESULTS</span>
         </h2>
 
       </div>
@@ -230,10 +231,10 @@
           </div>
         </div>
 
-        <!-- Card 5: Mastery/Calisthenics -->
+        <!-- Card 5: Mastery/Ice Hockey -->
         <div
-          class="group relative rounded-[2rem] overflow-hidden shadow-2xl aspect-[4/5] bg-slate-200 dark:bg-slate-800 transform hover:-translate-y-2 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(249,115,22,0.2)] lg:-translate-y-8 lg:hover:-translate-y-10">
-          <img src="/assets/goals/calisthenics_goal.png" alt="Outdoor Calisthenics"
+          class="group relative rounded-[2rem] overflow-hidden shadow-2xl aspect-[4/5] bg-slate-200 dark:bg-slate-800 transform hover:-translate-y-2 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(6,182,212,0.2)] lg:-translate-y-8 lg:hover:-translate-y-10">
+          <img src="/assets/goals/hockey_goal.png" alt="Ice Hockey Mastery"
             class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out" />
           <div
             class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300">
@@ -242,16 +243,16 @@
           <div
             class="absolute inset-0 flex flex-col justify-end p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
             <div
-              class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mb-6 text-white group-hover:scale-110 group-hover:bg-orange-500 group-hover:text-white transition-all duration-300">
+              class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mb-6 text-white group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <h3 class="text-4xl font-black text-white mb-3 tracking-tight">Ultimate Mastery</h3>
             <p
               class="text-white/70 text-lg font-medium leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-              Defy gravity itself. The absolute pinnacle of core control, power-to-weight ratio, and sheer dedication.
+              Skate with unmatched intensity. Master the ice and demonstrate awe-inspiring dedication, power, and
+              precision.
             </p>
           </div>
         </div>
@@ -307,9 +308,17 @@
 
   <style>
     @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
   </style>
 
@@ -1301,7 +1310,8 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img [src]="coachAvatars()['hustle-orbit'].avatar" [alt]="coachAvatars()['hustle-orbit'].name" class="coach-avatar">
+                  <img [src]="coachAvatars()['hustle-orbit'].avatar" [alt]="coachAvatars()['hustle-orbit'].name"
+                    class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
@@ -1332,7 +1342,8 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img [src]="coachAvatars()['opti-human'].avatar" [alt]="coachAvatars()['opti-human'].name" class="coach-avatar">
+                  <img [src]="coachAvatars()['opti-human'].avatar" [alt]="coachAvatars()['opti-human'].name"
+                    class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
@@ -1362,7 +1373,8 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img [src]="coachAvatars()['pipeline-pilot'].avatar" [alt]="coachAvatars()['pipeline-pilot'].name" class="coach-avatar">
+                  <img [src]="coachAvatars()['pipeline-pilot'].avatar" [alt]="coachAvatars()['pipeline-pilot'].name"
+                    class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
@@ -1393,7 +1405,8 @@
             <div class="relative z-10 flex flex-col h-[320px] p-6 justify-end">
               <div class="coach-chip absolute top-5 left-5">
                 <div class="coach-avatar-wrap">
-                  <img [src]="coachAvatars()['apex-ascend'].avatar" [alt]="coachAvatars()['apex-ascend'].name" class="coach-avatar">
+                  <img [src]="coachAvatars()['apex-ascend'].avatar" [alt]="coachAvatars()['apex-ascend'].name"
+                    class="coach-avatar">
                 </div>
                 <div class="coach-chip-copy">
                   <span class="coach-chip-label">AI Coach</span>
