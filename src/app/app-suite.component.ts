@@ -101,6 +101,11 @@ export class AppSuiteComponent implements OnInit {
     { value: '2hours', label: '2 hours' }
   ];
 
+  protected readonly isAdmin = computed(() => {
+    const profile = this.authService.profile();
+    return profile?.role === 'admin' || profile?.admin === true;
+  });
+
   protected readonly hasMoonshot = computed(() => {
     const plan = this.authService.profile()?.subscriptionPlan;
     if (!plan) return false;
@@ -789,6 +794,19 @@ export class AppSuiteComponent implements OnInit {
     } catch (error) {
       console.error('Error launching community coach:', error);
       this.isCreating.set(false);
+    }
+  }
+
+  async deleteCommunityCoachById(coachId: string, event: Event) {
+    event.stopPropagation();
+    if (!confirm('Delete this community coach? Existing goals using this coach will not be affected.')) return;
+
+    try {
+      await this.communityCoachService.deleteCommunityCoach(coachId);
+      this.communityCoaches.set(this.communityCoaches().filter(c => c.id !== coachId));
+    } catch (error: any) {
+      console.error('Error deleting community coach:', error);
+      alert(error?.message || 'Failed to delete coach.');
     }
   }
 

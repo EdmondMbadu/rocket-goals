@@ -89,14 +89,18 @@ export class CommunityCoachService {
     const ref = firestoreModule.collection(firestore, 'communityCoaches');
     const q = firestoreModule.query(
       ref,
-      firestoreModule.where('visibility', '==', 'public'),
-      firestoreModule.orderBy('createdAt', 'desc')
+      firestoreModule.where('visibility', '==', 'public')
     );
     const snapshot = await firestoreModule.getDocs(q);
-    return snapshot.docs.map((doc) => ({
+    const coaches = snapshot.docs.map((doc) => ({
       ...(doc.data() as Omit<CommunityCoach, 'id'>),
       id: doc.id
     }));
+    return coaches.sort((a, b) => {
+      const ta = (a.createdAt as any)?.toMillis?.() || 0;
+      const tb = (b.createdAt as any)?.toMillis?.() || 0;
+      return tb - ta;
+    });
   }
 
   async getMyCoaches(userId: string): Promise<CommunityCoach[]> {
@@ -105,13 +109,25 @@ export class CommunityCoachService {
     const ref = firestoreModule.collection(firestore, 'communityCoaches');
     const q = firestoreModule.query(
       ref,
-      firestoreModule.where('creatorUserId', '==', userId),
-      firestoreModule.orderBy('createdAt', 'desc')
+      firestoreModule.where('creatorUserId', '==', userId)
     );
     const snapshot = await firestoreModule.getDocs(q);
-    return snapshot.docs.map((doc) => ({
+    const coaches = snapshot.docs.map((doc) => ({
       ...(doc.data() as Omit<CommunityCoach, 'id'>),
       id: doc.id
     }));
+    return coaches.sort((a, b) => {
+      const ta = (a.createdAt as any)?.toMillis?.() || 0;
+      const tb = (b.createdAt as any)?.toMillis?.() || 0;
+      return tb - ta;
+    });
+  }
+
+  async deleteCommunityCoach(coachId: string): Promise<{ success: boolean }> {
+    const { getFunctions, httpsCallable } = await import('firebase/functions');
+    const { getApp } = await import('firebase/app');
+    const fn = httpsCallable(getFunctions(getApp()), 'deleteCommunityCoach');
+    const result = await fn({ coachId });
+    return result.data as { success: boolean };
   }
 }

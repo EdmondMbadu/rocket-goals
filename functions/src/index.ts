@@ -6389,6 +6389,38 @@ export const saveCommunityCoach = functions.runWith({
 });
 
 /**
+ * Delete a community coach. Admin-only.
+ * Existing goals that reference this coach are unaffected — the copilot data lives on the goal document.
+ */
+export const deleteCommunityCoach = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: { coachId: string }, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError('permission-denied', 'Only administrators can delete community coaches.');
+    }
+
+    const coachId = (data?.coachId || '').toString().trim();
+    if (!coachId) {
+        throw new functions.https.HttpsError('invalid-argument', 'Coach ID is required.');
+    }
+
+    const docRef = admin.firestore().collection('communityCoaches').doc(coachId);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Coach not found.');
+    }
+
+    await docRef.delete();
+    return { success: true };
+});
+
+/**
  * Scheduled Cloud Function that runs every hour to check for scheduled reminders
  * This checks all enabled reminders and sends emails if the current time matches
  */
