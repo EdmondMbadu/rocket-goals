@@ -418,22 +418,11 @@
             <!-- Step Indicator -->
             @if (forkingCoach) {
             <div class="flex items-center gap-2">
-              @for (step of [2, 3]; track step) {
-              <div class="flex-1 h-1.5 rounded-full transition-all duration-300"
-                [class]="wizardStep() >= step
-                  ? 'bg-red-500'
-                  : isDarkMode() ? 'bg-white/10' : 'bg-slate-200'">
-              </div>
-              }
+              <div class="flex-1 h-1.5 rounded-full bg-red-500 transition-all duration-300"></div>
             </div>
-            <div class="flex justify-between mt-2">
-              <span class="text-[10px] font-bold uppercase tracking-widest"
-                [class]="wizardStep() === 2 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Your Goal
-              </span>
-              <span class="text-[10px] font-bold uppercase tracking-widest"
-                [class]="wizardStep() === 3 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Launch
+            <div class="flex justify-center mt-2">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-red-500">
+                Set Up Your Goal
               </span>
             </div>
             } @else {
@@ -841,10 +830,24 @@
             <div></div>
             }
 
-            @if (wizardStep() < 3) {
+            @if (wizardStep() < 3 && !(forkingCoach && wizardStep() === 2)) {
             <button (click)="nextStep()" type="button"
               class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30">
               Continue
+            </button>
+            } @else if (forkingCoach && wizardStep() === 2) {
+            <button (click)="nextStep()" type="button"
+              [disabled]="wizardSubmitting()"
+              class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+              @if (wizardSubmitting()) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              <span>Launching...</span>
+              } @else {
+              <span>Launch Your Goal</span>
+              }
             </button>
             } @else {
             <button (click)="submitCoach()" type="button"

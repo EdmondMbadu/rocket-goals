@@ -482,6 +482,11 @@ export class AppSuiteComponent implements OnInit {
         this.wizardError.set('Please enter an app name for your coach.');
         return;
       }
+      if (this.forkingCoach) {
+        this.wizardError.set(null);
+        this.submitCoach();
+        return;
+      }
     }
     this.wizardError.set(null);
     this.wizardStep.set(this.wizardStep() + 1);
@@ -773,7 +778,7 @@ export class AppSuiteComponent implements OnInit {
 
     this.goalAppName.set(coach.appName);
     this.goalTagline.set(coach.tagline || '');
-    this.goalPrimaryGoal.set(coach.defaultGoals?.primaryGoal || '');
+    this.goalPrimaryGoal.set('');
     this.goalTheme.set(coach.defaultGoals?.theme || 'career');
     this.goalDailyEffort.set(coach.defaultGoals?.dailyEffort || '1hour');
 
