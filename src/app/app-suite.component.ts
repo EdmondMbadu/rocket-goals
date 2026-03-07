@@ -67,6 +67,7 @@ export class AppSuiteComponent implements OnInit {
   readonly coachCategory = signal('Custom');
   readonly coachAvatarPreview = signal<string | null>(null);
   readonly generatingAvatar = signal(false);
+  readonly avatarLightboxOpen = signal(false);
   private coachAvatarData = '';
 
   // Step 2: Goal
@@ -439,6 +440,7 @@ export class AppSuiteComponent implements OnInit {
     this.coachCategory.set('Custom');
     this.coachAvatarPreview.set(null);
     this.generatingAvatar.set(false);
+    this.avatarLightboxOpen.set(false);
     this.coachAvatarData = '';
     this.goalPrimaryGoal.set('');
     this.goalTheme.set('career');

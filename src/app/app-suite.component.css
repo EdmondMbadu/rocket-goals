@@ -535,3 +535,19 @@ button:focus-visible {
   background: #fff;
   color: #0f172a;
 }
+
+/* Avatar Lightbox */
+.avatar-lightbox-enter {
+  animation: lightbox-pop 0.25s ease-out forwards;
+}
+
+@keyframes lightbox-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
