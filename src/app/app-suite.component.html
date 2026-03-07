@@ -405,7 +405,7 @@
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-2xl font-black tracking-tight"
                 [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
-                Create Your Coach
+                {{ forkingCoach ? 'Launch with ' + forkingCoach.coachName : 'Create Your Coach' }}
               </h2>
               <button (click)="closeCreateModal()" class="p-2 rounded-full transition-colors"
                 [class]="isDarkMode() ? 'hover:bg-white/10 text-white/60' : 'hover:bg-slate-100 text-slate-400'">
@@ -416,6 +416,27 @@
             </div>
 
             <!-- Step Indicator -->
+            @if (forkingCoach) {
+            <div class="flex items-center gap-2">
+              @for (step of [2, 3]; track step) {
+              <div class="flex-1 h-1.5 rounded-full transition-all duration-300"
+                [class]="wizardStep() >= step
+                  ? 'bg-red-500'
+                  : isDarkMode() ? 'bg-white/10' : 'bg-slate-200'">
+              </div>
+              }
+            </div>
+            <div class="flex justify-between mt-2">
+              <span class="text-[10px] font-bold uppercase tracking-widest"
+                [class]="wizardStep() === 2 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
+                Your Goal
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-widest"
+                [class]="wizardStep() === 3 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
+                Launch
+              </span>
+            </div>
+            } @else {
             <div class="flex items-center gap-2">
               @for (step of [1, 2, 3]; track step) {
               <div class="flex-1 h-1.5 rounded-full transition-all duration-300"
@@ -439,6 +460,7 @@
                 Launch
               </span>
             </div>
+            }
           </div>
 
           <!-- Wizard Body -->
@@ -566,6 +588,30 @@
             <!-- Step 2: Your Goal -->
             @if (wizardStep() === 2) {
             <div class="space-y-5">
+
+              @if (forkingCoach) {
+              <div class="flex items-center gap-3 p-4 rounded-xl border"
+                [class]="isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'">
+                @if (forkingCoach.avatar) {
+                <img [src]="forkingCoach.avatar" [alt]="forkingCoach.coachName"
+                  class="w-12 h-12 rounded-full object-cover border-2 border-red-500/30">
+                }
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-bold truncate"
+                    [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
+                    {{ forkingCoach.coachName }}
+                  </p>
+                  <p class="text-xs truncate"
+                    [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
+                    {{ forkingCoach.tagline || forkingCoach.description }}
+                  </p>
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-red-500/10 text-red-500 whitespace-nowrap">
+                  Coach
+                </span>
+              </div>
+              }
+
               <div>
                 <label class="block text-sm font-bold mb-2"
                   [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">App Name *</label>
@@ -783,7 +829,7 @@
           <!-- Wizard Footer -->
           <div class="sticky bottom-0 px-8 py-5 border-t flex items-center justify-between backdrop-blur-xl"
             [class]="isDarkMode() ? 'bg-slate-900/95 border-white/10' : 'bg-white/95 border-slate-200'">
-            @if (wizardStep() > 1) {
+            @if (wizardStep() > 1 && !(forkingCoach && wizardStep() === 2)) {
             <button (click)="prevStep()" type="button"
               class="px-6 py-3 rounded-xl border text-sm font-bold transition-colors"
               [class]="isDarkMode()

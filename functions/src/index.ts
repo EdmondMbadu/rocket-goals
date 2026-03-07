@@ -6410,13 +6410,13 @@ export const deleteCommunityCoach = functions.runWith({
         throw new functions.https.HttpsError('invalid-argument', 'Coach ID is required.');
     }
 
-    const docRef = admin.firestore().collection('communityCoaches').doc(coachId);
-    const doc = await docRef.get();
-    if (!doc.exists) {
+    const coachRef = admin.firestore().collection('communityCoaches').doc(coachId);
+    const coachSnap = await coachRef.get();
+    if (!coachSnap.exists) {
         throw new functions.https.HttpsError('not-found', 'Coach not found.');
     }
 
-    await docRef.delete();
+    await coachRef.delete();
     return { success: true };
 });
 

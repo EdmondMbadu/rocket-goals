@@ -60,6 +60,7 @@ export class AppSuiteComponent implements OnInit {
   readonly wizardStep = signal(1);
   readonly wizardSubmitting = signal(false);
   readonly wizardError = signal<string | null>(null);
+  forkingCoach: CommunityCoach | null = null;
 
   // Step 1: Coach Identity
   readonly coachName = signal('');
@@ -440,6 +441,7 @@ export class AppSuiteComponent implements OnInit {
     this.wizardStep.set(1);
     this.wizardError.set(null);
     this.wizardSubmitting.set(false);
+    this.forkingCoach = null;
     this.coachName.set('');
     this.coachPersonality.set('');
     this.coachCategory.set('Custom');
@@ -663,26 +665,33 @@ export class AppSuiteComponent implements OnInit {
     ].filter(Boolean);
 
     try {
-      const result = await this.communityCoachService.saveCommunityCoach({
-        coachName: this.coachName().trim(),
-        avatar: this.coachAvatarData,
-        soulFilet: this.coachPersonality().trim(),
-        appName: this.goalAppName().trim(),
-        tagline: this.goalTagline().trim(),
-        description: this.coachPersonality().trim(),
-        icon: '🎯',
-        category: this.coachCategory(),
-        visibility: this.coachVisibility(),
-        defaultGoals: {
-          primaryGoal: this.goalPrimaryGoal().trim(),
-          theme: this.goalTheme(),
-          dailyEffort: this.goalDailyEffort(),
-          objectives: objectives.length > 0 ? objectives : ['Make progress']
-        }
-      });
+      let coachId = '';
 
-      if (!result.success) {
-        throw new Error('Failed to save coach.');
+      if (this.forkingCoach) {
+        coachId = this.forkingCoach.id;
+      } else {
+        const result = await this.communityCoachService.saveCommunityCoach({
+          coachName: this.coachName().trim(),
+          avatar: this.coachAvatarData,
+          soulFilet: this.coachPersonality().trim(),
+          appName: this.goalAppName().trim(),
+          tagline: this.goalTagline().trim(),
+          description: this.coachPersonality().trim(),
+          icon: '🎯',
+          category: this.coachCategory(),
+          visibility: this.coachVisibility(),
+          defaultGoals: {
+            primaryGoal: this.goalPrimaryGoal().trim(),
+            theme: this.goalTheme(),
+            dailyEffort: this.goalDailyEffort(),
+            objectives: objectives.length > 0 ? objectives : ['Make progress']
+          }
+        });
+
+        if (!result.success) {
+          throw new Error('Failed to save coach.');
+        }
+        coachId = result.coachId;
       }
 
       const now = Date.now();
@@ -710,7 +719,7 @@ export class AppSuiteComponent implements OnInit {
           goal_theme_label: this.coachCategory(),
           daily_effort: this.goalDailyEffort(),
           source: 'community_coach',
-          community_coach_id: result.coachId,
+          community_coach_id: coachId,
           community_coach_name: this.coachName().trim(),
           objectives: objectives.length > 0 ? objectives : ['Make progress'],
           custom_goal_title: `${appName} Mission`,
@@ -745,56 +754,40 @@ export class AppSuiteComponent implements OnInit {
     }
   }
 
-  async launchCommunityCoach(coach: CommunityCoach) {
-    const profile = this.authService.profile();
-    if (!profile?.userId) {
+  launchCommunityCoach(coach: CommunityCoach) {
+    if (!this.isLoggedIn()) {
       this.router.navigate(['/signup'], {
         queryParams: { redirectTo: '/app-suite' }
       });
       return;
     }
 
-    this.isCreating.set(true);
-    try {
-      const now = Date.now();
-      const goalId = await this.goalsService.createRocketGoal({
-        userId: profile.userId,
-        primaryGoal: coach.defaultGoals.primaryGoal,
-        answers: {
-          goal_title_label: `${coach.appName} Mission`,
-          goal_theme: coach.defaultGoals.theme,
-          goal_theme_label: coach.category,
-          daily_effort: coach.defaultGoals.dailyEffort,
-          source: 'community_coach',
-          community_coach_id: coach.id,
-          community_coach_name: coach.coachName,
-          objectives: coach.defaultGoals.objectives,
-          custom_goal_title: `${coach.appName} Mission`,
-          goalDescription: coach.description,
-          timeframe: 'week'
-        },
-        participant: {
-          firstName: profile.firstName || '',
-          lastName: profile.lastName || '',
-          email: profile.email || ''
-        },
-        status: 'active',
-        entryPoint: 'launch_challenge',
-        startTime: now,
-        copilot: {
-          avatar: coach.avatar || '/assets/rocket-goals.png',
-          name: coach.coachName,
-          role: coach.soulFilet
-        }
-      });
+    this.resetWizard();
+    this.forkingCoach = coach;
 
-      this.generateVisualizationAsync(goalId, coach.appName, coach.description, coach.defaultGoals.primaryGoal, profile);
-      this.isCreating.set(false);
-      this.router.navigate(['/rocketgoal', goalId]);
-    } catch (error) {
-      console.error('Error launching community coach:', error);
-      this.isCreating.set(false);
-    }
+    this.coachName.set(coach.coachName);
+    this.coachPersonality.set(coach.soulFilet || coach.description);
+    this.coachCategory.set(coach.category);
+    this.coachAvatarPreview.set(coach.avatar || null);
+    this.coachAvatarData = coach.avatar || '';
+
+    this.goalAppName.set(coach.appName);
+    this.goalTagline.set(coach.tagline || '');
+    this.goalPrimaryGoal.set(coach.defaultGoals?.primaryGoal || '');
+    this.goalTheme.set(coach.defaultGoals?.theme || 'career');
+    this.goalDailyEffort.set(coach.defaultGoals?.dailyEffort || '1hour');
+
+    const objs = coach.defaultGoals?.objectives || [];
+    this.goalObjective1.set(objs[0] || '');
+    this.goalObjective2.set(objs[1] || '');
+    this.goalObjective3.set(objs[2] || '');
+
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    this.goalDeadline.set(this.formatDateISO(d));
+
+    this.wizardStep.set(2);
+    this.showCreateModal.set(true);
   }
 
   async deleteCommunityCoachById(coachId: string, event: Event) {
