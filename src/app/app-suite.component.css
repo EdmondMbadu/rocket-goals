@@ -476,3 +476,62 @@ button:focus-visible {
 .light-theme .app-card:hover {
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
 }
+
+/* Make Your Own Card */
+.make-your-own-card {
+  animation: card-enter 0.5s ease-out forwards;
+  animation-delay: 0.7s;
+  opacity: 0;
+}
+
+.dark-theme .make-your-own-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.6), rgba(30, 27, 75, 0.3));
+}
+
+.light-theme .make-your-own-card {
+  background: linear-gradient(145deg, rgba(248, 250, 252, 1), rgba(241, 245, 249, 1));
+}
+
+.make-your-own-card:hover {
+  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.15);
+}
+
+/* Community Coach Card */
+.community-coach-card {
+  animation: card-enter 0.5s ease-out forwards;
+  animation-delay: 0.65s;
+  opacity: 0;
+}
+
+/* Wizard Modal */
+.wizard-modal {
+  animation: modal-enter 0.3s ease-out forwards;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.wizard-modal input:focus,
+.wizard-modal textarea:focus,
+.wizard-modal select:focus {
+  outline: none;
+  ring: 0;
+}
+
+.wizard-modal select option {
+  background: #1e293b;
+  color: #fff;
+}
+
+.light-theme .wizard-modal select option {
+  background: #fff;
+  color: #0f172a;
+}

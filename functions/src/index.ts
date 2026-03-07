@@ -6189,6 +6189,91 @@ export const saveSharedCoachPhilosophy = functions.runWith({
 });
 
 /**
+ * Save a community-created coach.
+ * Any authenticated user can create a public coach.
+ * Private coaches require at least a Moonshot subscription.
+ */
+export const saveCommunityCoach = functions.runWith({
+    secrets: []
+}).https.onCall(async (data: {
+    coachName: string;
+    avatar: string;
+    soulFilet: string;
+    appName: string;
+    tagline: string;
+    description: string;
+    icon: string;
+    category: string;
+    visibility: 'public' | 'private';
+    defaultGoals: {
+        primaryGoal: string;
+        theme: string;
+        dailyEffort: string;
+        objectives: string[];
+    };
+}, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    }
+
+    const coachName = (data?.coachName || '').toString().trim();
+    const appName = (data?.appName || '').toString().trim();
+    const tagline = (data?.tagline || '').toString().trim();
+    const description = (data?.description || '').toString().trim();
+    const icon = (data?.icon || '🎯').toString().trim();
+    const category = (data?.category || 'Custom').toString().trim();
+    const soulFilet = (data?.soulFilet || '').toString().trim();
+    const avatar = (data?.avatar || '').toString();
+    const visibility = data?.visibility === 'private' ? 'private' : 'public';
+
+    if (!coachName || !appName) {
+        throw new functions.https.HttpsError('invalid-argument', 'Coach name and app name are required.');
+    }
+
+    const goals = data?.defaultGoals;
+    if (!goals?.primaryGoal) {
+        throw new functions.https.HttpsError('invalid-argument', 'A primary goal is required.');
+    }
+
+    if (visibility === 'private') {
+        const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
+        const userData = userDoc.data();
+        const plan = userData?.subscriptionPlan || 'free';
+        const planHierarchy: Record<string, number> = { free: 0, moonshot: 1, interplanetary: 2, galactic: 3 };
+        if ((planHierarchy[plan] || 0) < 1) {
+            throw new functions.https.HttpsError(
+                'permission-denied',
+                'A Moonshot subscription or higher is required to create private coaches.'
+            );
+        }
+    }
+
+    const docRef = await admin.firestore().collection('communityCoaches').add({
+        creatorUserId: context.auth.uid,
+        coachName,
+        avatar,
+        soulFilet,
+        appName,
+        tagline,
+        description,
+        icon,
+        category,
+        visibility,
+        defaultGoals: {
+            primaryGoal: goals.primaryGoal.trim(),
+            theme: (goals.theme || 'career').trim(),
+            dailyEffort: (goals.dailyEffort || '1hour').trim(),
+            objectives: Array.isArray(goals.objectives)
+                ? goals.objectives.map((o: string) => (o || '').trim()).filter(Boolean)
+                : []
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return { success: true, coachId: docRef.id };
+});
+
+/**
  * Scheduled Cloud Function that runs every hour to check for scheduled reminders
  * This checks all enabled reminders and sends emails if the current time matches
  */
