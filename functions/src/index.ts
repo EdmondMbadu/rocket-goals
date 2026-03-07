@@ -4392,6 +4392,121 @@ The final image should make the viewer think:
 });
 
 /**
+ * Generate an AI coach avatar portrait using Gemini.
+ * Creates a professional, stylized portrait based on the coach name and personality description.
+ */
+export const generateCoachAvatar = onCall({
+    region: "us-central1",
+    secrets: [geminiApiKey],
+    timeoutSeconds: 60,
+    cors: [
+        "https://rocket-goals.web.app",
+        "https://rocket-goals.firebaseapp.com",
+        "https://www.rocketgoals.com",
+        "https://rocketgoals.com",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    ]
+}, async (request: any) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be logged in.");
+    }
+
+    const apiKey = geminiApiKey.value();
+    if (!apiKey) {
+        throw new HttpsError("failed-precondition", "Google AI API key is not configured");
+    }
+
+    const data = request?.data || {};
+    const coachName = (data?.coachName || "").toString().trim();
+    const coachDescription = (data?.coachDescription || "").toString().trim();
+    const category = (data?.category || "").toString().trim();
+
+    if (!coachName) {
+        throw new HttpsError("invalid-argument", "Coach name is required.");
+    }
+
+    const prompt = `Create a professional, high-quality headshot portrait of an AI coaching character named "${coachName}".
+
+Character profile:
+- Name: ${coachName}
+- Specialty: ${category || 'Life coaching'}
+- Personality: ${coachDescription || 'Warm, knowledgeable, and motivating'}
+
+Portrait requirements:
+- Professional studio-quality headshot, shoulders up
+- The character should look approachable, confident, and trustworthy
+- Age range: 28-45, any ethnicity — pick one that feels natural for the name and description
+- Warm, soft studio lighting with a subtle gradient background
+- Sharp focus on the face, gentle bokeh on the background
+- The expression should convey warmth, intelligence, and quiet confidence
+- Clean, modern styling — professional but not overly corporate
+- Photorealistic quality, cinematic color grading
+
+Style reference:
+- Think high-end executive coach or TED speaker headshot
+- Natural skin texture, no heavy retouching
+- Background: subtle dark-to-warm gradient, not distracting
+
+Avoid:
+- Cartoon or illustrated styles
+- Text, logos, or watermarks
+- Full body shots
+- Exaggerated expressions
+- Stock photo clichés`;
+
+    try {
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
+
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: `Generate an image based on this description:\n\n${prompt}` }] }],
+            generationConfig: {
+                responseModalities: ["Image", "Text"],
+            } as any,
+        });
+
+        const parts = result.response.candidates?.[0]?.content?.parts || [];
+        let imageBase64: string | null = null;
+        let imageMimeType: string | null = null;
+
+        for (const part of parts) {
+            if ((part as any).inlineData) {
+                imageBase64 = (part as any).inlineData.data;
+                imageMimeType = (part as any).inlineData.mimeType || 'image/png';
+                break;
+            }
+        }
+
+        if (!imageBase64) {
+            throw new HttpsError("internal", "Failed to generate avatar — no image in response");
+        }
+
+        const bucket = admin.storage().bucket();
+        const fileName = `coach-avatars/${request.auth.uid}/avatar_${Date.now()}.png`;
+        const file = bucket.file(fileName);
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+
+        await file.save(imageBuffer, {
+            metadata: {
+                contentType: imageMimeType || 'image/png',
+                metadata: { userId: request.auth.uid, generatedAt: new Date().toISOString() }
+            }
+        });
+
+        await file.makePublic();
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+        return { success: true, imageUrl: publicUrl };
+    } catch (error: any) {
+        console.error("generateCoachAvatar error:", error);
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError("internal", error?.message || "Failed to generate avatar");
+    }
+});
+
+/**
  * Extract text or describe images from uploaded chat attachments.
  * Supports PDF, DOCX, and common image formats.
  */

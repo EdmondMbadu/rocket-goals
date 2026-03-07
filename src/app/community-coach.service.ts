@@ -67,6 +67,22 @@ export class CommunityCoachService {
     return result.data as { success: boolean; coachId: string };
   }
 
+  async generateAvatar(payload: {
+    coachName: string;
+    coachDescription: string;
+    category: string;
+  }): Promise<{ success: boolean; imageUrl?: string }> {
+    const { getFunctions, httpsCallable } = await import('firebase/functions');
+    const { getApp } = await import('firebase/app');
+    const fn = httpsCallable(
+      getFunctions(getApp(), 'us-central1'),
+      'generateCoachAvatar',
+      { timeout: 60_000 }
+    );
+    const result = await fn(payload);
+    return result.data as { success: boolean; imageUrl?: string };
+  }
+
   async getPublicCoaches(): Promise<CommunityCoach[]> {
     const firestore = await this.getFirestore();
     const firestoreModule = await import('firebase/firestore');

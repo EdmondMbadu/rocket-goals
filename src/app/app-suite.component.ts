@@ -65,8 +65,8 @@ export class AppSuiteComponent implements OnInit {
   readonly coachName = signal('');
   readonly coachPersonality = signal('');
   readonly coachCategory = signal('Custom');
-  readonly coachIcon = signal('🎯');
   readonly coachAvatarPreview = signal<string | null>(null);
+  readonly generatingAvatar = signal(false);
   private coachAvatarData = '';
 
   // Step 2: Goal
@@ -436,8 +436,8 @@ export class AppSuiteComponent implements OnInit {
     this.coachName.set('');
     this.coachPersonality.set('');
     this.coachCategory.set('Custom');
-    this.coachIcon.set('🎯');
     this.coachAvatarPreview.set(null);
+    this.generatingAvatar.set(false);
     this.coachAvatarData = '';
     this.goalPrimaryGoal.set('');
     this.goalTheme.set('career');
@@ -485,11 +485,12 @@ export class AppSuiteComponent implements OnInit {
     const file = input?.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      this.wizardError.set('Image must be under 2 MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      this.wizardError.set('Image must be under 10 MB.');
       return;
     }
 
+    this.wizardError.set(null);
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
@@ -497,6 +498,43 @@ export class AppSuiteComponent implements OnInit {
       this.coachAvatarData = dataUrl;
     };
     reader.readAsDataURL(file);
+  }
+
+  async generateCoachAvatar() {
+    const name = this.coachName().trim();
+    const description = this.coachPersonality().trim();
+
+    if (!name) {
+      this.wizardError.set('Please enter a coach name first.');
+      return;
+    }
+    if (!description) {
+      this.wizardError.set('Please describe your coach\'s personality first.');
+      return;
+    }
+
+    this.generatingAvatar.set(true);
+    this.wizardError.set(null);
+
+    try {
+      const result = await this.communityCoachService.generateAvatar({
+        coachName: name,
+        coachDescription: description,
+        category: this.coachCategory()
+      });
+
+      if (result.success && result.imageUrl) {
+        this.coachAvatarPreview.set(result.imageUrl);
+        this.coachAvatarData = result.imageUrl;
+      } else {
+        this.wizardError.set('Could not generate avatar. Try again or upload your own.');
+      }
+    } catch (error: any) {
+      console.error('Avatar generation error:', error);
+      this.wizardError.set('Failed to generate avatar. Try again or upload your own image.');
+    } finally {
+      this.generatingAvatar.set(false);
+    }
   }
 
   setVisibility(v: 'public' | 'private') {
@@ -536,7 +574,7 @@ export class AppSuiteComponent implements OnInit {
         appName: this.goalAppName().trim(),
         tagline: this.goalTagline().trim(),
         description: this.coachPersonality().trim(),
-        icon: this.coachIcon().trim() || '🎯',
+        icon: '🎯',
         category: this.coachCategory(),
         visibility: this.coachVisibility(),
         defaultGoals: {
