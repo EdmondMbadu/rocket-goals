@@ -78,6 +78,7 @@ export class AppSuiteComponent implements OnInit {
   readonly goalObjective3 = signal('');
   readonly goalAppName = signal('');
   readonly goalTagline = signal('');
+  readonly goalDeadline = signal('');
 
   // Step 3: Visibility
   readonly coachVisibility = signal<'public' | 'private'>('public');
@@ -447,6 +448,7 @@ export class AppSuiteComponent implements OnInit {
     this.goalObjective3.set('');
     this.goalAppName.set('');
     this.goalTagline.set('');
+    this.goalDeadline.set('');
     this.coachVisibility.set('public');
   }
 
@@ -460,6 +462,7 @@ export class AppSuiteComponent implements OnInit {
         this.wizardError.set('Please describe your coach\'s personality.');
         return;
       }
+      this.prefillStep2();
     }
     if (this.wizardStep() === 2) {
       if (!this.goalPrimaryGoal().trim()) {
@@ -473,6 +476,92 @@ export class AppSuiteComponent implements OnInit {
     }
     this.wizardError.set(null);
     this.wizardStep.set(this.wizardStep() + 1);
+  }
+
+  private prefillStep2() {
+    const name = this.coachName().trim();
+    const personality = this.coachPersonality().trim();
+    const category = this.coachCategory();
+
+    if (!this.goalAppName()) {
+      const appName = name.replace(/^(coach|dr\.?|professor|sensei|mentor)\s+/i, '').trim();
+      const formatted = appName.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+      this.goalAppName.set(formatted || name);
+    }
+
+    if (!this.goalTagline()) {
+      const first = personality.split(/[.!?]/)[0]?.trim();
+      this.goalTagline.set(first ? (first.length > 80 ? first.substring(0, 77) + '...' : first) : `Your personal ${category.toLowerCase()} coach`);
+    }
+
+    if (!this.goalObjective1() && !this.goalObjective2() && !this.goalObjective3()) {
+      const objectives = this.deriveObjectives(personality, category);
+      this.goalObjective1.set(objectives[0] || '');
+      this.goalObjective2.set(objectives[1] || '');
+      this.goalObjective3.set(objectives[2] || '');
+    }
+
+    const themeMap: Record<string, string> = {
+      Business: 'career', Health: 'health', Fitness: 'fitness',
+      Career: 'career', Creative: 'creative', Learning: 'learning',
+      Sales: 'finance', Founder: 'career', Custom: 'personal'
+    };
+    if (this.goalTheme() === 'career' && themeMap[category]) {
+      this.goalTheme.set(themeMap[category]);
+    }
+
+    if (!this.goalDeadline()) {
+      const d = new Date();
+      d.setDate(d.getDate() + 30);
+      this.goalDeadline.set(this.formatDateISO(d));
+    }
+  }
+
+  private deriveObjectives(personality: string, category: string): string[] {
+    const lower = personality.toLowerCase();
+    const categoryDefaults: Record<string, string[]> = {
+      Business: ['Weekly business reviews', 'Revenue tracking', 'Customer outreach'],
+      Health: ['Daily health tracking', 'Nutrition planning', 'Wellness check-ins'],
+      Fitness: ['Complete daily workouts', 'Track progress metrics', 'Hit weekly targets'],
+      Career: ['Skill development', 'Networking outreach', 'Weekly progress review'],
+      Creative: ['Daily creative practice', 'Project milestones', 'Portfolio updates'],
+      Learning: ['Daily study sessions', 'Practice exercises', 'Knowledge reviews'],
+      Sales: ['Lead generation', 'Follow-up cadence', 'Deal closing'],
+      Founder: ['Product development', 'Customer acquisition', 'Revenue milestones'],
+      Custom: ['Daily progress', 'Weekly review', 'Hit key milestones']
+    };
+
+    const keywordObjectives: [string, string][] = [
+      ['workout', 'Complete daily workouts'],
+      ['weight', 'Track weight progress'],
+      ['nutrition', 'Follow nutrition plan'],
+      ['run', 'Complete training runs'],
+      ['code', 'Ship code daily'],
+      ['writing', 'Write every day'],
+      ['sales', 'Close deals consistently'],
+      ['marketing', 'Execute marketing campaigns'],
+      ['meditat', 'Daily mindfulness practice'],
+      ['read', 'Complete reading goals'],
+      ['network', 'Build professional network'],
+      ['budget', 'Track spending & savings']
+    ];
+
+    const matched: string[] = [];
+    for (const [keyword, objective] of keywordObjectives) {
+      if (lower.includes(keyword) && matched.length < 3) {
+        matched.push(objective);
+      }
+    }
+
+    if (matched.length >= 2) return matched.slice(0, 3);
+    return categoryDefaults[category] || categoryDefaults['Custom'];
+  }
+
+  private formatDateISO(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
   prevStep() {
@@ -591,6 +680,20 @@ export class AppSuiteComponent implements OnInit {
 
       const now = Date.now();
       const appName = this.goalAppName().trim();
+
+      const deadlineStr = this.goalDeadline();
+      let timeframe: string = 'week';
+      let deadlineDate: number | undefined;
+      if (deadlineStr) {
+        const end = new Date(deadlineStr);
+        deadlineDate = end.getTime();
+        const totalDays = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+        if (totalDays <= 7) timeframe = 'week';
+        else if (totalDays <= 30) timeframe = 'month';
+        else if (totalDays <= 90) timeframe = '3months';
+        else timeframe = '6months';
+      }
+
       const goalId = await this.goalsService.createRocketGoal({
         userId: profile.userId,
         primaryGoal: this.goalPrimaryGoal().trim(),
@@ -605,7 +708,8 @@ export class AppSuiteComponent implements OnInit {
           objectives: objectives.length > 0 ? objectives : ['Make progress'],
           custom_goal_title: `${appName} Mission`,
           goalDescription: this.coachPersonality().trim(),
-          timeframe: 'week'
+          timeframe,
+          ...(deadlineDate ? { deadlineDate } : {})
         },
         participant: {
           firstName: profile.firstName || '',
