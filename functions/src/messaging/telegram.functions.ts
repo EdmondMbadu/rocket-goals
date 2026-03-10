@@ -1356,9 +1356,8 @@ export const telegramWebhook = onRequest({
             const configuredAiName = String(teamData?.aiSettings?.displayName || '').trim();
             const aiMentionHandle = resolveTeamAiMentionHandle(configuredAiName || 'Rocket AI');
             const summonHandles = Array.from(new Set(['rocket', aiMentionHandle].filter(Boolean)));
-            const shouldSummonTeamAi = teamData?.aiCoachEnabled !== false
-              && (summonHandles.some((handle) => isTeamAiMentioned(messageText, handle))
-                || isBareFirstNameMention(messageText, configuredAiName));
+            // Always respond to every message in the group (not just mentions)
+            const shouldSummonTeamAi = teamData?.aiCoachEnabled !== false;
 
             if (shouldSummonTeamAi) {
               const apiKey = geminiApiKey.value();
@@ -1369,7 +1368,7 @@ export const telegramWebhook = onRequest({
                     .doc(teamId)
                     .collection('messages')
                     .orderBy('timestamp', 'desc')
-                    .limit(8)
+                    .limit(15)
                     .get();
 
                   const recentMessages = recentSnapshot.docs
@@ -2256,7 +2255,15 @@ TEAM CONTEXT:
 ${teamDesc ? `- Team purpose: ${teamDesc}` : ''}${membersContext}${chatContext}${aiPersonalityBlock}
 
 YOUR ROLE:
-You are the dedicated AI coach for THIS TEAM. The team itself is the goal. Focus entirely on what this team is working toward together based on the team name, purpose, and what members discuss in chat.
+You are the dedicated AI coach and conversational participant for THIS TEAM. You respond to EVERY message in the chat — not just when mentioned. You are always part of the conversation.
+
+CONVERSATION AWARENESS:
+- Read the RECENT CHAT MESSAGES carefully to understand the full context and flow of the conversation
+- Respond naturally to what was just said — acknowledge, build on, or react to the specific message
+- If someone shares progress, celebrate or dig deeper. If someone asks a question, answer it thoughtfully.
+- If someone is venting or struggling, empathize first, then offer perspective
+- If the conversation is casual or social, engage naturally — you don't have to coach every message
+- Match the energy and tone of the conversation — don't always be in "coach mode"
 
 IMPORTANT RULES:
 - NEVER reference members' personal/individual goals from outside this team
@@ -2264,12 +2271,12 @@ IMPORTANT RULES:
 - If the team name or description hints at a goal (e.g. "City to Shore Training"), treat THAT as the team's mission
 - Coach the team as a unit — encourage teamwork, accountability between members, and shared progress
 - Be encouraging, supportive, and actionable
-- Keep responses concise (2-4 short paragraphs max)
+- Keep responses concise (1-3 short paragraphs max) — shorter is better since you respond to everything
 - Reference team members by name to make it personal
-- Use a warm, motivational coaching tone
+- Use a warm, natural tone — like a knowledgeable teammate, not a lecture
 - If TEAM AI PERSONALITY is provided, follow it strictly for tone and communication style
 - Use emojis sparingly
-- If asked about something unrelated, be helpful but steer back to the team's mission`;
+- When someone shares data (like miles, workouts, progress), acknowledge the specific numbers and relate them to the team's goals`;
 
   const genAI = new GoogleGenerativeAI(resolvedApiKey);
   const model = genAI.getGenerativeModel({
@@ -2507,6 +2514,7 @@ export const sendDailyTeamAiMessages = onSchedule({
       const aiDisplayName = String(teamData?.aiSettings?.displayName || '').trim() || 'Rocket AI';
       const aiAvatarUrl = String(teamData?.aiSettings?.avatarUrl || '').trim();
 
+      const sendingToTelegram = !!(botToken && teamData?.telegramGroupId);
       const aiMsgData: Record<string, any> = {
         teamId,
         senderId: 'rocket-ai',
@@ -2514,7 +2522,9 @@ export const sendDailyTeamAiMessages = onSchedule({
         content: aiContent,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         type: 'ai-response',
-        source: 'web'
+        // Use 'telegram' source when sending directly to Telegram to prevent
+        // syncTeamMessageToTelegram trigger from sending a duplicate
+        source: sendingToTelegram ? 'telegram' : 'web'
       };
       if (aiAvatarUrl) aiMsgData.senderAvatarUrl = aiAvatarUrl;
 
@@ -2523,7 +2533,7 @@ export const sendDailyTeamAiMessages = onSchedule({
         .collection('messages').add(aiMsgData);
       await aiRef.update({ id: aiRef.id });
 
-      if (botToken && teamData?.telegramGroupId) {
+      if (sendingToTelegram) {
         await sendTelegramMessage(
           teamData.telegramGroupId,
           aiContent,
