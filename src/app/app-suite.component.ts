@@ -39,7 +39,7 @@ export interface PrebuiltTemplate {
 })
 export class AppSuiteComponent implements OnInit {
   private readonly defaultCoachPhilosophy =
-    'Every RocketGoals coach turns ambition into practical systems through clear priorities, disciplined action, and real accountability.';
+    'Every RocketGoals coach follows the RocketGoals philosophy, turning ambition into practical systems through clear priorities, disciplined action, and real accountability.';
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);

@@ -402,562 +402,6 @@
       </div>
       }
 
-      <!-- Create Coach Wizard Modal -->
-      @if (showCreateModal()) {
-      <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div class="absolute inset-0 z-0 bg-black/70 backdrop-blur-sm" (click)="closeCreateModal()"></div>
-        <div class="wizard-modal relative z-[210] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border"
-          [class]="isDarkMode() ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'">
-
-          <!-- Wizard Header -->
-          <div class="sticky top-0 z-10 px-8 pt-8 pb-4 border-b backdrop-blur-xl"
-            [class]="isDarkMode() ? 'bg-slate-900/95 border-white/10' : 'bg-white/95 border-slate-200'">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-2xl font-black tracking-tight"
-                [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
-                {{ forkingCoach ? 'Launch Your Goal with ' + forkingCoach.coachName : 'Create Your Coach' }}
-              </h2>
-              <button (click)="closeCreateModal()" class="p-2 rounded-full transition-colors"
-                [class]="isDarkMode() ? 'hover:bg-white/10 text-white/60' : 'hover:bg-slate-100 text-slate-400'">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Step Indicator -->
-            @if (forkingCoach) {
-            <div class="flex items-center gap-2">
-              <div class="flex-1 h-1.5 rounded-full bg-red-500 transition-all duration-300"></div>
-            </div>
-            <div class="flex justify-center mt-2">
-              <span class="text-[10px] font-bold uppercase tracking-widest text-red-500">
-                Launch Your Goal
-              </span>
-            </div>
-            } @else {
-            <div class="flex items-center gap-2">
-              @for (step of [1, 2, 3]; track step) {
-              <div class="flex-1 h-1.5 rounded-full transition-all duration-300"
-                [class]="wizardStep() >= step
-                  ? 'bg-red-500'
-                  : isDarkMode() ? 'bg-white/10' : 'bg-slate-200'">
-              </div>
-              }
-            </div>
-            <div class="flex justify-between mt-2">
-              <span class="text-[10px] font-bold uppercase tracking-widest"
-                [class]="wizardStep() === 1 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Coach Identity
-              </span>
-              <span class="text-[10px] font-bold uppercase tracking-widest"
-                [class]="wizardStep() === 2 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Coach App
-              </span>
-              <span class="text-[10px] font-bold uppercase tracking-widest"
-                [class]="wizardStep() === 3 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Save Coach
-              </span>
-            </div>
-            }
-          </div>
-
-          <!-- Wizard Body -->
-          <div class="px-8 py-6">
-
-            <!-- Error message -->
-            @if (wizardError()) {
-            <div class="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-medium">
-              {{ wizardError() }}
-            </div>
-            }
-
-            <!-- Step 1: Coach Identity -->
-            @if (wizardStep() === 1) {
-            <div class="space-y-5">
-              <div class="rounded-2xl border px-4 py-3"
-                [class]="isDarkMode() ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'">
-                <p class="text-sm font-semibold leading-relaxed"
-                  [class]="isDarkMode() ? 'text-white/75' : 'text-slate-700'">
-                  {{ coachPhilosophyBlurb() }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Name *</label>
-                <input type="text" [ngModel]="coachName()" (ngModelChange)="coachName.set($event)"
-                  placeholder="e.g., Coach Alex, Dr. Smith, Sensei Maya"
-                  class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                  [class]="isDarkMode()
-                    ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Personality & Expertise *</label>
-                <textarea [ngModel]="coachPersonality()" (ngModelChange)="coachPersonality.set($event)"
-                  placeholder="Describe your coach's personality, expertise, and coaching style. e.g., 'A direct, no-nonsense fitness coach who specializes in home workouts and nutrition planning. Motivates through tough love and data-driven progress tracking.'"
-                  rows="4"
-                  class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors resize-none"
-                  [class]="isDarkMode()
-                    ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-                </textarea>
-                <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p class="text-xs"
-                    [class]="isDarkMode() ? 'text-white/40' : 'text-slate-500'">
-                    Start with a short idea, then refine it and edit the result.
-                  </p>
-                  <button type="button" (click)="refineCoachPersonality()"
-                    [disabled]="!coachPersonality().trim() || expandingCoachPersonality()"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-[0.16em] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    [class]="isDarkMode()
-                      ? 'bg-white/10 text-white hover:bg-white/15'
-                      : 'bg-slate-900 text-white hover:bg-slate-700'">
-                    @if (expandingCoachPersonality()) {
-                    <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    <span>Refining</span>
-                    } @else {
-                    <span>Refine</span>
-                    }
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Category</label>
-                <select [ngModel]="coachCategory()" (ngModelChange)="coachCategory.set($event)"
-                  class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                  [class]="isDarkMode()
-                    ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
-                  @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ cat }}</option>
-                  }
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Avatar</label>
-
-                <!-- Avatar preview -->
-                <div class="flex items-start gap-5">
-                  <div class="flex-shrink-0">
-                    @if (coachAvatarPreview()) {
-                    <img [src]="coachAvatarPreview()" alt="Avatar preview"
-                      (click)="avatarLightboxOpen.set(true)"
-                      class="w-36 h-36 rounded-2xl object-cover border shadow-lg cursor-pointer transition-transform duration-200 hover:scale-105"
-                      [class]="isDarkMode() ? 'border-white/20' : 'border-slate-200'">
-                    } @else {
-                    <div class="w-36 h-36 rounded-2xl border-2 border-dashed flex items-center justify-center"
-                      [class]="isDarkMode() ? 'border-white/20 bg-white/5' : 'border-slate-300 bg-slate-50'">
-                      <svg class="w-12 h-12" [class]="isDarkMode() ? 'text-white/20' : 'text-slate-300'"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    }
-                  </div>
-
-                  <!-- Upload / Generate buttons -->
-                  <div class="flex flex-col gap-2 flex-1">
-                    <button type="button" (click)="generateCoachAvatar()"
-                      [disabled]="generatingAvatar()"
-                      class="w-full px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      [class]="isDarkMode()
-                        ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white hover:from-red-500 hover:to-orange-400 shadow-lg shadow-red-600/20'
-                        : 'bg-gradient-to-r from-red-600 to-orange-500 text-white hover:from-red-500 hover:to-orange-400 shadow-lg shadow-red-600/20'">
-                      @if (generatingAvatar()) {
-                      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                      </svg>
-                      <span>Generating...</span>
-                      } @else {
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      <span>Generate with AI</span>
-                      }
-                    </button>
-
-                    <div class="flex items-center gap-2">
-                      <div class="flex-1 h-px" [class]="isDarkMode() ? 'bg-white/10' : 'bg-slate-200'"></div>
-                      <span class="text-[10px] font-bold uppercase tracking-widest"
-                        [class]="isDarkMode() ? 'text-white/30' : 'text-slate-400'">or</span>
-                      <div class="flex-1 h-px" [class]="isDarkMode() ? 'bg-white/10' : 'bg-slate-200'"></div>
-                    </div>
-
-                    <label class="w-full px-4 py-2.5 rounded-xl border text-sm font-bold cursor-pointer transition-colors text-center"
-                      [class]="isDarkMode()
-                        ? 'border-white/20 text-white/70 hover:bg-white/10'
-                        : 'border-slate-300 text-slate-600 hover:bg-slate-100'">
-                      Upload Image
-                      <input type="file" accept="image/*" class="hidden" (change)="handleAvatarUpload($event)">
-                    </label>
-                    <p class="text-[11px] mt-0.5"
-                      [class]="isDarkMode() ? 'text-white/30' : 'text-slate-400'">
-                      Max 10 MB. Fill in the name & personality above to generate.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            }
-
-            <!-- Step 2 -->
-            @if (wizardStep() === 2) {
-            <div class="space-y-5">
-
-              @if (forkingCoach) {
-              <div class="flex items-center gap-3 p-4 rounded-xl border"
-                [class]="isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'">
-                @if (forkingCoach.avatar) {
-                <img [src]="forkingCoach.avatar" [alt]="forkingCoach.coachName"
-                  class="w-12 h-12 rounded-full object-cover border-2 border-red-500/30">
-                }
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-bold truncate"
-                    [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
-                    {{ forkingCoach.coachName }}
-                  </p>
-                  <p class="text-xs truncate"
-                    [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
-                    {{ forkingCoach.tagline || forkingCoach.description }}
-                  </p>
-                </div>
-                <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-red-500/10 text-red-500 whitespace-nowrap">
-                  Coach
-                </span>
-              </div>
-              <div class="rounded-2xl border p-4"
-                [class]="isDarkMode() ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'">
-                <div class="flex items-center justify-between gap-3">
-                  <div>
-                    <p class="text-xs font-black uppercase tracking-[0.2em]"
-                      [class]="isDarkMode() ? 'text-white/40' : 'text-slate-400'">Coach App</p>
-                    <p class="text-lg font-black mt-1"
-                      [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalAppName() }}</p>
-                  </div>
-                  <span class="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em]"
-                    [class]="isDarkMode() ? 'bg-white/10 text-white/60' : 'bg-white text-slate-500'">Ready</span>
-                </div>
-                @if (goalTagline()) {
-                <p class="mt-2 text-sm"
-                  [class]="isDarkMode() ? 'text-white/55' : 'text-slate-500'">{{ goalTagline() }}</p>
-                }
-              </div>
-              } @else {
-              <div class="rounded-2xl border p-4"
-                [class]="isDarkMode() ? 'border-blue-500/20 bg-blue-500/5' : 'border-blue-200 bg-blue-50'">
-                <p class="text-sm font-semibold"
-                  [class]="isDarkMode() ? 'text-blue-100' : 'text-blue-900'">
-                  Save your coach first. You will launch your goal from its coach card after this step.
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">App Name *</label>
-                <input type="text" [ngModel]="goalAppName()" (ngModelChange)="goalAppName.set($event)"
-                  placeholder="e.g., FitBlast, CodeMentor, ZenMind"
-                  class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                  [class]="isDarkMode()
-                    ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Tagline</label>
-                <input type="text" [ngModel]="goalTagline()" (ngModelChange)="goalTagline.set($event)"
-                  placeholder="e.g., Your personal fitness accountability partner"
-                  class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                  [class]="isDarkMode()
-                    ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-              </div>
-              }
-
-              @if (forkingCoach) {
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">What's your primary goal? *</label>
-                <input type="text" [ngModel]="goalPrimaryGoal()" (ngModelChange)="goalPrimaryGoal.set($event)"
-                  placeholder="e.g., Lose 20 pounds in 3 months, Launch my side project"
-                  class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                  [class]="isDarkMode()
-                    ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-              </div>
-
-              <div class="grid grid-cols-3 gap-4">
-                <div>
-                  <label class="block text-sm font-bold mb-2"
-                    [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Theme</label>
-                  <select [ngModel]="goalTheme()" (ngModelChange)="goalTheme.set($event)"
-                    class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                    [class]="isDarkMode()
-                      ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
-                    @for (t of themes; track t.value) {
-                    <option [value]="t.value">{{ t.label }}</option>
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2"
-                    [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Daily Effort</label>
-                  <select [ngModel]="goalDailyEffort()" (ngModelChange)="goalDailyEffort.set($event)"
-                    class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                    [class]="isDarkMode()
-                      ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
-                    @for (e of effortOptions; track e.value) {
-                    <option [value]="e.value">{{ e.label }}</option>
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2"
-                    [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Deadline</label>
-                  <input type="date" [ngModel]="goalDeadline()" (ngModelChange)="goalDeadline.set($event)"
-                    class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                    [class]="isDarkMode()
-                      ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold mb-2"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Key Objectives (up to 3)</label>
-                <div class="space-y-2">
-                  <input type="text" [ngModel]="goalObjective1()" (ngModelChange)="goalObjective1.set($event)"
-                    placeholder="Objective 1, e.g., Complete daily workouts"
-                    class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                    [class]="isDarkMode()
-                      ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-                  <input type="text" [ngModel]="goalObjective2()" (ngModelChange)="goalObjective2.set($event)"
-                    placeholder="Objective 2, e.g., Track nutrition daily"
-                    class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                    [class]="isDarkMode()
-                      ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-                  <input type="text" [ngModel]="goalObjective3()" (ngModelChange)="goalObjective3.set($event)"
-                    placeholder="Objective 3, e.g., Hit weekly milestones"
-                    class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
-                    [class]="isDarkMode()
-                      ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
-                </div>
-              </div>
-              }
-            </div>
-            }
-
-            <!-- Step 3: Visibility + Save -->
-            @if (wizardStep() === 3) {
-            <div class="space-y-6">
-              <div>
-                <label class="block text-sm font-bold mb-3"
-                  [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Visibility</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <!-- Public Option -->
-                  <button type="button" (click)="setVisibility('public')"
-                    class="p-4 rounded-2xl border-2 text-left transition-all duration-300"
-                    [class]="coachVisibility() === 'public'
-                      ? 'border-red-500 bg-red-500/10'
-                      : isDarkMode() ? 'border-white/10 hover:border-white/30' : 'border-slate-200 hover:border-slate-400'">
-                    <div class="flex items-center gap-2 mb-2">
-                      <svg class="w-5 h-5" [class]="coachVisibility() === 'public' ? 'text-red-500' : isDarkMode() ? 'text-white/50' : 'text-slate-400'"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span class="text-sm font-black"
-                        [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">Public</span>
-                    </div>
-                    <p class="text-xs"
-                      [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
-                      Visible to everyone. Help others achieve similar goals.
-                    </p>
-                  </button>
-
-                  <!-- Private Option -->
-                  <button type="button" (click)="setVisibility('private')"
-                    class="p-4 rounded-2xl border-2 text-left transition-all duration-300 relative"
-                    [class]="coachVisibility() === 'private'
-                      ? 'border-red-500 bg-red-500/10'
-                      : !hasMoonshot()
-                        ? 'border-white/5 opacity-60 cursor-not-allowed'
-                        : isDarkMode() ? 'border-white/10 hover:border-white/30' : 'border-slate-200 hover:border-slate-400'">
-                    <div class="flex items-center gap-2 mb-2">
-                      <svg class="w-5 h-5" [class]="coachVisibility() === 'private' ? 'text-red-500' : isDarkMode() ? 'text-white/50' : 'text-slate-400'"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      <span class="text-sm font-black"
-                        [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">Private</span>
-                      @if (!hasMoonshot()) {
-                      <span class="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-black uppercase">
-                        Moonshot
-                      </span>
-                      }
-                    </div>
-                    <p class="text-xs"
-                      [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
-                      Only visible to you. Your personal AI coach.
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Upgrade prompt for non-Moonshot users -->
-              @if (!hasMoonshot()) {
-              <div class="p-4 rounded-2xl border"
-                [class]="isDarkMode() ? 'bg-orange-500/5 border-orange-500/20' : 'bg-orange-50 border-orange-200'">
-                <div class="flex items-start gap-3">
-                  <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 class="text-sm font-black mb-1"
-                      [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
-                      Want a private coach?
-                    </h4>
-                    <p class="text-xs mb-3"
-                      [class]="isDarkMode() ? 'text-white/60' : 'text-slate-600'">
-                      Upgrade to Moonshot ($9.99/mo) to create private coaches only visible to you, plus get custom reminders, weekly progress PDFs, and more.
-                    </p>
-                    <button (click)="goToPricing()" type="button"
-                      class="px-4 py-2 rounded-xl bg-orange-500 text-white text-xs font-black hover:bg-orange-600 transition-colors">
-                      Upgrade to Moonshot
-                    </button>
-                  </div>
-                </div>
-              </div>
-              }
-
-              <!-- Summary -->
-              <div class="p-4 rounded-2xl border"
-                [class]="isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'">
-                <h4 class="text-sm font-black mb-3"
-                  [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">Summary</h4>
-                <div class="space-y-2 text-sm"
-                  [class]="isDarkMode() ? 'text-white/60' : 'text-slate-600'">
-                  <div class="flex justify-between">
-                    <span>Coach</span>
-                    <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ coachName() || '—' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>App Name</span>
-                    <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalAppName() || '—' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Tagline</span>
-                    <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalTagline() || '—' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Visibility</span>
-                    <span class="font-bold capitalize" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ coachVisibility() }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            }
-          </div>
-
-          <!-- Wizard Footer -->
-          <div class="sticky bottom-0 px-8 py-5 border-t flex items-center justify-between backdrop-blur-xl"
-            [class]="isDarkMode() ? 'bg-slate-900/95 border-white/10' : 'bg-white/95 border-slate-200'">
-            @if (wizardStep() > 1 && !(forkingCoach && wizardStep() === 2)) {
-            <button (click)="prevStep()" type="button"
-              class="px-6 py-3 rounded-xl border text-sm font-bold transition-colors"
-              [class]="isDarkMode()
-                ? 'border-white/20 text-white/70 hover:bg-white/10'
-                : 'border-slate-300 text-slate-600 hover:bg-slate-100'">
-              Back
-            </button>
-            } @else {
-            <div></div>
-            }
-
-            @if (wizardStep() < 3 && !(forkingCoach && wizardStep() === 2)) {
-            <button (click)="nextStep()" type="button"
-              class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30">
-              Continue
-            </button>
-            } @else if (forkingCoach && wizardStep() === 2) {
-            <button (click)="nextStep()" type="button"
-              [disabled]="wizardSubmitting()"
-              class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-              @if (wizardSubmitting()) {
-              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              <span>Launching...</span>
-              } @else {
-              <span>Launch Your Goal</span>
-              }
-            </button>
-            } @else {
-            <button (click)="submitCoach()" type="button"
-              [disabled]="wizardSubmitting()"
-              class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-              @if (wizardSubmitting()) {
-              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              <span>Saving...</span>
-              } @else {
-              <span>Save Your Coach</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              }
-            </button>
-            }
-          </div>
-        </div>
-      </div>
-      }
-
-      <!-- Avatar Lightbox -->
-      @if (avatarLightboxOpen() && coachAvatarPreview()) {
-      <div class="fixed inset-0 z-[200] flex items-center justify-center p-6"
-        (click)="avatarLightboxOpen.set(false)">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="relative z-10 avatar-lightbox-enter" (click)="$event.stopPropagation()">
-          <img [src]="coachAvatarPreview()" alt="Coach avatar"
-            class="max-w-[min(90vw,500px)] max-h-[80vh] rounded-3xl shadow-2xl object-contain border"
-            [class]="isDarkMode() ? 'border-white/10' : 'border-slate-200'">
-          <button (click)="avatarLightboxOpen.set(false)"
-            class="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors shadow-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      }
-
       <!-- Bottom CTA -->
       <div class="mt-32 text-center">
         <div class="inline-flex flex-col sm:flex-row items-center gap-8">
@@ -994,4 +438,553 @@
       </p>
     </div>
   </footer>
+
+  <!-- Create Coach Wizard Modal -->
+  @if (showCreateModal()) {
+  <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div class="absolute inset-0 z-0 bg-black/70 backdrop-blur-sm" (click)="closeCreateModal()"></div>
+    <div class="wizard-modal relative z-[210] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border"
+      [class]="isDarkMode() ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'">
+
+      <!-- Wizard Header -->
+      <div class="sticky top-0 z-10 px-8 pt-8 pb-4 border-b backdrop-blur-xl"
+        [class]="isDarkMode() ? 'bg-slate-900/95 border-white/10' : 'bg-white/95 border-slate-200'">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-black tracking-tight"
+            [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
+            {{ forkingCoach ? 'Launch Your Goal with ' + forkingCoach.coachName : 'Create Your Coach' }}
+          </h2>
+          <button (click)="closeCreateModal()" class="p-2 rounded-full transition-colors"
+            [class]="isDarkMode() ? 'hover:bg-white/10 text-white/60' : 'hover:bg-slate-100 text-slate-400'">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Step Indicator -->
+        @if (forkingCoach) {
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-1.5 rounded-full bg-red-500 transition-all duration-300"></div>
+        </div>
+        <div class="flex justify-center mt-2">
+          <span class="text-[10px] font-bold uppercase tracking-widest text-red-500">
+            Launch Your Goal
+          </span>
+        </div>
+        } @else {
+        <div class="flex items-center gap-2">
+          @for (step of [1, 2, 3]; track step) {
+          <div class="flex-1 h-1.5 rounded-full transition-all duration-300"
+            [class]="wizardStep() >= step
+              ? 'bg-red-500'
+              : isDarkMode() ? 'bg-white/10' : 'bg-slate-200'">
+          </div>
+          }
+        </div>
+        <div class="flex justify-between mt-2">
+          <span class="text-[10px] font-bold uppercase tracking-widest"
+            [class]="wizardStep() === 1 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
+            Coach Identity
+          </span>
+          <span class="text-[10px] font-bold uppercase tracking-widest"
+            [class]="wizardStep() === 2 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
+            Coach App
+          </span>
+          <span class="text-[10px] font-bold uppercase tracking-widest"
+            [class]="wizardStep() === 3 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
+            Save Coach
+          </span>
+        </div>
+        }
+      </div>
+
+      <!-- Wizard Body -->
+      <div class="px-8 py-6">
+
+        <!-- Error message -->
+        @if (wizardError()) {
+        <div class="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-medium">
+          {{ wizardError() }}
+        </div>
+        }
+
+        <!-- Step 1: Coach Identity -->
+        @if (wizardStep() === 1) {
+        <div class="space-y-5">
+          <div class="rounded-2xl border px-4 py-3"
+            [class]="isDarkMode() ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'">
+            <p class="text-sm font-semibold leading-relaxed"
+              [class]="isDarkMode() ? 'text-white/75' : 'text-slate-700'">
+              {{ coachPhilosophyBlurb() }}
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Name *</label>
+            <input type="text" [ngModel]="coachName()" (ngModelChange)="coachName.set($event)"
+              placeholder="e.g., Coach Alex, Dr. Smith, Sensei Maya"
+              class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+              [class]="isDarkMode()
+                ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Personality & Expertise *</label>
+            <textarea [ngModel]="coachPersonality()" (ngModelChange)="coachPersonality.set($event)"
+              placeholder="Describe your coach's personality, expertise, and coaching style. e.g., 'A direct, no-nonsense fitness coach who specializes in home workouts and nutrition planning. Motivates through tough love and data-driven progress tracking.'"
+              rows="4"
+              class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors resize-none"
+              [class]="isDarkMode()
+                ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+            </textarea>
+            <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p class="text-xs"
+                [class]="isDarkMode() ? 'text-white/40' : 'text-slate-500'">
+                Start with a short idea, then refine it and edit the result.
+              </p>
+              <button type="button" (click)="refineCoachPersonality()"
+                [disabled]="!coachPersonality().trim() || expandingCoachPersonality()"
+                class="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-[0.16em] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                [class]="isDarkMode()
+                  ? 'bg-white/10 text-white hover:bg-white/15'
+                  : 'bg-slate-900 text-white hover:bg-slate-700'">
+                @if (expandingCoachPersonality()) {
+                <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span>Refining</span>
+                } @else {
+                <span>Refine</span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Category</label>
+            <select [ngModel]="coachCategory()" (ngModelChange)="coachCategory.set($event)"
+              class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+              [class]="isDarkMode()
+                ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
+                : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
+              @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Avatar</label>
+
+            <div class="flex items-start gap-5">
+              <div class="flex-shrink-0">
+                @if (coachAvatarPreview()) {
+                <img [src]="coachAvatarPreview()" alt="Avatar preview"
+                  (click)="avatarLightboxOpen.set(true)"
+                  class="w-36 h-36 rounded-2xl object-cover border shadow-lg cursor-pointer transition-transform duration-200 hover:scale-105"
+                  [class]="isDarkMode() ? 'border-white/20' : 'border-slate-200'">
+                } @else {
+                <div class="w-36 h-36 rounded-2xl border-2 border-dashed flex items-center justify-center"
+                  [class]="isDarkMode() ? 'border-white/20 bg-white/5' : 'border-slate-300 bg-slate-50'">
+                  <svg class="w-12 h-12" [class]="isDarkMode() ? 'text-white/20' : 'text-slate-300'"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                }
+              </div>
+
+              <div class="flex flex-col gap-2 flex-1">
+                <button type="button" (click)="generateCoachAvatar()"
+                  [disabled]="generatingAvatar()"
+                  class="w-full px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [class]="isDarkMode()
+                    ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white hover:from-red-500 hover:to-orange-400 shadow-lg shadow-red-600/20'
+                    : 'bg-gradient-to-r from-red-600 to-orange-500 text-white hover:from-red-500 hover:to-orange-400 shadow-lg shadow-red-600/20'">
+                  @if (generatingAvatar()) {
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <span>Generating...</span>
+                  } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Generate with AI</span>
+                  }
+                </button>
+
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-px" [class]="isDarkMode() ? 'bg-white/10' : 'bg-slate-200'"></div>
+                  <span class="text-[10px] font-bold uppercase tracking-widest"
+                    [class]="isDarkMode() ? 'text-white/30' : 'text-slate-400'">or</span>
+                  <div class="flex-1 h-px" [class]="isDarkMode() ? 'bg-white/10' : 'bg-slate-200'"></div>
+                </div>
+
+                <label class="w-full px-4 py-2.5 rounded-xl border text-sm font-bold cursor-pointer transition-colors text-center"
+                  [class]="isDarkMode()
+                    ? 'border-white/20 text-white/70 hover:bg-white/10'
+                    : 'border-slate-300 text-slate-600 hover:bg-slate-100'">
+                  Upload Image
+                  <input type="file" accept="image/*" class="hidden" (change)="handleAvatarUpload($event)">
+                </label>
+                <p class="text-[11px] mt-0.5"
+                  [class]="isDarkMode() ? 'text-white/30' : 'text-slate-400'">
+                  Max 10 MB. Fill in the name & personality above to generate.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+
+        <!-- Step 2 -->
+        @if (wizardStep() === 2) {
+        <div class="space-y-5">
+
+          @if (forkingCoach) {
+          <div class="flex items-center gap-3 p-4 rounded-xl border"
+            [class]="isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'">
+            @if (forkingCoach.avatar) {
+            <img [src]="forkingCoach.avatar" [alt]="forkingCoach.coachName"
+              class="w-12 h-12 rounded-full object-cover border-2 border-red-500/30">
+            }
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-bold truncate"
+                [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
+                {{ forkingCoach.coachName }}
+              </p>
+              <p class="text-xs truncate"
+                [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
+                {{ forkingCoach.tagline || forkingCoach.description }}
+              </p>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-red-500/10 text-red-500 whitespace-nowrap">
+              Coach
+            </span>
+          </div>
+          <div class="rounded-2xl border p-4"
+            [class]="isDarkMode() ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-black uppercase tracking-[0.2em]"
+                  [class]="isDarkMode() ? 'text-white/40' : 'text-slate-400'">Coach App</p>
+                <p class="text-lg font-black mt-1"
+                  [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalAppName() }}</p>
+              </div>
+              <span class="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em]"
+                [class]="isDarkMode() ? 'bg-white/10 text-white/60' : 'bg-white text-slate-500'">Ready</span>
+            </div>
+            @if (goalTagline()) {
+            <p class="mt-2 text-sm"
+              [class]="isDarkMode() ? 'text-white/55' : 'text-slate-500'">{{ goalTagline() }}</p>
+            }
+          </div>
+          } @else {
+          <div class="rounded-2xl border p-4"
+            [class]="isDarkMode() ? 'border-blue-500/20 bg-blue-500/5' : 'border-blue-200 bg-blue-50'">
+            <p class="text-sm font-semibold"
+              [class]="isDarkMode() ? 'text-blue-100' : 'text-blue-900'">
+              Save your coach first. You will launch your goal from its coach card after this step.
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">App Name *</label>
+            <input type="text" [ngModel]="goalAppName()" (ngModelChange)="goalAppName.set($event)"
+              placeholder="e.g., FitBlast, CodeMentor, ZenMind"
+              class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+              [class]="isDarkMode()
+                ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Tagline</label>
+            <input type="text" [ngModel]="goalTagline()" (ngModelChange)="goalTagline.set($event)"
+              placeholder="e.g., Your personal fitness accountability partner"
+              class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+              [class]="isDarkMode()
+                ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+          </div>
+          }
+
+          @if (forkingCoach) {
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">What's your primary goal? *</label>
+            <input type="text" [ngModel]="goalPrimaryGoal()" (ngModelChange)="goalPrimaryGoal.set($event)"
+              placeholder="e.g., Lose 20 pounds in 3 months, Launch my side project"
+              class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+              [class]="isDarkMode()
+                ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-bold mb-2"
+                [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Theme</label>
+              <select [ngModel]="goalTheme()" (ngModelChange)="goalTheme.set($event)"
+                class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+                [class]="isDarkMode()
+                  ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
+                @for (t of themes; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2"
+                [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Daily Effort</label>
+              <select [ngModel]="goalDailyEffort()" (ngModelChange)="goalDailyEffort.set($event)"
+                class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+                [class]="isDarkMode()
+                  ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
+                @for (e of effortOptions; track e.value) {
+                <option [value]="e.value">{{ e.label }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2"
+                [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Deadline</label>
+              <input type="date" [ngModel]="goalDeadline()" (ngModelChange)="goalDeadline.set($event)"
+                class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+                [class]="isDarkMode()
+                  ? 'bg-white/5 border-white/10 text-white focus:border-red-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-red-500'">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Key Objectives (up to 3)</label>
+            <div class="space-y-2">
+              <input type="text" [ngModel]="goalObjective1()" (ngModelChange)="goalObjective1.set($event)"
+                placeholder="Objective 1, e.g., Complete daily workouts"
+                class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+                [class]="isDarkMode()
+                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+              <input type="text" [ngModel]="goalObjective2()" (ngModelChange)="goalObjective2.set($event)"
+                placeholder="Objective 2, e.g., Track nutrition daily"
+                class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+                [class]="isDarkMode()
+                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+              <input type="text" [ngModel]="goalObjective3()" (ngModelChange)="goalObjective3.set($event)"
+                placeholder="Objective 3, e.g., Hit weekly milestones"
+                class="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
+                [class]="isDarkMode()
+                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
+            </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Step 3: Visibility + Save -->
+        @if (wizardStep() === 3) {
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-bold mb-3"
+              [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Visibility</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" (click)="setVisibility('public')"
+                class="p-4 rounded-2xl border-2 text-left transition-all duration-300"
+                [class]="coachVisibility() === 'public'
+                  ? 'border-red-500 bg-red-500/10'
+                  : isDarkMode() ? 'border-white/10 hover:border-white/30' : 'border-slate-200 hover:border-slate-400'">
+                <div class="flex items-center gap-2 mb-2">
+                  <svg class="w-5 h-5" [class]="coachVisibility() === 'public' ? 'text-red-500' : isDarkMode() ? 'text-white/50' : 'text-slate-400'"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm font-black"
+                    [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">Public</span>
+                </div>
+                <p class="text-xs"
+                  [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
+                  Visible to everyone. Help others achieve similar goals.
+                </p>
+              </button>
+
+              <button type="button" (click)="setVisibility('private')"
+                class="p-4 rounded-2xl border-2 text-left transition-all duration-300 relative"
+                [class]="coachVisibility() === 'private'
+                  ? 'border-red-500 bg-red-500/10'
+                  : !hasMoonshot()
+                    ? 'border-white/5 opacity-60 cursor-not-allowed'
+                    : isDarkMode() ? 'border-white/10 hover:border-white/30' : 'border-slate-200 hover:border-slate-400'">
+                <div class="flex items-center gap-2 mb-2">
+                  <svg class="w-5 h-5" [class]="coachVisibility() === 'private' ? 'text-red-500' : isDarkMode() ? 'text-white/50' : 'text-slate-400'"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span class="text-sm font-black"
+                    [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">Private</span>
+                  @if (!hasMoonshot()) {
+                  <span class="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-black uppercase">
+                    Moonshot
+                  </span>
+                  }
+                </div>
+                <p class="text-xs"
+                  [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
+                  Only visible to you. Your personal AI coach.
+                </p>
+              </button>
+            </div>
+          </div>
+
+          @if (!hasMoonshot()) {
+          <div class="p-4 rounded-2xl border"
+            [class]="isDarkMode() ? 'bg-orange-500/5 border-orange-500/20' : 'bg-orange-50 border-orange-200'">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-sm font-black mb-1"
+                  [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
+                  Want a private coach?
+                </h4>
+                <p class="text-xs mb-3"
+                  [class]="isDarkMode() ? 'text-white/60' : 'text-slate-600'">
+                  Upgrade to Moonshot ($9.99/mo) to create private coaches only visible to you, plus get custom reminders, weekly progress PDFs, and more.
+                </p>
+                <button (click)="goToPricing()" type="button"
+                  class="px-4 py-2 rounded-xl bg-orange-500 text-white text-xs font-black hover:bg-orange-600 transition-colors">
+                  Upgrade to Moonshot
+                </button>
+              </div>
+            </div>
+          </div>
+          }
+
+          <div class="p-4 rounded-2xl border"
+            [class]="isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'">
+            <h4 class="text-sm font-black mb-3"
+              [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">Summary</h4>
+            <div class="space-y-2 text-sm"
+              [class]="isDarkMode() ? 'text-white/60' : 'text-slate-600'">
+              <div class="flex justify-between">
+                <span>Coach</span>
+                <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ coachName() || '—' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>App Name</span>
+                <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalAppName() || '—' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Tagline</span>
+                <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalTagline() || '—' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Visibility</span>
+                <span class="font-bold capitalize" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ coachVisibility() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="sticky bottom-0 px-8 py-5 border-t flex items-center justify-between backdrop-blur-xl"
+        [class]="isDarkMode() ? 'bg-slate-900/95 border-white/10' : 'bg-white/95 border-slate-200'">
+        @if (wizardStep() > 1 && !(forkingCoach && wizardStep() === 2)) {
+        <button (click)="prevStep()" type="button"
+          class="px-6 py-3 rounded-xl border text-sm font-bold transition-colors"
+          [class]="isDarkMode()
+            ? 'border-white/20 text-white/70 hover:bg-white/10'
+            : 'border-slate-300 text-slate-600 hover:bg-slate-100'">
+          Back
+        </button>
+        } @else {
+        <div></div>
+        }
+
+        @if (wizardStep() < 3 && !(forkingCoach && wizardStep() === 2)) {
+        <button (click)="nextStep()" type="button"
+          class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30">
+          Continue
+        </button>
+        } @else if (forkingCoach && wizardStep() === 2) {
+        <button (click)="nextStep()" type="button"
+          [disabled]="wizardSubmitting()"
+          class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          @if (wizardSubmitting()) {
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span>Launching...</span>
+          } @else {
+          <span>Launch Your Goal</span>
+          }
+        </button>
+        } @else {
+        <button (click)="submitCoach()" type="button"
+          [disabled]="wizardSubmitting()"
+          class="px-8 py-3 rounded-xl bg-red-600 text-white text-sm font-black hover:bg-red-500 transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          @if (wizardSubmitting()) {
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span>Saving...</span>
+          } @else {
+          <span>Save Your Coach</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          }
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Avatar Lightbox -->
+  @if (avatarLightboxOpen() && coachAvatarPreview()) {
+  <div class="fixed inset-0 z-[220] flex items-center justify-center p-6"
+    (click)="avatarLightboxOpen.set(false)">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="relative z-10 avatar-lightbox-enter" (click)="$event.stopPropagation()">
+      <img [src]="coachAvatarPreview()" alt="Coach avatar"
+        class="max-w-[min(90vw,500px)] max-h-[80vh] rounded-3xl shadow-2xl object-contain border"
+        [class]="isDarkMode() ? 'border-white/10' : 'border-slate-200'">
+      <button (click)="avatarLightboxOpen.set(false)"
+        class="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors shadow-lg">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  }
 </div>
