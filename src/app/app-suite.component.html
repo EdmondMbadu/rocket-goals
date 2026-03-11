@@ -404,9 +404,9 @@
 
       <!-- Create Coach Wizard Modal -->
       @if (showCreateModal()) {
-      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" (click)="closeCreateModal()"></div>
-        <div class="wizard-modal relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border"
+      <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div class="absolute inset-0 z-0 bg-black/70 backdrop-blur-sm" (click)="closeCreateModal()"></div>
+        <div class="wizard-modal relative z-[210] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border"
           [class]="isDarkMode() ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'">
 
           <!-- Wizard Header -->
@@ -475,6 +475,14 @@
             <!-- Step 1: Coach Identity -->
             @if (wizardStep() === 1) {
             <div class="space-y-5">
+              <div class="rounded-2xl border px-4 py-3"
+                [class]="isDarkMode() ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'">
+                <p class="text-sm font-semibold leading-relaxed"
+                  [class]="isDarkMode() ? 'text-white/75' : 'text-slate-700'">
+                  {{ coachPhilosophyBlurb() }}
+                </p>
+              </div>
+
               <div>
                 <label class="block text-sm font-bold mb-2"
                   [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">Coach Name *</label>
@@ -497,6 +505,28 @@
                     ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
                     : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
                 </textarea>
+                <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p class="text-xs"
+                    [class]="isDarkMode() ? 'text-white/40' : 'text-slate-500'">
+                    Start with a short idea, then refine it and edit the result.
+                  </p>
+                  <button type="button" (click)="refineCoachPersonality()"
+                    [disabled]="!coachPersonality().trim() || expandingCoachPersonality()"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-[0.16em] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    [class]="isDarkMode()
+                      ? 'bg-white/10 text-white hover:bg-white/15'
+                      : 'bg-slate-900 text-white hover:bg-slate-700'">
+                    @if (expandingCoachPersonality()) {
+                    <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span>Refining</span>
+                    } @else {
+                    <span>Refine</span>
+                    }
+                  </button>
+                </div>
               </div>
 
               <div>

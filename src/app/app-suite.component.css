@@ -506,6 +506,7 @@ button:focus-visible {
 /* Wizard Modal */
 .wizard-modal {
   animation: modal-enter 0.3s ease-out forwards;
+  isolation: isolate;
 }
 
 @keyframes modal-enter {

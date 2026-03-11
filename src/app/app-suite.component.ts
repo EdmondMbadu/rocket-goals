@@ -9,6 +9,7 @@ import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import { VisualizationService } from './visualization.service';
 import { CoachPromptsService } from './coach-prompts.service';
 import { CommunityCoachService, CommunityCoach } from './community-coach.service';
+import { RocketGoalsAIService } from './rocket-goals-ai.service';
 
 export interface PrebuiltTemplate {
   id: string;
@@ -37,6 +38,8 @@ export interface PrebuiltTemplate {
   styleUrl: './app-suite.component.css'
 })
 export class AppSuiteComponent implements OnInit {
+  private readonly defaultCoachPhilosophy =
+    'Every RocketGoals coach turns ambition into practical systems through clear priorities, disciplined action, and real accountability.';
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly goalsService = inject(RocketGoalsService);
@@ -44,6 +47,7 @@ export class AppSuiteComponent implements OnInit {
   private readonly visualizationService = inject(VisualizationService);
   private readonly coachPromptsService = inject(CoachPromptsService);
   private readonly communityCoachService = inject(CommunityCoachService);
+  private readonly aiService = inject(RocketGoalsAIService);
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
@@ -69,8 +73,10 @@ export class AppSuiteComponent implements OnInit {
   readonly coachCategory = signal('Custom');
   readonly coachAvatarPreview = signal<string | null>(null);
   readonly generatingAvatar = signal(false);
+  readonly expandingCoachPersonality = signal(false);
   readonly avatarLightboxOpen = signal(false);
   private coachAvatarData = '';
+  protected readonly coachPhilosophyBlurb = signal(this.defaultCoachPhilosophy);
 
   // Step 2: Goal
   readonly goalPrimaryGoal = signal('');
@@ -429,6 +435,7 @@ export class AppSuiteComponent implements OnInit {
       });
       return;
     }
+    this.closeMobileNav();
     this.pageNotice.set(null);
     this.resetWizard();
     this.showCreateModal.set(true);
@@ -449,6 +456,7 @@ export class AppSuiteComponent implements OnInit {
     this.coachCategory.set('Custom');
     this.coachAvatarPreview.set(null);
     this.generatingAvatar.set(false);
+    this.expandingCoachPersonality.set(false);
     this.avatarLightboxOpen.set(false);
     this.coachAvatarData = '';
     this.goalPrimaryGoal.set('');
@@ -641,6 +649,47 @@ export class AppSuiteComponent implements OnInit {
     }
   }
 
+  async refineCoachPersonality() {
+    const seed = this.coachPersonality().trim();
+    if (!seed) {
+      this.wizardError.set('Start with a short coach description first.');
+      return;
+    }
+
+    this.expandingCoachPersonality.set(true);
+    this.wizardError.set(null);
+
+    try {
+      const prompt = `You are helping create an AI coach profile inside RocketGoals.
+
+Coach category: ${this.coachCategory()}
+Coach name: ${this.coachName().trim() || 'Unnamed coach'}
+RocketGoals philosophy: ${this.coachPhilosophyBlurb()}
+
+User draft:
+${seed}
+
+Rewrite this into a clearer, stronger coach profile the user can edit.
+Requirements:
+- Keep it concise: 4 to 6 sentences.
+- Make the coach feel specific and credible.
+- Include coaching style, domain expertise, accountability style, and how progress is measured.
+- Keep the tone practical, motivating, and aligned with RocketGoals.
+- Return only the rewritten profile text.`;
+
+      const response = await this.aiService.callAISilent(prompt);
+      const refined = this.normalizeCoachPersonality(response);
+      this.coachPersonality.set(refined);
+      this.prefillCoachSetupStep();
+    } catch (error) {
+      console.warn('Failed to refine coach personality with AI:', error);
+      this.coachPersonality.set(this.buildFallbackCoachPersonality(seed));
+      this.prefillCoachSetupStep();
+    } finally {
+      this.expandingCoachPersonality.set(false);
+    }
+  }
+
   setVisibility(v: 'public' | 'private') {
     if (v === 'private' && !this.hasMoonshot()) {
       return;
@@ -721,6 +770,7 @@ export class AppSuiteComponent implements OnInit {
       return;
     }
 
+    this.closeMobileNav();
     this.pageNotice.set(null);
     this.resetWizard();
     this.forkingCoach = coach;
@@ -856,6 +906,21 @@ export class AppSuiteComponent implements OnInit {
       Custom: 'personal'
     };
     return themeMap[category] || 'personal';
+  }
+
+  private normalizeCoachPersonality(value: string): string {
+    return value
+      .replace(/\r\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  private buildFallbackCoachPersonality(seed: string): string {
+    const cleanedSeed = seed.replace(/\s+/g, ' ').trim();
+    const category = this.coachCategory().toLowerCase();
+    const coachName = this.coachName().trim() || 'This coach';
+
+    return `${coachName} is a ${category} coach built around ${cleanedSeed}. They turn big ambitions into a clear weekly plan, keep the user accountable with direct check-ins, and focus on the next highest-leverage action instead of vague motivation. They measure progress through visible milestones, consistent daily effort, and honest review of what is or is not working. Their style stays practical, encouraging, and aligned with the RocketGoals philosophy of clarity, execution, and momentum.`;
   }
 
   private async generateVisualizationAsync(
