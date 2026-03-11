@@ -178,6 +178,16 @@
           Choose your coach and gain 24/7 access to best-in-class coaching,
           feedback and results — delivered directly to your phone!
         </p>
+
+        @if (pageNotice()) {
+        <div class="mt-6 inline-flex max-w-2xl items-center gap-3 rounded-2xl border px-4 py-3 text-left"
+          [class]="isDarkMode() ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100' : 'border-emerald-200 bg-emerald-50 text-emerald-900'">
+          <svg class="h-5 w-5 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span class="text-sm font-semibold">{{ pageNotice() }}</span>
+        </div>
+        }
       </div>
 
       <!-- App Cards Grid -->
@@ -236,7 +246,7 @@
             <!-- Launch Button -->
             <div
               class="w-full py-4 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest group-hover:bg-red-600 group-hover:text-white transition-all duration-300 shadow-2xl flex items-center justify-center gap-3">
-              <span>Explore App</span>
+              <span>Launch Your Goal</span>
               <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none"
                 stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -272,7 +282,7 @@
             </h3>
             <p class="text-sm font-medium leading-relaxed max-w-[220px] transition-colors duration-300"
               [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
-              Don't see a Coach that fits you? Create your own custom AI coach.
+              Create your own custom AI coach now, then launch a goal with it when you're ready.
             </p>
 
             <div class="mt-8 w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-2xl flex items-center justify-center gap-3 border-2 border-dashed group-hover:border-solid group-hover:bg-red-600 group-hover:text-white group-hover:border-red-600"
@@ -309,7 +319,7 @@
               </h2>
               <p class="text-sm mt-0.5"
                 [class]="isDarkMode() ? 'text-white/50' : 'text-slate-500'">
-                Created by the community — pick one and start your mission
+                Created by the community — pick one and launch your goal
               </p>
             </div>
           </div>
@@ -378,7 +388,7 @@
               </p>
 
               <div class="w-full py-4 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest group-hover:bg-orange-500 group-hover:text-white transition-all duration-300 shadow-2xl flex items-center justify-center gap-3">
-                <span>Launch Coach</span>
+                <span>Launch Your Goal</span>
                 <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -405,7 +415,7 @@
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-2xl font-black tracking-tight"
                 [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">
-                {{ forkingCoach ? 'Launch with ' + forkingCoach.coachName : 'Create Your Coach' }}
+                {{ forkingCoach ? 'Launch Your Goal with ' + forkingCoach.coachName : 'Create Your Coach' }}
               </h2>
               <button (click)="closeCreateModal()" class="p-2 rounded-full transition-colors"
                 [class]="isDarkMode() ? 'hover:bg-white/10 text-white/60' : 'hover:bg-slate-100 text-slate-400'">
@@ -422,7 +432,7 @@
             </div>
             <div class="flex justify-center mt-2">
               <span class="text-[10px] font-bold uppercase tracking-widest text-red-500">
-                Set Up Your Goal
+                Launch Your Goal
               </span>
             </div>
             } @else {
@@ -442,11 +452,11 @@
               </span>
               <span class="text-[10px] font-bold uppercase tracking-widest"
                 [class]="wizardStep() === 2 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Your Goal
+                Coach App
               </span>
               <span class="text-[10px] font-bold uppercase tracking-widest"
                 [class]="wizardStep() === 3 ? 'text-red-500' : isDarkMode() ? 'text-white/40' : 'text-slate-400'">
-                Launch
+                Save Coach
               </span>
             </div>
             }
@@ -574,7 +584,7 @@
             </div>
             }
 
-            <!-- Step 2: Your Goal -->
+            <!-- Step 2 -->
             @if (wizardStep() === 2) {
             <div class="space-y-5">
 
@@ -599,7 +609,31 @@
                   Coach
                 </span>
               </div>
-              }
+              <div class="rounded-2xl border p-4"
+                [class]="isDarkMode() ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-black uppercase tracking-[0.2em]"
+                      [class]="isDarkMode() ? 'text-white/40' : 'text-slate-400'">Coach App</p>
+                    <p class="text-lg font-black mt-1"
+                      [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalAppName() }}</p>
+                  </div>
+                  <span class="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em]"
+                    [class]="isDarkMode() ? 'bg-white/10 text-white/60' : 'bg-white text-slate-500'">Ready</span>
+                </div>
+                @if (goalTagline()) {
+                <p class="mt-2 text-sm"
+                  [class]="isDarkMode() ? 'text-white/55' : 'text-slate-500'">{{ goalTagline() }}</p>
+                }
+              </div>
+              } @else {
+              <div class="rounded-2xl border p-4"
+                [class]="isDarkMode() ? 'border-blue-500/20 bg-blue-500/5' : 'border-blue-200 bg-blue-50'">
+                <p class="text-sm font-semibold"
+                  [class]="isDarkMode() ? 'text-blue-100' : 'text-blue-900'">
+                  Save your coach first. You will launch your goal from its coach card after this step.
+                </p>
+              </div>
 
               <div>
                 <label class="block text-sm font-bold mb-2"
@@ -622,7 +656,9 @@
                     ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-red-500'
                     : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
               </div>
+              }
 
+              @if (forkingCoach) {
               <div>
                 <label class="block text-sm font-bold mb-2"
                   [class]="isDarkMode() ? 'text-white/80' : 'text-slate-700'">What's your primary goal? *</label>
@@ -696,10 +732,11 @@
                       : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500'">
                 </div>
               </div>
+              }
             </div>
             }
 
-            <!-- Step 3: Visibility + Launch -->
+            <!-- Step 3: Visibility + Save -->
             @if (wizardStep() === 3) {
             <div class="space-y-6">
               <div>
@@ -802,8 +839,8 @@
                     <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalAppName() || '—' }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span>Goal</span>
-                    <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalPrimaryGoal() || '—' }}</span>
+                    <span>Tagline</span>
+                    <span class="font-bold" [class]="isDarkMode() ? 'text-white' : 'text-slate-900'">{{ goalTagline() || '—' }}</span>
                   </div>
                   <div class="flex justify-between">
                     <span>Visibility</span>
@@ -858,9 +895,9 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
-              <span>Creating...</span>
+              <span>Saving...</span>
               } @else {
-              <span>Launch Your Coach</span>
+              <span>Save Your Coach</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
