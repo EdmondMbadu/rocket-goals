@@ -2825,7 +2825,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     if (!content || !teamId || !profile || !this.isCurrentUserMember()) return;
 
     const senderName = `${profile.firstName} ${profile.lastName}`.trim() || profile.firstName || 'Team member';
-    const shouldSummonAi = this.team()?.aiCoachEnabled !== false && this.shouldSummonTeamAi(content);
+    // Always respond to every message (not just mentions)
+    const shouldSummonAi = this.team()?.aiCoachEnabled !== false;
     const recentMessages = shouldSummonAi
       ? this.buildRecentTeamChatContext({ senderName, content, type: 'text' })
       : undefined;
