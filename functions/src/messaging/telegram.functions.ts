@@ -126,6 +126,26 @@ async function sendTelegramMessage(
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Telegram API error:', errorData);
+
+      // Retry without parse_mode if Markdown formatting caused the failure
+      if (parseMode && errorData?.description?.includes("can't parse")) {
+        console.warn('Retrying Telegram message without Markdown formatting');
+        const fallbackPayload: Record<string, any> = { chat_id: chatId, text: text.replace(/[*_`\[\]()~>#+\-=|{}.!\\]/g, '') };
+        if (Number.isFinite(messageThreadId) && Number(messageThreadId) > 0) {
+          fallbackPayload.message_thread_id = Number(messageThreadId);
+        }
+        const fallbackResp = await fetch(
+          `https://api.telegram.org/bot${botToken}/sendMessage`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fallbackPayload)
+          }
+        );
+        if (fallbackResp.ok) return true;
+        console.error('Telegram fallback also failed');
+      }
+
       return false;
     }
 
@@ -1419,9 +1439,9 @@ export const telegramWebhook = onRequest({
 
                     await sendTelegramMessage(
                       groupChatId,
-                      `🤖 *${escapeMarkdown(aiDisplayName)}:*\n${aiContent}`,
+                      `🤖 ${aiDisplayName}:\n${aiContent}`,
                       botToken,
-                      'Markdown',
+                      null,
                       messageThreadId
                     );
                     console.log(`🤖 Team AI replied in Telegram group for team ${teamId}`);
