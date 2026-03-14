@@ -124,6 +124,7 @@ export class App implements AfterViewInit, OnDestroy {
   private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected mobileNavOpen = signal(false);
+  protected readonly heroGoalPrompt = signal('');
   protected readonly isAuthRoute = computed(() => {
     const route = this.currentRoute();
     // Show router outlet for auth routes and component routes (goals, rocketgoal, profile)
@@ -301,6 +302,19 @@ export class App implements AfterViewInit, OnDestroy {
 
   closeMobileNav(): void {
     this.mobileNavOpen.set(false);
+  }
+
+  updateHeroGoalPrompt(value: string): void {
+    this.heroGoalPrompt.set(value);
+  }
+
+  launchHeroGoal(): void {
+    const goal = this.heroGoalPrompt().trim();
+    this.router.navigate(['/ai'], {
+      queryParams: goal
+        ? { launchGoal: 'true', goal }
+        : { launchGoal: 'true' }
+    });
   }
 
   toggleDarkMode() {

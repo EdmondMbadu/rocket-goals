@@ -122,6 +122,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       initialParams.get('prompt')
     );
     const shouldOpenLaunchGoal = initialParams.get('launchGoal') === 'true';
+    const initialGoalDescription = initialParams.get('goal')?.trim() || '';
     const shouldStartFresh = !!initialAutoPrompt;
 
     if (this.isLoggedIn()) {
@@ -152,7 +153,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (shouldOpenLaunchGoal) {
-      this.openGoalModal();
+      this.openGoalModal(initialGoalDescription);
     }
 
     this.route.queryParamMap.subscribe(params => {
@@ -160,13 +161,14 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       const hasLaunchGoal = params.get('launchGoal') === 'true';
       const autoLaunchToken = params.get('autoLaunch');
       const inlinePrompt = params.get('prompt');
+      const goalDescription = params.get('goal')?.trim() || '';
 
       if (hasSevenDayChallenge) {
         this.isSevenDayChallenge.set(true);
         // Open modal and pre-fill for 7-day challenge
         this.openGoalModalForSevenDayChallenge();
       } else if (hasLaunchGoal) {
-        this.openGoalModal();
+        this.openGoalModal(goalDescription);
       }
 
       // Only process prompt if we haven't already handled it in ngOnInit
@@ -382,16 +384,10 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showHistory.update((current) => !current);
   }
 
-  // Goal creation modal methods (Launch Your GOAL wizard)
-  protected openGoalModal(): void {
-    // Always open modal - auth check happens at the end
-    this.showGoalModal.set(true);
-    this.goalModalStep.set(1);
-    this.showAuthPrompt.set(false);
-    this.goalCreationError.set(null);
-    this.quizAnswers.set({
-      goalDescription: '',
-      timeframe: null,
+  private createEmptyQuizAnswers(goalDescription = '', timeframe: GoalTimeframe | null = null): RocketQuizAnswers {
+    return {
+      goalDescription,
+      timeframe,
       futureSelfClarity: 5,
       dailyTimeForGoal: '',
       challengePerception: '',
@@ -399,7 +395,18 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
       dailyConsistency: '',
       hasAccountabilitySupport: '',
       additionalNotes: ''
-    });
+    };
+  }
+
+  // Goal creation modal methods (Launch Your GOAL wizard)
+  protected openGoalModal(goalDescription = ''): void {
+    const trimmedGoalDescription = goalDescription.trim();
+    // Always open modal - auth check happens at the end
+    this.showGoalModal.set(true);
+    this.goalModalStep.set(trimmedGoalDescription ? 2 : 1);
+    this.showAuthPrompt.set(false);
+    this.goalCreationError.set(null);
+    this.quizAnswers.set(this.createEmptyQuizAnswers(trimmedGoalDescription));
   }
 
   // Open modal specifically for 7-day challenge
@@ -409,17 +416,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showAuthPrompt.set(false);
     this.goalCreationError.set(null);
     // Set timeframe to week automatically, but leave goal description empty
-    this.quizAnswers.set({
-      goalDescription: '', // Leave empty - question text will mention 7-day challenge
-      timeframe: 'week', // Automatically set to one week
-      futureSelfClarity: 5,
-      dailyTimeForGoal: '',
-      challengePerception: '',
-      emotionalResilience: '',
-      dailyConsistency: '',
-      hasAccountabilitySupport: '',
-      additionalNotes: ''
-    });
+    this.quizAnswers.set(this.createEmptyQuizAnswers('', 'week'));
   }
 
   protected closeGoalModal(): void {
