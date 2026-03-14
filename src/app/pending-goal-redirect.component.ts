@@ -35,18 +35,26 @@ interface PendingGoalQuizAnswers {
       <div class="launch-loading-card">
         <div class="launch-loading-badge">
           <span class="launch-loading-badge-dot"></span>
-          <span>Preparing Your RocketGoal</span>
+          <span>RocketGoals Launch Sequence</span>
         </div>
 
         <div class="launch-loading-orbit" aria-hidden="true">
+          <div class="launch-loading-stars"></div>
           <div class="launch-loading-ring launch-loading-ring-outer"></div>
           <div class="launch-loading-ring launch-loading-ring-middle"></div>
           <div class="launch-loading-ring launch-loading-ring-inner"></div>
-          <div class="launch-loading-core">RG</div>
+          <div class="launch-loading-rocket">
+            <div class="launch-loading-rocket-flame"></div>
+            <div class="launch-loading-rocket-body">
+              <div class="launch-loading-rocket-window"></div>
+              <div class="launch-loading-rocket-fin launch-loading-rocket-fin-left"></div>
+              <div class="launch-loading-rocket-fin launch-loading-rocket-fin-right"></div>
+            </div>
+          </div>
         </div>
 
         <div class="launch-loading-copy">
-          <p class="launch-loading-kicker">Mission launch in progress</p>
+          <p class="launch-loading-kicker">RocketGoals mission control</p>
           <h1 class="launch-loading-title">{{ statusTitle() }}</h1>
           <p class="launch-loading-message">{{ statusMessage() }}</p>
           @if (goalPreview()) {
@@ -183,11 +191,25 @@ interface PendingGoalQuizAnswers {
 
     .launch-loading-orbit {
       position: relative;
-      width: 9rem;
-      height: 9rem;
-      margin: 1.75rem auto 1.5rem;
+      width: 11rem;
+      height: 11rem;
+      margin: 1.9rem auto 1.65rem;
       display: grid;
       place-items: center;
+    }
+
+    .launch-loading-stars {
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 72% 22%, rgba(255,255,255,0.8) 0 1.2px, transparent 1.8px),
+        radial-gradient(circle at 78% 75%, rgba(255,255,255,0.7) 0 1.4px, transparent 2px),
+        radial-gradient(circle at 28% 78%, rgba(255,255,255,0.75) 0 1.1px, transparent 1.8px),
+        radial-gradient(circle at 50% 10%, rgba(239,68,68,0.6) 0 1.3px, transparent 2px);
+      opacity: 0.9;
+      animation: spin-orbit 24s linear infinite;
     }
 
     .launch-loading-ring {
@@ -217,18 +239,88 @@ interface PendingGoalQuizAnswers {
       border-color: rgba(255, 255, 255, 0.12);
     }
 
-    .launch-loading-core {
-      width: 4rem;
-      height: 4rem;
+    .launch-loading-rocket {
+      position: relative;
+      width: 5.3rem;
+      height: 7.6rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      animation: rocket-hover 2.4s ease-in-out infinite;
+    }
+
+    .launch-loading-rocket-body {
+      position: relative;
+      width: 3.6rem;
+      height: 5.9rem;
+      border-radius: 999px 999px 1.1rem 1.1rem;
+      background: linear-gradient(180deg, #fff 0%, #ffe4e6 44%, #fecaca 100%);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 22px 45px rgba(239, 68, 68, 0.22);
+      overflow: visible;
+    }
+
+    :host-context(.dark) .launch-loading-rocket-body {
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 22px 45px rgba(239, 68, 68, 0.28);
+    }
+
+    .launch-loading-rocket-body::before {
+      content: '';
+      position: absolute;
+      top: -0.9rem;
+      left: 50%;
+      width: 1.8rem;
+      height: 1.8rem;
+      transform: translateX(-50%) rotate(45deg);
+      border-radius: 0.4rem;
+      background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    }
+
+    .launch-loading-rocket-window {
+      position: absolute;
+      top: 1.45rem;
+      left: 50%;
+      width: 1.25rem;
+      height: 1.25rem;
+      transform: translateX(-50%);
       border-radius: 9999px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #111827 0%, #ef4444 100%);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      box-shadow: 0 18px 45px rgba(239, 68, 68, 0.28);
+      background: radial-gradient(circle at 35% 30%, #ffffff 0%, #bfdbfe 45%, #2563eb 100%);
+      border: 3px solid rgba(15, 23, 42, 0.08);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.65);
+    }
+
+    .launch-loading-rocket-fin {
+      position: absolute;
+      bottom: 0.55rem;
+      width: 1rem;
+      height: 1.9rem;
+      background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+      border-radius: 0.2rem 0.2rem 0.65rem 0.65rem;
+    }
+
+    .launch-loading-rocket-fin-left {
+      left: -0.7rem;
+      transform: skewY(20deg);
+    }
+
+    .launch-loading-rocket-fin-right {
+      right: -0.7rem;
+      transform: skewY(-20deg);
+    }
+
+    .launch-loading-rocket-flame {
+      position: absolute;
+      bottom: -1.2rem;
+      left: 50%;
+      width: 1.3rem;
+      height: 2rem;
+      transform: translateX(-50%);
+      border-radius: 999px 999px 1.4rem 1.4rem;
+      background: linear-gradient(180deg, rgba(253,224,71,0.95) 0%, rgba(249,115,22,0.95) 55%, rgba(239,68,68,0.88) 100%);
+      filter: blur(0.2px);
+      box-shadow: 0 0 26px rgba(249, 115, 22, 0.45);
+      animation: flame-flicker 0.9s ease-in-out infinite;
     }
 
     .launch-loading-kicker {
@@ -421,6 +513,16 @@ interface PendingGoalQuizAnswers {
       50% { transform: scale(1.06); opacity: 1; }
     }
 
+    @keyframes rocket-hover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes flame-flicker {
+      0%, 100% { transform: translateX(-50%) scaleY(1); opacity: 0.92; }
+      50% { transform: translateX(-50%) scaleY(1.16); opacity: 1; }
+    }
+
     @media (max-width: 640px) {
       .launch-loading-card {
         padding: 1.4rem;
@@ -433,8 +535,8 @@ interface PendingGoalQuizAnswers {
       }
 
       .launch-loading-orbit {
-        width: 7.5rem;
-        height: 7.5rem;
+        width: 8.75rem;
+        height: 8.75rem;
       }
 
       .launch-loading-title {
