@@ -500,7 +500,7 @@ export class RocketAiPageComponent implements OnInit, OnDestroy, AfterViewInit {
     sessionStorage.setItem('pendingGoalQuiz', JSON.stringify(this.quizAnswers()));
     this.closeGoalModal();
     this.router.navigate([`/${mode}`], {
-      queryParams: { redirectTo: '/ai', createGoal: 'true' }
+      queryParams: { redirectTo: '/goals', createGoal: 'true' }
     });
   }
 
