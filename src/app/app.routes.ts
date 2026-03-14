@@ -26,6 +26,7 @@ export const routes: Routes = [
   { path: 'app-suite', loadComponent: () => import('./app-suite.component').then(m => m.AppSuiteComponent) },
   { path: 'bloom-book', loadComponent: () => import('./bloom-book-page.component').then(m => m.BloomBookPageComponent) },
   { path: 'surge-book', loadComponent: () => import('./surge-book-page.component').then(m => m.SurgeBookPageComponent) },
+  { path: 'goal-launch-complete', loadComponent: () => import('./pending-goal-redirect.component').then(m => m.PendingGoalRedirectComponent) },
 
   // Launchpad Generic Route - Unified App Viewer
   { path: 'launchpad/:id', loadComponent: () => import('./launchpad/launchpad-app-viewer.component').then(m => m.LaunchpadAppViewerComponent) },

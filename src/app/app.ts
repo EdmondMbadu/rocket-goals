@@ -121,7 +121,7 @@ export class App implements AfterViewInit, OnDestroy {
   private document = inject(DOCUMENT);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected mobileNavOpen = signal(false);
   protected readonly heroGoalPrompt = signal('');
