@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth.guard';
+import { PendingGoalRedirectComponent } from './pending-goal-redirect.component';
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./landing-bridge.component').then(m => m.LandingBridgeComponent), pathMatch: 'full' },
@@ -26,7 +27,7 @@ export const routes: Routes = [
   { path: 'app-suite', loadComponent: () => import('./app-suite.component').then(m => m.AppSuiteComponent) },
   { path: 'bloom-book', loadComponent: () => import('./bloom-book-page.component').then(m => m.BloomBookPageComponent) },
   { path: 'surge-book', loadComponent: () => import('./surge-book-page.component').then(m => m.SurgeBookPageComponent) },
-  { path: 'goal-launch-complete', loadComponent: () => import('./pending-goal-redirect.component').then(m => m.PendingGoalRedirectComponent) },
+  { path: 'goal-launch-complete', component: PendingGoalRedirectComponent },
 
   // Launchpad Generic Route - Unified App Viewer
   { path: 'launchpad/:id', loadComponent: () => import('./launchpad/launchpad-app-viewer.component').then(m => m.LaunchpadAppViewerComponent) },
