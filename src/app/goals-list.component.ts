@@ -18,11 +18,12 @@ import { TeamService } from './team.service';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 
-export type GoalTimeframe = 'week' | 'month' | '3months';
+export type GoalTimeframe = 'week' | 'month' | '3months' | 'custom';
 
 export interface RocketQuizAnswers {
   goalDescription: string;
   timeframe: GoalTimeframe | null;
+  customDeadline: string;
   futureSelfClarity: number; // 1-10 scale
   dailyTimeForGoal: string; // time option
   challengePerception: string; // obstacles or growth
@@ -114,6 +115,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly quizAnswers = signal<RocketQuizAnswers>({
     goalDescription: '',
     timeframe: null,
+    customDeadline: '',
     futureSelfClarity: 5,
     dailyTimeForGoal: '',
     challengePerception: '',
@@ -127,7 +129,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly timeframeOptions: { value: GoalTimeframe; label: string; description: string }[] = [
     { value: 'week', label: 'Within a week', description: '7-day intensive sprint' },
     { value: 'month', label: 'Within a month', description: '30-day focused journey' },
-    { value: '3months', label: 'Within 3 months', description: 'Sustained transformation' }
+    { value: '3months', label: 'Within 3 months', description: 'Sustained transformation' },
+    { value: 'custom', label: 'Custom deadline', description: 'Pick the exact date you want to hit' }
   ];
 
   protected readonly dailyTimeOptions = [
@@ -745,6 +748,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.quizAnswers.set({
       goalDescription: '',
       timeframe: null,
+      customDeadline: '',
       futureSelfClarity: 5,
       dailyTimeForGoal: '',
       challengePerception: '',
@@ -819,13 +823,36 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.quizAnswers.update(current => ({ ...current, [key]: value }));
   }
 
+  protected selectTimeframe(value: GoalTimeframe): void {
+    this.quizAnswers.update(current => ({
+      ...current,
+      timeframe: value,
+      customDeadline: value === 'custom' ? current.customDeadline : ''
+    }));
+  }
+
+  protected updateCustomDeadline(value: string): void {
+    this.quizAnswers.update(current => ({
+      ...current,
+      timeframe: 'custom',
+      customDeadline: value
+    }));
+  }
+
+  protected getMinimumCustomDeadline(): string {
+    const tomorrow = new Date();
+    tomorrow.setHours(0, 0, 0, 0);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return this.formatDateInputValue(tomorrow);
+  }
+
   protected canProceedToNextStep(): boolean {
     const step = this.goalModalStep();
     const answers = this.quizAnswers();
 
     switch (step) {
       case 1: return !!answers.goalDescription.trim();
-      case 2: return !!answers.timeframe;
+      case 2: return !!answers.timeframe && (answers.timeframe !== 'custom' || this.isCustomDeadlineValid(answers.customDeadline));
       case 3: return answers.futureSelfClarity >= 1 && answers.futureSelfClarity <= 10;
       case 4: return !!answers.dailyTimeForGoal;
       case 5: return !!answers.challengePerception;
@@ -1054,8 +1081,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Calculate timeframe days
       const now = Date.now();
-      const timeframeDays = answers.timeframe === 'week' ? 7 :
-                           answers.timeframe === 'month' ? 30 : 90;
+      const timeframeDays = this.resolveTimeframeDays(answers, now);
+      const deadlineDate = this.resolveDeadlineTimestamp(answers.customDeadline);
+      const timeframeLabel = this.getExternalTimeframeLabel(answers);
 
       // Create the goal with all quiz data points
       const goalId = await this.rocketGoalsService.createRocketGoal({
@@ -1065,6 +1093,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
           goal_title_label: answers.goalDescription,
           timeframe: answers.timeframe,
           timeframe_days: timeframeDays,
+          ...(deadlineDate ? { deadlineDate } : {}),
           chat_context: chatContext,
           source: 'launch_your_goal_quiz',
           // ROCKET quiz data points
@@ -1117,7 +1146,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         const visualizationResult = await this.visualizationService.generateVisualization({
           goalId,
           goalDescription: answers.goalDescription,
-          timeframe: answers.timeframe!,
+          timeframe: timeframeLabel,
           hasAccountabilitySupport: answers.hasAccountabilitySupport,
           userPhotoBase64: userPhotoBase64
         });
@@ -1147,7 +1176,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         await sendGoalEmail({
           goalId,
           goalTitle: answers.goalDescription,
-          timeframe: answers.timeframe!,
+          timeframe: timeframeLabel,
           userEmail: profile.email || '',
           userName: profile.firstName || 'Achiever',
           imageUrl: visualizationImageUrl
@@ -1420,5 +1449,54 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!target.closest('.goal-action-menu')) {
       this.closeGoalMenu();
     }
+  }
+
+  private isCustomDeadlineValid(value: string): boolean {
+    const deadline = this.resolveDeadlineTimestamp(value);
+    return deadline !== null && deadline > Date.now();
+  }
+
+  private resolveDeadlineTimestamp(value: string): number | null {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return null;
+
+    const [year, month, day] = trimmed.split('-').map(part => Number(part));
+    if (!year || !month || !day) return null;
+
+    const deadline = new Date(year, month - 1, day, 23, 59, 59, 999);
+    return Number.isNaN(deadline.getTime()) ? null : deadline.getTime();
+  }
+
+  private resolveTimeframeDays(answers: RocketQuizAnswers, startTimeMs: number): number {
+    if (answers.timeframe === 'custom') {
+      const deadline = this.resolveDeadlineTimestamp(answers.customDeadline);
+      if (deadline) {
+        return Math.max(1, Math.ceil((deadline - startTimeMs) / (1000 * 60 * 60 * 24)));
+      }
+    }
+
+    if (answers.timeframe === 'week') return 7;
+    if (answers.timeframe === 'month') return 30;
+    return 90;
+  }
+
+  private getExternalTimeframeLabel(answers: RocketQuizAnswers): string {
+    if (answers.timeframe === 'custom') {
+      const deadline = this.resolveDeadlineTimestamp(answers.customDeadline);
+      if (deadline) {
+        return `by ${new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      }
+      return 'custom deadline';
+    }
+
+    const match = this.timeframeOptions.find(option => option.value === answers.timeframe);
+    return match?.label || 'Within a month';
+  }
+
+  private formatDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

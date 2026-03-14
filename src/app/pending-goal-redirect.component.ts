@@ -8,11 +8,12 @@ import { RocketGoalsAIService } from './rocket-goals-ai.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import { VisualizationService } from './visualization.service';
 
-type GoalTimeframe = 'week' | 'month' | '3months';
+type GoalTimeframe = 'week' | 'month' | '3months' | 'custom';
 
 interface PendingGoalQuizAnswers {
   goalDescription: string;
   timeframe: GoalTimeframe | null;
+  customDeadline?: string;
   futureSelfClarity: number;
   dailyTimeForGoal: string;
   challengePerception: string;
@@ -500,9 +501,10 @@ export class PendingGoalRedirectComponent implements OnDestroy {
         ? messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n\n')
         : '';
 
-      const timeframeDays = answers.timeframe === 'week' ? 7 :
-        answers.timeframe === 'month' ? 30 : 90;
       const now = Date.now();
+      const timeframeDays = this.resolveTimeframeDays(answers, now);
+      const deadlineDate = this.resolveDeadlineTimestamp(answers.customDeadline || '');
+      const timeframeLabel = this.getExternalTimeframeLabel(answers);
 
       this.setPhase(1, 'Creating your RocketGoal and generating the first milestone set.');
 
@@ -513,6 +515,7 @@ export class PendingGoalRedirectComponent implements OnDestroy {
           goal_title_label: answers.goalDescription,
           timeframe: answers.timeframe,
           timeframe_days: timeframeDays,
+          ...(deadlineDate ? { deadlineDate } : {}),
           chat_context: chatContext,
           source: 'launch_your_goal_quiz',
           rocket_quiz: {
@@ -550,7 +553,7 @@ export class PendingGoalRedirectComponent implements OnDestroy {
         const visualizationResult = await this.visualizationService.generateVisualization({
           goalId,
           goalDescription: answers.goalDescription,
-          timeframe: answers.timeframe!,
+          timeframe: timeframeLabel,
           hasAccountabilitySupport: answers.hasAccountabilitySupport,
           userPhotoBase64
         });
@@ -576,7 +579,7 @@ export class PendingGoalRedirectComponent implements OnDestroy {
         await sendGoalEmail({
           goalId,
           goalTitle: answers.goalDescription,
-          timeframe: answers.timeframe!,
+          timeframe: timeframeLabel,
           userEmail: profile.email || '',
           userName: profile.firstName || 'Achiever',
           imageUrl: visualizationImageUrl
@@ -617,6 +620,44 @@ export class PendingGoalRedirectComponent implements OnDestroy {
       const target = this.phaseProgressTargets[Math.min(this.phaseIndex(), this.phaseProgressTargets.length - 1)];
       this.progress.update(current => current >= target ? current : Math.min(target, current + 1));
     }, 90);
+  }
+
+  private resolveDeadlineTimestamp(value: string): number | null {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return null;
+
+    const [year, month, day] = trimmed.split('-').map(part => Number(part));
+    if (!year || !month || !day) return null;
+
+    const deadline = new Date(year, month - 1, day, 23, 59, 59, 999);
+    return Number.isNaN(deadline.getTime()) ? null : deadline.getTime();
+  }
+
+  private resolveTimeframeDays(answers: PendingGoalQuizAnswers, startTimeMs: number): number {
+    if (answers.timeframe === 'custom') {
+      const deadline = this.resolveDeadlineTimestamp(answers.customDeadline || '');
+      if (deadline) {
+        return Math.max(1, Math.ceil((deadline - startTimeMs) / (1000 * 60 * 60 * 24)));
+      }
+    }
+
+    if (answers.timeframe === 'week') return 7;
+    if (answers.timeframe === 'month') return 30;
+    return 90;
+  }
+
+  private getExternalTimeframeLabel(answers: PendingGoalQuizAnswers): string {
+    if (answers.timeframe === 'custom') {
+      const deadline = this.resolveDeadlineTimestamp(answers.customDeadline || '');
+      if (deadline) {
+        return `by ${new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      }
+      return 'custom deadline';
+    }
+
+    if (answers.timeframe === 'week') return 'Within a week';
+    if (answers.timeframe === 'month') return 'Within a month';
+    return 'Within 3 months';
   }
 
   private async waitForProfile(): Promise<ReturnType<AuthService['profile']>> {
