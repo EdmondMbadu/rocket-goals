@@ -273,7 +273,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         throw goalsResult.reason;
       }
 
-      const goals = goalsResult.value as RocketGoal[];
+      const goals = (goalsResult.value as RocketGoal[]).map(goal => this.normalizeGoal(goal));
       const teams = teamsResult.status === 'fulfilled'
         ? (teamsResult.value as Team[])
         : [];
@@ -282,7 +282,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         console.warn('Failed to load teams for goals page:', teamsResult.reason);
       }
 
-      const visibleGoals = (goals as RocketGoal[]).filter(goal => !this.isTeamLinkedGoal(goal));
+      const visibleGoals = goals.filter(goal => !this.isTeamLinkedGoal(goal));
 
       console.log('Loaded goals:', goals);
       this.goals.set(visibleGoals);
@@ -323,6 +323,13 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     return explicitTeamGoal || hasTeamId || deterministicTeamGoalId;
   }
 
+  private normalizeGoal(goal: RocketGoal): RocketGoal {
+    return {
+      ...goal,
+      answers: goal?.answers ?? {}
+    };
+  }
+
   async loadFanMemberships() {
     const profile = this.authService.profile();
     const email = profile?.email?.toLowerCase();
@@ -344,7 +351,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         goalIds.map(async goalId => {
           try {
             const goal = await this.rocketGoalsService.getRocketGoalById(goalId);
-            return { goalId, goal: goal as RocketGoal | null };
+            return { goalId, goal: goal ? this.normalizeGoal(goal as RocketGoal) : null };
           } catch (error) {
             console.warn('Unable to fetch goal for fan membership', goalId, error);
             return { goalId, goal: null };
@@ -379,7 +386,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getGoalTitle(goal: RocketGoal): string {
-    return goal.answers['goal_title_label'] || goal.answers['custom_goal_title'] || goal.primaryGoal || 'Untitled Goal';
+    const answers = goal?.answers ?? {};
+    return answers['goal_title_label'] || answers['custom_goal_title'] || goal.primaryGoal || 'Untitled Goal';
   }
 
   isMyOneThing(goal: RocketGoal): boolean {
@@ -449,7 +457,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getGoalTheme(goal: RocketGoal): string {
-    return goal.answers['goal_theme_label'] || 'Personal Growth';
+    return goal?.answers?.['goal_theme_label'] || 'Personal Growth';
   }
 
   getGoalStatus(goal: RocketGoal): string {
@@ -1352,7 +1360,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
       // Also update the custom_goal_title in answers if it exists, or set it
-      const currentAnswers = { ...goal.answers };
+      const currentAnswers = { ...(goal.answers || {}) };
       if (currentAnswers['custom_goal_title']) {
         currentAnswers['custom_goal_title'] = newTitle;
         currentAnswers['goal_title_label'] = newTitle;
