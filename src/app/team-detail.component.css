@@ -3401,6 +3401,32 @@
   align-items: center;
 }
 
+.mc-leaderboard-editor {
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.48);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.mc-leaderboard-editor-head {
+  display: grid;
+  gap: 2px;
+}
+
+.mc-leaderboard-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mc-copy-textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
 .mc-add-input,
 .mc-add-select,
 .mc-card-name-input,
@@ -4634,6 +4660,7 @@
 .light-mode .mc-weekly-bar-label { color: #334155; }
 .light-mode .mc-weekly-bar-meta { color: #64748b; }
 .light-mode .mc-add-form,
+.light-mode .mc-leaderboard-editor,
 .light-mode .mc-card-shell {
   border-color: rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.92);
@@ -4849,6 +4876,9 @@
     grid-template-columns: 1fr;
   }
   .mc-add-form {
+    grid-template-columns: 1fr;
+  }
+  .mc-leaderboard-editor-grid {
     grid-template-columns: 1fr;
   }
   .mc-add-actions {

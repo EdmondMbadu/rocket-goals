@@ -88,6 +88,16 @@ export interface TeamMissionControlCard {
   metricKey: TeamMissionControlMetricKey;
 }
 
+export interface TeamMissionControlLeaderboardConfig {
+  kicker?: string;
+  primaryTitle?: string;
+  primaryDescription?: string;
+  secondaryTitle?: string;
+  secondaryDescription?: string;
+  primaryToggleLabel?: string;
+  secondaryToggleLabel?: string;
+}
+
 export interface TeamAiSettings {
   displayName?: string;
   avatarUrl?: string;
@@ -112,6 +122,7 @@ export interface Team {
   aiCoachEnabled: boolean;
   aiSettings?: TeamAiSettings;
   missionControlCards?: TeamMissionControlCard[];
+  missionControlLeaderboard?: TeamMissionControlLeaderboardConfig;
   telegramGroupId?: number;
   telegramGroupInviteLink?: string;
   telegramGroupTitle?: string;

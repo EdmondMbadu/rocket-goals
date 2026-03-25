@@ -13,6 +13,7 @@ import type {
   TeamMissionControlCard,
   TeamMissionControlCardStyle,
   TeamMissionControlMetricKey,
+  TeamMissionControlLeaderboardConfig,
   TeamMemberActivitySnapshot,
   TeamMemberConversationPreview,
   TeamMessage
@@ -77,6 +78,8 @@ type TeamLeaderboardRow = {
   tieBreaker: number;
   latestActivityAt: number | null;
 };
+
+type ResolvedMissionControlLeaderboardConfig = Required<TeamMissionControlLeaderboardConfig>;
 
 const DEFAULT_GENERIC_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
   { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
@@ -266,6 +269,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   missionControlCardsEditing = signal(false);
   showAddMissionControlCardForm = signal(false);
   missionControlDraftCards = signal<TeamMissionControlCard[]>([]);
+  missionControlLeaderboardDraft = signal<ResolvedMissionControlLeaderboardConfig | null>(null);
   leaderboardMileageMode = signal<'total' | 'weekly'>('total');
   draggingMissionControlCardId = signal<string | null>(null);
   dragOverMissionControlCardId = signal<string | null>(null);
@@ -312,6 +316,14 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.teamGoalTracksMileage()
       ? MILEAGE_MISSION_CONTROL_METRIC_OPTIONS
       : GENERIC_MISSION_CONTROL_METRIC_OPTIONS
+  ));
+  readonly leaderboardConfig = computed<ResolvedMissionControlLeaderboardConfig>(() => (
+    this.resolveMissionControlLeaderboard(this.team()?.missionControlLeaderboard)
+  ));
+  readonly renderedLeaderboardConfig = computed<ResolvedMissionControlLeaderboardConfig>(() => (
+    this.missionControlCardsEditing() && this.missionControlLeaderboardDraft()
+      ? this.missionControlLeaderboardDraft()!
+      : this.leaderboardConfig()
   ));
   readonly missionControlStyleOptions = MISSION_CONTROL_STYLE_OPTIONS;
   summaryMembers = computed(() => {
@@ -506,23 +518,20 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       });
   });
   leaderboardTitle = computed(() => {
-    if (this.teamGoalTracksMileage()) {
-      return this.leaderboardMileageMode() === 'weekly' ? 'Miles This Week' : 'Miles Driven So Far';
-    }
-    return this.leaderboardMileageMode() === 'weekly' ? "Today's Execution" : 'Overall Progress';
+    const config = this.renderedLeaderboardConfig();
+    return this.leaderboardMileageMode() === 'weekly'
+      ? config.secondaryTitle
+      : config.primaryTitle;
   });
   leaderboardDescription = computed(() => {
-    if (this.teamGoalTracksMileage()) {
-      return this.leaderboardMileageMode() === 'weekly'
-        ? 'Current Monday-Sunday mileage by member.'
-        : "From each member's individual bike-mile entries.";
-    }
+    const config = this.renderedLeaderboardConfig();
     return this.leaderboardMileageMode() === 'weekly'
-      ? 'Ranked by tasks completed on the current mission day.'
-      : 'Ranked by milestone completion across each member goal.';
+      ? config.secondaryDescription
+      : config.primaryDescription;
   });
-  leaderboardPrimaryToggleLabel = computed(() => this.teamGoalTracksMileage() ? 'Total' : 'Overall');
-  leaderboardSecondaryToggleLabel = computed(() => this.teamGoalTracksMileage() ? 'Current Week' : 'Today');
+  leaderboardKicker = computed(() => this.renderedLeaderboardConfig().kicker);
+  leaderboardPrimaryToggleLabel = computed(() => this.renderedLeaderboardConfig().primaryToggleLabel);
+  leaderboardSecondaryToggleLabel = computed(() => this.renderedLeaderboardConfig().secondaryToggleLabel);
   leaderboardEmptyText = computed(() => {
     if (this.teamGoalTracksMileage()) {
       return 'No member mileage data yet.';
@@ -767,6 +776,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.missionControlCardsEditing.set(false);
       this.showAddMissionControlCardForm.set(false);
       this.missionControlDraftCards.set([]);
+      this.missionControlLeaderboardDraft.set(null);
       this.missionControlCardsError.set(null);
       this.draggingMissionControlCardId.set(null);
       this.dragOverMissionControlCardId.set(null);
@@ -795,6 +805,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.resetAiAvatarUploadState();
       this.stopTeamCountdown();
       this.setTeamCountdownValues(0, 0, 0, 0);
+      this.missionControlLeaderboardDraft.set(null);
     } finally {
       this.loading.set(false);
     }
@@ -1480,6 +1491,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.newMissionControlCardMetric = 'overall_milestone_progress';
     this.newMissionControlCardStyle = 'histogram';
     this.missionControlDraftCards.set(this.missionControlCards().map(card => ({ ...card })));
+    this.missionControlLeaderboardDraft.set({ ...this.leaderboardConfig() });
     this.missionControlCardsEditing.set(true);
     this.draggingMissionControlCardId.set(null);
     this.dragOverMissionControlCardId.set(null);
@@ -1490,6 +1502,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.missionControlCardsEditing.set(false);
     this.showAddMissionControlCardForm.set(false);
     this.missionControlDraftCards.set([]);
+    this.missionControlLeaderboardDraft.set(null);
     this.newMissionControlCardName = '';
     this.draggingMissionControlCardId.set(null);
     this.dragOverMissionControlCardId.set(null);
@@ -1656,6 +1669,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const normalizedCards = this.ensureMileageAggregationCards(
       this.normalizeMissionControlCards(this.missionControlDraftCards())
     );
+    const leaderboardConfig = this.normalizeMissionControlLeaderboard(
+      this.missionControlLeaderboardDraft() || this.leaderboardConfig()
+    );
     if (!normalizedCards.length) {
       this.missionControlCardsError.set('Add at least one card before saving.');
       return;
@@ -1664,18 +1680,26 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     this.missionControlCardsError.set(null);
     this.missionControlCardsSuccess.set(null);
     try {
-      await this.teamService.updateTeam(team.id, { missionControlCards: normalizedCards });
-      this.team.update(current => current ? { ...current, missionControlCards: normalizedCards } : current);
+      await this.teamService.updateTeam(team.id, {
+        missionControlCards: normalizedCards,
+        missionControlLeaderboard: leaderboardConfig
+      });
+      this.team.update(current => current ? {
+        ...current,
+        missionControlCards: normalizedCards,
+        missionControlLeaderboard: leaderboardConfig
+      } : current);
       this.missionControlCardsEditing.set(false);
       this.showAddMissionControlCardForm.set(false);
       this.missionControlDraftCards.set([]);
-      this.missionControlCardsSuccess.set('Mission Control cards updated.');
+      this.missionControlLeaderboardDraft.set(null);
+      this.missionControlCardsSuccess.set('Mission Control settings updated.');
       this.draggingMissionControlCardId.set(null);
       this.dragOverMissionControlCardId.set(null);
       this.dragOverMissionControlCardPosition.set(null);
     } catch (error) {
       console.error('Failed to save Mission Control cards:', error);
-      this.missionControlCardsError.set('Unable to save Mission Control cards right now.');
+      this.missionControlCardsError.set('Unable to save Mission Control settings right now.');
     } finally {
       this.missionControlCardsSaving.set(false);
     }
@@ -1683,6 +1707,19 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   getMissionControlMetricLabel(metricKey: TeamMissionControlMetricKey): string {
     return MILEAGE_MISSION_CONTROL_METRIC_OPTIONS.find(option => option.key === metricKey)?.label || 'Custom Data Point';
+  }
+
+  updateMissionControlLeaderboardField(
+    field: keyof ResolvedMissionControlLeaderboardConfig,
+    value: string
+  ) {
+    if (!this.missionControlCardsEditing()) {
+      return;
+    }
+    this.missionControlLeaderboardDraft.update(current => ({
+      ...(current || this.leaderboardConfig()),
+      [field]: value.trim()
+    }));
   }
 
   private resolveMissionControlCards(cards: TeamMissionControlCard[] | undefined): TeamMissionControlCard[] {
@@ -1810,6 +1847,51 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     return this.teamGoalTracksMileage()
       ? DEFAULT_MILEAGE_MISSION_CONTROL_CARDS
       : DEFAULT_GENERIC_MISSION_CONTROL_CARDS;
+  }
+
+  private getDefaultMissionControlLeaderboard(): ResolvedMissionControlLeaderboardConfig {
+    if (this.teamGoalTracksMileage()) {
+      return {
+        kicker: 'Leaderboard',
+        primaryTitle: 'Miles Driven So Far',
+        primaryDescription: "From each member's individual bike-mile entries.",
+        secondaryTitle: 'Miles This Week',
+        secondaryDescription: 'Current Monday-Sunday mileage by member.',
+        primaryToggleLabel: 'Total',
+        secondaryToggleLabel: 'Current Week'
+      };
+    }
+
+    return {
+      kicker: 'Leaderboard',
+      primaryTitle: 'Overall Progress',
+      primaryDescription: 'Ranked by milestone completion across each member goal.',
+      secondaryTitle: "Today's Execution",
+      secondaryDescription: 'Ranked by tasks completed on the current mission day.',
+      primaryToggleLabel: 'Overall',
+      secondaryToggleLabel: 'Today'
+    };
+  }
+
+  private normalizeMissionControlLeaderboard(
+    config: TeamMissionControlLeaderboardConfig | null | undefined
+  ): ResolvedMissionControlLeaderboardConfig {
+    const defaults = this.getDefaultMissionControlLeaderboard();
+    return {
+      kicker: String(config?.kicker || '').trim() || defaults.kicker,
+      primaryTitle: String(config?.primaryTitle || '').trim() || defaults.primaryTitle,
+      primaryDescription: String(config?.primaryDescription || '').trim() || defaults.primaryDescription,
+      secondaryTitle: String(config?.secondaryTitle || '').trim() || defaults.secondaryTitle,
+      secondaryDescription: String(config?.secondaryDescription || '').trim() || defaults.secondaryDescription,
+      primaryToggleLabel: String(config?.primaryToggleLabel || '').trim() || defaults.primaryToggleLabel,
+      secondaryToggleLabel: String(config?.secondaryToggleLabel || '').trim() || defaults.secondaryToggleLabel
+    };
+  }
+
+  private resolveMissionControlLeaderboard(
+    config: TeamMissionControlLeaderboardConfig | undefined
+  ): ResolvedMissionControlLeaderboardConfig {
+    return this.normalizeMissionControlLeaderboard(config);
   }
 
   private looksLikeLegacyMileageDefaults(cards: TeamMissionControlCard[]): boolean {

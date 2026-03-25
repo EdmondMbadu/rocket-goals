@@ -591,6 +591,59 @@
         <p class="alert-inline success">{{ missionControlCardsSuccess() }}</p>
         }
 
+        @if (missionControlCardsEditing()) {
+        <div class="mc-leaderboard-editor">
+          <div class="mc-leaderboard-editor-head">
+            <p class="mc-kicker">Leaderboard Copy</p>
+            <p class="mc-subtitle">Edit the leaderboard header, descriptions, and toggle labels.</p>
+          </div>
+          <div class="mc-leaderboard-editor-grid">
+            <input
+              class="mc-add-input"
+              type="text"
+              [ngModel]="renderedLeaderboardConfig().kicker"
+              (ngModelChange)="updateMissionControlLeaderboardField('kicker', $event)"
+              placeholder="Section kicker" />
+            <input
+              class="mc-add-input"
+              type="text"
+              [ngModel]="renderedLeaderboardConfig().primaryToggleLabel"
+              (ngModelChange)="updateMissionControlLeaderboardField('primaryToggleLabel', $event)"
+              placeholder="Primary toggle label" />
+            <input
+              class="mc-add-input"
+              type="text"
+              [ngModel]="renderedLeaderboardConfig().secondaryToggleLabel"
+              (ngModelChange)="updateMissionControlLeaderboardField('secondaryToggleLabel', $event)"
+              placeholder="Secondary toggle label" />
+            <input
+              class="mc-add-input"
+              type="text"
+              [ngModel]="renderedLeaderboardConfig().primaryTitle"
+              (ngModelChange)="updateMissionControlLeaderboardField('primaryTitle', $event)"
+              placeholder="Primary leaderboard title" />
+            <textarea
+              class="mc-add-input mc-copy-textarea"
+              rows="2"
+              [ngModel]="renderedLeaderboardConfig().primaryDescription"
+              (ngModelChange)="updateMissionControlLeaderboardField('primaryDescription', $event)"
+              placeholder="Primary leaderboard description"></textarea>
+            <input
+              class="mc-add-input"
+              type="text"
+              [ngModel]="renderedLeaderboardConfig().secondaryTitle"
+              (ngModelChange)="updateMissionControlLeaderboardField('secondaryTitle', $event)"
+              placeholder="Secondary leaderboard title" />
+            <textarea
+              class="mc-add-input mc-copy-textarea"
+              rows="2"
+              [ngModel]="renderedLeaderboardConfig().secondaryDescription"
+              (ngModelChange)="updateMissionControlLeaderboardField('secondaryDescription', $event)"
+              placeholder="Secondary leaderboard description"></textarea>
+          </div>
+        </div>
+        }
+
         @if (missionControlCardsEditing() && showAddMissionControlCardForm()) {
         <div class="mc-add-form">
           <input class="mc-add-input" type="text" placeholder="Card name" [(ngModel)]="newMissionControlCardName" />
@@ -614,7 +667,7 @@
         <section class="mc-leaderboard">
           <div class="mc-leaderboard-head">
             <div>
-              <p class="mc-leaderboard-kicker">Leaderboard</p>
+              <p class="mc-leaderboard-kicker">{{ leaderboardKicker() }}</p>
               <h4>{{ leaderboardTitle() }}</h4>
               <p>{{ leaderboardDescription() }}</p>
             </div>
