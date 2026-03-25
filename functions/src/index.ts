@@ -47,6 +47,8 @@ const twilioPhoneNumber = defineSecret('TWILIO_PHONE_NUMBER');
 const twilioAccountSid2 = defineSecret('TWILIO_ACCOUNT_SID_2');
 const twilioAuthToken2 = defineSecret('TWILIO_AUTH_TOKEN_2');
 const twilioPhoneNumber2 = defineSecret('TWILIO_PHONE_NUMBER_2');
+const whatsappAccessToken = defineSecret('WHATSAPP_ACCESS_TOKEN');
+const whatsappPhoneNumberId = defineSecret('WHATSAPP_PHONE_NUMBER_ID');
 
 const stripeSubscriptionEvents = new Set([
     'customer.subscription.created',
@@ -120,6 +122,32 @@ const timingSafeEqual = (a: string, b: string) => {
     if (aBuffer.length !== bBuffer.length) return false;
     return crypto.timingSafeEqual(aBuffer, bBuffer);
 };
+
+const WHATSAPP_GRAPH_API_VERSION = 'v22.0';
+
+function normalizePhoneForE164(rawPhone: string): string {
+    const trimmed = (rawPhone || '').trim();
+    if (!trimmed) return '';
+
+    if (trimmed.startsWith('+')) {
+        return `+${trimmed.slice(1).replace(/\D/g, '')}`;
+    }
+
+    const digitsOnly = trimmed.replace(/\D/g, '');
+    if (digitsOnly.length === 10) {
+        return `+1${digitsOnly}`;
+    }
+
+    if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) {
+        return `+${digitsOnly}`;
+    }
+
+    return digitsOnly ? `+${digitsOnly}` : '';
+}
+
+function normalizePhoneForWhatsApp(rawPhone: string): string {
+    return normalizePhoneForE164(rawPhone).replace(/\D/g, '');
+}
 
 const verifyStripeSignature = (rawBody: Buffer, signatureHeader: string, secret: string) => {
     const { timestamp, signatures } = parseStripeSignature(signatureHeader);
@@ -2090,7 +2118,7 @@ export const sendTestSMS = functions.runWith({
 
     // Validate phone number format (basic validation - E.164 format preferred)
     // Remove any non-digit characters except + at the start
-    const cleanedPhone = phoneNumber.trim();
+    const cleanedPhone = normalizePhoneForE164(phoneNumber);
     if (!cleanedPhone || cleanedPhone.length < 10) {
         throw new functions.https.HttpsError(
             'invalid-argument',
@@ -2167,6 +2195,165 @@ export const sendTestSMS = functions.runWith({
         throw new functions.https.HttpsError(
             'internal',
             `Failed to send SMS: ${error.message}`
+        );
+    }
+});
+
+/**
+ * Cloud Function to send test WhatsApp messages via Meta's Cloud API
+ * Only accessible by admin users
+ */
+export const sendTestWhatsApp = functions.runWith({
+    secrets: [
+        whatsappAccessToken,
+        whatsappPhoneNumberId
+    ]
+}).https.onCall(async (
+    data: {
+        phoneNumber: string;
+        mode?: 'template' | 'text';
+        message?: string;
+        templateName?: string;
+        templateLanguage?: string;
+    },
+    context: functions.https.CallableContext
+) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to send WhatsApp messages.'
+        );
+    }
+
+    const userDoc = await admin.firestore()
+        .collection('userProfiles')
+        .doc(context.auth.uid)
+        .get();
+
+    const userData = userDoc.data();
+    if (!userData || (userData.role !== 'admin' && !userData.admin)) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Only administrators can send test WhatsApp messages.'
+        );
+    }
+
+    const mode = data?.mode === 'text' ? 'text' : 'template';
+    const normalizedPhoneE164 = normalizePhoneForE164(data?.phoneNumber || '');
+    const recipientPhone = normalizePhoneForWhatsApp(data?.phoneNumber || '');
+    const message = (data?.message || '').trim();
+    const templateName = (data?.templateName || 'hello_world').trim() || 'hello_world';
+    const templateLanguage = (data?.templateLanguage || 'en_US').trim() || 'en_US';
+
+    if (!recipientPhone || recipientPhone.length < 10 || recipientPhone.length > 15) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid phone number format. Use international format, for example +14155552671.'
+        );
+    }
+
+    if (mode === 'text' && !message) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Please enter a WhatsApp message.'
+        );
+    }
+
+    if (message.length > 4096) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'WhatsApp text messages must be 4096 characters or fewer.'
+        );
+    }
+
+    const accessToken = whatsappAccessToken.value();
+    const phoneNumberId = whatsappPhoneNumberId.value();
+
+    if (!accessToken || !phoneNumberId) {
+        throw new functions.https.HttpsError(
+            'failed-precondition',
+            'WhatsApp secrets are missing. Please set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID.'
+        );
+    }
+
+    const payload: Record<string, unknown> = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientPhone
+    };
+
+    if (mode === 'text') {
+        payload.type = 'text';
+        payload.text = {
+            preview_url: false,
+            body: message
+        };
+    } else {
+        payload.type = 'template';
+        payload.template = {
+            name: templateName,
+            language: {
+                code: templateLanguage
+            }
+        };
+    }
+
+    const endpoint = `https://graph.facebook.com/${WHATSAPP_GRAPH_API_VERSION}/${phoneNumberId}/messages`;
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const responseBody = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const apiError = responseBody?.error;
+            const rawMessage = apiError?.message || `WhatsApp API request failed with HTTP ${response.status}.`;
+            let friendlyMessage = rawMessage;
+
+            if (mode === 'text' && /24[\s-]?hour|customer care window/i.test(rawMessage)) {
+                friendlyMessage = 'Free-form WhatsApp text messages only work inside the 24-hour customer service window. Try the hello_world template first.';
+            } else if (/phone[_ ]?number[_ ]?id/i.test(rawMessage)) {
+                friendlyMessage = 'Your WHATSAPP_PHONE_NUMBER_ID secret is invalid or not linked to the access token.';
+            } else if (/permission|access token|oauth/i.test(rawMessage)) {
+                friendlyMessage = 'Your WHATSAPP_ACCESS_TOKEN is invalid, expired, or missing WhatsApp permissions.';
+            } else if (/recipient|not.*allowed|verified/i.test(rawMessage)) {
+                friendlyMessage = 'The recipient phone number is not ready for testing. Make sure it is a WhatsApp number and, in test mode, added to the allowed recipients in Meta.';
+            }
+
+            throw new functions.https.HttpsError(
+                'internal',
+                `WhatsApp API error: ${friendlyMessage}`
+            );
+        }
+
+        const whatsappMessageId = responseBody?.messages?.[0]?.id;
+        console.log(`✅ Test WhatsApp ${mode} sent successfully to ${normalizedPhoneE164 || recipientPhone}. Message ID: ${whatsappMessageId || 'n/a'}`);
+
+        return {
+            success: true,
+            message: `WhatsApp ${mode === 'template' ? `template "${templateName}"` : 'message'} sent successfully to ${normalizedPhoneE164 || `+${recipientPhone}`}`,
+            whatsappMessageId,
+            mode,
+            templateName: mode === 'template' ? templateName : null,
+            templateLanguage: mode === 'template' ? templateLanguage : null
+        };
+    } catch (error: any) {
+        console.error('❌ Error sending WhatsApp test message:', error);
+
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to send WhatsApp message: ${error.message}`
         );
     }
 });

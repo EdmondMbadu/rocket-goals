@@ -10,7 +10,8 @@ import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 import { LAUNCHPAD_TEMPLATES } from '../launchpad/launchpad.types';
 
-type SectionKey = 'users' | 'email' | 'sms' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
+type SectionKey = 'users' | 'email' | 'sms' | 'whatsapp' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
+type WhatsAppTestMode = 'template' | 'text';
 
 type PromoCodeUser = {
   userId: string;
@@ -122,6 +123,13 @@ export class AdminComponent implements OnInit {
   smsMessage = signal('Hello! This is a test SMS from Rocket Goals Admin Panel to verify Twilio integration is working correctly.');
   smsCredentialSet = signal<'primary' | 'alternate'>('primary');
 
+  // WhatsApp form state
+  whatsappPhoneNumber = signal('');
+  whatsappMode = signal<WhatsAppTestMode>('template');
+  whatsappTemplateName = signal('hello_world');
+  whatsappTemplateLanguage = signal('en_US');
+  whatsappMessage = signal('Hello! This is a test WhatsApp message from Rocket Goals Admin Panel.');
+
   // Reminder OS form state
   reminderGoalTitle = signal('Complete my fitness challenge');
   reminderParticipantName = signal('John Doe');
@@ -181,6 +189,7 @@ export class AdminComponent implements OnInit {
     users: false,
     email: false,
     sms: false,
+    whatsapp: false,
     reminders: false,
     quickActions: true,
     aiAnalytics: false,
@@ -338,7 +347,7 @@ export class AdminComponent implements OnInit {
   }
 
   async sendTestSMS() {
-    const phoneNumber = this.smsPhoneNumber().trim();
+    const phoneNumber = this.normalizePhoneInput(this.smsPhoneNumber());
     const message = this.smsMessage().trim();
     const credentialSet = this.smsCredentialSet();
 
@@ -407,6 +416,83 @@ export class AdminComponent implements OnInit {
       console.error('Error sending SMS:', err);
       const errorMessage = err.message || 'An unexpected error occurred';
       this.error.set(`Failed to send SMS: ${errorMessage}`);
+    } finally {
+      this.loading.set(false);
+      setTimeout(() => {
+        this.success.set(null);
+        this.error.set(null);
+      }, 8000);
+    }
+  }
+
+  async sendTestWhatsApp() {
+    const phoneNumber = this.normalizePhoneInput(this.whatsappPhoneNumber());
+    const mode = this.whatsappMode();
+    const templateName = this.whatsappTemplateName().trim() || 'hello_world';
+    const templateLanguage = this.whatsappTemplateLanguage().trim() || 'en_US';
+    const message = this.whatsappMessage().trim();
+
+    if (!phoneNumber) {
+      this.error.set('Please enter a recipient phone number');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    const digitCount = phoneNumber.replace(/\D/g, '').length;
+    if (digitCount < 10 || digitCount > 15) {
+      this.error.set('Please enter a valid phone number. Example: +14155552671');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (mode === 'text' && !message) {
+      this.error.set('Please enter a WhatsApp message');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (message.length > 4096) {
+      this.error.set('WhatsApp text messages must be 4096 characters or fewer.');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const { getApp } = await import('firebase/app');
+
+      const app = getApp();
+      const functions = getFunctions(app);
+      const sendWhatsApp = httpsCallable(functions, 'sendTestWhatsApp');
+
+      const result = await sendWhatsApp({
+        phoneNumber,
+        mode,
+        message,
+        templateName,
+        templateLanguage
+      });
+      const data = result.data as {
+        success: boolean;
+        message: string;
+        whatsappMessageId?: string;
+        mode?: WhatsAppTestMode;
+      };
+
+      if (data.success) {
+        this.success.set(`✅ ${data.message}${data.whatsappMessageId ? ` (Message ID: ${data.whatsappMessageId})` : ''}`);
+        this.whatsappPhoneNumber.set('');
+      } else {
+        this.error.set('Failed to send WhatsApp test message. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Error sending WhatsApp test message:', err);
+      const errorMessage = err.message || 'An unexpected error occurred';
+      this.error.set(`Failed to send WhatsApp test message: ${errorMessage}`);
     } finally {
       this.loading.set(false);
       setTimeout(() => {
@@ -913,6 +999,26 @@ export class AdminComponent implements OnInit {
 
   toggleDarkMode() {
     this.theme.toggleDarkMode();
+  }
+
+  private normalizePhoneInput(rawPhone: string): string {
+    const trimmed = (rawPhone || '').trim();
+    if (!trimmed) return '';
+
+    if (trimmed.startsWith('+')) {
+      return `+${trimmed.slice(1).replace(/\D/g, '')}`;
+    }
+
+    const digitsOnly = trimmed.replace(/\D/g, '');
+    if (digitsOnly.length === 10) {
+      return `+1${digitsOnly}`;
+    }
+
+    if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) {
+      return `+${digitsOnly}`;
+    }
+
+    return trimmed;
   }
 
   formatDate(value: unknown) {
