@@ -4,6 +4,7 @@ import { firebaseConfig } from '../../environments/environment';
 import {
   CreateTeamInput,
   Team,
+  TeamInvite,
   TeamMissionControlCard,
   TeamDirectMessage,
   TeamMemberActivitySnapshot,
@@ -701,6 +702,129 @@ export class TeamService {
     const functions = functionsModule.getFunctions(app, 'us-central1');
     const sendInvite = functionsModule.httpsCallable(functions, 'sendTeamInviteEmail');
     await sendInvite(payload);
+  }
+
+  async createOrRefreshTeamInvite(payload: {
+    teamId: string;
+    teamName: string;
+    inviteeEmail: string;
+    invitedByUserId: string;
+    invitedByName?: string;
+    inviteeName?: string;
+    teamDescription?: string;
+    teamCoverImageUrl?: string;
+  }): Promise<string> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const normalizedEmail = payload.inviteeEmail.trim().toLowerCase();
+    const normalizedTeamId = payload.teamId.trim();
+    const invitesRef = fm.collection(firestore, 'teamInvites');
+    const existingSnapshot = await fm.getDocs(
+      fm.query(
+        invitesRef,
+        fm.where('teamId', '==', normalizedTeamId),
+        fm.where('inviteeEmail', '==', normalizedEmail),
+        fm.limit(10)
+      )
+    );
+
+    const existingPending = existingSnapshot.docs.find(doc => {
+      const data = doc.data() as Record<string, any>;
+      return String(data['status'] || 'pending').trim().toLowerCase() === 'pending';
+    });
+
+    const baseInvitePayload = this.sanitizeWritePayload({
+      teamId: normalizedTeamId,
+      teamName: payload.teamName.trim(),
+      teamDescription: payload.teamDescription?.trim(),
+      teamCoverImageUrl: payload.teamCoverImageUrl?.trim(),
+      inviteeEmail: normalizedEmail,
+      inviteeName: payload.inviteeName?.trim(),
+      invitedByUserId: payload.invitedByUserId.trim(),
+      invitedByName: payload.invitedByName?.trim(),
+      status: 'pending' as const
+    });
+
+    if (existingPending) {
+      await fm.updateDoc(existingPending.ref, {
+        ...baseInvitePayload,
+        respondedAt: fm.deleteField(),
+        respondedByUserId: fm.deleteField(),
+        invitedAt: fm.serverTimestamp()
+      });
+      return existingPending.id;
+    }
+
+    const docRef = await fm.addDoc(invitesRef, {
+      ...baseInvitePayload,
+      invitedAt: fm.serverTimestamp()
+    });
+    await fm.updateDoc(docRef, { id: docRef.id });
+    return docRef.id;
+  }
+
+  async getPendingInvitesByEmail(email: string): Promise<TeamInvite[]> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return [];
+    }
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const invitesRef = fm.collection(firestore, 'teamInvites');
+    const snapshot = await fm.getDocs(
+      fm.query(
+        invitesRef,
+        fm.where('inviteeEmail', '==', normalizedEmail),
+        fm.where('status', '==', 'pending')
+      )
+    );
+
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }) as TeamInvite)
+      .sort((left, right) => {
+        const leftAt = this.getTimestampMillis(left.invitedAt) || 0;
+        const rightAt = this.getTimestampMillis(right.invitedAt) || 0;
+        return rightAt - leftAt;
+      });
+  }
+
+  async acceptTeamInvite(
+    inviteId: string,
+    member: Team['members'][0]
+  ): Promise<{ teamId: string }> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const inviteRef = fm.doc(firestore, 'teamInvites', inviteId);
+    const inviteSnap = await fm.getDoc(inviteRef);
+    if (!inviteSnap.exists()) {
+      throw new Error('Invite not found.');
+    }
+
+    const invite = { id: inviteSnap.id, ...inviteSnap.data() } as TeamInvite;
+    if (invite.status !== 'pending') {
+      throw new Error('This invite has already been handled.');
+    }
+
+    await this.addMemberToTeam(invite.teamId, member);
+    await fm.updateDoc(inviteRef, {
+      status: 'accepted',
+      respondedAt: fm.serverTimestamp(),
+      respondedByUserId: member.userId
+    });
+
+    return { teamId: invite.teamId };
+  }
+
+  async declineTeamInvite(inviteId: string, userId?: string): Promise<void> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const inviteRef = fm.doc(firestore, 'teamInvites', inviteId);
+    await fm.updateDoc(inviteRef, {
+      status: 'declined',
+      respondedAt: fm.serverTimestamp(),
+      respondedByUserId: userId || null
+    });
   }
 
   async addMemberToTeam(teamId: string, member: Team['members'][0]): Promise<void> {

@@ -3339,6 +3339,21 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       const inviteeName = selected && this.normalizeEmail(selected.email) === email
         ? `${selected.firstName} ${selected.lastName}`.trim() || undefined
         : undefined;
+      const inviterName = [this.authService.profile()?.firstName, this.authService.profile()?.lastName]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || this.authService.profile()?.email || undefined;
+
+      await this.teamService.createOrRefreshTeamInvite({
+        teamId: teamData.id,
+        teamName: teamData.name,
+        teamDescription: teamData.description,
+        teamCoverImageUrl: teamData.coverImageUrl,
+        inviteeEmail: email,
+        inviteeName,
+        invitedByUserId: this.authService.profile()?.userId || '',
+        invitedByName: inviterName
+      });
 
       await this.teamService.sendTeamInviteEmail({
         teamId: teamData.id,

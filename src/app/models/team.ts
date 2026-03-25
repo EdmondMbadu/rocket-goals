@@ -98,6 +98,22 @@ export interface TeamMissionControlLeaderboardConfig {
   secondaryToggleLabel?: string;
 }
 
+export interface TeamInvite {
+  id: string;
+  teamId: string;
+  teamName: string;
+  teamDescription?: string;
+  teamCoverImageUrl?: string;
+  inviteeEmail: string;
+  inviteeName?: string;
+  invitedByUserId: string;
+  invitedByName?: string;
+  status: 'pending' | 'accepted' | 'declined';
+  invitedAt: unknown;
+  respondedAt?: unknown;
+  respondedByUserId?: string;
+}
+
 export interface TeamAiSettings {
   displayName?: string;
   avatarUrl?: string;

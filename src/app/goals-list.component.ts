@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 import { RocketGoalsAIComponent } from './rocket-goals-ai.component';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import type { RocketGoal } from './models/rocket-goal';
-import type { Team, TeamMember } from './models/team';
+import type { Team, TeamInvite, TeamMember } from './models/team';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ThemeService } from './theme.service';
@@ -47,6 +47,11 @@ export interface RocketQuizAnswers {
 interface FanMissionContext {
   fan: Fan;
   goal: RocketGoal | null;
+}
+
+interface PendingTeamInviteContext {
+  invite: TeamInvite;
+  team: Team | null;
 }
 
 type TeamCoachSource = 'prebuilt' | 'community' | 'custom';
@@ -103,6 +108,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   fanMemberships = signal<FanMissionContext[]>([]);
   fanMembershipsLoading = signal(false);
   leavingFanIds = signal<Record<string, boolean>>({});
+  pendingTeamInvites = signal<PendingTeamInviteContext[]>([]);
+  pendingTeamInvitesLoading = signal(false);
+  teamInviteActionState = signal<Record<string, 'accepting' | 'declining'>>({});
   editingGoalId = signal<string | null>(null);
   editingGoalTitleValue = signal<string>('');
   activeGoalMenuId = signal<string | null>(null);
@@ -321,18 +329,23 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     const profile = this.authService.profile();
     if (!profile?.userId) {
       this.teams.set([]);
+      this.pendingTeamInvites.set([]);
       this.error.set('Please log in to view your goals');
       this.loading.set(false);
       return;
     }
 
     this.loading.set(true);
+    this.pendingTeamInvitesLoading.set(true);
     this.error.set(null);
     try {
       console.log('Loading goals for userId:', profile.userId);
-      const [goalsResult, teamsResult] = await Promise.allSettled([
+      const [goalsResult, teamsResult, teamInvitesResult] = await Promise.allSettled([
         this.rocketGoalsService.getRocketGoalsByUserId(profile.userId),
-        this.teamService.getTeamsByUserId(profile.userId)
+        this.teamService.getTeamsByUserId(profile.userId),
+        profile.email
+          ? this.teamService.getPendingInvitesByEmail(profile.email)
+          : Promise.resolve([])
       ]);
 
       if (goalsResult.status !== 'fulfilled') {
@@ -343,16 +356,29 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       const teams = teamsResult.status === 'fulfilled'
         ? (teamsResult.value as Team[])
         : [];
+      const pendingInvites = teamInvitesResult.status === 'fulfilled'
+        ? (teamInvitesResult.value as TeamInvite[])
+        : [];
 
       if (teamsResult.status !== 'fulfilled') {
         console.warn('Failed to load teams for goals page:', teamsResult.reason);
       }
+      if (teamInvitesResult.status !== 'fulfilled') {
+        console.warn('Failed to load team invites for goals page:', teamInvitesResult.reason);
+      }
 
       const visibleGoals = goals.filter(goal => !this.isTeamLinkedGoal(goal));
+      const pendingInviteEntries: PendingTeamInviteContext[] = pendingInvites
+        .filter(invite => !teams.some(team => team.id === invite.teamId))
+        .map(invite => ({
+          invite,
+          team: null
+        }));
 
       console.log('Loaded goals:', goals);
       this.goals.set(visibleGoals);
       this.teams.set(teams);
+      this.pendingTeamInvites.set(pendingInviteEntries);
       const preferredGoalId = profile?.myOneThingGoalId;
       const preferredExists = preferredGoalId && visibleGoals.some(goal => goal.id === preferredGoalId);
       const defaultGoalId = visibleGoals[0]?.id || null;
@@ -375,8 +401,10 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (err) {
       console.error('Error loading goals:', err);
       this.teams.set([]);
+      this.pendingTeamInvites.set([]);
       this.error.set('Failed to load goals. Please try again.');
     } finally {
+      this.pendingTeamInvitesLoading.set(false);
       this.loading.set(false);
     }
   }
@@ -535,6 +563,88 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       return team.members.length;
     }
     return Array.isArray(team.memberIds) ? team.memberIds.length : 0;
+  }
+
+  getPendingTeamInviteCount(): number {
+    return this.pendingTeamInvites().length;
+  }
+
+  getPendingTeamInviteTeamName(entry: PendingTeamInviteContext): string {
+    return entry.invite.teamName || 'Team invitation';
+  }
+
+  getPendingTeamInviteDescription(entry: PendingTeamInviteContext): string {
+    return entry.invite.teamDescription || 'Join this team to collaborate, stay accountable, and move the mission together.';
+  }
+
+  getPendingTeamInviteCover(entry: PendingTeamInviteContext): string {
+    return entry.invite.teamCoverImageUrl || '/assets/team-rocket.jpg';
+  }
+
+  getPendingTeamInviteInviter(entry: PendingTeamInviteContext): string {
+    return entry.invite.invitedByName || 'A Rocket Goals leader';
+  }
+
+  isTeamInviteProcessing(inviteId: string): boolean {
+    return !!this.teamInviteActionState()[inviteId];
+  }
+
+  async acceptTeamInvite(entry: PendingTeamInviteContext): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId) {
+      this.error.set('Please log in before accepting a team invite.');
+      return;
+    }
+
+    this.teamInviteActionState.update(state => ({ ...state, [entry.invite.id]: 'accepting' }));
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      await this.teamService.acceptTeamInvite(entry.invite.id, {
+        userId: profile.userId,
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        email: (profile.email || '').trim().toLowerCase(),
+        profilePictureUrl: profile.profilePictureUrl,
+        role: 'member',
+        joinedAt: Date.now()
+      });
+
+      this.success.set(`You joined ${entry.invite.teamName}.`);
+      await this.loadGoals();
+    } catch (error: any) {
+      console.error('Failed to accept team invite:', error);
+      this.error.set(error?.message || 'Could not accept this team invite right now.');
+    } finally {
+      this.teamInviteActionState.update(state => {
+        const next = { ...state };
+        delete next[entry.invite.id];
+        return next;
+      });
+    }
+  }
+
+  async declineTeamInvite(entry: PendingTeamInviteContext): Promise<void> {
+    const profile = this.authService.profile();
+    this.teamInviteActionState.update(state => ({ ...state, [entry.invite.id]: 'declining' }));
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      await this.teamService.declineTeamInvite(entry.invite.id, profile?.userId);
+      this.pendingTeamInvites.update(invites => invites.filter(item => item.invite.id !== entry.invite.id));
+      this.success.set(`Declined the invite to ${entry.invite.teamName}.`);
+    } catch (error: any) {
+      console.error('Failed to decline team invite:', error);
+      this.error.set(error?.message || 'Could not decline this team invite right now.');
+    } finally {
+      this.teamInviteActionState.update(state => {
+        const next = { ...state };
+        delete next[entry.invite.id];
+        return next;
+      });
+    }
   }
 
   isTeamAdmin(team: Team): boolean {
