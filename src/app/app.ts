@@ -121,7 +121,7 @@ export class App implements AfterViewInit, OnDestroy {
   private document = inject(DOCUMENT);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/setup-team', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected mobileNavOpen = signal(false);
   protected readonly heroGoalPrompt = signal('');
@@ -261,6 +261,14 @@ export class App implements AfterViewInit, OnDestroy {
         title: 'Schedule a Demo | See RocketGoals in Action',
         description: 'Book a quick demo to see how RocketGoals helps teams and individuals set, track, and achieve goals with AI coaching.',
         canonicalPath: '/schedule'
+      };
+    }
+
+    if (routePath === '/setup-team') {
+      return {
+        title: 'Setup Your Team | RocketGoals Coaching Page',
+        description: 'Launch a RocketGoals team page for coaching with AI-powered check-ins, reminders, dashboards, and team accountability.',
+        canonicalPath: '/setup-team'
       };
     }
 

@@ -10,8 +10,7 @@ import type { Timestamp } from 'firebase/firestore';
 import { ThemeService } from '../theme.service';
 import { LAUNCHPAD_TEMPLATES } from '../launchpad/launchpad.types';
 
-type SectionKey = 'users' | 'email' | 'sms' | 'whatsapp' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
-type WhatsAppTestMode = 'template' | 'text';
+type SectionKey = 'users' | 'email' | 'sms' | 'telnyx' | 'reminders' | 'quickActions' | 'aiAnalytics' | 'promoCodes' | 'demoRequests' | 'bookDownloads';
 
 type PromoCodeUser = {
   userId: string;
@@ -123,12 +122,9 @@ export class AdminComponent implements OnInit {
   smsMessage = signal('Hello! This is a test SMS from Rocket Goals Admin Panel to verify Twilio integration is working correctly.');
   smsCredentialSet = signal<'primary' | 'alternate'>('primary');
 
-  // WhatsApp form state
-  whatsappPhoneNumber = signal('');
-  whatsappMode = signal<WhatsAppTestMode>('template');
-  whatsappTemplateName = signal('hello_world');
-  whatsappTemplateLanguage = signal('en_US');
-  whatsappMessage = signal('Hello! This is a test WhatsApp message from Rocket Goals Admin Panel.');
+  // Telnyx form state
+  telnyxPhoneNumber = signal('');
+  telnyxMessage = signal('Hello! This is a test SMS from Rocket Goals Admin Panel via Telnyx.');
 
   // Reminder OS form state
   reminderGoalTitle = signal('Complete my fitness challenge');
@@ -189,7 +185,7 @@ export class AdminComponent implements OnInit {
     users: false,
     email: false,
     sms: false,
-    whatsapp: false,
+    telnyx: false,
     reminders: false,
     quickActions: true,
     aiAnalytics: false,
@@ -425,12 +421,9 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  async sendTestWhatsApp() {
-    const phoneNumber = this.normalizePhoneInput(this.whatsappPhoneNumber());
-    const mode = this.whatsappMode();
-    const templateName = this.whatsappTemplateName().trim() || 'hello_world';
-    const templateLanguage = this.whatsappTemplateLanguage().trim() || 'en_US';
-    const message = this.whatsappMessage().trim();
+  async sendTestTelnyxSMS() {
+    const phoneNumber = this.normalizePhoneInput(this.telnyxPhoneNumber());
+    const message = this.telnyxMessage().trim();
 
     if (!phoneNumber) {
       this.error.set('Please enter a recipient phone number');
@@ -438,21 +431,26 @@ export class AdminComponent implements OnInit {
       return;
     }
 
-    const digitCount = phoneNumber.replace(/\D/g, '').length;
-    if (digitCount < 10 || digitCount > 15) {
-      this.error.set('Please enter a valid phone number. Example: +14155552671');
+    if (!phoneNumber.startsWith('+')) {
+      this.error.set('Please enter phone number in E.164 format (e.g., +1234567890)');
       setTimeout(() => this.error.set(null), 5000);
       return;
     }
 
-    if (mode === 'text' && !message) {
-      this.error.set('Please enter a WhatsApp message');
+    if (phoneNumber.length < 10) {
+      this.error.set('Please enter a valid phone number');
       setTimeout(() => this.error.set(null), 5000);
       return;
     }
 
-    if (message.length > 4096) {
-      this.error.set('WhatsApp text messages must be 4096 characters or fewer.');
+    if (!message) {
+      this.error.set('Please enter a Telnyx SMS message');
+      setTimeout(() => this.error.set(null), 5000);
+      return;
+    }
+
+    if (message.length > 1600) {
+      this.error.set('Message is too long. Maximum length is 1600 characters.');
       setTimeout(() => this.error.set(null), 5000);
       return;
     }
@@ -467,32 +465,29 @@ export class AdminComponent implements OnInit {
 
       const app = getApp();
       const functions = getFunctions(app);
-      const sendWhatsApp = httpsCallable(functions, 'sendTestWhatsApp');
+      const sendTelnyxSMS = httpsCallable(functions, 'sendTestTelnyxSMS');
 
-      const result = await sendWhatsApp({
+      const result = await sendTelnyxSMS({
         phoneNumber,
-        mode,
-        message,
-        templateName,
-        templateLanguage
+        message
       });
       const data = result.data as {
         success: boolean;
         message: string;
-        whatsappMessageId?: string;
-        mode?: WhatsAppTestMode;
+        messageId?: string;
+        status?: string;
       };
 
       if (data.success) {
-        this.success.set(`✅ ${data.message}${data.whatsappMessageId ? ` (Message ID: ${data.whatsappMessageId})` : ''}`);
-        this.whatsappPhoneNumber.set('');
+        this.success.set(`✅ ${data.message}${data.messageId ? ` (Message ID: ${data.messageId})` : ''}`);
+        this.telnyxPhoneNumber.set('');
       } else {
-        this.error.set('Failed to send WhatsApp test message. Please try again.');
+        this.error.set('Failed to send Telnyx SMS. Please try again.');
       }
     } catch (err: any) {
-      console.error('Error sending WhatsApp test message:', err);
+      console.error('Error sending Telnyx SMS:', err);
       const errorMessage = err.message || 'An unexpected error occurred';
-      this.error.set(`Failed to send WhatsApp test message: ${errorMessage}`);
+      this.error.set(`Failed to send Telnyx SMS: ${errorMessage}`);
     } finally {
       this.loading.set(false);
       setTimeout(() => {
