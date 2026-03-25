@@ -23,11 +23,7 @@ export class TeamService {
       { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
       { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
       { id: 'mc-active-today', name: 'Active Today', style: 'circular', metricKey: 'active_today' },
-      { id: 'mc-current-week-miles', name: 'Current Week Miles', style: 'circular', metricKey: 'current_week_miles' },
-      { id: 'mc-weekly-miles-total', name: 'Weekly Miles Total', style: 'circular', metricKey: 'weekly_miles_total' },
-      { id: 'mc-overall-miles-total', name: 'Overall Miles Total', style: 'circular', metricKey: 'overall_miles_total' },
       { id: 'mc-overall-progress', name: 'Overall Milestone Progress', style: 'histogram', metricKey: 'overall_milestone_progress' },
-      { id: 'mc-weekly-mileage-progress', name: 'Weekly Mileage Progress', style: 'histogram', metricKey: 'weekly_mileage_progress' },
       { id: 'mc-today-rate', name: "Today's Execution Rate", style: 'histogram', metricKey: 'today_execution_rate' },
       { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
     ];

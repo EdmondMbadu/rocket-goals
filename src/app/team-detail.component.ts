@@ -69,13 +69,26 @@ type TeamMissionSummary = {
   }>;
 };
 
-type TeamMilesLeaderboardRow = {
+type TeamLeaderboardRow = {
   member: TeamMember;
-  miles: number;
+  primaryValueText: string;
+  secondaryValueText: string;
+  sortValue: number;
+  tieBreaker: number;
   latestActivityAt: number | null;
 };
 
-const DEFAULT_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
+const DEFAULT_GENERIC_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
+  { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
+  { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
+  { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
+  { id: 'mc-active-today', name: 'Active Today', style: 'circular', metricKey: 'active_today' },
+  { id: 'mc-overall-progress', name: 'Overall Milestone Progress', style: 'histogram', metricKey: 'overall_milestone_progress' },
+  { id: 'mc-today-rate', name: "Today's Execution Rate", style: 'histogram', metricKey: 'today_execution_rate' },
+  { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
+];
+
+const DEFAULT_MILEAGE_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
   { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
   { id: 'mc-milestones-done', name: 'Milestones Done', style: 'circular', metricKey: 'milestones_done' },
   { id: 'mc-today-execution', name: "Today's Execution", style: 'circular', metricKey: 'today_execution' },
@@ -89,18 +102,22 @@ const DEFAULT_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
   { id: 'mc-engagement-rate', name: 'Team Engagement', style: 'histogram', metricKey: 'team_engagement_rate' }
 ];
 
-const MISSION_CONTROL_METRIC_OPTIONS: Array<{ key: TeamMissionControlMetricKey; label: string }> = [
+const GENERIC_MISSION_CONTROL_METRIC_OPTIONS: Array<{ key: TeamMissionControlMetricKey; label: string }> = [
   { key: 'total_members', label: 'Total Members' },
   { key: 'milestones_done', label: 'Milestones Done' },
   { key: 'today_execution', label: "Today's Execution" },
   { key: 'active_today', label: 'Active Today' },
+  { key: 'overall_milestone_progress', label: 'Overall Milestone Progress' },
+  { key: 'today_execution_rate', label: "Today's Execution Rate" },
+  { key: 'team_engagement_rate', label: 'Team Engagement Rate' }
+];
+
+const MILEAGE_MISSION_CONTROL_METRIC_OPTIONS: Array<{ key: TeamMissionControlMetricKey; label: string }> = [
+  ...GENERIC_MISSION_CONTROL_METRIC_OPTIONS,
   { key: 'current_week_miles', label: 'Current Week Miles' },
   { key: 'weekly_miles_total', label: 'Weekly Miles Total' },
   { key: 'overall_miles_total', label: 'Overall Miles Total' },
-  { key: 'overall_milestone_progress', label: 'Overall Milestone Progress' },
   { key: 'weekly_mileage_progress', label: 'Weekly Mileage Progress' },
-  { key: 'today_execution_rate', label: "Today's Execution Rate" },
-  { key: 'team_engagement_rate', label: 'Team Engagement Rate' }
 ];
 
 const MISSION_CONTROL_STYLE_OPTIONS: Array<{ key: TeamMissionControlCardStyle; label: string }> = [
@@ -290,7 +307,12 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canManageMissionControlCards = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
-  readonly missionControlMetricOptions = MISSION_CONTROL_METRIC_OPTIONS;
+  readonly teamGoalTracksMileage = computed(() => this.isMileageTrackingTeamGoal(this.teamGoal()));
+  readonly missionControlMetricOptions = computed(() => (
+    this.teamGoalTracksMileage()
+      ? MILEAGE_MISSION_CONTROL_METRIC_OPTIONS
+      : GENERIC_MISSION_CONTROL_METRIC_OPTIONS
+  ));
   readonly missionControlStyleOptions = MISSION_CONTROL_STYLE_OPTIONS;
   summaryMembers = computed(() => {
     return (this.team()?.members || []).filter(member => !!member.userId);
@@ -416,12 +438,32 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const summary = this.teamDirectSummary();
     return this.renderedMissionControlCards().map(card => this.buildMissionControlCardView(card, summary));
   });
-  milesLeaderboardRows = computed<TeamMilesLeaderboardRow[]>(() => {
+  leaderboardRows = computed<TeamLeaderboardRow[]>(() => {
+    const isMileageLeaderboard = this.teamGoalTracksMileage();
     const mode = this.leaderboardMileageMode();
     const activityMap = this.participantActivityMap();
     return this.leaderboardMembers()
       .map(member => {
         const activity = activityMap[member.userId] || null;
+        if (!isMileageLeaderboard) {
+          const completionPercent = this.getParticipantCompletionPercent(activity);
+          const todayPercent = this.getParticipantTodayPercent(activity);
+          const completedMilestones = activity?.completedMilestones || 0;
+          const totalMilestones = activity?.totalMilestones || 0;
+          const completedToday = activity?.completedToday || 0;
+          const totalToday = activity?.totalToday || 0;
+          const showingToday = mode === 'weekly';
+          return {
+            member,
+            primaryValueText: showingToday ? `${todayPercent}%` : `${completionPercent}%`,
+            secondaryValueText: showingToday
+              ? `${completedToday}/${totalToday} today`
+              : `${completedMilestones}/${totalMilestones} milestones`,
+            sortValue: showingToday ? todayPercent : completionPercent,
+            tieBreaker: showingToday ? completedToday : completedMilestones,
+            latestActivityAt: activity?.latestActivityAt || null
+          };
+        }
         const weekly = activity?.weeklyMileageProgress || [];
         const fallbackMiles = weekly.reduce((sum, week) => sum + (week.actualMiles || 0), 0);
         const milesSource = typeof activity?.totalMilesLogged === 'number' && Number.isFinite(activity.totalMilesLogged)
@@ -435,18 +477,59 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         ) / 10;
         return {
           member,
-          miles: mode === 'weekly' ? currentWeekMiles : totalMiles,
+          primaryValueText: `${mode === 'weekly' ? currentWeekMiles : totalMiles} mi`,
+          secondaryValueText: mode === 'weekly'
+            ? `${Math.round((((activity?.currentWeekMilesTarget || 0) + Number.EPSILON) * 10)) / 10} mi target`
+            : 'Total miles logged',
+          sortValue: mode === 'weekly' ? currentWeekMiles : totalMiles,
+          tieBreaker: mode === 'weekly'
+            ? Math.round((((activity?.currentWeekMilesTarget || 0) + Number.EPSILON) * 10)) / 10
+            : totalMiles,
           latestActivityAt: activity?.latestActivityAt || null
         };
       })
       .sort((left, right) => {
-        if (right.miles !== left.miles) {
-          return right.miles - left.miles;
+        if (right.sortValue !== left.sortValue) {
+          return right.sortValue - left.sortValue;
+        }
+        if (right.tieBreaker !== left.tieBreaker) {
+          return right.tieBreaker - left.tieBreaker;
+        }
+        const leftActivity = left.latestActivityAt || 0;
+        const rightActivity = right.latestActivityAt || 0;
+        if (rightActivity !== leftActivity) {
+          return rightActivity - leftActivity;
         }
         const leftName = `${left.member.firstName} ${left.member.lastName}`.trim().toLowerCase();
         const rightName = `${right.member.firstName} ${right.member.lastName}`.trim().toLowerCase();
         return leftName.localeCompare(rightName);
       });
+  });
+  leaderboardTitle = computed(() => {
+    if (this.teamGoalTracksMileage()) {
+      return this.leaderboardMileageMode() === 'weekly' ? 'Miles This Week' : 'Miles Driven So Far';
+    }
+    return this.leaderboardMileageMode() === 'weekly' ? "Today's Execution" : 'Overall Progress';
+  });
+  leaderboardDescription = computed(() => {
+    if (this.teamGoalTracksMileage()) {
+      return this.leaderboardMileageMode() === 'weekly'
+        ? 'Current Monday-Sunday mileage by member.'
+        : "From each member's individual bike-mile entries.";
+    }
+    return this.leaderboardMileageMode() === 'weekly'
+      ? 'Ranked by tasks completed on the current mission day.'
+      : 'Ranked by milestone completion across each member goal.';
+  });
+  leaderboardPrimaryToggleLabel = computed(() => this.teamGoalTracksMileage() ? 'Total' : 'Overall');
+  leaderboardSecondaryToggleLabel = computed(() => this.teamGoalTracksMileage() ? 'Current Week' : 'Today');
+  leaderboardEmptyText = computed(() => {
+    if (this.teamGoalTracksMileage()) {
+      return 'No member mileage data yet.';
+    }
+    return this.leaderboardMileageMode() === 'weekly'
+      ? 'No member execution data yet.'
+      : 'No member goal progress yet.';
   });
   selectedConversationOverview = computed(() => {
     const member = this.activeDirectParticipant();
@@ -1599,19 +1682,25 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   getMissionControlMetricLabel(metricKey: TeamMissionControlMetricKey): string {
-    return this.missionControlMetricOptions.find(option => option.key === metricKey)?.label || 'Custom Data Point';
+    return MILEAGE_MISSION_CONTROL_METRIC_OPTIONS.find(option => option.key === metricKey)?.label || 'Custom Data Point';
   }
 
   private resolveMissionControlCards(cards: TeamMissionControlCard[] | undefined): TeamMissionControlCard[] {
+    const defaults = this.getDefaultMissionControlCards();
     if (!Array.isArray(cards) || cards.length === 0) {
-      return DEFAULT_MISSION_CONTROL_CARDS.map(card => ({ ...card }));
+      return defaults.map(card => ({ ...card }));
     }
-    return this.ensureMileageAggregationCards(
-      this.upgradeLegacyMissionControlCards(this.normalizeMissionControlCards(cards))
-    );
+    const normalized = this.normalizeMissionControlCards(cards);
+    const upgraded = this.teamGoalTracksMileage()
+      ? this.upgradeLegacyMissionControlCards(normalized)
+      : this.replaceLegacyMileageDefaultsWithGeneric(normalized);
+    return this.ensureMileageAggregationCards(upgraded);
   }
 
   private ensureMileageAggregationCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    if (!this.teamGoalTracksMileage()) {
+      return cards;
+    }
     const next = [...cards];
     const required: Array<{ metricKey: TeamMissionControlMetricKey; style: TeamMissionControlCardStyle }> = [
       { metricKey: 'weekly_miles_total', style: 'circular' },
@@ -1633,6 +1722,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   private upgradeLegacyMissionControlCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    if (!this.teamGoalTracksMileage()) {
+      return cards;
+    }
     const legacyDefaultMetrics = new Set<TeamMissionControlMetricKey>([
       'total_members',
       'milestones_done',
@@ -1674,6 +1766,13 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     return upgraded;
   }
 
+  private replaceLegacyMileageDefaultsWithGeneric(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
+    if (!this.looksLikeLegacyMileageDefaults(cards)) {
+      return cards;
+    }
+    return this.getDefaultMissionControlCards().map(card => ({ ...card }));
+  }
+
   private normalizeMissionControlCards(cards: TeamMissionControlCard[]): TeamMissionControlCard[] {
     const allowedStyles = new Set<TeamMissionControlCardStyle>(['circular', 'histogram']);
     const allowedMetrics = new Set<TeamMissionControlMetricKey>([
@@ -1689,10 +1788,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       'today_execution_rate',
       'team_engagement_rate'
     ]);
+    const fallbackCards = this.getDefaultMissionControlCards();
 
     return cards
       .map((card, index) => {
-        const fallback = DEFAULT_MISSION_CONTROL_CARDS[index % DEFAULT_MISSION_CONTROL_CARDS.length];
+        const fallback = fallbackCards[index % fallbackCards.length];
         const metricKey = allowedMetrics.has(card.metricKey) ? card.metricKey : fallback.metricKey;
         const style = allowedStyles.has(card.style) ? card.style : fallback.style;
         const name = String(card.name || '').trim() || this.getMissionControlMetricLabel(metricKey);
@@ -1704,6 +1804,57 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   private createMissionControlCardId(): string {
     return `mc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  private getDefaultMissionControlCards(): TeamMissionControlCard[] {
+    return this.teamGoalTracksMileage()
+      ? DEFAULT_MILEAGE_MISSION_CONTROL_CARDS
+      : DEFAULT_GENERIC_MISSION_CONTROL_CARDS;
+  }
+
+  private looksLikeLegacyMileageDefaults(cards: TeamMissionControlCard[]): boolean {
+    const defaultKeys = DEFAULT_MILEAGE_MISSION_CONTROL_CARDS.map(card => card.metricKey);
+    if (cards.length !== defaultKeys.length) {
+      return false;
+    }
+    const keys = cards.map(card => card.metricKey);
+    return defaultKeys.every(key => keys.includes(key));
+  }
+
+  private isMileageTrackingTeamGoal(goal: RocketGoal | null): boolean {
+    const answers = (goal?.answers || {}) as Record<string, any>;
+    const templateId = String(answers['launchpad_template_id'] || '').trim().toLowerCase();
+    if (templateId === 'my-rocket-ride') {
+      return true;
+    }
+
+    const unit = String(answers['onboarding_one_thing_unit'] || '').trim().toLowerCase();
+    if (unit.includes('mile')) {
+      return true;
+    }
+
+    const label = String(answers['onboarding_one_thing_label'] || '').trim().toLowerCase();
+    if (label.includes('mile') || label.includes('distance')) {
+      return true;
+    }
+
+    const title = String(
+      goal?.primaryGoal
+      || answers['goal_title_label']
+      || answers['custom_goal_title']
+      || ''
+    ).trim().toLowerCase();
+
+    if (!title) {
+      return false;
+    }
+
+    return (
+      title.includes('bike')
+      || title.includes('cycling')
+      || title.includes('ride')
+      || title.includes('mile')
+    );
   }
 
   private buildMissionControlCardView(
