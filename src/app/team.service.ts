@@ -8,6 +8,7 @@ import {
   TeamMissionControlCard,
   TeamDirectMessage,
   TeamMemberActivitySnapshot,
+  TeamMemberProgressNote,
   TeamMemberConversationPreview,
   TeamMessage
 } from './models/team';
@@ -1126,6 +1127,63 @@ export class TeamService {
           return left - right;
         });
     }
+  }
+
+  async getMemberProgressNotes(teamId: string, memberUserId: string, limitCount = 100): Promise<TeamMemberProgressNote[]> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const notesRef = fm.collection(
+      firestore,
+      'teams',
+      teamId,
+      'memberProgressNotes',
+      memberUserId,
+      'entries'
+    );
+
+    try {
+      const q = fm.query(notesRef, fm.orderBy('createdAt', 'desc'), fm.limit(limitCount));
+      const snapshot = await fm.getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as TeamMemberProgressNote);
+    } catch {
+      const snapshot = await fm.getDocs(fm.query(notesRef, fm.limit(limitCount)));
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }) as TeamMemberProgressNote)
+        .sort((a, b) => {
+          const left = this.getTimestampMillis(a.createdAt) || 0;
+          const right = this.getTimestampMillis(b.createdAt) || 0;
+          return right - left;
+        });
+    }
+  }
+
+  async addMemberProgressNote(
+    teamId: string,
+    memberUserId: string,
+    note: Omit<TeamMemberProgressNote, 'id' | 'teamId' | 'memberUserId' | 'createdAt' | 'updatedAt'>
+  ): Promise<string> {
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+    const notesRef = fm.collection(
+      firestore,
+      'teams',
+      teamId,
+      'memberProgressNotes',
+      memberUserId,
+      'entries'
+    );
+
+    const payload = this.sanitizeWritePayload({
+      ...note,
+      teamId,
+      memberUserId,
+      createdAt: fm.serverTimestamp(),
+      updatedAt: fm.serverTimestamp()
+    });
+
+    const docRef = await fm.addDoc(notesRef, payload);
+    await fm.updateDoc(docRef, { id: docRef.id });
+    return docRef.id;
   }
 
   async getMemberConversationPreviews(teamId: string, memberUserIds: string[]): Promise<TeamMemberConversationPreview[]> {

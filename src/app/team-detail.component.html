@@ -1186,7 +1186,7 @@
         } @else {
         <div class="direct-empty">
           <p class="direct-empty-title">You are in your private thread</p>
-          <p class="muted tiny">Reply here to message your team lead and admin directly.</p>
+          <p class="muted tiny">Reply here to message your leadership team directly.</p>
         </div>
         }
       </aside>
@@ -1247,11 +1247,29 @@
             <h3>{{ activeDirectParticipant()!.firstName }} {{ activeDirectParticipant()!.lastName }}</h3>
             <p>{{ activeDirectParticipant()!.email }}</p>
           </div>
-          @if (loadingDirectActivity()) {
-          <span class="muted tiny">Loading activity...</span>
-          } @else {
-          <span class="direct-activity-stamp">{{ formatRelativeTime(selectedDirectMemberActivity()?.latestActivityAt) }}</span>
-          }
+          <div class="direct-chat-head-meta">
+            @if (loadingDirectActivity()) {
+            <span class="muted tiny">Loading activity...</span>
+            } @else {
+            <span class="direct-activity-stamp">{{ formatRelativeTime(selectedDirectMemberActivity()?.latestActivityAt) }}</span>
+            }
+            @if (canManageParticipantConversations()) {
+            <div class="direct-workspace-toggle" role="tablist" aria-label="Direct workspace view">
+              <button
+                type="button"
+                [class.active]="directWorkspaceView() === 'notes'"
+                (click)="setDirectWorkspaceView('notes')">
+                Progress File
+              </button>
+              <button
+                type="button"
+                [class.active]="directWorkspaceView() === 'chat'"
+                (click)="setDirectWorkspaceView('chat')">
+                Chat
+              </button>
+            </div>
+            }
+          </div>
         </div>
 
         <div class="direct-activity-grid">
@@ -1289,6 +1307,74 @@
           </div>
         </div>
 
+        @if (canManageParticipantConversations() && directWorkspaceView() === 'notes') {
+        <section class="direct-progress-file expanded">
+          <div class="direct-progress-file-head">
+            <div>
+              <p class="direct-progress-file-kicker">Progress File</p>
+              <h4>Coach notes for {{ activeDirectParticipant()!.firstName }} {{ activeDirectParticipant()!.lastName }}</h4>
+              <p>Save relevant observations, concerns, wins, and context. Every entry is timestamped for the member record.</p>
+            </div>
+            @if (loadingProgressNotes()) {
+            <span class="muted tiny">Loading notes...</span>
+            }
+          </div>
+
+          @if (progressNoteError()) {
+          <p class="alert-inline error">{{ progressNoteError() }}</p>
+          }
+          @if (progressNoteSuccess()) {
+          <p class="alert-inline success">{{ progressNoteSuccess() }}</p>
+          }
+
+          <div class="direct-progress-compose">
+            <textarea
+              [(ngModel)]="progressNoteDraft"
+              rows="4"
+              maxlength="4000"
+              placeholder="Write the latest coaching context, behavior changes, blockers, commitments, or anything the team should remember about this member..."
+              class="direct-progress-textarea"></textarea>
+            <div class="direct-progress-compose-actions">
+              <span class="muted tiny">Saved privately for staff use and future AI context.</span>
+              <button
+                type="button"
+                class="btn solid sm"
+                (click)="saveProgressNote()"
+                [disabled]="!progressNoteDraft.trim() || savingProgressNote()">
+                @if (savingProgressNote()) {
+                Saving...
+                } @else {
+                Save note
+                }
+              </button>
+            </div>
+          </div>
+
+          <div class="direct-progress-log">
+            @if (progressNotes().length === 0 && !loadingProgressNotes()) {
+            <div class="direct-empty compact">
+              <p class="direct-empty-title">No progress notes yet</p>
+              <p class="muted tiny">Start the file with the first relevant update for this member.</p>
+            </div>
+            } @else {
+              @for (note of progressNotes(); track note.id) {
+              <article class="direct-progress-entry">
+                <div class="direct-progress-entry-head">
+                  <div>
+                    <p class="direct-progress-entry-author">{{ note.authorName }}</p>
+                    <p class="direct-progress-entry-role">{{ getProgressNoteAuthorRoleLabel(note) }}</p>
+                  </div>
+                  <time class="direct-progress-entry-time">{{ formatProgressNoteDate(note.createdAt) }}</time>
+                </div>
+                <p class="direct-progress-entry-body">{{ note.content }}</p>
+              </article>
+              }
+            }
+          </div>
+        </section>
+        }
+
+        @if (!canManageParticipantConversations() || directWorkspaceView() === 'chat') {
         <div class="direct-messages-list" #directMessagesContainer>
           @if (loadingDirectMessages()) {
           <div class="direct-empty">
@@ -1299,7 +1385,7 @@
           <div class="direct-empty">
             <p class="direct-empty-title">No direct messages yet</p>
             <p class="muted tiny">
-              {{ canManageParticipantConversations() ? 'Send the first message to kick off one-on-one coaching.' : 'Your team lead or admin can message you here.' }}
+              {{ canManageParticipantConversations() ? 'Send the first message to kick off one-on-one coaching.' : 'Your leadership team can message you here.' }}
             </p>
           </div>
           } @else {
@@ -1343,6 +1429,7 @@
             }
           </button>
         </div>
+        }
         }
       </section>
     </div>

@@ -4305,6 +4305,47 @@
   margin-bottom: 10px;
 }
 
+.direct-chat-head-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.direct-workspace-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.44);
+}
+
+.direct-workspace-toggle button {
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.direct-workspace-toggle button:hover {
+  color: #f8fafc;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.direct-workspace-toggle button.active {
+  color: #fff7ed;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.92), rgba(249, 115, 22, 0.82));
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.2);
+}
+
 .direct-coach-hero {
   border-radius: 14px;
   border: 1px solid rgba(239, 68, 68, 0.22);
@@ -4418,6 +4459,142 @@
   margin-bottom: 12px;
 }
 
+.direct-progress-file {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 12px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.direct-progress-file.expanded {
+  flex: 1;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.direct-progress-file-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.direct-progress-file-kicker {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+.direct-progress-file-head h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.direct-progress-file-head p:last-child {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.direct-progress-compose {
+  display: grid;
+  gap: 8px;
+}
+
+.direct-progress-textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.5);
+  color: #f8fafc;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.direct-progress-textarea:focus {
+  outline: none;
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+.direct-progress-compose-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.direct-progress-log {
+  display: grid;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.direct-progress-file.expanded .direct-progress-log {
+  flex: 1;
+  max-height: none;
+  min-height: 220px;
+}
+
+.direct-progress-entry {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.44);
+  padding: 10px 12px;
+}
+
+.direct-progress-entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.direct-progress-entry-author {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.direct-progress-entry-role {
+  margin: 2px 0 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+.direct-progress-entry-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.direct-progress-entry-body {
+  margin: 8px 0 0;
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .direct-activity-card {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
@@ -4488,6 +4665,10 @@
   color: #94a3b8;
 }
 
+.direct-empty.compact {
+  min-height: 120px;
+}
+
 .direct-empty-title {
   margin: 0;
   color: #f8fafc;
@@ -4541,6 +4722,56 @@
 }
 
 .light-mode .direct-activity-card {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.light-mode .direct-progress-file {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.light-mode .direct-workspace-toggle {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.98);
+}
+
+.light-mode .direct-workspace-toggle button {
+  color: #64748b;
+}
+
+.light-mode .direct-workspace-toggle button:hover {
+  color: #0f172a;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.light-mode .direct-workspace-toggle button.active {
+  color: #ffffff;
+}
+
+.light-mode .direct-progress-file-kicker,
+.light-mode .direct-progress-entry-role {
+  color: #dc2626;
+}
+
+.light-mode .direct-progress-file-head h4,
+.light-mode .direct-progress-entry-author {
+  color: #0f172a;
+}
+
+.light-mode .direct-progress-file-head p:last-child,
+.light-mode .direct-progress-entry-time,
+.light-mode .direct-progress-entry-body {
+  color: #64748b;
+}
+
+.light-mode .direct-progress-textarea {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.light-mode .direct-progress-entry {
   border-color: rgba(15, 23, 42, 0.08);
   background: rgba(248, 250, 252, 0.95);
 }
@@ -4852,6 +5083,23 @@
 
   .direct-activity-grid {
     grid-template-columns: 1fr;
+  }
+
+  .direct-chat-head,
+  .direct-chat-head-meta,
+  .direct-progress-file-head,
+  .direct-progress-compose-actions,
+  .direct-progress-entry-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .direct-workspace-toggle {
+    width: 100%;
+  }
+
+  .direct-workspace-toggle button {
+    flex: 1;
   }
 
   .team-direct-stats-grid,

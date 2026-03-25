@@ -38,6 +38,18 @@ export interface TeamMemberConversationPreview {
   lastMessage: TeamDirectMessage | null;
 }
 
+export interface TeamMemberProgressNote {
+  id: string;
+  teamId: string;
+  memberUserId: string;
+  content: string;
+  authorUserId: string;
+  authorName: string;
+  authorRole: TeamMember['role'] | 'system';
+  createdAt: unknown;
+  updatedAt?: unknown;
+}
+
 export interface TeamMemberActivitySnapshot {
   memberUserId: string;
   goalId: string | null;

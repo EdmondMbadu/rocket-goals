@@ -15,6 +15,7 @@ import type {
   TeamMissionControlMetricKey,
   TeamMissionControlLeaderboardConfig,
   TeamMemberActivitySnapshot,
+  TeamMemberProgressNote,
   TeamMemberConversationPreview,
   TeamMessage
 } from './models/team';
@@ -183,6 +184,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   directError = signal<string | null>(null);
   participantSummaryError = signal<string | null>(null);
   directSendError = signal<string | null>(null);
+  progressNotes = signal<TeamMemberProgressNote[]>([]);
+  loadingProgressNotes = signal(false);
+  savingProgressNote = signal(false);
+  progressNoteError = signal<string | null>(null);
+  progressNoteSuccess = signal<string | null>(null);
   showInviteModal = signal(false);
   sendingMessage = signal(false);
   inviteLoading = signal(false);
@@ -223,6 +229,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   loginEmail = '';
   loginPassword = '';
+  progressNoteDraft = '';
 
   // Cover image
   coverImagePreview = signal<string | null>(null);
@@ -263,6 +270,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   private linkedTeamGoalProfileKey: string | null = null;
   private directConversationPollInterval: ReturnType<typeof setInterval> | null = null;
   private teamCountdownInterval: ReturnType<typeof setInterval> | null = null;
+  private progressNotesLoadedKey: string | null = null;
   missionControlCardsSaving = signal(false);
   missionControlCardsError = signal<string | null>(null);
   missionControlCardsSuccess = signal<string | null>(null);
@@ -271,6 +279,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   missionControlDraftCards = signal<TeamMissionControlCard[]>([]);
   missionControlLeaderboardDraft = signal<ResolvedMissionControlLeaderboardConfig | null>(null);
   leaderboardMileageMode = signal<'total' | 'weekly'>('total');
+  directWorkspaceView = signal<'notes' | 'chat'>('chat');
   draggingMissionControlCardId = signal<string | null>(null);
   dragOverMissionControlCardId = signal<string | null>(null);
   dragOverMissionControlCardPosition = signal<'before' | 'after' | null>(null);
@@ -298,6 +307,13 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     }
     return this.findCurrentUserTeamMember(team)?.role === 'team-lead';
   });
+  currentUserLeadershipRole = computed(() => {
+    const role = this.currentUserTeamMember()?.role;
+    if (role === 'coach' || role === 'captain' || role === 'team-lead') {
+      return role;
+    }
+    return null;
+  });
   canManageTeamInvites = computed(() => {
     if (this.isAdmin()) {
       return true;
@@ -307,8 +323,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   });
   canEditTeamWelcome = computed(() => this.canManageTeamInvites());
   canEditTeamDeadline = computed(() => this.canManageTeamInvites() && !!this.teamGoal()?.id);
-  canAccessDirectConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
-  canManageParticipantConversations = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
+  canAccessDirectConversations = computed(() => this.isAdmin() || !!this.currentUserLeadershipRole());
+  canManageParticipantConversations = computed(() => this.isAdmin() || !!this.currentUserLeadershipRole());
+  canWriteParticipantProgressNotes = computed(() => this.isAdmin() || !!this.currentUserLeadershipRole());
   canManageMissionControlCards = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
   readonly teamGoalTracksMileage = computed(() => this.isMileageTrackingTeamGoal(this.teamGoal()));
@@ -672,6 +689,12 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
           this.directMessages.set([]);
           this.directConversationPreviews.set([]);
           this.directConversationLoadedForTeamId = null;
+          this.progressNotes.set([]);
+          this.progressNotesLoadedKey = null;
+          this.loadingProgressNotes.set(false);
+          this.progressNoteError.set(null);
+          this.progressNoteSuccess.set(null);
+          this.progressNoteDraft = '';
           this.loadingDirectMessages.set(false);
           this.loadingDirectActivity.set(false);
           this.loadingDirectConversations.set(false);
@@ -685,6 +708,12 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         this.directMessages.set([]);
         this.directConversationPreviews.set([]);
         this.directConversationLoadedForTeamId = null;
+        this.progressNotes.set([]);
+        this.progressNotesLoadedKey = null;
+        this.loadingProgressNotes.set(false);
+        this.progressNoteError.set(null);
+        this.progressNoteSuccess.set(null);
+        this.progressNoteDraft = '';
         this.participantActivityMap.set({});
         this.participantSummaryLoadedKey = null;
         this.loadingParticipantSummaries.set(false);
@@ -771,8 +800,14 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.meetingRoomNotice.set(null);
       this.directConversationLoadedForTeamId = null;
       this.participantSummaryLoadedKey = null;
+      this.progressNotesLoadedKey = null;
       this.participantActivityMap.set({});
       this.participantSummaryError.set(null);
+      this.progressNotes.set([]);
+      this.loadingProgressNotes.set(false);
+      this.progressNoteError.set(null);
+      this.progressNoteSuccess.set(null);
+      this.progressNoteDraft = '';
       this.missionControlCardsEditing.set(false);
       this.showAddMissionControlCardForm.set(false);
       this.missionControlDraftCards.set([]);
@@ -806,6 +841,12 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       this.stopTeamCountdown();
       this.setTeamCountdownValues(0, 0, 0, 0);
       this.missionControlLeaderboardDraft.set(null);
+      this.progressNotes.set([]);
+      this.loadingProgressNotes.set(false);
+      this.progressNoteError.set(null);
+      this.progressNoteSuccess.set(null);
+      this.progressNoteDraft = '';
+      this.progressNotesLoadedKey = null;
     } finally {
       this.loading.set(false);
     }
@@ -1409,12 +1450,14 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     }
     this.activeTab.set('direct');
     if (this.canManageParticipantConversations()) {
+      this.directWorkspaceView.set('chat');
       const selectedMember = this.selectedDirectMemberUserId();
       const participants = this.participantMembers();
       if (!selectedMember && participants.length) {
         this.selectedDirectMemberUserId.set(participants[0].userId);
       }
     } else {
+      this.directWorkspaceView.set('chat');
       const ownParticipantId = this.findCurrentUserTeamMember(this.team())?.userId || this.currentUserId() || null;
       this.selectedDirectMemberUserId.set(ownParticipantId);
     }
@@ -1428,6 +1471,15 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       return;
     }
     this.selectedDirectMemberUserId.set(member.userId);
+    this.directWorkspaceView.set('chat');
+  }
+
+  setDirectWorkspaceView(view: 'notes' | 'chat') {
+    if (!this.canManageParticipantConversations()) {
+      this.directWorkspaceView.set('chat');
+      return;
+    }
+    this.directWorkspaceView.set(view);
   }
 
   openMemberProfile(member: TeamMember, event?: Event) {
@@ -2208,7 +2260,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     if (showLoading) {
       this.loadingDirectMessages.set(true);
       this.loadingDirectActivity.set(true);
+      this.loadingProgressNotes.set(canManageParticipantConversations);
       this.directError.set(null);
+      this.progressNoteError.set(null);
     }
 
     try {
@@ -2219,12 +2273,17 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         }
       }
 
-      const [messages, activity] = await Promise.all([
+      const [messages, activity, progressNotes] = await Promise.all([
         this.teamService.getDirectMessages(teamId, participantUserId),
-        this.teamService.getMemberActivitySnapshot(teamId, participantUserId)
+        this.teamService.getMemberActivitySnapshot(teamId, participantUserId),
+        canManageParticipantConversations
+          ? this.teamService.getMemberProgressNotes(teamId, participantUserId)
+          : Promise.resolve([])
       ]);
       this.directMessages.set(messages);
       this.selectedDirectMemberActivity.set(activity);
+      this.progressNotes.set(progressNotes);
+      this.progressNotesLoadedKey = `${teamId}|${participantUserId}`;
       this.participantActivityMap.update(current => ({
         ...current,
         [participantUserId]: activity
@@ -2236,11 +2295,17 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         this.directError.set('Unable to load this participant conversation right now.');
         this.directMessages.set([]);
         this.selectedDirectMemberActivity.set(null);
+        this.progressNotes.set([]);
+        this.progressNotesLoadedKey = null;
+        if (canManageParticipantConversations) {
+          this.progressNoteError.set('Unable to load the progress file right now.');
+        }
       }
     } finally {
       if (showLoading) {
         this.loadingDirectMessages.set(false);
         this.loadingDirectActivity.set(false);
+        this.loadingProgressNotes.set(false);
       }
     }
   }
@@ -2282,6 +2347,61 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     } finally {
       this.sendingDirectMessage.set(false);
     }
+  }
+
+  async saveProgressNote() {
+    const content = this.progressNoteDraft.trim();
+    const teamId = this.team()?.id;
+    const participantUserId = this.activeDirectParticipantUserId();
+    const profile = this.authService.profile();
+    const authorRole = this.currentUserTeamMember()?.role;
+
+    if (!content || !teamId || !participantUserId || !profile?.userId || !this.canWriteParticipantProgressNotes()) {
+      return;
+    }
+
+    this.savingProgressNote.set(true);
+    this.progressNoteError.set(null);
+    this.progressNoteSuccess.set(null);
+
+    try {
+      await this.teamService.addMemberProgressNote(teamId, participantUserId, {
+        content,
+        authorUserId: profile.userId,
+        authorName: `${profile.firstName} ${profile.lastName}`.trim() || profile.email,
+        authorRole: authorRole || 'admin'
+      });
+      this.progressNoteDraft = '';
+      this.progressNoteSuccess.set('Progress note saved.');
+      await this.refreshActiveDirectConversation(false);
+    } catch (error) {
+      console.error('Failed to save progress note:', error);
+      this.progressNoteError.set('Unable to save the progress note right now.');
+    } finally {
+      this.savingProgressNote.set(false);
+    }
+  }
+
+  getProgressNoteAuthorRoleLabel(note: TeamMemberProgressNote): string {
+    if (note.authorRole === 'coach') return 'Coach';
+    if (note.authorRole === 'captain') return 'Captain';
+    if (note.authorRole === 'team-lead') return 'Team Lead';
+    if (note.authorRole === 'admin') return 'Admin';
+    return 'Staff';
+  }
+
+  formatProgressNoteDate(timestamp: unknown): string {
+    const millis = this.getTimestampMillis(timestamp);
+    if (millis === null) {
+      return 'Just now';
+    }
+    return new Date(millis).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
   }
 
   getAdmins(): TeamMember[] {
