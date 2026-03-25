@@ -1,0 +1,265 @@
+export interface PrebuiltTemplate {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  icon: string;
+  imageUrl: string;
+  coPilotAvatar: string;
+  coPilotName: string;
+  color: string;
+  category: string;
+  defaultGoals: {
+    primaryGoal: string;
+    theme: string;
+    dailyEffort: string;
+    objectives: string[];
+  };
+}
+
+export const PREBUILT_TEMPLATES: PrebuiltTemplate[] = [
+  {
+    id: 'hustle-orbit',
+    name: 'HustleOrbit',
+    tagline: 'Solopreneur & Indie Hacker execution coach.',
+    description: 'Build your indie empire with focused execution. Track product launches, customer acquisition, and revenue milestones.',
+    icon: '🚀',
+    imageUrl: '/assets/app-suite/hustle-orbit.png',
+    coPilotAvatar: '/assets/ogilvy.jpg',
+    coPilotName: 'Marcus Chen',
+    color: 'from-slate-900 via-slate-800 to-slate-900',
+    category: 'Business',
+    defaultGoals: {
+      primaryGoal: 'Launch and grow my indie product',
+      theme: 'career',
+      dailyEffort: '1hour',
+      objectives: ['Ship features', 'Grow audience', 'Generate revenue']
+    }
+  },
+  {
+    id: 'opti-human',
+    name: 'OptiHuman',
+    tagline: 'Biohacker performance & health optimization.',
+    description: 'Optimize your biology for peak performance. Track sleep, nutrition, exercise, and cognitive enhancement protocols.',
+    icon: '🧬',
+    imageUrl: '/assets/app-suite/opti-human.png',
+    coPilotAvatar: '/assets/a-2.jpg',
+    coPilotName: 'Dr. Elena Vance',
+    color: 'from-indigo-950 via-purple-900 to-indigo-900',
+    category: 'Health',
+    defaultGoals: {
+      primaryGoal: 'Optimize my health and performance',
+      theme: 'health',
+      dailyEffort: '30min',
+      objectives: ['Sleep optimization', 'Nutrition tracking', 'Energy management']
+    }
+  },
+  {
+    id: 'marketing-maven',
+    name: 'MarketingMaven',
+    tagline: 'Campaign strategist for consistent growth.',
+    description: 'Plan sharper marketing moves after hours. Track experiments, conversions, and brand momentum without burning out.',
+    icon: '🌙',
+    imageUrl: '/assets/app-suite/moonlight-maker.png',
+    coPilotAvatar: '/assets/sarah-jenkins.jpg',
+    coPilotName: 'Sarah Jenkins',
+    color: 'from-blue-950 via-indigo-950 to-slate-900',
+    category: 'Business',
+    defaultGoals: {
+      primaryGoal: 'Build a profitable marketing engine',
+      theme: 'career',
+      dailyEffort: '1hour',
+      objectives: ['Run experiments', 'Improve conversion', 'Scale channels']
+    }
+  },
+  {
+    id: 'pipeline-pilot',
+    name: 'PipelinePilot',
+    tagline: 'Real Estate & Sales Pro deal accelerator.',
+    description: 'Close more deals and grow your pipeline. Track leads, follow-ups, and revenue targets with precision.',
+    icon: '📈',
+    imageUrl: '/assets/app-suite/pipeline-pilot.png',
+    coPilotAvatar: '/assets/jordan-blake.jpg',
+    coPilotName: 'Jordan Blake',
+    color: 'from-emerald-950 via-teal-900 to-cyan-950',
+    category: 'Sales',
+    defaultGoals: {
+      primaryGoal: 'Close more deals and grow revenue',
+      theme: 'finance',
+      dailyEffort: '2hours',
+      objectives: ['Lead generation', 'Follow-up cadence', 'Deal closing']
+    }
+  },
+  {
+    id: 'apex-ascend',
+    name: 'ApexAscend',
+    tagline: 'Corporate Climber leadership & strategy.',
+    description: 'Advance your corporate career with strategic moves. Track promotions, skill building, and leadership development.',
+    icon: '⛰️',
+    imageUrl: '/assets/app-suite/apex-ascend.png',
+    coPilotAvatar: '/assets/a-5.jpg',
+    coPilotName: 'Robert Sterling',
+    color: 'from-slate-900 via-blue-950 to-indigo-950',
+    category: 'Career',
+    defaultGoals: {
+      primaryGoal: 'Advance my corporate career',
+      theme: 'career',
+      dailyEffort: '30min',
+      objectives: ['Visibility projects', 'Networking', 'Skill development']
+    }
+  },
+  {
+    id: 'creator-craft',
+    name: 'CreatorCraft',
+    tagline: 'Creative Freelancer project completion tool.',
+    description: 'Ship creative projects on time. Track client work, personal projects, and portfolio building.',
+    icon: '🎨',
+    imageUrl: '/assets/app-suite/creator-craft.png',
+    coPilotAvatar: '/assets/a-6.jpg',
+    coPilotName: 'Maya Rivera',
+    color: 'from-orange-950 via-amber-900 to-yellow-950',
+    category: 'Creative',
+    defaultGoals: {
+      primaryGoal: 'Complete creative projects consistently',
+      theme: 'career',
+      dailyEffort: '2hours',
+      objectives: ['Client deliverables', 'Portfolio pieces', 'Skill growth']
+    }
+  },
+  {
+    id: 'neuro-nexus',
+    name: 'NeuroNexus',
+    tagline: 'AI Early Adopter neural network coaching.',
+    description: 'Master AI tools and stay ahead of the curve. Track learning, experiments, and AI project implementations.',
+    icon: '🧠',
+    imageUrl: '/assets/app-suite/opti-human.png',
+    coPilotAvatar: '/assets/a-7.jpg',
+    coPilotName: 'Alex Tech',
+    color: 'from-cyan-950 via-teal-900 to-emerald-950',
+    category: 'Learning',
+    defaultGoals: {
+      primaryGoal: 'Master AI tools and applications',
+      theme: 'learning',
+      dailyEffort: '1hour',
+      objectives: ['AI tool mastery', 'Project experiments', 'Knowledge sharing']
+    }
+  },
+  {
+    id: 'boss-beam',
+    name: 'BossBeam',
+    tagline: 'Female Founder vision & scaling platform.',
+    description: 'Scale your vision with confidence. Track fundraising, team building, and company milestones.',
+    icon: '👑',
+    imageUrl: '/assets/app-suite/pipeline-pilot.png',
+    coPilotAvatar: '/assets/a-8.jpg',
+    coPilotName: 'Claire Beaumont',
+    color: 'from-fuchsia-950 via-pink-900 to-rose-950',
+    category: 'Founder',
+    defaultGoals: {
+      primaryGoal: 'Scale my company and vision',
+      theme: 'career',
+      dailyEffort: '2hours',
+      objectives: ['Team growth', 'Revenue milestones', 'Vision execution']
+    }
+  },
+  {
+    id: 'my-sugar-shift',
+    name: 'MySugarShift',
+    tagline: 'Wellness & nutrition balance assistant.',
+    description: 'Transform your relationship with food and energy. Track nutrition, blood sugar, and wellness habits.',
+    icon: '🍎',
+    imageUrl: '/assets/app-suite/opti-human.png',
+    coPilotAvatar: '/assets/a-9.jpg',
+    coPilotName: 'Lucille Grant',
+    color: 'from-lime-950 via-green-900 to-emerald-950',
+    category: 'Health',
+    defaultGoals: {
+      primaryGoal: 'Optimize nutrition and energy levels',
+      theme: 'health',
+      dailyEffort: '20min',
+      objectives: ['Meal tracking', 'Energy patterns', 'Healthy habits']
+    }
+  },
+  {
+    id: 'my-rocket-ride',
+    name: 'MyRocketRide',
+    tagline: 'Distance Biker mileage & route planner.',
+    description: 'Conquer long-distance cycling goals. Track mileage, routes, and training progress.',
+    icon: '🚴',
+    imageUrl: '/assets/app-suite/moonlight-maker.png',
+    coPilotAvatar: '/assets/a-10.jpg',
+    coPilotName: 'Tom Wheeler',
+    color: 'from-orange-950 via-red-900 to-rose-950',
+    category: 'Fitness',
+    defaultGoals: {
+      primaryGoal: 'Complete my cycling distance goals',
+      theme: 'health',
+      dailyEffort: '1hour',
+      objectives: ['Weekly mileage', 'Route completion', 'Performance gains']
+    }
+  },
+  {
+    id: 'marathon-mover',
+    name: 'MarathonMover',
+    tagline: 'Marathon runner training & pacing guide.',
+    description: 'Train for your marathon with precision. Track runs, pacing strategies, and race preparation.',
+    icon: '🏃',
+    imageUrl: '/assets/app-suite/apex-ascend.png',
+    coPilotAvatar: '/assets/gym-coach.jpg',
+    coPilotName: 'Coach Alina Park',
+    color: 'from-amber-950 via-orange-900 to-red-950',
+    category: 'Fitness',
+    defaultGoals: {
+      primaryGoal: 'Complete my marathon training',
+      theme: 'health',
+      dailyEffort: '1hour',
+      objectives: ['Weekly mileage', 'Pace improvement', 'Race readiness']
+    }
+  },
+  {
+    id: 'career-quest',
+    name: 'CareerQuest',
+    tagline: 'Job Seeker application & interview tracker.',
+    description: 'Land your dream job with organized tracking. Manage applications, interviews, and networking.',
+    icon: '💼',
+    imageUrl: '/assets/app-suite/pipeline-pilot.png',
+    coPilotAvatar: '/assets/career.jpg',
+    coPilotName: 'Maya Ellis',
+    color: 'from-slate-900 via-zinc-900 to-neutral-800',
+    category: 'Career',
+    defaultGoals: {
+      primaryGoal: 'Land my dream job',
+      theme: 'career',
+      dailyEffort: '2hours',
+      objectives: ['Applications sent', 'Interviews completed', 'Network growth']
+    }
+  },
+  {
+    id: 'lean-launch',
+    name: 'Home Workout and Weight Loss',
+    tagline: 'Home workout plan and weight loss coaching.',
+    description: 'Home Workout & Weight Loss Coach. Tess the "Time-Shifter" is a sharp, no-nonsense coach backed by the latest training and nutrition innovations. She can help you create power-packed 20-30 minute home workouts routines tailored to your schedule and goals, while also building a personalized diet and weight loss plan.\n\n"I\'ll be your lead strategist for this mission. Our objective is to optimize your health trajectory through focused execution and high-performance protocols."',
+    icon: '⚖️',
+    imageUrl: '/assets/app-suite/lean-launch.png',
+    coPilotAvatar: '/assets/tess.png',
+    coPilotName: 'Coach Tess',
+    color: 'from-emerald-950 via-slate-900 to-black',
+    category: 'Health',
+    defaultGoals: {
+      primaryGoal: 'Lose weight with consistent home workouts',
+      theme: 'health',
+      dailyEffort: '30min',
+      objectives: ['Weekly workouts', 'Daily movement', 'Weekly weigh-ins']
+    }
+  }
+];
+
+export function clonePrebuiltTemplates(): PrebuiltTemplate[] {
+  return PREBUILT_TEMPLATES.map(template => ({
+    ...template,
+    defaultGoals: {
+      ...template.defaultGoals,
+      objectives: [...template.defaultGoals.objectives]
+    }
+  }));
+}

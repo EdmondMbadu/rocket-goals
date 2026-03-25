@@ -5,7 +5,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TeamService } from './team.service';
 import { AuthService } from './auth.service';
 import { ThemeService } from './theme.service';
-import type { Team, TeamMember } from './models/team';
+import type { Team } from './models/team';
 
 @Component({
   selector: 'app-teams',
@@ -22,19 +22,11 @@ export class TeamsComponent implements OnInit {
 
   teams = signal<Team[]>([]);
   loading = signal(true);
-  showCreateModal = signal(false);
-  creating = signal(false);
   deleting = signal(false);
   mobileNavOpen = signal(false);
   teamToDelete = signal<Team | null>(null);
 
   currentUserId = computed(() => this.authService.profile()?.userId || '');
-
-  newTeamName = '';
-  newTeamDescription = '';
-  newTeamAiCoach = true;
-  inviteEmail = '';
-  inviteEmails = signal<string[]>([]);
 
   async ngOnInit() {
     this.waitForAuthAndLoadTeams();
@@ -81,6 +73,10 @@ export class TeamsComponent implements OnInit {
     this.router.navigate(['/team', teamId]);
   }
 
+  goToCreateTeamFlow() {
+    this.router.navigate(['/goals'], { queryParams: { createTeam: 'true' } });
+  }
+
   confirmDelete(team: Team, event: Event) {
     event.stopPropagation();
     this.teamToDelete.set(team);
@@ -98,83 +94,6 @@ export class TeamsComponent implements OnInit {
       console.error('Failed to delete team:', err);
     } finally {
       this.deleting.set(false);
-    }
-  }
-
-  addInviteEmail() {
-    const email = this.inviteEmail.trim().toLowerCase();
-    if (email && email.includes('@') && !this.inviteEmails().includes(email)) {
-      this.inviteEmails.update(list => [...list, email]);
-      this.inviteEmail = '';
-    }
-  }
-
-  removeInviteEmail(email: string) {
-    this.inviteEmails.update(list => list.filter(e => e !== email));
-  }
-
-  closeCreateModal() {
-    this.showCreateModal.set(false);
-    this.newTeamName = '';
-    this.newTeamDescription = '';
-    this.newTeamAiCoach = true;
-    this.inviteEmail = '';
-    this.inviteEmails.set([]);
-  }
-
-  async createTeam() {
-    if (!this.newTeamName.trim() || this.creating()) return;
-    this.creating.set(true);
-
-    try {
-      const profile = this.authService.profile();
-      if (!profile) return;
-
-      const adminMember: TeamMember = {
-        userId: profile.userId,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        email: profile.email,
-        profilePictureUrl: profile.profilePictureUrl,
-        role: 'admin',
-        joinedAt: Date.now()
-      };
-
-      const teamId = await this.teamService.createTeam({
-        name: this.newTeamName.trim(),
-        description: this.newTeamDescription.trim() || undefined,
-        adminId: profile.userId,
-        members: [adminMember],
-        memberIds: [profile.userId],
-        aiCoachEnabled: this.newTeamAiCoach
-      });
-
-      const emails = this.inviteEmails();
-      for (const email of emails) {
-        try {
-          const user = await this.teamService.findUserByEmail(email);
-          if (user) {
-            await this.teamService.addMemberToTeam(teamId, {
-              userId: user.userId,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email,
-              profilePictureUrl: user.profilePictureUrl,
-              role: 'member',
-              joinedAt: Date.now()
-            });
-          }
-        } catch (err) {
-          console.error(`Failed to add invited member ${email}:`, err);
-        }
-      }
-
-      this.closeCreateModal();
-      this.router.navigate(['/team', teamId]);
-    } catch (err) {
-      console.error('Failed to create team:', err);
-    } finally {
-      this.creating.set(false);
     }
   }
 }

@@ -15,6 +15,16 @@ import { FansService, Fan } from './fans.service';
 import { VisualizationService } from './visualization.service';
 import { RocketGoalsAIService } from './rocket-goals-ai.service';
 import { TeamService } from './team.service';
+import { CoachCatalogService } from './coach-catalog.service';
+import { CommunityCoach, CommunityCoachService } from './community-coach.service';
+import { PrebuiltTemplate } from './coach-catalog.data';
+import {
+  buildCoachPersonalityRefinementPrompt,
+  buildFallbackCoachPersonality,
+  COACH_CATEGORIES,
+  DEFAULT_COACH_PHILOSOPHY,
+  normalizeCoachPersonality
+} from './coach-builder.util';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
 
@@ -39,6 +49,18 @@ interface FanMissionContext {
   goal: RocketGoal | null;
 }
 
+type TeamCoachSource = 'prebuilt' | 'community' | 'custom';
+
+interface ResolvedTeamCoachSelection {
+  source: TeamCoachSource;
+  title: string;
+  subtitle: string;
+  description: string;
+  settings: NonNullable<Team['aiSettings']>;
+  previewAvatarUrl?: string;
+  uploadFile?: File | null;
+}
+
 @Component({
   selector: 'app-goals-list',
   standalone: true,
@@ -57,6 +79,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly theme = inject(ThemeService);
   private readonly visualizationService = inject(VisualizationService);
   private readonly aiService = inject(RocketGoalsAIService);
+  private readonly coachCatalogService = inject(CoachCatalogService);
+  private readonly communityCoachService = inject(CommunityCoachService);
   private readonly functions = getFunctions(getApp(), 'us-central1');
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
@@ -94,9 +118,26 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly creatingTeam = signal(false);
   protected newTeamName = '';
   protected newTeamDescription = '';
-  protected newTeamAiCoach = true;
   protected inviteEmail = '';
   protected inviteEmails = signal<string[]>([]);
+  protected readonly teamCoachLibraryLoading = signal(false);
+  protected readonly teamCoachBrowseMode = signal<TeamCoachSource>('prebuilt');
+  protected readonly teamCoachSelectionSource = signal<TeamCoachSource | null>(null);
+  protected readonly selectedPrebuiltCoachId = signal<string | null>(null);
+  protected readonly selectedCommunityCoachId = signal<string | null>(null);
+  protected readonly teamCoachError = signal<string | null>(null);
+  protected readonly prebuiltTeamCoaches = signal<PrebuiltTemplate[]>([]);
+  protected readonly communityTeamCoaches = signal<CommunityCoach[]>([]);
+  protected readonly customTeamCoachName = signal('');
+  protected readonly customTeamCoachPersonality = signal('');
+  protected readonly customTeamCoachCategory = signal<string>('Custom');
+  protected readonly customTeamCoachAvatarPreview = signal<string | null>(null);
+  protected readonly customTeamCoachGeneratingAvatar = signal(false);
+  protected readonly customTeamCoachRefining = signal(false);
+  protected readonly customTeamCoachAvatarLightboxOpen = signal(false);
+  protected readonly teamCoachPhilosophyBlurb = signal(DEFAULT_COACH_PHILOSOPHY);
+  protected readonly teamCoachCategories = [...COACH_CATEGORIES];
+  private customTeamCoachAvatarFile: File | null = null;
 
   // Photo capture state
   protected readonly isCameraActive = signal(false);
@@ -170,6 +211,16 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
+    const clearQueryFlag = (flag: string) => {
+      const nextParams = { ...this.route.snapshot.queryParams };
+      delete nextParams[flag];
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: nextParams,
+        replaceUrl: true
+      });
+    };
+
     // Check for startChallenge query param immediately and on changes
     // This handles the case where we navigate to the same route with different query params
     const checkParams = () => {
@@ -184,6 +235,12 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadGoals();
         // Remove the refresh param from URL
         this.router.navigate(['/goals'], { replaceUrl: true, queryParams: {} });
+      }
+      if (params['createTeam'] === 'true') {
+        if (!this.showCreateTeamModal()) {
+          this.openCreateTeamModal();
+        }
+        clearQueryFlag('createTeam');
       }
     };
 
@@ -200,6 +257,12 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadGoals();
         // Remove the refresh param from URL
         this.router.navigate(['/goals'], { replaceUrl: true, queryParams: {} });
+      }
+      if (params['createTeam'] === 'true') {
+        if (!this.showCreateTeamModal()) {
+          this.openCreateTeamModal();
+        }
+        clearQueryFlag('createTeam');
       }
     });
 
@@ -640,23 +703,58 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigateByUrl('/goals');
   }
 
-  protected openCreateTeamModal(): void {
-    this.showCreateTeamModal.set(true);
+  private resetTeamCoachDraft(): void {
+    this.teamCoachBrowseMode.set('prebuilt');
+    this.teamCoachSelectionSource.set(null);
+    this.selectedPrebuiltCoachId.set(null);
+    this.selectedCommunityCoachId.set(null);
+    this.teamCoachError.set(null);
+    this.customTeamCoachName.set('');
+    this.customTeamCoachPersonality.set('');
+    this.customTeamCoachCategory.set('Custom');
+    this.customTeamCoachAvatarPreview.set(null);
+    this.customTeamCoachGeneratingAvatar.set(false);
+    this.customTeamCoachRefining.set(false);
+    this.customTeamCoachAvatarLightboxOpen.set(false);
+    this.customTeamCoachAvatarFile = null;
+  }
+
+  private resetCreateTeamDraft(): void {
     this.newTeamName = '';
     this.newTeamDescription = '';
-    this.newTeamAiCoach = true;
     this.inviteEmail = '';
     this.inviteEmails.set([]);
+    this.creatingTeam.set(false);
+    this.resetTeamCoachDraft();
+  }
+
+  private async loadTeamCoachOptions(): Promise<void> {
+    this.teamCoachLibraryLoading.set(true);
+    try {
+      const profile = this.authService.profile();
+      const [prebuilt, community] = await Promise.all([
+        this.coachCatalogService.getPrebuiltTemplates(),
+        this.coachCatalogService.getAvailableCommunityCoaches(profile?.userId)
+      ]);
+      this.prebuiltTeamCoaches.set(prebuilt);
+      this.communityTeamCoaches.set(community);
+    } catch (error) {
+      console.error('Failed to load team coach options:', error);
+      this.teamCoachError.set('Coach library is temporarily unavailable. Try again in a moment.');
+    } finally {
+      this.teamCoachLibraryLoading.set(false);
+    }
+  }
+
+  protected openCreateTeamModal(): void {
+    this.showCreateTeamModal.set(true);
+    this.resetCreateTeamDraft();
+    void this.loadTeamCoachOptions();
   }
 
   protected closeCreateTeamModal(): void {
     this.showCreateTeamModal.set(false);
-    this.newTeamName = '';
-    this.newTeamDescription = '';
-    this.newTeamAiCoach = true;
-    this.inviteEmail = '';
-    this.inviteEmails.set([]);
-    this.creatingTeam.set(false);
+    this.resetCreateTeamDraft();
   }
 
   protected addInviteEmail(): void {
@@ -669,6 +767,316 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected removeInviteEmail(email: string): void {
     this.inviteEmails.update(list => list.filter(candidate => candidate !== email));
+  }
+
+  protected setTeamCoachBrowseMode(mode: TeamCoachSource): void {
+    this.teamCoachBrowseMode.set(mode);
+    if (mode === 'custom') {
+      this.teamCoachSelectionSource.set('custom');
+      this.teamCoachError.set(null);
+    }
+  }
+
+  protected selectPrebuiltCoach(template: PrebuiltTemplate): void {
+    this.teamCoachBrowseMode.set('prebuilt');
+    this.teamCoachSelectionSource.set('prebuilt');
+    this.selectedPrebuiltCoachId.set(template.id);
+    this.selectedCommunityCoachId.set(null);
+    this.teamCoachError.set(null);
+  }
+
+  protected selectCommunityCoach(coach: CommunityCoach): void {
+    this.teamCoachBrowseMode.set('community');
+    this.teamCoachSelectionSource.set('community');
+    this.selectedCommunityCoachId.set(coach.id);
+    this.selectedPrebuiltCoachId.set(null);
+    this.teamCoachError.set(null);
+  }
+
+  protected activateCustomCoachSelection(): void {
+    this.teamCoachBrowseMode.set('custom');
+    this.teamCoachSelectionSource.set('custom');
+    this.selectedPrebuiltCoachId.set(null);
+    this.selectedCommunityCoachId.set(null);
+    this.teamCoachError.set(null);
+  }
+
+  protected updateCustomTeamCoachName(value: string): void {
+    this.customTeamCoachName.set(value);
+    this.activateCustomCoachSelection();
+  }
+
+  protected updateCustomTeamCoachPersonality(value: string): void {
+    this.customTeamCoachPersonality.set(value);
+    this.activateCustomCoachSelection();
+  }
+
+  protected updateCustomTeamCoachCategory(value: string): void {
+    this.customTeamCoachCategory.set(value);
+    this.activateCustomCoachSelection();
+  }
+
+  protected clearCustomTeamCoachAvatar(): void {
+    this.customTeamCoachAvatarFile = null;
+    this.customTeamCoachAvatarPreview.set(null);
+    this.activateCustomCoachSelection();
+  }
+
+  protected onCustomTeamCoachAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      this.teamCoachError.set('Please select an image file for your coach avatar.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.teamCoachError.set('Coach avatar image should stay under 10 MB.');
+      return;
+    }
+
+    this.teamCoachError.set(null);
+    this.customTeamCoachAvatarFile = file;
+    this.activateCustomCoachSelection();
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.customTeamCoachAvatarPreview.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  protected async generateCustomTeamCoachAvatar(): Promise<void> {
+    const coachName = this.customTeamCoachName().trim();
+    const coachDescription = this.customTeamCoachPersonality().trim();
+
+    if (!coachName) {
+      this.teamCoachError.set('Give your coach a name before generating an avatar.');
+      return;
+    }
+    if (!coachDescription) {
+      this.teamCoachError.set('Describe your coach before generating an avatar.');
+      return;
+    }
+
+    this.customTeamCoachGeneratingAvatar.set(true);
+    this.teamCoachError.set(null);
+    this.activateCustomCoachSelection();
+
+    try {
+      const result = await this.communityCoachService.generateAvatar({
+        coachName,
+        coachDescription,
+        category: this.customTeamCoachCategory()
+      });
+
+      if (result.success && result.imageUrl) {
+        this.customTeamCoachAvatarFile = null;
+        this.customTeamCoachAvatarPreview.set(result.imageUrl);
+      } else {
+        this.teamCoachError.set('Could not generate an avatar right now. Upload one instead.');
+      }
+    } catch (error) {
+      console.error('Failed to generate custom team coach avatar:', error);
+      this.teamCoachError.set('Could not generate an avatar right now. Upload one instead.');
+    } finally {
+      this.customTeamCoachGeneratingAvatar.set(false);
+    }
+  }
+
+  protected async refineCustomTeamCoachPersonality(): Promise<void> {
+    const seed = this.customTeamCoachPersonality().trim();
+    if (!seed) {
+      this.teamCoachError.set('Start with a short coach description first.');
+      return;
+    }
+
+    this.customTeamCoachRefining.set(true);
+    this.teamCoachError.set(null);
+    this.activateCustomCoachSelection();
+
+    try {
+      const response = await this.aiService.callAISilent(
+        buildCoachPersonalityRefinementPrompt({
+          category: this.customTeamCoachCategory(),
+          coachName: this.customTeamCoachName().trim(),
+          philosophy: this.teamCoachPhilosophyBlurb(),
+          seed
+        })
+      );
+      this.customTeamCoachPersonality.set(normalizeCoachPersonality(response));
+    } catch (error) {
+      console.warn('Failed to refine custom team coach personality:', error);
+      this.customTeamCoachPersonality.set(
+        buildFallbackCoachPersonality({
+          seed,
+          category: this.customTeamCoachCategory(),
+          coachName: this.customTeamCoachName().trim()
+        })
+      );
+    } finally {
+      this.customTeamCoachRefining.set(false);
+    }
+  }
+
+  private getSelectedPrebuiltCoach(): PrebuiltTemplate | null {
+    const id = this.selectedPrebuiltCoachId();
+    if (!id) {
+      return null;
+    }
+    return this.prebuiltTeamCoaches().find(template => template.id === id) || null;
+  }
+
+  private getSelectedCommunityCoach(): CommunityCoach | null {
+    const id = this.selectedCommunityCoachId();
+    if (!id) {
+      return null;
+    }
+    return this.communityTeamCoaches().find(coach => coach.id === id) || null;
+  }
+
+  private resolveSelectedTeamCoach(): ResolvedTeamCoachSelection | null {
+    const source = this.teamCoachSelectionSource();
+
+    if (source === 'prebuilt') {
+      const template = this.getSelectedPrebuiltCoach();
+      if (!template) {
+        return null;
+      }
+
+      return {
+        source,
+        title: template.name,
+        subtitle: `AI Coach: ${template.coPilotName}`,
+        description: template.tagline,
+        settings: {
+          displayName: template.coPilotName,
+          avatarUrl: template.coPilotAvatar,
+          personality: `${template.coPilotName} is the dedicated AI coach for ${template.name}. ${template.description}`
+        },
+        previewAvatarUrl: template.coPilotAvatar
+      };
+    }
+
+    if (source === 'community') {
+      const coach = this.getSelectedCommunityCoach();
+      if (!coach) {
+        return null;
+      }
+
+      return {
+        source,
+        title: coach.appName,
+        subtitle: `AI Coach: ${coach.coachName}`,
+        description: coach.tagline || coach.description,
+        settings: {
+          displayName: coach.coachName,
+          ...(coach.avatar ? { avatarUrl: coach.avatar } : {}),
+          personality: (coach.soulFilet || coach.description || coach.tagline || '').trim()
+        },
+        previewAvatarUrl: coach.avatar || undefined
+      };
+    }
+
+    if (source === 'custom') {
+      const displayName = this.customTeamCoachName().trim();
+      const personality = this.customTeamCoachPersonality().trim();
+      const previewAvatarUrl = this.customTeamCoachAvatarPreview() || undefined;
+
+      if (!displayName || !personality) {
+        return null;
+      }
+
+      const settings: NonNullable<Team['aiSettings']> = {
+        displayName,
+        personality
+      };
+      if (previewAvatarUrl && !this.customTeamCoachAvatarFile) {
+        settings.avatarUrl = previewAvatarUrl;
+      }
+
+      return {
+        source,
+        title: displayName,
+        subtitle: `${this.customTeamCoachCategory()} coach`,
+        description: personality,
+        settings,
+        previewAvatarUrl,
+        uploadFile: this.customTeamCoachAvatarFile
+      };
+    }
+
+    return null;
+  }
+
+  protected selectedTeamCoach(): ResolvedTeamCoachSelection | null {
+    return this.resolveSelectedTeamCoach();
+  }
+
+  protected isPrebuiltCoachSelected(templateId: string): boolean {
+    return this.teamCoachSelectionSource() === 'prebuilt' && this.selectedPrebuiltCoachId() === templateId;
+  }
+
+  protected isCommunityCoachSelected(coachId: string): boolean {
+    return this.teamCoachSelectionSource() === 'community' && this.selectedCommunityCoachId() === coachId;
+  }
+
+  protected isCustomCoachSelected(): boolean {
+    return this.teamCoachSelectionSource() === 'custom';
+  }
+
+  protected teamCoachSelectionLabel(source: TeamCoachSource): string {
+    if (source === 'prebuilt') {
+      return 'App Suite coach';
+    }
+    if (source === 'community') {
+      return 'Community coach';
+    }
+    return 'Custom coach';
+  }
+
+  private getTeamCoachValidationError(): string | null {
+    const source = this.teamCoachSelectionSource();
+    if (!source) {
+      return 'Choose an AI coach for the team.';
+    }
+
+    if (source === 'prebuilt' && !this.getSelectedPrebuiltCoach()) {
+      return 'Pick one of the App Suite coaches.';
+    }
+
+    if (source === 'community' && !this.getSelectedCommunityCoach()) {
+      return 'Pick one of your community coaches.';
+    }
+
+    if (source === 'custom') {
+      const coachName = this.customTeamCoachName().trim();
+      const personality = this.customTeamCoachPersonality().trim();
+      if (!coachName) {
+        return 'Give your custom coach a name.';
+      }
+      if (coachName.length > 60) {
+        return 'Coach name should stay under 60 characters.';
+      }
+      if (!personality) {
+        return 'Describe how your coach should guide and hold the team accountable.';
+      }
+      if (personality.length > 12000) {
+        return 'Coach personality should stay under 12,000 characters.';
+      }
+    }
+
+    return null;
+  }
+
+  protected canCreateTeam(): boolean {
+    return !!this.newTeamName.trim()
+      && !this.creatingTeam()
+      && !this.teamCoachLibraryLoading()
+      && !this.getTeamCoachValidationError();
   }
 
   protected async createTeamFromGoalsPage(): Promise<void> {
@@ -686,8 +1094,23 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.creatingTeam.set(true);
     this.error.set(null);
+    this.teamCoachError.set(null);
 
     try {
+      const coachValidationError = this.getTeamCoachValidationError();
+      if (coachValidationError) {
+        this.teamCoachError.set(coachValidationError);
+        this.creatingTeam.set(false);
+        return;
+      }
+
+      const selectedCoach = this.resolveSelectedTeamCoach();
+      if (!selectedCoach) {
+        this.teamCoachError.set('Choose or create an AI coach before creating the team.');
+        this.creatingTeam.set(false);
+        return;
+      }
+
       const description = this.newTeamDescription.trim();
       const adminMember: TeamMember = {
         userId: profile.userId,
@@ -705,8 +1128,23 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         adminId: profile.userId,
         members: [adminMember],
         memberIds: [profile.userId],
-        aiCoachEnabled: this.newTeamAiCoach
+        aiCoachEnabled: true,
+        aiSettings: selectedCoach.settings
       });
+
+      if (selectedCoach.uploadFile) {
+        try {
+          const uploadedAvatarUrl = await this.teamService.uploadTeamAiAvatar(teamId, selectedCoach.uploadFile);
+          await this.teamService.updateTeam(teamId, {
+            aiSettings: {
+              ...selectedCoach.settings,
+              avatarUrl: uploadedAvatarUrl
+            }
+          } as Partial<Team>);
+        } catch (avatarError) {
+          console.error('Failed to upload team coach avatar during creation:', avatarError);
+        }
+      }
 
       try {
         await this.teamService.ensureTeamRocketGoal(teamId);
