@@ -20,6 +20,9 @@ export class SignupComponent implements OnInit {
   protected theme = inject(ThemeService);
   readonly redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
   readonly mobileNavOpen = signal(false);
+  private get shouldAutoContinueAfterSignup(): boolean {
+    return (this.redirectTo || '').includes('completePendingTeam=true');
+  }
 
   readonly signupForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -65,6 +68,10 @@ export class SignupComponent implements OnInit {
       await this.authService.sendEmailVerification();
       // Send welcome email with Surge book (fire and forget - don't block signup)
       this.authService.sendWelcomeEmail().catch(() => {});
+      if (this.shouldAutoContinueAfterSignup && this.redirectTo) {
+        await this.router.navigateByUrl(this.redirectTo);
+        return;
+      }
       this.verificationEmail.set(email);
       this.verificationSent.set(true);
       this.verificationNotice.set('Verification email sent. Check your inbox and confirm to continue.');

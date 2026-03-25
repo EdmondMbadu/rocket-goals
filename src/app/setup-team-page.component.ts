@@ -1,7 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { AuthService } from './auth.service';
+import { TeamLaunchService, PendingTeamCreationDraft, PendingTeamCoachDraft, PendingTeamCoachSource } from './team-launch.service';
+import { CoachCatalogService } from './coach-catalog.service';
+import { CommunityCoach, CommunityCoachService } from './community-coach.service';
+import { PrebuiltTemplate } from './coach-catalog.data';
+import { RocketGoalsAIService } from './rocket-goals-ai.service';
 import { ThemeService } from './theme.service';
+import {
+  buildCoachPersonalityRefinementPrompt,
+  buildFallbackCoachPersonality,
+  COACH_CATEGORIES,
+  DEFAULT_COACH_PHILOSOPHY,
+  normalizeCoachPersonality
+} from './coach-builder.util';
 
 type StatItem = {
   value: string;
@@ -19,10 +33,20 @@ type FeatureItem = {
   description: string;
 };
 
+interface TeamCoachSelectionView {
+  source: PendingTeamCoachSource;
+  title: string;
+  subtitle: string;
+  description: string;
+  avatarUrl?: string;
+  uploadedAvatarDataUrl?: string;
+  settings: PendingTeamCoachDraft;
+}
+
 @Component({
   selector: 'app-setup-team-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="min-h-screen bg-white text-black transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
       <header class="sticky top-0 z-40 border-b border-black/5 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/80">
@@ -63,16 +87,33 @@ type FeatureItem = {
               class="hidden rounded-full border border-black/10 px-4 py-2 text-sm font-bold transition hover:border-black dark:border-white/15 dark:hover:border-white sm:inline-flex">
               Schedule Demo
             </a>
-            <a
-              routerLink="/signup"
+            <button
+              type="button"
+              (click)="openTeamSetupModal()"
               class="inline-flex rounded-full bg-black px-4 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-red-600">
-              Start Free
-            </a>
+              {{ isLoggedIn() ? 'Create Team Page' : 'Start Free' }}
+            </button>
           </div>
         </div>
       </header>
 
       <main>
+        @if (pageError()) {
+          <div class="container mx-auto px-6 pt-6">
+            <div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+              {{ pageError() }}
+            </div>
+          </div>
+        }
+
+        @if (pageNotice()) {
+          <div class="container mx-auto px-6 pt-6">
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+              {{ pageNotice() }}
+            </div>
+          </div>
+        }
+
         @if (isDarkMode()) {
           <section class="relative overflow-hidden border-b border-white/10 bg-neutral-950 text-white">
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(239,68,68,0.30),transparent_32%)]"></div>
@@ -96,11 +137,12 @@ type FeatureItem = {
                 </p>
 
                 <div class="mt-10 flex flex-col gap-4 sm:flex-row">
-                  <a
-                    routerLink="/signup"
+                  <button
+                    type="button"
+                    (click)="openTeamSetupModal()"
                     class="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-base font-black text-black shadow-[0_18px_45px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5 hover:bg-red-500 hover:text-white">
                     Create Your Team Page
-                  </a>
+                  </button>
                   <a
                     routerLink="/schedule"
                     class="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-4 text-base font-black text-white transition hover:bg-white hover:text-black">
@@ -209,11 +251,12 @@ type FeatureItem = {
                 </p>
 
                 <div class="mt-10 flex flex-col gap-4 sm:flex-row">
-                  <a
-                    routerLink="/signup"
+                  <button
+                    type="button"
+                    (click)="openTeamSetupModal()"
                     class="inline-flex items-center justify-center rounded-full bg-black px-8 py-4 text-base font-black text-white shadow-[0_18px_45px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:bg-red-500">
                     Create Your Team Page
-                  </a>
+                  </button>
                   <a
                     routerLink="/schedule"
                     class="inline-flex items-center justify-center rounded-full border border-black/10 bg-white/80 px-8 py-4 text-base font-black text-black transition hover:border-black hover:bg-black hover:text-white">
@@ -461,11 +504,12 @@ type FeatureItem = {
               </p>
 
               <div class="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-                <a
-                  routerLink="/signup"
+                <button
+                  type="button"
+                  (click)="openTeamSetupModal()"
                   class="inline-flex items-center justify-center rounded-full bg-red-600 px-8 py-4 text-base font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-black">
-                  Get Started
-                </a>
+                  {{ isLoggedIn() ? 'Create Team Page' : 'Get Started' }}
+                </button>
                 <a
                   routerLink="/contact"
                   class="inline-flex items-center justify-center rounded-full border border-black/10 px-8 py-4 text-base font-black transition hover:border-black hover:bg-black hover:text-white dark:border-white/15 dark:hover:border-white dark:hover:bg-white dark:hover:text-black">
@@ -479,6 +523,461 @@ type FeatureItem = {
             </div>
           </div>
         </section>
+
+        @if (showCreateTeamModal()) {
+          <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-md">
+            <div
+              class="w-full max-w-5xl overflow-hidden rounded-3xl border border-white/50 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900">
+              <div class="flex items-start justify-between gap-4 border-b border-black/10 px-6 py-5 dark:border-white/10">
+                <div>
+                  <p class="mb-1 text-xs font-bold uppercase tracking-[0.22em] text-red-500">Team Mission</p>
+                  <h3 class="text-2xl font-black text-black dark:text-white">
+                    {{ teamSetupStep() === 1 ? 'Create Team' : 'Finish your setup' }}
+                  </h3>
+                  <p class="mt-1 text-sm text-gray-600 dark:text-slate-300">
+                    {{
+                      teamSetupStep() === 1
+                        ? 'Define the team, assign its AI coach, and launch the page in one flow.'
+                        : 'Your team draft is ready. Sign in or create your account to launch it.'
+                    }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="h-10 w-10 rounded-full border border-black/10 text-gray-500 transition-all hover:border-red-400 hover:text-red-600 dark:border-white/15 dark:text-slate-300 dark:hover:border-red-400/60 dark:hover:text-red-300"
+                  (click)="closeTeamSetupModal()"
+                  [disabled]="creatingTeam()">
+                  <svg class="mx-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="max-h-[75vh] space-y-6 overflow-y-auto px-6 py-5">
+                @if (teamSetupStep() === 1) {
+                  <section class="space-y-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white dark:bg-white dark:text-black">1</div>
+                      <div>
+                        <h4 class="text-lg font-black text-black dark:text-white">Team basics</h4>
+                        <p class="text-sm text-gray-500 dark:text-slate-400">Name the team and define what everyone is here to accomplish.</p>
+                      </div>
+                    </div>
+
+                    <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                      <div class="space-y-4">
+                        <div>
+                          <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Team name</label>
+                          <input
+                            type="text"
+                            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                            [ngModel]="teamName"
+                            (ngModelChange)="teamName = $event"
+                            placeholder="e.g. MS Bike - Team Walksalot"
+                            maxlength="80" />
+                        </div>
+
+                        <div>
+                          <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Description</label>
+                          <textarea
+                            class="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                            [ngModel]="teamDescription"
+                            (ngModelChange)="teamDescription = $event"
+                            rows="4"
+                            placeholder="What is the shared mission, sprint, or outcome this team is driving?"></textarea>
+                        </div>
+                      </div>
+
+                      <div class="rounded-2xl border border-red-200 bg-red-50/80 p-5 dark:border-red-500/20 dark:bg-red-500/10">
+                        <div class="flex items-start gap-3">
+                          <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-600/25">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.75 17L15 12l-5.25-5M19 19H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="text-sm font-black uppercase tracking-[0.2em] text-red-600 dark:text-red-300">Mandatory coaching</p>
+                            <p class="mt-2 text-sm font-semibold text-black dark:text-white">Every team launches with an assigned AI coach.</p>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Choose from the App Suite roster, use a saved coach, or create a custom coach for this team.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="space-y-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white dark:bg-white dark:text-black">2</div>
+                      <div>
+                        <h4 class="text-lg font-black text-black dark:text-white">Choose the team coach</h4>
+                        <p class="text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach, one of your saved/community coaches, or build one here.</p>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <button type="button" class="rounded-full border px-4 py-2 text-sm font-bold transition-all"
+                        [class]="teamCoachBrowseMode() === 'prebuilt'
+                          ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                          : 'border-black/10 text-black hover:border-red-500 hover:text-red-600 dark:border-white/15 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300'"
+                        (click)="setTeamCoachBrowseMode('prebuilt')">
+                        App Suite Coaches
+                      </button>
+                      <button type="button" class="rounded-full border px-4 py-2 text-sm font-bold transition-all"
+                        [class]="teamCoachBrowseMode() === 'community'
+                          ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                          : 'border-black/10 text-black hover:border-red-500 hover:text-red-600 dark:border-white/15 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300'"
+                        (click)="setTeamCoachBrowseMode('community')">
+                        My & Community Coaches
+                      </button>
+                      <button type="button" class="rounded-full border px-4 py-2 text-sm font-bold transition-all"
+                        [class]="teamCoachBrowseMode() === 'custom'
+                          ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                          : 'border-black/10 text-black hover:border-red-500 hover:text-red-600 dark:border-white/15 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300'"
+                        (click)="setTeamCoachBrowseMode('custom')">
+                        Create Custom Coach
+                      </button>
+                    </div>
+
+                    @if (teamSetupLoading()) {
+                      <div class="flex items-center gap-3 rounded-2xl border border-black/10 bg-black/[0.02] p-5 dark:border-white/10 dark:bg-white/[0.02]">
+                        <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-red-200 border-t-red-600 dark:border-red-500/30 dark:border-t-red-300"></span>
+                        <p class="text-sm font-semibold text-gray-700 dark:text-slate-200">Loading coach library...</p>
+                      </div>
+                    } @else {
+                      @if (teamCoachBrowseMode() === 'prebuilt') {
+                        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                          @for (template of prebuiltTeamCoaches(); track template.id) {
+                            <button type="button"
+                              class="overflow-hidden rounded-3xl border text-left transition-all group"
+                              [class]="isPrebuiltCoachSelected(template.id)
+                                ? 'border-red-500 shadow-[0_18px_50px_rgba(220,38,38,0.18)]'
+                                : 'border-black/10 hover:border-red-400 dark:border-white/10 dark:hover:border-red-400/60'"
+                              (click)="selectPrebuiltCoach(template)">
+                              <div class="relative h-40 overflow-hidden">
+                                <img [src]="template.imageUrl" [alt]="template.name" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                                <div class="absolute left-4 top-4 flex items-center gap-3 rounded-full bg-white/95 px-3 py-2 shadow-lg">
+                                  <img [src]="template.coPilotAvatar" [alt]="template.coPilotName" class="h-10 w-10 rounded-full border border-red-100 object-cover" />
+                                  <div class="min-w-0">
+                                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">AI Coach</p>
+                                    <p class="truncate text-sm font-bold text-black">{{ template.coPilotName }}</p>
+                                  </div>
+                                </div>
+                                <div class="absolute right-4 top-4 rounded-full bg-black/65 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white">{{ template.category }}</div>
+                              </div>
+                              <div class="bg-white p-5 dark:bg-slate-900">
+                                <div class="flex items-start justify-between gap-3">
+                                  <div>
+                                    <h5 class="text-lg font-black text-black dark:text-white">{{ template.name }}</h5>
+                                    <p class="mt-1 text-sm text-gray-600 dark:text-slate-300">{{ template.tagline }}</p>
+                                  </div>
+                                  @if (isPrebuiltCoachSelected(template.id)) {
+                                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
+                                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </span>
+                                  }
+                                </div>
+                              </div>
+                            </button>
+                          }
+                        </div>
+                      }
+
+                      @if (teamCoachBrowseMode() === 'community') {
+                        @if (communityTeamCoaches().length > 0) {
+                          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            @for (coach of communityTeamCoaches(); track coach.id) {
+                              <button type="button"
+                                class="rounded-3xl border p-5 text-left transition-all"
+                                [class]="isCommunityCoachSelected(coach.id)
+                                  ? 'border-red-500 shadow-[0_18px_50px_rgba(220,38,38,0.18)]'
+                                  : 'border-black/10 hover:border-red-400 dark:border-white/10 dark:hover:border-red-400/60'"
+                                (click)="selectCommunityCoach(coach)">
+                                <div class="flex items-start gap-4">
+                                  @if (coach.avatar) {
+                                    <img [src]="coach.avatar" [alt]="coach.coachName" class="h-14 w-14 rounded-2xl border border-black/10 object-cover dark:border-white/10" />
+                                  } @else {
+                                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 text-2xl text-white">{{ coach.icon }}</div>
+                                  }
+                                  <div class="min-w-0 flex-1">
+                                    <div class="flex items-center justify-between gap-3">
+                                      <p class="truncate text-lg font-black text-black dark:text-white">{{ coach.appName }}</p>
+                                      @if (isCommunityCoachSelected(coach.id)) {
+                                        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
+                                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        </span>
+                                      }
+                                    </div>
+                                    <p class="mt-1 text-sm font-semibold text-red-600 dark:text-red-300">{{ coach.coachName }}</p>
+                                    <p class="mt-2 line-clamp-3 text-sm text-gray-600 dark:text-slate-300">{{ coach.tagline || coach.description }}</p>
+                                  </div>
+                                </div>
+                              </button>
+                            }
+                          </div>
+                        } @else {
+                          <div class="rounded-2xl border border-dashed border-black/15 p-6 text-center dark:border-white/15">
+                            <p class="text-base font-bold text-black dark:text-white">No saved community coaches yet.</p>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach above or create a custom one here.</p>
+                          </div>
+                        }
+                      }
+
+                      @if (teamCoachBrowseMode() === 'custom') {
+                        <div class="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+                          <div class="space-y-4">
+                            <div class="rounded-2xl border border-black/10 bg-black/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.02]">
+                              <p class="text-sm font-semibold text-black dark:text-white">{{ teamCoachPhilosophyBlurb() }}</p>
+                            </div>
+
+                            <div class="rounded-2xl border border-dashed border-black/15 p-4 dark:border-white/15">
+                              <div class="flex items-start gap-4">
+                                <div class="shrink-0">
+                                  @if (customTeamCoachAvatarPreview()) {
+                                    <img [src]="customTeamCoachAvatarPreview()" alt="Custom team coach avatar" class="h-24 w-24 rounded-2xl border border-black/10 object-cover dark:border-white/10" />
+                                  } @else {
+                                    <div class="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-black/15 text-gray-300 dark:border-white/15 dark:text-slate-600">
+                                      <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                      </svg>
+                                    </div>
+                                  }
+                                </div>
+
+                                <div class="min-w-0 flex-1 space-y-2">
+                                  <p class="text-sm font-bold text-black dark:text-white">Coach avatar</p>
+                                  <button type="button"
+                                    class="w-full rounded-xl bg-black px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-600 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-red-500 dark:hover:text-white"
+                                    (click)="generateCustomTeamCoachAvatar()"
+                                    [disabled]="customTeamCoachGeneratingAvatar()">
+                                    {{ customTeamCoachGeneratingAvatar() ? 'Generating...' : 'Generate with AI' }}
+                                  </button>
+
+                                  <label class="block w-full cursor-pointer rounded-xl border border-black/10 px-4 py-2.5 text-center text-sm font-bold transition-all hover:border-red-500 hover:text-red-600 dark:border-white/15 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300">
+                                    Upload Image
+                                    <input type="file" accept="image/*" class="hidden" (change)="onCustomTeamCoachAvatarSelected($event)" />
+                                  </label>
+
+                                  @if (customTeamCoachAvatarPreview()) {
+                                    <button type="button"
+                                      class="text-xs font-semibold text-gray-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-300"
+                                      (click)="clearCustomTeamCoachAvatar()">
+                                      Remove avatar
+                                    </button>
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="space-y-4">
+                            <div>
+                              <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Coach name</label>
+                              <input type="text"
+                                class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                                [ngModel]="customTeamCoachName()"
+                                (ngModelChange)="updateCustomTeamCoachName($event)"
+                                placeholder="e.g. Coach Tessa, Sprint Captain, Dr. Rivera"
+                                maxlength="60" />
+                            </div>
+
+                            <div>
+                              <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Category</label>
+                              <select
+                                class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white"
+                                [ngModel]="customTeamCoachCategory()"
+                                (ngModelChange)="updateCustomTeamCoachCategory($event)">
+                                @for (category of teamCoachCategories; track category) {
+                                  <option [value]="category">{{ category }}</option>
+                                }
+                              </select>
+                            </div>
+
+                            <div>
+                              <div class="mb-1 flex items-center justify-between gap-3">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Coaching personality</label>
+                                <button type="button"
+                                  class="text-xs font-black uppercase tracking-[0.16em] text-red-600 hover:text-red-700 disabled:opacity-40 dark:text-red-300 dark:hover:text-red-200"
+                                  (click)="refineCustomTeamCoachPersonality()"
+                                  [disabled]="!customTeamCoachPersonality().trim() || customTeamCoachRefining()">
+                                  {{ customTeamCoachRefining() ? 'Refining...' : 'Refine with AI' }}
+                                </button>
+                              </div>
+                              <textarea
+                                class="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                                [ngModel]="customTeamCoachPersonality()"
+                                (ngModelChange)="updateCustomTeamCoachPersonality($event)"
+                                rows="6"
+                                placeholder="Describe the tone, expertise, accountability style, and how this coach should push the team forward."></textarea>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    }
+
+                    @if (teamSetupError()) {
+                      <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+                        {{ teamSetupError() }}
+                      </div>
+                    }
+
+                    @if (selectedTeamCoach(); as chosenCoach) {
+                      <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                          <div class="flex min-w-0 items-center gap-4">
+                            @if (chosenCoach.avatarUrl) {
+                              <img [src]="chosenCoach.avatarUrl" [alt]="chosenCoach.settings.displayName" class="h-16 w-16 rounded-2xl border border-emerald-200 object-cover dark:border-emerald-500/20" />
+                            } @else {
+                              <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-xl font-black text-white">
+                                {{ chosenCoach.settings.displayName.charAt(0) }}
+                              </div>
+                            }
+                            <div class="min-w-0">
+                              <p class="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">{{ teamCoachSelectionLabel(chosenCoach.source) }}</p>
+                              <h5 class="truncate text-lg font-black text-black dark:text-white">{{ chosenCoach.title }}</h5>
+                              <p class="truncate text-sm font-semibold text-gray-700 dark:text-slate-200">{{ chosenCoach.subtitle }}</p>
+                              <p class="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-slate-300">{{ chosenCoach.description }}</p>
+                            </div>
+                          </div>
+                          <div class="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-emerald-700 shadow-sm dark:bg-slate-950/70 dark:text-emerald-300">
+                            Coach assigned
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </section>
+
+                  <section class="space-y-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white dark:bg-white dark:text-black">3</div>
+                      <div>
+                        <h4 class="text-lg font-black text-black dark:text-white">Invite teammates</h4>
+                        <p class="text-sm text-gray-500 dark:text-slate-400">Optional for now. You can add more people later from the team page.</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Invite teammates</label>
+                      @if (inviteEmails().length > 0) {
+                        <div class="mb-3 flex flex-wrap gap-2">
+                          @for (email of inviteEmails(); track email) {
+                            <span class="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+                              {{ email }}
+                              <button type="button"
+                                class="text-red-500 hover:text-red-700 dark:text-red-300 dark:hover:text-red-100"
+                                (click)="removeInviteEmail(email)">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </span>
+                          }
+                        </div>
+                      }
+                      <div class="flex items-center gap-2">
+                        <input type="email"
+                          class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                          [ngModel]="inviteEmail"
+                          (ngModelChange)="inviteEmail = $event"
+                          (keyup.enter)="addInviteEmail()"
+                          placeholder="name@email.com" />
+                        <button type="button"
+                          class="rounded-xl border border-black/15 px-4 py-3 font-semibold text-black transition-all hover:border-red-500 hover:text-red-600 disabled:opacity-40 dark:border-white/20 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300"
+                          (click)="addInviteEmail()"
+                          [disabled]="!inviteEmail.trim()">
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+                } @else {
+                  <section class="space-y-5">
+                    <div class="rounded-3xl border border-black/10 bg-black/[0.02] p-6 dark:border-white/10 dark:bg-white/[0.02]">
+                      <p class="text-xs font-black uppercase tracking-[0.24em] text-red-600 dark:text-red-300">Step 2</p>
+                      <h4 class="mt-3 text-2xl font-black text-black dark:text-white">Create your account or log in</h4>
+                      <p class="mt-3 text-sm leading-relaxed text-gray-600 dark:text-slate-300">
+                        We already have your team draft. Authenticate once and we will create your account and launch the team immediately after.
+                      </p>
+                    </div>
+
+                    @if (selectedTeamCoach(); as chosenCoach) {
+                      <div class="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-950/70">
+                        <div class="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">Team</p>
+                            <h5 class="mt-2 text-xl font-black text-black dark:text-white">{{ teamName }}</h5>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">{{ teamDescription || 'No team description yet.' }}</p>
+                          </div>
+                          <div>
+                            <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">Coach</p>
+                            <h5 class="mt-2 text-xl font-black text-black dark:text-white">{{ chosenCoach.subtitle }}</h5>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">{{ chosenCoach.title }}</p>
+                            @if (inviteEmails().length > 0) {
+                              <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">{{ inviteEmails().length }} teammate{{ inviteEmails().length === 1 ? '' : 's' }} queued for invite.</p>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                      <button type="button"
+                        class="inline-flex items-center justify-center rounded-2xl bg-black px-5 py-4 text-base font-black text-white transition hover:bg-red-600 dark:bg-white dark:text-black dark:hover:bg-red-500 dark:hover:text-white"
+                        (click)="continueToAuth('signup')">
+                        Create account and launch team
+                      </button>
+                      <button type="button"
+                        class="inline-flex items-center justify-center rounded-2xl border border-black/10 px-5 py-4 text-base font-black text-black transition hover:border-black hover:bg-black hover:text-white dark:border-white/15 dark:text-white dark:hover:border-white dark:hover:bg-white dark:hover:text-black"
+                        (click)="continueToAuth('login')">
+                        Log in and launch team
+                      </button>
+                    </div>
+
+                    <button type="button"
+                      class="text-sm font-semibold text-gray-500 transition hover:text-red-600 dark:text-slate-400 dark:hover:text-red-300"
+                      (click)="backToTeamDetails()">
+                      Back to team details
+                    </button>
+                  </section>
+                }
+              </div>
+
+              <div class="flex items-center justify-end gap-3 border-t border-black/10 px-6 py-4 dark:border-white/10">
+                <button
+                  type="button"
+                  class="px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:text-gray-900 dark:text-slate-300 dark:hover:text-white"
+                  (click)="closeTeamSetupModal()"
+                  [disabled]="creatingTeam()">
+                  Cancel
+                </button>
+                @if (teamSetupStep() === 1) {
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-600 disabled:opacity-50 disabled:hover:bg-black"
+                    (click)="continueTeamSetup()"
+                    [disabled]="teamSetupLoading() || creatingTeam()">
+                    @if (creatingTeam()) {
+                      <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                    }
+                    {{
+                      creatingTeam()
+                        ? 'Creating team...'
+                        : isLoggedIn()
+                          ? 'Create team'
+                          : 'Continue'
+                    }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
       </main>
     </div>
   `,
@@ -489,8 +988,42 @@ type FeatureItem = {
   `]
 })
 export class SetupTeamPageComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly authService = inject(AuthService);
   private readonly themeService = inject(ThemeService);
+  private readonly teamLaunchService = inject(TeamLaunchService);
+  private readonly coachCatalogService = inject(CoachCatalogService);
+  private readonly communityCoachService = inject(CommunityCoachService);
+  private readonly aiService = inject(RocketGoalsAIService);
   protected readonly isDarkMode = this.themeService.isDarkMode;
+  protected readonly isLoggedIn = computed(() => !!this.authService.profile()?.userId);
+  protected readonly showCreateTeamModal = signal(false);
+  protected readonly teamSetupStep = signal<1 | 2>(1);
+  protected readonly teamSetupLoading = signal(false);
+  protected readonly creatingTeam = signal(false);
+  protected readonly pageNotice = signal<string | null>(null);
+  protected readonly pageError = signal<string | null>(null);
+  protected readonly teamSetupError = signal<string | null>(null);
+  protected teamName = '';
+  protected teamDescription = '';
+  protected inviteEmail = '';
+  protected readonly inviteEmails = signal<string[]>([]);
+  protected readonly teamCoachBrowseMode = signal<PendingTeamCoachSource>('prebuilt');
+  protected readonly teamCoachSelectionSource = signal<PendingTeamCoachSource | null>(null);
+  protected readonly selectedPrebuiltCoachId = signal<string | null>(null);
+  protected readonly selectedCommunityCoachId = signal<string | null>(null);
+  protected readonly prebuiltTeamCoaches = signal<PrebuiltTemplate[]>([]);
+  protected readonly communityTeamCoaches = signal<CommunityCoach[]>([]);
+  protected readonly customTeamCoachName = signal('');
+  protected readonly customTeamCoachPersonality = signal('');
+  protected readonly customTeamCoachCategory = signal<string>('Custom');
+  protected readonly customTeamCoachAvatarPreview = signal<string | null>(null);
+  protected readonly customTeamCoachGeneratingAvatar = signal(false);
+  protected readonly customTeamCoachRefining = signal(false);
+  protected readonly teamCoachCategories = [...COACH_CATEGORIES];
+  protected readonly teamCoachPhilosophyBlurb = signal(DEFAULT_COACH_PHILOSOPHY);
+  private customTeamCoachUploadedAvatarDataUrl: string | null = null;
 
   readonly socialProof: StatItem[] = [
     { value: '24/7', label: 'AI coach availability' },
@@ -606,11 +1139,491 @@ export class SetupTeamPageComponent implements OnInit {
     }
   ];
 
+  private resetCoachDraft(): void {
+    this.teamCoachBrowseMode.set('prebuilt');
+    this.teamCoachSelectionSource.set(null);
+    this.selectedPrebuiltCoachId.set(null);
+    this.selectedCommunityCoachId.set(null);
+    this.customTeamCoachName.set('');
+    this.customTeamCoachPersonality.set('');
+    this.customTeamCoachCategory.set('Custom');
+    this.customTeamCoachAvatarPreview.set(null);
+    this.customTeamCoachGeneratingAvatar.set(false);
+    this.customTeamCoachRefining.set(false);
+    this.customTeamCoachUploadedAvatarDataUrl = null;
+  }
+
+  private resetTeamSetupState(): void {
+    this.teamSetupStep.set(1);
+    this.teamSetupError.set(null);
+    this.teamName = '';
+    this.teamDescription = '';
+    this.inviteEmail = '';
+    this.inviteEmails.set([]);
+    this.resetCoachDraft();
+  }
+
+  private async loadCoachOptions(): Promise<void> {
+    this.teamSetupLoading.set(true);
+    try {
+      const [prebuilt, community] = await Promise.all([
+        this.coachCatalogService.getPrebuiltTemplates(),
+        this.coachCatalogService.getAvailableCommunityCoaches(this.authService.profile()?.userId)
+      ]);
+      this.prebuiltTeamCoaches.set(prebuilt);
+      this.communityTeamCoaches.set(community);
+    } catch (error) {
+      console.error('Failed to load setup-team coach options:', error);
+      this.teamSetupError.set('Coach library is temporarily unavailable. Please try again.');
+    } finally {
+      this.teamSetupLoading.set(false);
+    }
+  }
+
+  openTeamSetupModal(): void {
+    this.pageNotice.set(null);
+    this.pageError.set(null);
+    this.resetTeamSetupState();
+    this.showCreateTeamModal.set(true);
+    void this.loadCoachOptions();
+  }
+
+  closeTeamSetupModal(): void {
+    this.showCreateTeamModal.set(false);
+    this.resetTeamSetupState();
+  }
+
+  setTeamCoachBrowseMode(mode: PendingTeamCoachSource): void {
+    this.teamCoachBrowseMode.set(mode);
+    if (mode === 'custom') {
+      this.teamCoachSelectionSource.set('custom');
+      this.teamSetupError.set(null);
+    }
+  }
+
+  selectPrebuiltCoach(template: PrebuiltTemplate): void {
+    this.teamCoachBrowseMode.set('prebuilt');
+    this.teamCoachSelectionSource.set('prebuilt');
+    this.selectedPrebuiltCoachId.set(template.id);
+    this.selectedCommunityCoachId.set(null);
+    this.teamSetupError.set(null);
+  }
+
+  selectCommunityCoach(coach: CommunityCoach): void {
+    this.teamCoachBrowseMode.set('community');
+    this.teamCoachSelectionSource.set('community');
+    this.selectedCommunityCoachId.set(coach.id);
+    this.selectedPrebuiltCoachId.set(null);
+    this.teamSetupError.set(null);
+  }
+
+  activateCustomCoachSelection(): void {
+    this.teamCoachBrowseMode.set('custom');
+    this.teamCoachSelectionSource.set('custom');
+    this.selectedPrebuiltCoachId.set(null);
+    this.selectedCommunityCoachId.set(null);
+    this.teamSetupError.set(null);
+  }
+
+  updateCustomTeamCoachName(value: string): void {
+    this.customTeamCoachName.set(value);
+    this.activateCustomCoachSelection();
+  }
+
+  updateCustomTeamCoachPersonality(value: string): void {
+    this.customTeamCoachPersonality.set(value);
+    this.activateCustomCoachSelection();
+  }
+
+  updateCustomTeamCoachCategory(value: string): void {
+    this.customTeamCoachCategory.set(value);
+    this.activateCustomCoachSelection();
+  }
+
+  async refineCustomTeamCoachPersonality(): Promise<void> {
+    const seed = this.customTeamCoachPersonality().trim();
+    if (!seed) {
+      this.teamSetupError.set('Start with a short coach description first.');
+      return;
+    }
+
+    this.customTeamCoachRefining.set(true);
+    this.teamSetupError.set(null);
+    this.activateCustomCoachSelection();
+
+    try {
+      const response = await this.aiService.callAISilent(
+        buildCoachPersonalityRefinementPrompt({
+          category: this.customTeamCoachCategory(),
+          coachName: this.customTeamCoachName().trim(),
+          philosophy: this.teamCoachPhilosophyBlurb(),
+          seed
+        })
+      );
+      this.customTeamCoachPersonality.set(normalizeCoachPersonality(response));
+    } catch (error) {
+      console.warn('Failed to refine setup-team coach personality:', error);
+      this.customTeamCoachPersonality.set(
+        buildFallbackCoachPersonality({
+          seed,
+          category: this.customTeamCoachCategory(),
+          coachName: this.customTeamCoachName().trim()
+        })
+      );
+    } finally {
+      this.customTeamCoachRefining.set(false);
+    }
+  }
+
+  async generateCustomTeamCoachAvatar(): Promise<void> {
+    const coachName = this.customTeamCoachName().trim();
+    const coachDescription = this.customTeamCoachPersonality().trim();
+
+    if (!coachName) {
+      this.teamSetupError.set('Give your coach a name before generating an avatar.');
+      return;
+    }
+    if (!coachDescription) {
+      this.teamSetupError.set('Describe your coach before generating an avatar.');
+      return;
+    }
+
+    this.customTeamCoachGeneratingAvatar.set(true);
+    this.teamSetupError.set(null);
+    this.activateCustomCoachSelection();
+
+    try {
+      const result = await this.communityCoachService.generateAvatar({
+        coachName,
+        coachDescription,
+        category: this.customTeamCoachCategory()
+      });
+
+      if (result.success && result.imageUrl) {
+        this.customTeamCoachAvatarPreview.set(result.imageUrl);
+        this.customTeamCoachUploadedAvatarDataUrl = null;
+      } else {
+        this.teamSetupError.set('Could not generate an avatar right now. Upload one instead.');
+      }
+    } catch (error) {
+      console.error('Failed to generate setup-team coach avatar:', error);
+      this.teamSetupError.set('Could not generate an avatar right now. Upload one instead.');
+    } finally {
+      this.customTeamCoachGeneratingAvatar.set(false);
+    }
+  }
+
+  onCustomTeamCoachAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    const maxSizeBytes = this.isLoggedIn() ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
+    if (!file.type.startsWith('image/')) {
+      this.teamSetupError.set('Please select an image file for your coach avatar.');
+      return;
+    }
+    if (file.size > maxSizeBytes) {
+      this.teamSetupError.set(
+        this.isLoggedIn()
+          ? 'Coach avatar image should stay under 10 MB.'
+          : 'Coach avatar image should stay under 2 MB before sign-in so we can carry it through setup.'
+      );
+      return;
+    }
+
+    this.teamSetupError.set(null);
+    this.activateCustomCoachSelection();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      this.customTeamCoachAvatarPreview.set(dataUrl);
+      this.customTeamCoachUploadedAvatarDataUrl = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearCustomTeamCoachAvatar(): void {
+    this.customTeamCoachAvatarPreview.set(null);
+    this.customTeamCoachUploadedAvatarDataUrl = null;
+    this.activateCustomCoachSelection();
+  }
+
+  addInviteEmail(): void {
+    const email = this.inviteEmail.trim().toLowerCase();
+    if (email && email.includes('@') && !this.inviteEmails().includes(email)) {
+      this.inviteEmails.update(list => [...list, email]);
+      this.inviteEmail = '';
+    }
+  }
+
+  removeInviteEmail(email: string): void {
+    this.inviteEmails.update(list => list.filter(candidate => candidate !== email));
+  }
+
+  private getSelectedPrebuiltCoach(): PrebuiltTemplate | null {
+    const id = this.selectedPrebuiltCoachId();
+    if (!id) return null;
+    return this.prebuiltTeamCoaches().find(template => template.id === id) || null;
+  }
+
+  private getSelectedCommunityCoach(): CommunityCoach | null {
+    const id = this.selectedCommunityCoachId();
+    if (!id) return null;
+    return this.communityTeamCoaches().find(coach => coach.id === id) || null;
+  }
+
+  selectedTeamCoach(): TeamCoachSelectionView | null {
+    const source = this.teamCoachSelectionSource();
+
+    if (source === 'prebuilt') {
+      const template = this.getSelectedPrebuiltCoach();
+      if (!template) return null;
+      const settings: PendingTeamCoachDraft = {
+        source,
+        displayName: template.coPilotName,
+        personality: `${template.coPilotName} is the dedicated AI coach for ${template.name}. ${template.description}`,
+        avatarUrl: template.coPilotAvatar,
+        title: template.name,
+        subtitle: `AI Coach: ${template.coPilotName}`,
+        description: template.tagline
+      };
+      return {
+        source,
+        title: settings.title,
+        subtitle: settings.subtitle,
+        description: settings.description,
+        avatarUrl: settings.avatarUrl,
+        settings
+      };
+    }
+
+    if (source === 'community') {
+      const coach = this.getSelectedCommunityCoach();
+      if (!coach) return null;
+      const settings: PendingTeamCoachDraft = {
+        source,
+        displayName: coach.coachName,
+        personality: (coach.soulFilet || coach.description || coach.tagline || '').trim(),
+        ...(coach.avatar ? { avatarUrl: coach.avatar } : {}),
+        title: coach.appName,
+        subtitle: `AI Coach: ${coach.coachName}`,
+        description: coach.tagline || coach.description
+      };
+      return {
+        source,
+        title: settings.title,
+        subtitle: settings.subtitle,
+        description: settings.description,
+        avatarUrl: settings.avatarUrl,
+        settings
+      };
+    }
+
+    if (source === 'custom') {
+      const displayName = this.customTeamCoachName().trim();
+      const personality = this.customTeamCoachPersonality().trim();
+      if (!displayName || !personality) {
+        return null;
+      }
+      const settings: PendingTeamCoachDraft = {
+        source,
+        displayName,
+        personality,
+        ...(this.customTeamCoachAvatarPreview() && !this.customTeamCoachUploadedAvatarDataUrl
+          ? { avatarUrl: this.customTeamCoachAvatarPreview() || undefined }
+          : {}),
+        ...(this.customTeamCoachUploadedAvatarDataUrl
+          ? { uploadedAvatarDataUrl: this.customTeamCoachUploadedAvatarDataUrl }
+          : {}),
+        title: displayName,
+        subtitle: `${this.customTeamCoachCategory()} coach`,
+        description: personality
+      };
+      return {
+        source,
+        title: settings.title,
+        subtitle: settings.subtitle,
+        description: settings.description,
+        avatarUrl: this.customTeamCoachAvatarPreview() || undefined,
+        uploadedAvatarDataUrl: this.customTeamCoachUploadedAvatarDataUrl || undefined,
+        settings
+      };
+    }
+
+    return null;
+  }
+
+  isPrebuiltCoachSelected(templateId: string): boolean {
+    return this.teamCoachSelectionSource() === 'prebuilt' && this.selectedPrebuiltCoachId() === templateId;
+  }
+
+  isCommunityCoachSelected(coachId: string): boolean {
+    return this.teamCoachSelectionSource() === 'community' && this.selectedCommunityCoachId() === coachId;
+  }
+
+  teamCoachSelectionLabel(source: PendingTeamCoachSource): string {
+    if (source === 'prebuilt') return 'App Suite coach';
+    if (source === 'community') return 'Community coach';
+    return 'Custom coach';
+  }
+
+  private validateDraft(): string | null {
+    if (!this.teamName.trim()) {
+      return 'Enter your team name.';
+    }
+
+    const selection = this.selectedTeamCoach();
+    if (!selection) {
+      return 'Choose or create an AI coach for this team.';
+    }
+
+    if (selection.source === 'custom') {
+      if (selection.settings.displayName.length > 60) {
+        return 'Coach name should stay under 60 characters.';
+      }
+      if (selection.settings.personality.length > 12000) {
+        return 'Coach personality should stay under 12,000 characters.';
+      }
+    }
+
+    return null;
+  }
+
+  private buildPendingDraft(): PendingTeamCreationDraft | null {
+    const selection = this.selectedTeamCoach();
+    if (!selection) return null;
+    return {
+      teamName: this.teamName.trim(),
+      teamDescription: this.teamDescription.trim(),
+      inviteEmails: this.inviteEmails(),
+      coach: selection.settings
+    };
+  }
+
+  private hydrateDraft(draft: PendingTeamCreationDraft): void {
+    this.teamName = draft.teamName;
+    this.teamDescription = draft.teamDescription;
+    this.inviteEmail = '';
+    this.inviteEmails.set(draft.inviteEmails || []);
+    this.teamCoachSelectionSource.set('custom');
+    this.teamCoachBrowseMode.set('custom');
+    this.selectedPrebuiltCoachId.set(null);
+    this.selectedCommunityCoachId.set(null);
+    this.customTeamCoachName.set(draft.coach.displayName);
+    this.customTeamCoachPersonality.set(draft.coach.personality);
+    this.customTeamCoachCategory.set('Custom');
+    this.customTeamCoachAvatarPreview.set(draft.coach.uploadedAvatarDataUrl || draft.coach.avatarUrl || null);
+    this.customTeamCoachUploadedAvatarDataUrl = draft.coach.uploadedAvatarDataUrl || null;
+  }
+
+  async continueTeamSetup(): Promise<void> {
+    const validationError = this.validateDraft();
+    if (validationError) {
+      this.teamSetupError.set(validationError);
+      return;
+    }
+
+    const draft = this.buildPendingDraft();
+    if (!draft) {
+      this.teamSetupError.set('Could not prepare your team draft. Please try again.');
+      return;
+    }
+
+    if (this.isLoggedIn()) {
+      await this.createTeamFromDraft(draft);
+      return;
+    }
+
+    this.teamSetupError.set(null);
+    this.teamSetupStep.set(2);
+  }
+
+  continueToAuth(mode: 'login' | 'signup'): void {
+    const validationError = this.validateDraft();
+    if (validationError) {
+      this.teamSetupError.set(validationError);
+      this.teamSetupStep.set(1);
+      return;
+    }
+
+    const draft = this.buildPendingDraft();
+    if (!draft) {
+      this.teamSetupError.set('Could not prepare your team draft. Please try again.');
+      return;
+    }
+
+    this.teamLaunchService.savePendingDraft(draft);
+    this.router.navigate([`/${mode}`], {
+      queryParams: {
+        redirectTo: '/setup-team?completePendingTeam=true'
+      }
+    });
+  }
+
+  backToTeamDetails(): void {
+    this.teamSetupStep.set(1);
+    this.teamSetupError.set(null);
+  }
+
+  private async createTeamFromDraft(draft: PendingTeamCreationDraft): Promise<void> {
+    const profile = this.authService.profile();
+    if (!profile?.userId || this.creatingTeam()) {
+      this.teamSetupError.set('Please log in to create your team.');
+      return;
+    }
+
+    this.creatingTeam.set(true);
+    this.teamSetupError.set(null);
+    this.pageError.set(null);
+    try {
+      const teamId = await this.teamLaunchService.createTeamFromDraft(profile, draft);
+      this.teamLaunchService.clearPendingDraft();
+      this.closeTeamSetupModal();
+      await this.router.navigate(['/team', teamId]);
+    } catch (error) {
+      console.error('Failed to create team from setup-team page:', error);
+      this.pageError.set('Could not create the team right now. Please try again.');
+      this.teamSetupError.set('Could not create the team right now. Please try again.');
+      this.hydrateDraft(draft);
+      this.showCreateTeamModal.set(true);
+    } finally {
+      this.creatingTeam.set(false);
+    }
+  }
+
+  private async completePendingTeamAfterAuth(): Promise<void> {
+    const pendingDraft = this.teamLaunchService.loadPendingDraft();
+    const shouldComplete = this.route.snapshot.queryParamMap.get('completePendingTeam') === 'true';
+    if (!shouldComplete || !pendingDraft) {
+      return;
+    }
+
+    let attempts = 0;
+    while (attempts < 20 && !this.authService.profile()?.userId) {
+      attempts += 1;
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
+    if (!this.authService.profile()?.userId) {
+      this.pageError.set('We created your account, but could not finalize the team yet. Please try again.');
+      return;
+    }
+
+    this.hydrateDraft(pendingDraft);
+    void this.loadCoachOptions();
+    this.showCreateTeamModal.set(true);
+    this.teamSetupStep.set(1);
+    await this.createTeamFromDraft(pendingDraft);
+  }
+
   toggleDarkMode(): void {
     this.themeService.toggleDarkMode();
   }
 
   ngOnInit(): void {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    void this.completePendingTeamAfterAuth();
   }
 }
