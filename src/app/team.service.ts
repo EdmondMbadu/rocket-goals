@@ -731,7 +731,7 @@ export class TeamService {
 
     const nextMembers = existingMember
       ? team.members.map(m => (m.userId === sanitizedInput.userId ? mergedMember : this.sanitizeMemberForWrite(m)))
-      : [...team.members, mergedMember];
+      : [mergedMember, ...team.members.map(m => this.sanitizeMemberForWrite(m))];
 
     const nextMemberIds = team.memberIds.includes(sanitizedInput.userId)
       ? team.memberIds

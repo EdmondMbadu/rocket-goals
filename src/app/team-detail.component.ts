@@ -2131,7 +2131,20 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         if (role === 'team-lead') return 3;
         return 4;
       };
-      return rank(a.role) - rank(b.role);
+      const roleDiff = rank(a.role) - rank(b.role);
+      if (roleDiff !== 0) {
+        return roleDiff;
+      }
+
+      const joinedAtA = Number(a.joinedAt || 0);
+      const joinedAtB = Number(b.joinedAt || 0);
+      if (joinedAtA !== joinedAtB) {
+        return joinedAtB - joinedAtA;
+      }
+
+      const nameA = `${a.firstName} ${a.lastName}`.trim().toLowerCase() || a.email.toLowerCase();
+      const nameB = `${b.firstName} ${b.lastName}`.trim().toLowerCase() || b.email.toLowerCase();
+      return nameA.localeCompare(nameB);
     });
   }
 
