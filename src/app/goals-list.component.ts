@@ -106,6 +106,9 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   editingGoalId = signal<string | null>(null);
   editingGoalTitleValue = signal<string>('');
   activeGoalMenuId = signal<string | null>(null);
+  editingTeamId = signal<string | null>(null);
+  editingTeamTitleValue = signal<string>('');
+  activeTeamMenuId = signal<string | null>(null);
 
   // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
@@ -600,8 +603,27 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.activeGoalMenuId() === goalId;
   }
 
+  toggleTeamMenu(teamId: string, event?: Event) {
+    event?.stopPropagation();
+    const current = this.activeTeamMenuId();
+    this.activeTeamMenuId.set(current === teamId ? null : teamId);
+  }
+
+  closeTeamMenu() {
+    this.activeTeamMenuId.set(null);
+  }
+
+  isTeamMenuOpen(teamId: string): boolean {
+    return this.activeTeamMenuId() === teamId;
+  }
+
   navigateToGoal(goalId: string) {
     this.router.navigateByUrl(`/rocketgoal/${goalId}`);
+    this.closeAvatarDropdown();
+  }
+
+  navigateToTeam(teamId: string) {
+    this.router.navigateByUrl(`/team/${teamId}`);
     this.closeAvatarDropdown();
   }
 
@@ -1770,6 +1792,20 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  async deleteTeamFromGoalsPage(teamId: string) {
+    if (!confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await this.teamService.deleteTeam(teamId);
+      await this.loadGoals();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      alert('Failed to delete team. Please try again.');
+    }
+  }
+
   startEditingGoalTitle(goal: RocketGoal) {
     const currentTitle = this.getGoalTitle(goal);
     this.editingGoalTitleValue.set(currentTitle);
@@ -1830,6 +1866,46 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isEditingGoal(goalId: string): boolean {
     return this.editingGoalId() === goalId;
+  }
+
+  startEditingTeamTitle(team: Team) {
+    this.editingTeamTitleValue.set(team.name || '');
+    this.editingTeamId.set(team.id);
+    setTimeout(() => {
+      const input = document.querySelector('input.team-title-edit-input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  async saveTeamTitle(team: Team) {
+    const newTitle = this.editingTeamTitleValue().trim();
+    if (!newTitle) {
+      this.cancelEditingTeamTitle();
+      return;
+    }
+
+    try {
+      await this.teamService.updateTeam(team.id, { name: newTitle } as Partial<Team>);
+      this.teams.update(teams => teams.map(item => (
+        item.id === team.id ? { ...item, name: newTitle } : item
+      )));
+      this.cancelEditingTeamTitle();
+    } catch (error) {
+      console.error('Error updating team title:', error);
+      alert('Failed to update team title. Please try again.');
+    }
+  }
+
+  cancelEditingTeamTitle() {
+    this.editingTeamId.set(null);
+    this.editingTeamTitleValue.set('');
+  }
+
+  isEditingTeam(teamId: string): boolean {
+    return this.editingTeamId() === teamId;
   }
 
   getVisualizationImageUrl(goal: RocketGoal): string | null {

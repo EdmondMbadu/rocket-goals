@@ -398,10 +398,34 @@
                 loading="lazy" />
             </div>
             <div class="mb-4">
+              @if (isEditingTeam(team.id)) {
+              <div class="flex items-center gap-2 mb-2">
+                <input type="text"
+                  [ngModel]="editingTeamTitleValue()"
+                  (ngModelChange)="editingTeamTitleValue.set($event)"
+                  (keyup.enter)="saveTeamTitle(team)"
+                  (keyup.escape)="cancelEditingTeamTitle()"
+                  class="team-title-edit-input text-2xl font-black text-black bg-transparent border-b-2 border-red-600 focus:outline-none focus:border-red-700 flex-1 dark:text-white dark:border-red-400"
+                  placeholder="Enter team name..." />
+                <button (click)="saveTeamTitle(team)"
+                  class="text-green-600 hover:text-green-700 transition-colors p-1 shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <button (click)="cancelEditingTeamTitle()"
+                  class="text-gray-400 hover:text-red-600 transition-colors p-1 shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              } @else {
               <h3
                 class="text-2xl font-black text-black mb-2 transition-colors line-clamp-2 group-hover:text-red-600 dark:text-white dark:group-hover:text-red-400">
                 {{ team.name }}
               </h3>
+              }
               <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 dark:text-slate-400">
                 {{ team.description || 'Team mission and accountability space' }}
               </p>
@@ -429,6 +453,33 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </a>
+
+            @if (isTeamAdmin(team)) {
+            <div class="goal-action-menu">
+              <button (click)="toggleTeamMenu(team.id, $event)"
+                class="goal-menu-trigger"
+                title="Team actions">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <circle cx="4" cy="10" r="2"></circle>
+                  <circle cx="10" cy="10" r="2"></circle>
+                  <circle cx="16" cy="10" r="2"></circle>
+                </svg>
+              </button>
+              @if (isTeamMenuOpen(team.id)) {
+              <div class="goal-menu-panel" (click)="$event.stopPropagation()">
+                <button class="goal-menu-item" (click)="navigateToTeam(team.id); closeTeamMenu()">
+                  Open team
+                </button>
+                <button class="goal-menu-item" (click)="startEditingTeamTitle(team); closeTeamMenu()">
+                  Change team title
+                </button>
+                <button class="goal-menu-item danger" (click)="deleteTeamFromGoalsPage(team.id); closeTeamMenu()">
+                  Delete team
+                </button>
+              </div>
+              }
+            </div>
+            }
           </div>
         </div>
         }
