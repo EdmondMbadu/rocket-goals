@@ -757,9 +757,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
       const mergedGoals = new Map<string, RocketGoal>();
       const fallbackTeamGoals = new Map<string, RocketGoal>();
+      const activeTeamIds = new Set(
+        (teamsRaw as Team[])
+          .map(team => String(team?.id || '').trim())
+          .filter(Boolean)
+      );
 
       for (const goal of personalGoalsRaw as RocketGoal[]) {
-        if (goal?.id) {
+        if (goal?.id && this.shouldIncludeProfileGoal(goal, activeTeamIds)) {
           mergedGoals.set(goal.id, goal);
         }
       }
@@ -789,6 +794,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
           if (goal?.id) {
             const ownerId = String((goal as any).userId || '').trim();
             if (ownerId && ownerId !== profile.userId) {
+              continue;
+            }
+            if (!this.shouldIncludeProfileGoal(goal as RocketGoal, activeTeamIds)) {
               continue;
             }
             mergedGoals.set(goal.id, goal as RocketGoal);
@@ -850,6 +858,35 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   private buildMemberTeamGoalId(teamId: string, userId: string): string {
     return `team-${teamId}-member-${userId}`;
+  }
+
+  private extractLinkedTeamId(goal: RocketGoal): string | null {
+    const answerTeamId = typeof goal?.answers?.['teamId'] === 'string'
+      ? goal.answers['teamId'].trim()
+      : '';
+    if (answerTeamId) {
+      return answerTeamId;
+    }
+
+    const goalId = String(goal?.id || '').trim();
+    if (!goalId.startsWith('team-')) {
+      return null;
+    }
+
+    const memberMatch = goalId.match(/^team-(.+?)-member-.+$/);
+    if (memberMatch?.[1]) {
+      return memberMatch[1].trim() || null;
+    }
+
+    return goalId.slice('team-'.length).trim() || null;
+  }
+
+  private shouldIncludeProfileGoal(goal: RocketGoal, activeTeamIds: Set<string>): boolean {
+    const linkedTeamId = this.extractLinkedTeamId(goal);
+    if (!linkedTeamId) {
+      return true;
+    }
+    return activeTeamIds.has(linkedTeamId);
   }
 
   private buildFallbackTeamGoal(team: Team, profile: UserProfile, goalId: string): RocketGoal {

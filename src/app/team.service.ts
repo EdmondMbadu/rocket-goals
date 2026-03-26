@@ -1604,13 +1604,179 @@ export class TeamService {
     return (result.data as { success: boolean; response: string }).response;
   }
 
+  private async deleteCollectionDocs(
+    fm: typeof import('firebase/firestore'),
+    collectionRef: ReturnType<typeof fm.collection>
+  ): Promise<void> {
+    const snapshot = await fm.getDocs(collectionRef);
+    if (snapshot.empty) {
+      return;
+    }
+    await Promise.all(snapshot.docs.map(doc => fm.deleteDoc(doc.ref)));
+  }
+
+  private async deleteGoalWithArtifacts(
+    firestore: Firestore,
+    fm: typeof import('firebase/firestore'),
+    goalId: string
+  ): Promise<void> {
+    const goalDocRef = fm.doc(firestore, 'rocketGoals', goalId);
+    const goalCollections = [
+      'actionItems',
+      'calendarEvents',
+      'dailyIgnitions',
+      'fanComments',
+      'fanReactions',
+      'fans',
+      'journeyPhotos',
+      'milestoneEntries',
+      'missionLogs',
+      'weeklyResets'
+    ] as const;
+
+    await Promise.all(
+      goalCollections.map(collectionName =>
+        this.deleteCollectionDocs(fm, fm.collection(firestore, 'rocketGoals', goalId, collectionName))
+      )
+    );
+
+    try {
+      await fm.deleteDoc(goalDocRef);
+    } catch {
+      // Goal may already be gone.
+    }
+  }
+
+  private async getUserProfileDocByUserId(
+    firestore: Firestore,
+    fm: typeof import('firebase/firestore'),
+    userId: string
+  ): Promise<any | null> {
+    const profileQuery = fm.query(
+      fm.collection(firestore, 'userProfiles'),
+      fm.where('userId', '==', userId),
+      fm.limit(1)
+    );
+    const profileSnapshot = await fm.getDocs(profileQuery);
+    if (!profileSnapshot.empty) {
+      return profileSnapshot.docs[0];
+    }
+
+    const fallbackProfileRef = fm.doc(firestore, 'userProfiles', userId);
+    const fallbackProfileSnap = await fm.getDoc(fallbackProfileRef);
+    if (fallbackProfileSnap.exists()) {
+      return fallbackProfileSnap;
+    }
+
+    return null;
+  }
+
   async deleteTeam(teamId: string): Promise<void> {
     const firestore = await this.getFirestore();
     const fm = await import('firebase/firestore');
-    const messagesRef = fm.collection(firestore, 'teams', teamId, 'messages');
-    const snapshot = await fm.getDocs(messagesRef);
-    await Promise.all(snapshot.docs.map(doc => fm.deleteDoc(doc.ref)));
-    const docRef = fm.doc(firestore, 'teams', teamId);
-    await fm.deleteDoc(docRef);
+    const team = await this.getTeamById(teamId);
+
+    const teamGoalIds = new Set<string>([
+      `team-${teamId}`
+    ]);
+
+    if (team?.rocketGoalId) {
+      teamGoalIds.add(String(team.rocketGoalId).trim());
+    }
+
+    const memberUserIds = Array.from(
+      new Set([
+        ...(team?.memberIds || []),
+        ...(team?.members || []).map(member => String(member.userId || '').trim()),
+        String(team?.adminId || '').trim()
+      ].filter(Boolean))
+    );
+
+    for (const userId of memberUserIds) {
+      teamGoalIds.add(this.buildMemberTeamGoalId(teamId, userId));
+    }
+
+    try {
+      const linkedGoalsSnapshot = await fm.getDocs(
+        fm.query(
+          fm.collection(firestore, 'rocketGoals'),
+          fm.where('answers.teamId', '==', teamId)
+        )
+      );
+      linkedGoalsSnapshot.docs.forEach(doc => {
+        teamGoalIds.add(doc.id);
+      });
+    } catch (error) {
+      console.warn('Unable to query linked team goals during team deletion:', error);
+    }
+
+    await Promise.all(
+      memberUserIds.map(async userId => {
+        const profileDoc = await this.getUserProfileDocByUserId(firestore, fm, userId);
+        if (!profileDoc) {
+          return;
+        }
+        const profileData = profileDoc.data() as Record<string, any>;
+        const selectedGoalId = String(profileData['myOneThingGoalId'] || '').trim();
+        if (!selectedGoalId || !teamGoalIds.has(selectedGoalId)) {
+          return;
+        }
+        await fm.updateDoc(profileDoc.ref, {
+          myOneThingGoalId: fm.deleteField()
+        });
+      })
+    );
+
+    await Promise.all(
+      memberUserIds.map(async userId => {
+        await this.deleteCollectionDocs(
+          fm,
+          fm.collection(firestore, 'teams', teamId, 'memberConversations', userId, 'messages')
+        );
+        try {
+          await fm.deleteDoc(fm.doc(firestore, 'teams', teamId, 'memberConversations', userId));
+        } catch {
+          // Missing conversation doc is acceptable.
+        }
+
+        await this.deleteCollectionDocs(
+          fm,
+          fm.collection(firestore, 'teams', teamId, 'memberProgressNotes', userId, 'entries')
+        );
+        try {
+          await fm.deleteDoc(fm.doc(firestore, 'teams', teamId, 'memberProgressNotes', userId));
+        } catch {
+          // Missing progress-notes doc is acceptable.
+        }
+      })
+    );
+
+    await this.deleteCollectionDocs(fm, fm.collection(firestore, 'teams', teamId, 'messages'));
+
+    try {
+      const inviteSnapshot = await fm.getDocs(
+        fm.query(
+          fm.collection(firestore, 'teamInvites'),
+          fm.where('teamId', '==', teamId)
+        )
+      );
+      if (!inviteSnapshot.empty) {
+        await Promise.all(inviteSnapshot.docs.map(doc => fm.deleteDoc(doc.ref)));
+      }
+    } catch (error) {
+      console.warn('Unable to delete team invites during team deletion:', error);
+    }
+
+    await Promise.all(
+      Array.from(teamGoalIds)
+        .filter(Boolean)
+        .map(goalId => this.deleteGoalWithArtifacts(firestore, fm, goalId))
+    );
+
+    try {
+      await fm.deleteDoc(fm.doc(firestore, 'teams', teamId));
+    } catch {
+      // Team may already be gone.
+    }
   }
 }
