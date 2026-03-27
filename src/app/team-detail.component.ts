@@ -1221,7 +1221,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       lastActiveLabel: lastActiveCell
         ? lastActiveCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : 'No team activity yet',
-      windowLabel: `${windowStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${windowEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      windowLabel: `${windowStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${windowEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
       weeks: weeks.length
     };
   }
