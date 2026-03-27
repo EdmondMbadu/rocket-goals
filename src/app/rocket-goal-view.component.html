@@ -600,13 +600,13 @@
                           <button
                             type="button"
                             class="momentum-cell"
-                            [attr.title]="cell.title"
                             [attr.aria-label]="cell.title"
                             [attr.data-level]="cell.level"
                             [class.is-outside-goal]="!cell.isWithinGoal"
                             [class.is-before-goal]="cell.isBeforeGoal"
                             [class.is-future]="cell.isFuture"
                             [class.is-today]="cell.isToday">
+                            <span class="momentum-cell-tooltip">{{ cell.title }}</span>
                           </button>
                           }
                         </div>

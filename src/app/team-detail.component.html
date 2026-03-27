@@ -591,6 +591,89 @@
         <p class="alert-inline success">{{ missionControlCardsSuccess() }}</p>
         }
 
+        @if (teamGoal()) {
+        <section class="team-heatmap-card">
+          <div class="team-heatmap-head">
+            <div>
+              <p class="mc-kicker">Team Contribution Activity</p>
+              <p class="team-heatmap-subtitle">Combined Daily Ignition and Mission Log activity across all linked teammate goals.</p>
+            </div>
+            <div class="team-heatmap-summary">
+              <div class="team-heatmap-summary-item">
+                <strong>{{ teamContributionSummary().activeDays }}</strong>
+                <span>active days</span>
+              </div>
+              <div class="team-heatmap-summary-item">
+                <strong>{{ teamContributionSummary().totalContributions }}</strong>
+                <span>total check-ins</span>
+              </div>
+              <div class="team-heatmap-summary-item">
+                <strong>{{ teamContributionSummary().activeMembersToday }}</strong>
+                <span>active today</span>
+              </div>
+            </div>
+          </div>
+
+          @if (teamContributionHeatmapError()) {
+          <p class="alert-inline error">{{ teamContributionHeatmapError() }}</p>
+          }
+
+          @if (loadingTeamContributionHeatmap()) {
+          <div class="team-heatmap-loading">
+            <span class="spinner small"></span>
+            <p>Loading team activity heatmap...</p>
+          </div>
+          } @else {
+          <div class="team-heatmap-shell">
+            <div class="team-heatmap-month-strip">
+              <div class="team-heatmap-spacer"></div>
+              <div class="team-heatmap-month-columns">
+                @for (week of teamContributionWeeks(); track $index) {
+                <span class="team-heatmap-month-chip">{{ week.monthLabel }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="team-heatmap-grid-shell">
+              <div class="team-heatmap-weekday-labels">
+                <span></span>
+                <span>Mon</span>
+                <span></span>
+                <span>Wed</span>
+                <span></span>
+                <span>Fri</span>
+                <span></span>
+              </div>
+              <div class="team-heatmap-week-columns">
+                @for (week of teamContributionWeeks(); track $index) {
+                <div class="team-heatmap-week-column">
+                  @for (cell of week.days; track cell.dateId) {
+                  <button
+                    type="button"
+                    class="team-heatmap-cell"
+                    [attr.aria-label]="cell.tooltip"
+                    [attr.data-level]="cell.level"
+                    [class.is-before-goal]="cell.isBeforeGoal"
+                    [class.is-future]="cell.isFuture"
+                    [class.is-after-deadline]="cell.isAfterDeadline"
+                    [class.is-today]="cell.isToday">
+                    <span class="team-heatmap-tooltip">{{ cell.tooltip }}</span>
+                  </button>
+                  }
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="team-heatmap-foot">
+            <span>Window: {{ teamContributionSummary().windowLabel }}</span>
+            <span>Peak day: {{ teamContributionSummary().strongestDayCount }} check-ins</span>
+            <span>Last active: {{ teamContributionSummary().lastActiveLabel }}</span>
+          </div>
+          }
+        </section>
+        }
+
         @if (missionControlCardsEditing()) {
         <div class="mc-leaderboard-editor">
           <div class="mc-leaderboard-editor-head">

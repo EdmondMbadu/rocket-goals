@@ -4,6 +4,7 @@ import { firebaseConfig } from '../../environments/environment';
 import {
   CreateTeamInput,
   Team,
+  TeamContributionDaySummary,
   TeamInvite,
   TeamMissionControlCard,
   TeamDirectMessage,
@@ -96,6 +97,21 @@ export class TeamService {
 
     const parsed = Date.parse(String(value));
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private getCheckinDateId(record: Record<string, any>): string | null {
+    const rawDateId = String(record['dateId'] || '').trim();
+    if (rawDateId) {
+      return rawDateId;
+    }
+    const timestamp = this.getTimestampMillis(record['createdAtMs'])
+      ?? this.getTimestampMillis(record['createdAt'])
+      ?? this.getTimestampMillis(record['updatedAtMs'])
+      ?? this.getTimestampMillis(record['updatedAt']);
+    if (timestamp === null) {
+      return null;
+    }
+    return formatDateId(toDateOnly(new Date(timestamp)));
   }
 
   private getGoalTotalDays(goal: any): number {
@@ -1499,6 +1515,105 @@ export class TeamService {
       currentWeekMilesTarget,
       weeklyMileageProgress
     };
+  }
+
+  async getTeamContributionDaySummaries(
+    goalRefs: Array<{ memberUserId: string; goalId: string | null }>,
+    limitCount = 180
+  ): Promise<TeamContributionDaySummary[]> {
+    const refs = Array.from(
+      new Map(
+        goalRefs
+          .filter(ref => !!String(ref.goalId || '').trim())
+          .map(ref => [String(ref.goalId || '').trim(), {
+            memberUserId: String(ref.memberUserId || '').trim(),
+            goalId: String(ref.goalId || '').trim()
+          }])
+      ).values()
+    ).filter(ref => !!ref.memberUserId && !!ref.goalId);
+
+    if (!refs.length) {
+      return [];
+    }
+
+    const firestore = await this.getFirestore();
+    const fm = await import('firebase/firestore');
+
+    const perGoalResults = await Promise.all(refs.map(async ref => {
+      const loadSubcollection = async (subcollection: 'dailyIgnitions' | 'missionLogs'): Promise<Record<string, any>[]> => {
+        const collectionRef = fm.collection(firestore, 'rocketGoals', ref.goalId, subcollection);
+        try {
+          const q = fm.query(collectionRef, fm.orderBy('createdAtMs', 'desc'), fm.limit(limitCount));
+          const snapshot = await fm.getDocs(q);
+          return snapshot.docs.map(doc => doc.data() as Record<string, any>);
+        } catch {
+          const snapshot = await fm.getDocs(fm.query(collectionRef, fm.limit(limitCount)));
+          return snapshot.docs.map(doc => doc.data() as Record<string, any>);
+        }
+      };
+
+      const [ignitions, missionLogs] = await Promise.all([
+        loadSubcollection('dailyIgnitions'),
+        loadSubcollection('missionLogs')
+      ]);
+
+      return {
+        memberUserId: ref.memberUserId,
+        ignitions,
+        missionLogs
+      };
+    }));
+
+    const byDate = new Map<string, {
+      dateId: string;
+      ignitionCount: number;
+      missionLogCount: number;
+      memberUserIds: Set<string>;
+    }>();
+
+    for (const result of perGoalResults) {
+      for (const record of result.ignitions) {
+        const dateId = this.getCheckinDateId(record);
+        if (!dateId) {
+          continue;
+        }
+        const existing = byDate.get(dateId) || {
+          dateId,
+          ignitionCount: 0,
+          missionLogCount: 0,
+          memberUserIds: new Set<string>()
+        };
+        existing.ignitionCount += 1;
+        existing.memberUserIds.add(result.memberUserId);
+        byDate.set(dateId, existing);
+      }
+
+      for (const record of result.missionLogs) {
+        const dateId = this.getCheckinDateId(record);
+        if (!dateId) {
+          continue;
+        }
+        const existing = byDate.get(dateId) || {
+          dateId,
+          ignitionCount: 0,
+          missionLogCount: 0,
+          memberUserIds: new Set<string>()
+        };
+        existing.missionLogCount += 1;
+        existing.memberUserIds.add(result.memberUserId);
+        byDate.set(dateId, existing);
+      }
+    }
+
+    return Array.from(byDate.values())
+      .sort((left, right) => left.dateId.localeCompare(right.dateId))
+      .map(entry => ({
+        dateId: entry.dateId,
+        ignitionCount: entry.ignitionCount,
+        missionLogCount: entry.missionLogCount,
+        activeMemberCount: entry.memberUserIds.size,
+        memberUserIds: Array.from(entry.memberUserIds.values()).sort()
+      }));
   }
 
   async uploadTeamCoverImage(teamId: string, file: File): Promise<string> {

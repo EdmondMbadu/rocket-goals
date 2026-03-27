@@ -8,6 +8,7 @@ import { ThemeService } from './theme.service';
 import { RocketGoalsService } from './rocket-goals.service';
 import type {
   Team,
+  TeamContributionDaySummary,
   TeamDirectMessage,
   TeamMember,
   TeamMissionControlCard,
@@ -22,6 +23,7 @@ import type {
 import type { RocketGoal } from './models/rocket-goal';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import QRCode from 'qrcode';
+import { addDays, formatDateId, toDateOnly } from './week-utils';
 
 type InviteUserSuggestion = {
   userId: string;
@@ -81,6 +83,38 @@ type TeamLeaderboardRow = {
 };
 
 type ResolvedMissionControlLeaderboardConfig = Required<TeamMissionControlLeaderboardConfig>;
+
+type TeamContributionCellLevel = 0 | 1 | 2 | 3 | 4;
+
+type TeamContributionCell = {
+  date: Date;
+  dateId: string;
+  ignitionCount: number;
+  missionLogCount: number;
+  totalCount: number;
+  activeMemberCount: number;
+  level: TeamContributionCellLevel;
+  isToday: boolean;
+  isBeforeGoal: boolean;
+  isFuture: boolean;
+  isAfterDeadline: boolean;
+  tooltip: string;
+};
+
+type TeamContributionWeek = {
+  monthLabel: string;
+  days: TeamContributionCell[];
+};
+
+type TeamContributionSummary = {
+  totalContributions: number;
+  activeDays: number;
+  activeMembersToday: number;
+  strongestDayCount: number;
+  lastActiveLabel: string;
+  windowLabel: string;
+  weeks: number;
+};
 
 const DEFAULT_GENERIC_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
   { id: 'mc-total-members', name: 'Total Members', style: 'circular', metricKey: 'total_members' },
@@ -176,6 +210,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   selectedDirectMemberUserId = signal<string | null>(null);
   selectedDirectMemberActivity = signal<TeamMemberActivitySnapshot | null>(null);
   participantActivityMap = signal<Record<string, TeamMemberActivitySnapshot>>({});
+  teamContributionDays = signal<TeamContributionDaySummary[]>([]);
+  loadingTeamContributionHeatmap = signal(false);
+  teamContributionHeatmapError = signal<string | null>(null);
   loadingDirectConversations = signal(false);
   loadingDirectMessages = signal(false);
   loadingDirectActivity = signal(false);
@@ -343,6 +380,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       : this.leaderboardConfig()
   ));
   readonly missionControlStyleOptions = MISSION_CONTROL_STYLE_OPTIONS;
+  readonly teamContributionWeeksToShow = 16;
   summaryMembers = computed(() => {
     return (this.team()?.members || []).filter(member => !!member.userId);
   });
@@ -379,6 +417,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       activity: activityMap[member.userId] || null
     }));
   });
+  readonly teamContributionWeeks = computed(() => this.buildTeamContributionWeeks());
+  readonly teamContributionSummary = computed(() => this.buildTeamContributionSummary(this.teamContributionWeeks()));
   teamDirectSummary = computed<TeamMissionSummary>(() => {
     const rows = this.participantSummaryRows();
     const totalParticipants = this.team()?.members.length || rows.length;
@@ -715,6 +755,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         this.progressNoteSuccess.set(null);
         this.progressNoteDraft = '';
         this.participantActivityMap.set({});
+        this.teamContributionDays.set([]);
+        this.loadingTeamContributionHeatmap.set(false);
+        this.teamContributionHeatmapError.set(null);
         this.participantSummaryLoadedKey = null;
         this.loadingParticipantSummaries.set(false);
         this.participantSummaryError.set(null);
@@ -1045,6 +1088,142 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const total = endTime - startTime;
     const elapsed = Math.min(Math.max(Date.now() - startTime, 0), total);
     return Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)));
+  }
+
+  private getStartOfWeekSunday(date: Date): Date {
+    const normalized = toDateOnly(date);
+    return addDays(normalized, -normalized.getDay());
+  }
+
+  private getTeamContributionScore(day: TeamContributionDaySummary): number {
+    return day.ignitionCount + (day.missionLogCount * 2) + day.activeMemberCount;
+  }
+
+  private getTeamContributionLevel(score: number, maxScore: number, isWithinGoal: boolean): TeamContributionCellLevel {
+    if (!isWithinGoal || score <= 0 || maxScore <= 0) {
+      return 0;
+    }
+
+    const ratio = score / maxScore;
+    if (ratio <= 0.25) return 1;
+    if (ratio <= 0.5) return 2;
+    if (ratio <= 0.75) return 3;
+    return 4;
+  }
+
+  private buildTeamContributionTooltip(date: Date, day: TeamContributionDaySummary | null, flags: {
+    isBeforeGoal: boolean;
+    isFuture: boolean;
+    isAfterDeadline: boolean;
+  }): string {
+    const label = date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    if (flags.isBeforeGoal) {
+      return `${label}: before the team mission started`;
+    }
+    if (flags.isAfterDeadline) {
+      return `${label}: after the team deadline`;
+    }
+    if (!day || (day.ignitionCount + day.missionLogCount) === 0) {
+      return flags.isFuture
+        ? `${label}: no team check-ins yet`
+        : `${label}: no team check-ins logged`;
+    }
+
+    const total = day.ignitionCount + day.missionLogCount;
+    return `${label}: ${total} contribution${total === 1 ? '' : 's'} from ${day.activeMemberCount} teammate${day.activeMemberCount === 1 ? '' : 's'} • ${day.ignitionCount} ignition${day.ignitionCount === 1 ? '' : 's'} • ${day.missionLogCount} mission log${day.missionLogCount === 1 ? '' : 's'}`;
+  }
+
+  private buildTeamContributionWeeks(): TeamContributionWeek[] {
+    const goal = this.teamGoal();
+    if (!goal) {
+      return [];
+    }
+
+    const today = toDateOnly(new Date());
+    const goalStart = toDateOnly(new Date(this.getTeamGoalStartTime(goal)));
+    const goalEndTime = this.getTeamGoalEndTime(goal);
+    const goalEnd = goalEndTime ? toDateOnly(new Date(goalEndTime)) : today;
+    const displayEnd = goalEnd;
+    const windowStart = addDays(this.getStartOfWeekSunday(displayEnd), -((this.teamContributionWeeksToShow - 1) * 7));
+    const dayMap = new Map(this.teamContributionDays().map(day => [day.dateId, day] as const));
+    const maxScore = this.teamContributionDays().reduce((max, day) => Math.max(max, this.getTeamContributionScore(day)), 0);
+
+    const allDays: TeamContributionCell[] = [];
+    for (let date = windowStart; date.getTime() <= displayEnd.getTime(); date = addDays(date, 1)) {
+      const dateId = formatDateId(date);
+      const summary = dayMap.get(dateId) || null;
+      const isBeforeGoal = date.getTime() < goalStart.getTime();
+      const isFuture = date.getTime() > today.getTime();
+      const isAfterDeadline = date.getTime() > goalEnd.getTime();
+      const isWithinGoal = !isBeforeGoal && !isAfterDeadline;
+      const score = summary ? this.getTeamContributionScore(summary) : 0;
+
+      allDays.push({
+        date,
+        dateId,
+        ignitionCount: summary?.ignitionCount || 0,
+        missionLogCount: summary?.missionLogCount || 0,
+        totalCount: (summary?.ignitionCount || 0) + (summary?.missionLogCount || 0),
+        activeMemberCount: summary?.activeMemberCount || 0,
+        level: this.getTeamContributionLevel(score, maxScore, isWithinGoal),
+        isToday: dateId === formatDateId(today),
+        isBeforeGoal,
+        isFuture,
+        isAfterDeadline,
+        tooltip: this.buildTeamContributionTooltip(date, summary, {
+          isBeforeGoal,
+          isFuture,
+          isAfterDeadline
+        })
+      });
+    }
+
+    const weeks: TeamContributionWeek[] = [];
+    let previousMonthLabel = '';
+    for (let index = 0; index < allDays.length; index += 7) {
+      const days = allDays.slice(index, index + 7);
+      const labelSource = days.find(day => day.date.getDate() === 1) || days[0];
+      const monthLabel = labelSource.date.toLocaleDateString('en-US', { month: 'short' });
+      weeks.push({
+        monthLabel: monthLabel === previousMonthLabel ? '' : monthLabel,
+        days
+      });
+      if (monthLabel !== previousMonthLabel) {
+        previousMonthLabel = monthLabel;
+      }
+    }
+
+    return weeks;
+  }
+
+  private buildTeamContributionSummary(weeks: TeamContributionWeek[]): TeamContributionSummary {
+    const days = weeks.flatMap(week => week.days);
+    const activeDays = days.filter(day => day.totalCount > 0 && !day.isBeforeGoal && !day.isAfterDeadline);
+    const totalContributions = activeDays.reduce((sum, day) => sum + day.totalCount, 0);
+    const strongestDayCount = activeDays.reduce((max, day) => Math.max(max, day.totalCount), 0);
+    const today = formatDateId(toDateOnly(new Date()));
+    const todayCell = days.find(day => day.dateId === today);
+    const windowStart = days[0]?.date || toDateOnly(new Date());
+    const windowEnd = days[days.length - 1]?.date || toDateOnly(new Date());
+    const lastActiveCell = [...activeDays].pop();
+
+    return {
+      totalContributions,
+      activeDays: activeDays.length,
+      activeMembersToday: todayCell?.activeMemberCount || 0,
+      strongestDayCount,
+      lastActiveLabel: lastActiveCell
+        ? lastActiveCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : 'No team activity yet',
+      windowLabel: `${windowStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${windowEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      weeks: weeks.length
+    };
   }
 
   private formatDateInputValue(date: Date): string {
@@ -2180,6 +2359,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const memberIds = members.map(member => member.userId).filter(Boolean);
     if (!memberIds.length) {
       this.participantActivityMap.set({});
+      this.teamContributionDays.set([]);
+      this.loadingTeamContributionHeatmap.set(false);
+      this.teamContributionHeatmapError.set(null);
       this.loadingParticipantSummaries.set(false);
       this.participantSummaryError.set(null);
       return;
@@ -2199,12 +2381,33 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         nextMap[item.memberUserId] = item.activity;
       }
       this.participantActivityMap.set(nextMap);
+      await this.loadTeamContributionHeatmap(snapshots.map(item => ({
+        memberUserId: item.memberUserId,
+        goalId: item.activity.goalId
+      })));
     } catch (error) {
       console.error('Failed to load participant activity summaries:', error);
       this.participantSummaryError.set('Unable to load team execution summary right now.');
       this.participantActivityMap.set({});
+      this.teamContributionDays.set([]);
+      this.teamContributionHeatmapError.set('Unable to load the team activity heatmap right now.');
     } finally {
       this.loadingParticipantSummaries.set(false);
+    }
+  }
+
+  private async loadTeamContributionHeatmap(goalRefs: Array<{ memberUserId: string; goalId: string | null }>) {
+    this.loadingTeamContributionHeatmap.set(true);
+    this.teamContributionHeatmapError.set(null);
+    try {
+      const days = await this.teamService.getTeamContributionDaySummaries(goalRefs, 180);
+      this.teamContributionDays.set(days);
+    } catch (error) {
+      console.error('Failed to load team contribution heatmap:', error);
+      this.teamContributionDays.set([]);
+      this.teamContributionHeatmapError.set('Unable to load the team activity heatmap right now.');
+    } finally {
+      this.loadingTeamContributionHeatmap.set(false);
     }
   }
 

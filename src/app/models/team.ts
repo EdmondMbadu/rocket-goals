@@ -70,6 +70,14 @@ export interface TeamMemberActivitySnapshot {
   weeklyMileageProgress?: TeamWeeklyMileageProgress[];
 }
 
+export interface TeamContributionDaySummary {
+  dateId: string;
+  ignitionCount: number;
+  missionLogCount: number;
+  activeMemberCount: number;
+  memberUserIds: string[];
+}
+
 export type TeamMissionControlCardStyle = 'circular' | 'histogram';
 
 export type TeamMissionControlMetricKey =
