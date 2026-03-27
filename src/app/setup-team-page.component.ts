@@ -592,7 +592,7 @@ interface TeamCoachSelectionView {
                     <div class="flex items-center gap-3">
                       <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white dark:bg-white dark:text-black">2</div>
                       <div>
-                        <h4 class="text-lg font-black text-black dark:text-white">Choose the team coach (optional)</h4>
+                        <h4 class="text-lg font-black text-black dark:text-white">Choose an AI coach or make one</h4>
                         <p class="text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach, one of your saved/community coaches, build one here, or skip this for now.</p>
                       </div>
                     </div>
