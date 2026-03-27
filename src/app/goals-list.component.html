@@ -739,6 +739,16 @@
           </div>
 
           <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Coach/Team Lead name</label>
+            <input type="text"
+              class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 dark:bg-slate-950/70 dark:border-white/15 dark:text-white dark:placeholder-slate-500"
+              [ngModel]="newCoachTeamLeadName"
+              (ngModelChange)="newCoachTeamLeadName = $event"
+              placeholder="e.g. Marcus Rivera"
+              maxlength="80" />
+          </div>
+
+          <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Description</label>
             <textarea
               class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 resize-none dark:bg-slate-950/70 dark:border-white/15 dark:text-white dark:placeholder-slate-500"

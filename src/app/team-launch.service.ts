@@ -18,6 +18,7 @@ export interface PendingTeamCoachDraft {
 
 export interface PendingTeamCreationDraft {
   teamName: string;
+  coachTeamLeadName: string;
   teamDescription: string;
   inviteEmails: string[];
   coach?: PendingTeamCoachDraft;
@@ -81,6 +82,7 @@ export class TeamLaunchService {
 
     const teamId = await this.teamService.createTeam({
       name: draft.teamName.trim(),
+      ...(draft.coachTeamLeadName.trim() ? { coachTeamLeadName: draft.coachTeamLeadName.trim() } : {}),
       ...(draft.teamDescription.trim() ? { description: draft.teamDescription.trim() } : {}),
       adminId: profile.userId,
       members: [adminMember],

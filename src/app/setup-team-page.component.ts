@@ -577,6 +577,17 @@ interface TeamCoachSelectionView {
                       </div>
 
                       <div>
+                        <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Coach/Team Lead name</label>
+                        <input
+                          type="text"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                          [ngModel]="coachTeamLeadName"
+                          (ngModelChange)="coachTeamLeadName = $event"
+                          placeholder="e.g. Marcus Rivera"
+                          maxlength="80" />
+                      </div>
+
+                      <div>
                         <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Description</label>
                         <textarea
                           class="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
@@ -894,10 +905,13 @@ interface TeamCoachSelectionView {
                           <div>
                             <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">Team</p>
                             <h5 class="mt-2 text-xl font-black text-black dark:text-white">{{ teamName }}</h5>
+                            @if (coachTeamLeadName.trim()) {
+                              <p class="mt-2 text-sm font-semibold text-gray-700 dark:text-slate-200">Coach/Team Lead: {{ coachTeamLeadName }}</p>
+                            }
                             <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">{{ teamDescription || 'No team description yet.' }}</p>
                           </div>
                           <div>
-                            <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">Coach</p>
+                            <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">AI coach</p>
                             <h5 class="mt-2 text-xl font-black text-black dark:text-white">{{ chosenCoach.subtitle }}</h5>
                             <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">{{ chosenCoach.title }}</p>
                             @if (inviteEmails().length > 0) {
@@ -988,6 +1002,7 @@ export class SetupTeamPageComponent implements OnInit {
   protected readonly pageError = signal<string | null>(null);
   protected readonly teamSetupError = signal<string | null>(null);
   protected teamName = '';
+  protected coachTeamLeadName = '';
   protected teamDescription = '';
   protected inviteEmail = '';
   protected readonly inviteEmails = signal<string[]>([]);
@@ -1139,6 +1154,7 @@ export class SetupTeamPageComponent implements OnInit {
     this.teamSetupStep.set(1);
     this.teamSetupError.set(null);
     this.teamName = '';
+    this.coachTeamLeadName = '';
     this.teamDescription = '';
     this.inviteEmail = '';
     this.inviteEmails.set([]);
@@ -1485,6 +1501,7 @@ export class SetupTeamPageComponent implements OnInit {
     const selection = this.selectedTeamCoach();
     return {
       teamName: this.teamName.trim(),
+      coachTeamLeadName: this.coachTeamLeadName.trim(),
       teamDescription: this.teamDescription.trim(),
       inviteEmails: this.inviteEmails(),
       ...(selection ? { coach: selection.settings } : {})
@@ -1493,6 +1510,7 @@ export class SetupTeamPageComponent implements OnInit {
 
   private hydrateDraft(draft: PendingTeamCreationDraft): void {
     this.teamName = draft.teamName;
+    this.coachTeamLeadName = draft.coachTeamLeadName || '';
     this.teamDescription = draft.teamDescription;
     this.inviteEmail = '';
     this.inviteEmails.set(draft.inviteEmails || []);

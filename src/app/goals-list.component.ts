@@ -128,6 +128,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly showCreateTeamModal = signal(false);
   protected readonly creatingTeam = signal(false);
   protected newTeamName = '';
+  protected newCoachTeamLeadName = '';
   protected newTeamDescription = '';
   protected inviteEmail = '';
   protected inviteEmails = signal<string[]>([]);
@@ -853,6 +854,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private resetCreateTeamDraft(): void {
     this.newTeamName = '';
+    this.newCoachTeamLeadName = '';
     this.newTeamDescription = '';
     this.inviteEmail = '';
     this.inviteEmails.set([]);
@@ -1249,6 +1251,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       const selectedCoach = this.resolveSelectedTeamCoach();
 
       const description = this.newTeamDescription.trim();
+      const coachTeamLeadName = this.newCoachTeamLeadName.trim();
       const adminMember: TeamMember = {
         userId: profile.userId,
         firstName: profile.firstName || '',
@@ -1261,6 +1264,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const teamId = await this.teamService.createTeam({
         name: teamName,
+        ...(coachTeamLeadName ? { coachTeamLeadName } : {}),
         ...(description ? { description } : {}),
         adminId: profile.userId,
         members: [adminMember],

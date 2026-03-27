@@ -135,6 +135,7 @@ export interface TeamAiSettings {
 export interface Team {
   id: string;
   name: string;
+  coachTeamLeadName?: string;
   description?: string;
   welcomeMessage?: string;
   meetingRoomLink?: string;
