@@ -796,10 +796,18 @@ interface TeamCoachSelectionView {
                               <div class="mb-1 flex items-center justify-between gap-3">
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200">Coaching personality</label>
                                 <button type="button"
-                                  class="text-xs font-black uppercase tracking-[0.16em] text-red-600 hover:text-red-700 disabled:opacity-40 dark:text-red-300 dark:hover:text-red-200"
+                                  class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-orange-500 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-lg shadow-red-600/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:from-red-500 dark:to-orange-400"
                                   (click)="refineCustomTeamCoachPersonality()"
                                   [disabled]="!customTeamCoachPersonality().trim() || customTeamCoachRefining()">
-                                  {{ customTeamCoachRefining() ? 'Refining...' : 'Refine with AI' }}
+                                  @if (customTeamCoachRefining()) {
+                                    <span class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/35 border-t-white"></span>
+                                    Refining...
+                                  } @else {
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 3 4 14h6l-1 7 9-11h-6l1-7Z" />
+                                    </svg>
+                                    Refine with AI
+                                  }
                                 </button>
                               </div>
                               <textarea
