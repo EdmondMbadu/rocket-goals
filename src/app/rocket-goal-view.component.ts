@@ -50,6 +50,44 @@ type CheckinDashboardStats = {
   actionDistribution: Record<string, number>;
 };
 
+type ContributionCellLevel = 0 | 1 | 2 | 3 | 4;
+
+type ContributionCell = {
+  date: Date;
+  dateKey: string;
+  totalCount: number;
+  ignitionCount: number;
+  missionLogCount: number;
+  level: ContributionCellLevel;
+  isToday: boolean;
+  isWithinGoal: boolean;
+  isBeforeGoal: boolean;
+  isFuture: boolean;
+  title: string;
+};
+
+type ContributionWeek = {
+  monthLabel: string;
+  days: ContributionCell[];
+};
+
+type ContributionSummary = {
+  totalContributions: number;
+  activeDays: number;
+  coverageRate: number;
+  currentStreak: number;
+  longestStreak: number;
+  strongestDayCount: number;
+  elapsedDays: number;
+  completedToday: number;
+  todayIgnitions: number;
+  todayMissionLogs: number;
+  todayLabel: string;
+  lastActiveLabel: string;
+  windowLabel: string;
+  weeks: number;
+};
+
 type WeeklyMileageRow = {
   weekId: string;
   weekStartMs: number;
@@ -131,7 +169,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   // Timeline view mode: 'daily' for day-by-day navigation, 'goal' for full timeline snapshot
   timelineViewMode = signal<'daily' | 'goal'>('daily');
   showMissionDetails = signal(false);
-  showDailyMomentum = signal(false);
+  showDailyMomentum = signal(true);
   showAllWeeks = signal(false);
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
@@ -233,6 +271,10 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   weeklyResets = signal<WeeklyResetSummary[]>([]);
   weeklyResetNotice = signal<string | null>(null);
   private pendingWeeklyScroll = false;
+  readonly contributionWeeksToShow = 16;
+  readonly contributionLegendLevels: ContributionCellLevel[] = [0, 1, 2, 3, 4];
+  readonly contributionWeeks = computed(() => this.buildContributionWeeks());
+  readonly contributionSummary = computed(() => this.buildContributionSummary(this.contributionWeeks()));
 
   ignitionOneThingChoice = signal<IgnitionOneThingChoice>('suggested');
   ignitionOneThingText = signal('');
@@ -2593,8 +2635,8 @@ ${url}`;
       const [ignition, missionLog, recentIgnitions, recentMissionLogs, journeyPhotos] = await Promise.all([
         this.checkInsService.getLatestDailyIgnition(goalId),
         this.checkInsService.getLatestMissionLog(goalId),
-        this.checkInsService.getRecentDailyIgnitions(goalId, 60),
-        this.checkInsService.getRecentMissionLogs(goalId, 60),
+        this.checkInsService.getRecentDailyIgnitions(goalId, 180),
+        this.checkInsService.getRecentMissionLogs(goalId, 180),
         this.checkInsService.getJourneyPhotos(goalId, 50)
       ]);
       this.latestDailyIgnition.set(ignition);
@@ -3315,21 +3357,236 @@ ${url}`;
     return `${year}-${month}-${day}`;
   }
 
+  private getRecordDateKey(value: { dateId?: string; createdAtMs?: unknown; createdAt?: unknown }): string | null {
+    if (typeof value.dateId === 'string' && value.dateId.trim()) {
+      return value.dateId.trim();
+    }
+
+    const date = this.getDateFromValue(value.createdAtMs || value.createdAt);
+    return date ? this.getDateKey(date) : null;
+  }
+
+  private getStartOfWeekSunday(value: Date): Date {
+    const date = toDateOnly(value);
+    return addDays(date, -date.getDay());
+  }
+
+  private getEndOfWeekSaturday(value: Date): Date {
+    return addDays(this.getStartOfWeekSunday(value), 6);
+  }
+
+  private getContributionLevel(ignitionCount: number, missionLogCount: number, isWithinGoal: boolean): ContributionCellLevel {
+    if (!isWithinGoal) {
+      return 0;
+    }
+
+    const score = ignitionCount + (missionLogCount * 2);
+    if (score <= 0) return 0;
+    if (score === 1) return 1;
+    if (score === 2) return 2;
+    if (score === 3) return 3;
+    return 4;
+  }
+
+  private getContributionCellTitle(
+    date: Date,
+    ignitionCount: number,
+    missionLogCount: number,
+    flags: { isWithinGoal: boolean; isBeforeGoal: boolean; isFuture: boolean; goalEnded: boolean }
+  ): string {
+    const dateLabel = date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    if (flags.isBeforeGoal) {
+      return `${dateLabel}: before this goal started`;
+    }
+
+    if (flags.goalEnded) {
+      return `${dateLabel}: after the goal deadline`;
+    }
+
+    if (flags.isFuture) {
+      return `${dateLabel}: upcoming day`;
+    }
+
+    if (!flags.isWithinGoal) {
+      return `${dateLabel}: outside this goal window`;
+    }
+
+    const totalCount = ignitionCount + missionLogCount;
+    if (totalCount === 0) {
+      return `${dateLabel}: no check-ins logged`;
+    }
+
+    const parts: string[] = [`${totalCount} contribution${totalCount === 1 ? '' : 's'}`];
+    if (ignitionCount > 0) {
+      parts.push(`${ignitionCount} Daily Ignition${ignitionCount === 1 ? '' : 's'}`);
+    }
+    if (missionLogCount > 0) {
+      parts.push(`${missionLogCount} Mission Log${missionLogCount === 1 ? '' : 's'}`);
+    }
+
+    return `${dateLabel}: ${parts.join(' • ')}`;
+  }
+
+  private getWeekMonthLabel(weekDays: ContributionCell[], previousLabel: string): string {
+    const firstOfMonth = weekDays.find(day => day.date.getDate() === 1);
+    const labelSource = firstOfMonth || weekDays[0];
+    const label = labelSource.date.toLocaleDateString('en-US', { month: 'short' });
+    return label === previousLabel ? '' : label;
+  }
+
+  private buildContributionWeeks(): ContributionWeek[] {
+    const today = toDateOnly(new Date());
+    const goal = this.goal();
+    const goalStart = goal?.startTime ? toDateOnly(new Date(goal.startTime)) : today;
+    const goalEnd = toDateOnly(this.getDateFromDayNumber(this.getTimeframeDays()));
+    const windowEnd = this.getEndOfWeekSaturday(today);
+    const totalDays = this.contributionWeeksToShow * 7;
+    const windowStart = addDays(windowEnd, -(totalDays - 1));
+
+    const ignitionCounts = new Map<string, number>();
+    const missionLogCounts = new Map<string, number>();
+
+    this.recentIgnitions().forEach(item => {
+      const key = this.getRecordDateKey(item);
+      if (!key) return;
+      ignitionCounts.set(key, (ignitionCounts.get(key) || 0) + 1);
+    });
+
+    this.recentMissionLogs().forEach(item => {
+      const key = this.getRecordDateKey(item);
+      if (!key) return;
+      missionLogCounts.set(key, (missionLogCounts.get(key) || 0) + 1);
+    });
+
+    const allDays: ContributionCell[] = [];
+    for (let index = 0; index < totalDays; index++) {
+      const date = addDays(windowStart, index);
+      const dateKey = formatDateId(date);
+      const ignitionCount = ignitionCounts.get(dateKey) || 0;
+      const missionLogCount = missionLogCounts.get(dateKey) || 0;
+      const isToday = dateKey === formatDateId(today);
+      const isBeforeGoal = date.getTime() < goalStart.getTime();
+      const isFuture = date.getTime() > today.getTime();
+      const goalEnded = date.getTime() > goalEnd.getTime();
+      const isWithinGoal = !isBeforeGoal && !isFuture && !goalEnded;
+
+      allDays.push({
+        date,
+        dateKey,
+        totalCount: ignitionCount + missionLogCount,
+        ignitionCount,
+        missionLogCount,
+        level: this.getContributionLevel(ignitionCount, missionLogCount, isWithinGoal),
+        isToday,
+        isWithinGoal,
+        isBeforeGoal,
+        isFuture,
+        title: this.getContributionCellTitle(date, ignitionCount, missionLogCount, {
+          isWithinGoal,
+          isBeforeGoal,
+          isFuture,
+          goalEnded
+        })
+      });
+    }
+
+    const weeks: ContributionWeek[] = [];
+    let previousMonthLabel = '';
+    for (let index = 0; index < allDays.length; index += 7) {
+      const days = allDays.slice(index, index + 7);
+      const monthLabel = this.getWeekMonthLabel(days, previousMonthLabel);
+      if (monthLabel) {
+        previousMonthLabel = monthLabel;
+      }
+      weeks.push({ monthLabel, days });
+    }
+
+    return weeks;
+  }
+
+  private buildContributionSummary(weeks: ContributionWeek[]): ContributionSummary {
+    const cells = weeks.flatMap(week => week.days);
+    const inGoalCells = cells.filter(cell => cell.isWithinGoal);
+    const activeCells = inGoalCells.filter(cell => cell.totalCount > 0);
+    const activeDateKeys = new Set(activeCells.map(cell => cell.dateKey));
+    const totalContributions = activeCells.reduce((sum, cell) => sum + cell.totalCount, 0);
+    const strongestDayCount = activeCells.reduce((max, cell) => Math.max(max, cell.totalCount), 0);
+    const coverageRate = inGoalCells.length ? Math.round((activeCells.length / inGoalCells.length) * 100) : 0;
+
+    let currentStreak = 0;
+    for (let index = inGoalCells.length - 1; index >= 0; index--) {
+      if (activeDateKeys.has(inGoalCells[index].dateKey)) {
+        currentStreak += 1;
+      } else {
+        break;
+      }
+    }
+
+    let longestStreak = 0;
+    let rollingStreak = 0;
+    inGoalCells.forEach(cell => {
+      if (activeDateKeys.has(cell.dateKey)) {
+        rollingStreak += 1;
+        longestStreak = Math.max(longestStreak, rollingStreak);
+      } else {
+        rollingStreak = 0;
+      }
+    });
+
+    const todayKey = formatDateId(toDateOnly(new Date()));
+    const todayCell = cells.find(cell => cell.dateKey === todayKey);
+    const windowStart = inGoalCells[0]?.date || cells[0]?.date || toDateOnly(new Date());
+    const windowEnd = inGoalCells[inGoalCells.length - 1]?.date || cells[cells.length - 1]?.date || toDateOnly(new Date());
+    const lastActiveCell = [...activeCells].pop();
+
+    let todayLabel = 'No check-ins yet';
+    if (todayCell?.ignitionCount && todayCell.missionLogCount) {
+      todayLabel = 'Both check-ins logged';
+    } else if (todayCell?.ignitionCount) {
+      todayLabel = 'Daily Ignition logged';
+    } else if (todayCell?.missionLogCount) {
+      todayLabel = 'Mission Log logged';
+    }
+
+    return {
+      totalContributions,
+      activeDays: activeCells.length,
+      coverageRate,
+      currentStreak,
+      longestStreak,
+      strongestDayCount,
+      elapsedDays: inGoalCells.length,
+      completedToday: todayCell?.totalCount || 0,
+      todayIgnitions: todayCell?.ignitionCount || 0,
+      todayMissionLogs: todayCell?.missionLogCount || 0,
+      todayLabel,
+      lastActiveLabel: lastActiveCell
+        ? lastActiveCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : 'No activity yet',
+      windowLabel: `${windowStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${windowEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      weeks: weeks.length
+    };
+  }
+
   private buildDaySummaries(days: number): CheckinDaySummary[] {
     const ignitionMap = new Map<string, number>();
     const missionMap = new Map<string, number>();
 
     this.recentIgnitions().forEach(item => {
-      const date = this.getDateFromValue(item.createdAtMs || item.createdAt);
-      if (!date) return;
-      const key = this.getDateKey(date);
+      const key = this.getRecordDateKey(item);
+      if (!key) return;
       ignitionMap.set(key, (ignitionMap.get(key) || 0) + 1);
     });
 
     this.recentMissionLogs().forEach(item => {
-      const date = this.getDateFromValue(item.createdAtMs || item.createdAt);
-      if (!date) return;
-      const key = this.getDateKey(date);
+      const key = this.getRecordDateKey(item);
+      if (!key) return;
       missionMap.set(key, (missionMap.get(key) || 0) + 1);
     });
 
@@ -3377,9 +3634,8 @@ ${url}`;
 
     const missionLogDateKeys = new Set(
       this.recentMissionLogs()
-        .map(item => this.getDateFromValue(item.createdAtMs || item.createdAt))
-        .filter((date): date is Date => !!date)
-        .map(date => this.getDateKey(date))
+        .map(item => this.getRecordDateKey(item))
+        .filter((dateKey): dateKey is string => !!dateKey)
     );
     const streakDays = this.calculateStreak(missionLogDateKeys);
 
