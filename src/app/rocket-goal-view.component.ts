@@ -63,6 +63,7 @@ type ContributionCell = {
   isWithinGoal: boolean;
   isBeforeGoal: boolean;
   isFuture: boolean;
+  isAfterDeadline: boolean;
   title: string;
 };
 
@@ -3445,9 +3446,8 @@ ${url}`;
     const goal = this.goal();
     const goalStart = goal?.startTime ? toDateOnly(new Date(goal.startTime)) : today;
     const goalEnd = toDateOnly(this.getDateFromDayNumber(this.getTimeframeDays()));
-    const windowEnd = this.getEndOfWeekSaturday(today);
-    const totalDays = this.contributionWeeksToShow * 7;
-    const windowStart = addDays(windowEnd, -(totalDays - 1));
+    const displayEnd = goalEnd;
+    const windowStart = addDays(this.getStartOfWeekSunday(displayEnd), -((this.contributionWeeksToShow - 1) * 7));
 
     const ignitionCounts = new Map<string, number>();
     const missionLogCounts = new Map<string, number>();
@@ -3465,16 +3465,15 @@ ${url}`;
     });
 
     const allDays: ContributionCell[] = [];
-    for (let index = 0; index < totalDays; index++) {
-      const date = addDays(windowStart, index);
+    for (let date = windowStart; date.getTime() <= displayEnd.getTime(); date = addDays(date, 1)) {
       const dateKey = formatDateId(date);
       const ignitionCount = ignitionCounts.get(dateKey) || 0;
       const missionLogCount = missionLogCounts.get(dateKey) || 0;
       const isToday = dateKey === formatDateId(today);
       const isBeforeGoal = date.getTime() < goalStart.getTime();
       const isFuture = date.getTime() > today.getTime();
-      const goalEnded = date.getTime() > goalEnd.getTime();
-      const isWithinGoal = !isBeforeGoal && !isFuture && !goalEnded;
+      const isAfterDeadline = date.getTime() > goalEnd.getTime();
+      const isWithinGoal = !isBeforeGoal && !isFuture && !isAfterDeadline;
 
       allDays.push({
         date,
@@ -3487,11 +3486,12 @@ ${url}`;
         isWithinGoal,
         isBeforeGoal,
         isFuture,
+        isAfterDeadline,
         title: this.getContributionCellTitle(date, ignitionCount, missionLogCount, {
           isWithinGoal,
           isBeforeGoal,
           isFuture,
-          goalEnded
+          goalEnded: isAfterDeadline
         })
       });
     }
@@ -3513,6 +3513,7 @@ ${url}`;
   private buildContributionSummary(weeks: ContributionWeek[]): ContributionSummary {
     const cells = weeks.flatMap(week => week.days);
     const inGoalCells = cells.filter(cell => cell.isWithinGoal);
+    const displayedGoalCells = cells.filter(cell => !cell.isBeforeGoal && !cell.isAfterDeadline);
     const activeCells = inGoalCells.filter(cell => cell.totalCount > 0);
     const activeDateKeys = new Set(activeCells.map(cell => cell.dateKey));
     const totalContributions = activeCells.reduce((sum, cell) => sum + cell.totalCount, 0);
@@ -3541,8 +3542,8 @@ ${url}`;
 
     const todayKey = formatDateId(toDateOnly(new Date()));
     const todayCell = cells.find(cell => cell.dateKey === todayKey);
-    const windowStart = inGoalCells[0]?.date || cells[0]?.date || toDateOnly(new Date());
-    const windowEnd = inGoalCells[inGoalCells.length - 1]?.date || cells[cells.length - 1]?.date || toDateOnly(new Date());
+    const windowStart = displayedGoalCells[0]?.date || cells[0]?.date || toDateOnly(new Date());
+    const windowEnd = displayedGoalCells[displayedGoalCells.length - 1]?.date || cells[cells.length - 1]?.date || toDateOnly(new Date());
     const lastActiveCell = [...activeCells].pop();
 
     let todayLabel = 'No check-ins yet';

@@ -7656,9 +7656,7 @@
 }
 
 .daily-momentum-board {
-  display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(270px, 0.95fr);
-  gap: 16px;
+  display: block;
 }
 
 .daily-momentum-main,
@@ -7710,17 +7708,10 @@
   color: #15803d;
 }
 
-.daily-momentum-board-title,
 .momentum-insight-value {
   margin: 0;
   font-family: 'Exo 2', sans-serif;
   font-weight: 800;
-}
-
-.daily-momentum-board-title {
-  font-size: 1.2rem;
-  line-height: 1.15;
-  margin-bottom: 6px;
 }
 
 .daily-momentum-board-subtitle,
@@ -7731,12 +7722,10 @@
   line-height: 1.55;
 }
 
-.dark-mode .daily-momentum-board-title,
 .dark-mode .momentum-insight-value {
   color: #f8fafc;
 }
 
-.light-mode .daily-momentum-board-title,
 .light-mode .momentum-insight-value {
   color: #0f172a;
 }
@@ -7751,12 +7740,6 @@
 .light-mode .momentum-insight-sub,
 .light-mode .daily-momentum-footnote {
   color: #475569;
-}
-
-.daily-momentum-sidepanel {
-  display: grid;
-  gap: 12px;
-  align-content: start;
 }
 
 .momentum-insight-card {
@@ -7986,6 +7969,13 @@
   margin-top: 14px;
 }
 
+.daily-momentum-insights-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
 /* Responsive for deadline badge */
 @media (max-width: 640px) {
   .daily-progress-header-left {
@@ -8008,8 +7998,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .daily-momentum-board {
-    grid-template-columns: 1fr;
+  .daily-momentum-insights-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -8029,6 +8019,10 @@
   }
 
   .daily-momentum-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-momentum-insights-row {
     grid-template-columns: 1fr;
   }
 

@@ -554,7 +554,6 @@
                   <div class="daily-momentum-board-header">
                     <div>
                       <p class="daily-momentum-board-kicker">Contribution Activity</p>
-                      <h4 class="daily-momentum-board-title">GitHub-style consistency view</h4>
                       <p class="daily-momentum-board-subtitle">A square lights up when you log Daily Ignition or Mission Log. Darker squares mean a stronger day.</p>
                     </div>
                     <div class="momentum-legend-inline">
@@ -616,30 +615,30 @@
                     </div>
                   </div>
                   <p class="daily-momentum-footnote">Window: {{ contributionSummary().windowLabel }}. Hover any square for the exact breakdown.</p>
-                  }
-                </div>
 
-                <div class="daily-momentum-sidepanel">
-                  <div class="momentum-insight-card emphasis">
-                    <span class="momentum-insight-kicker">Today</span>
-                    <p class="momentum-insight-value">{{ contributionSummary().todayLabel }}</p>
-                    <p class="momentum-insight-sub">{{ contributionSummary().todayIgnitions }} ignition · {{ contributionSummary().todayMissionLogs }} mission log</p>
+                  <div class="daily-momentum-insights-row">
+                    <div class="momentum-insight-card emphasis">
+                      <span class="momentum-insight-kicker">Today</span>
+                      <p class="momentum-insight-value">{{ contributionSummary().todayLabel }}</p>
+                      <p class="momentum-insight-sub">{{ contributionSummary().todayIgnitions }} ignition · {{ contributionSummary().todayMissionLogs }} mission log</p>
+                    </div>
+                    <div class="momentum-insight-card">
+                      <span class="momentum-insight-kicker">Recent Window</span>
+                      <p class="momentum-insight-value">{{ contributionSummary().weeks }} weeks</p>
+                      <p class="momentum-insight-sub">{{ contributionSummary().elapsedDays }} elapsed goal days inside the grid</p>
+                    </div>
+                    <div class="momentum-insight-card">
+                      <span class="momentum-insight-kicker">Last Active</span>
+                      <p class="momentum-insight-value">{{ contributionSummary().lastActiveLabel }}</p>
+                      <p class="momentum-insight-sub">Most recent day with momentum logged</p>
+                    </div>
+                    <div class="momentum-insight-card">
+                      <span class="momentum-insight-kicker">Read the Grid</span>
+                      <p class="momentum-insight-value">Ignition + Log</p>
+                      <p class="momentum-insight-sub">Mission Log counts heavier, so mixed days glow brighter.</p>
+                    </div>
                   </div>
-                  <div class="momentum-insight-card">
-                    <span class="momentum-insight-kicker">Recent Window</span>
-                    <p class="momentum-insight-value">{{ contributionSummary().weeks }} weeks</p>
-                    <p class="momentum-insight-sub">{{ contributionSummary().elapsedDays }} elapsed goal days inside the grid</p>
-                  </div>
-                  <div class="momentum-insight-card">
-                    <span class="momentum-insight-kicker">Last Active</span>
-                    <p class="momentum-insight-value">{{ contributionSummary().lastActiveLabel }}</p>
-                    <p class="momentum-insight-sub">Most recent day with momentum logged</p>
-                  </div>
-                  <div class="momentum-insight-card">
-                    <span class="momentum-insight-kicker">Read the Grid</span>
-                    <p class="momentum-insight-value">Ignition + Log</p>
-                    <p class="momentum-insight-sub">Mission Log counts heavier, so mixed days glow brighter.</p>
-                  </div>
+                  }
                 </div>
               </div>
             </div>
