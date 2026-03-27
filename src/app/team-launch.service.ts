@@ -20,7 +20,7 @@ export interface PendingTeamCreationDraft {
   teamName: string;
   teamDescription: string;
   inviteEmails: string[];
-  coach: PendingTeamCoachDraft;
+  coach?: PendingTeamCoachDraft;
 }
 
 const PENDING_TEAM_CREATION_KEY = 'pendingTeamCreationDraft';
@@ -41,7 +41,7 @@ export class TeamLaunchService {
 
     try {
       const parsed = JSON.parse(raw) as PendingTeamCreationDraft;
-      if (!parsed?.teamName || !parsed?.coach?.displayName || !parsed?.coach?.personality) {
+      if (!parsed?.teamName) {
         return null;
       }
       return parsed;
@@ -69,11 +69,13 @@ export class TeamLaunchService {
       ...(profile.profilePictureUrl ? { profilePictureUrl: profile.profilePictureUrl } : {})
     };
 
-    const aiSettings: NonNullable<Team['aiSettings']> = {
-      displayName: draft.coach.displayName,
-      personality: draft.coach.personality
-    };
-    if (draft.coach.avatarUrl && !draft.coach.uploadedAvatarDataUrl) {
+    const aiSettings: NonNullable<Team['aiSettings']> | undefined = draft.coach
+      ? {
+          displayName: draft.coach.displayName,
+          personality: draft.coach.personality
+        }
+      : undefined;
+    if (aiSettings && draft.coach?.avatarUrl && !draft.coach.uploadedAvatarDataUrl) {
       aiSettings.avatarUrl = draft.coach.avatarUrl;
     }
 
@@ -83,11 +85,11 @@ export class TeamLaunchService {
       adminId: profile.userId,
       members: [adminMember],
       memberIds: [profile.userId],
-      aiCoachEnabled: true,
-      aiSettings
+      aiCoachEnabled: !!draft.coach,
+      ...(aiSettings ? { aiSettings } : {})
     });
 
-    if (draft.coach.uploadedAvatarDataUrl) {
+    if (draft.coach?.uploadedAvatarDataUrl && aiSettings) {
       try {
         const file = this.dataUrlToFile(draft.coach.uploadedAvatarDataUrl, 'team-ai-avatar.png');
         const uploadedAvatarUrl = await this.teamService.uploadTeamAiAvatar(teamId, file);

@@ -954,6 +954,14 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activateCustomCoachSelection();
   }
 
+  private hasPartialCustomTeamCoachDraft(): boolean {
+    return !!this.customTeamCoachName().trim()
+      || !!this.customTeamCoachPersonality().trim()
+      || !!this.customTeamCoachAvatarPreview()
+      || !!this.customTeamCoachAvatarFile
+      || this.customTeamCoachCategory() !== 'Custom';
+  }
+
   protected onCustomTeamCoachAvatarSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -1173,20 +1181,23 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private getTeamCoachValidationError(): string | null {
     const source = this.teamCoachSelectionSource();
     if (!source) {
-      return 'Choose an AI coach for the team.';
+      return null;
     }
 
     if (source === 'prebuilt' && !this.getSelectedPrebuiltCoach()) {
-      return 'Pick one of the App Suite coaches.';
+      return null;
     }
 
     if (source === 'community' && !this.getSelectedCommunityCoach()) {
-      return 'Pick one of your community coaches.';
+      return null;
     }
 
     if (source === 'custom') {
       const coachName = this.customTeamCoachName().trim();
       const personality = this.customTeamCoachPersonality().trim();
+      if (!coachName && !personality && !this.customTeamCoachAvatarPreview() && !this.customTeamCoachAvatarFile && this.customTeamCoachCategory() === 'Custom') {
+        return null;
+      }
       if (!coachName) {
         return 'Give your custom coach a name.';
       }
@@ -1207,7 +1218,6 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected canCreateTeam(): boolean {
     return !!this.newTeamName.trim()
       && !this.creatingTeam()
-      && !this.teamCoachLibraryLoading()
       && !this.getTeamCoachValidationError();
   }
 
@@ -1237,11 +1247,6 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       const selectedCoach = this.resolveSelectedTeamCoach();
-      if (!selectedCoach) {
-        this.teamCoachError.set('Choose or create an AI coach before creating the team.');
-        this.creatingTeam.set(false);
-        return;
-      }
 
       const description = this.newTeamDescription.trim();
       const adminMember: TeamMember = {
@@ -1260,13 +1265,14 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
         adminId: profile.userId,
         members: [adminMember],
         memberIds: [profile.userId],
-        aiCoachEnabled: true,
-        aiSettings: selectedCoach.settings
+        aiCoachEnabled: !!selectedCoach,
+        ...(selectedCoach ? { aiSettings: selectedCoach.settings } : {})
       });
 
-      if (selectedCoach.uploadFile) {
+      if (selectedCoach?.uploadFile) {
+        const uploadFile = selectedCoach.uploadFile;
         try {
-          const uploadedAvatarUrl = await this.teamService.uploadTeamAiAvatar(teamId, selectedCoach.uploadFile);
+          const uploadedAvatarUrl = await this.teamService.uploadTeamAiAvatar(teamId, uploadFile);
           await this.teamService.updateTeam(teamId, {
             aiSettings: {
               ...selectedCoach.settings,

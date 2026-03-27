@@ -564,44 +564,26 @@ interface TeamCoachSelectionView {
                       </div>
                     </div>
 
-                    <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                      <div class="space-y-4">
-                        <div>
-                          <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Team name</label>
-                          <input
-                            type="text"
-                            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
-                            [ngModel]="teamName"
-                            (ngModelChange)="teamName = $event"
-                            placeholder="e.g. MS Bike - Team Walksalot"
-                            maxlength="80" />
-                        </div>
-
-                        <div>
-                          <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Description</label>
-                          <textarea
-                            class="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
-                            [ngModel]="teamDescription"
-                            (ngModelChange)="teamDescription = $event"
-                            rows="4"
-                            placeholder="What is the shared mission, sprint, or outcome this team is driving?"></textarea>
-                        </div>
+                    <div class="max-w-3xl space-y-4">
+                      <div>
+                        <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Team name</label>
+                        <input
+                          type="text"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                          [ngModel]="teamName"
+                          (ngModelChange)="teamName = $event"
+                          placeholder="e.g. MS Bike - Team Walksalot"
+                          maxlength="80" />
                       </div>
 
-                      <div class="rounded-2xl border border-red-200 bg-red-50/80 p-5 dark:border-red-500/20 dark:bg-red-500/10">
-                        <div class="flex items-start gap-3">
-                          <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-600/25">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9.75 17L15 12l-5.25-5M19 19H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p class="text-sm font-black uppercase tracking-[0.2em] text-red-600 dark:text-red-300">Mandatory coaching</p>
-                            <p class="mt-2 text-sm font-semibold text-black dark:text-white">Every team launches with an assigned AI coach.</p>
-                            <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Choose from the App Suite roster, use a saved coach, or create a custom coach for this team.</p>
-                          </div>
-                        </div>
+                      <div>
+                        <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Description</label>
+                        <textarea
+                          class="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
+                          [ngModel]="teamDescription"
+                          (ngModelChange)="teamDescription = $event"
+                          rows="4"
+                          placeholder="What is the shared mission, sprint, or outcome this team is driving?"></textarea>
                       </div>
                     </div>
                   </section>
@@ -610,8 +592,8 @@ interface TeamCoachSelectionView {
                     <div class="flex items-center gap-3">
                       <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white dark:bg-white dark:text-black">2</div>
                       <div>
-                        <h4 class="text-lg font-black text-black dark:text-white">Choose the team coach</h4>
-                        <p class="text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach, one of your saved/community coaches, or build one here.</p>
+                        <h4 class="text-lg font-black text-black dark:text-white">Choose the team coach (optional)</h4>
+                        <p class="text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach, one of your saved/community coaches, build one here, or skip this for now.</p>
                       </div>
                     </div>
 
@@ -1350,6 +1332,14 @@ export class SetupTeamPageComponent implements OnInit {
     this.activateCustomCoachSelection();
   }
 
+  private hasPartialCustomCoachDraft(): boolean {
+    return !!this.customTeamCoachName().trim()
+      || !!this.customTeamCoachPersonality().trim()
+      || !!this.customTeamCoachAvatarPreview()
+      || !!this.customTeamCoachUploadedAvatarDataUrl
+      || this.customTeamCoachCategory() !== 'Custom';
+  }
+
   addInviteEmail(): void {
     const email = this.inviteEmail.trim().toLowerCase();
     if (email && email.includes('@') && !this.inviteEmails().includes(email)) {
@@ -1475,11 +1465,11 @@ export class SetupTeamPageComponent implements OnInit {
     }
 
     const selection = this.selectedTeamCoach();
-    if (!selection) {
-      return 'Choose or create an AI coach for this team.';
+    if (!selection && this.teamCoachSelectionSource() === 'custom' && this.hasPartialCustomCoachDraft()) {
+      return 'Finish your custom coach details or clear them before creating the team.';
     }
 
-    if (selection.source === 'custom') {
+    if (selection?.source === 'custom') {
       if (selection.settings.displayName.length > 60) {
         return 'Coach name should stay under 60 characters.';
       }
@@ -1493,12 +1483,11 @@ export class SetupTeamPageComponent implements OnInit {
 
   private buildPendingDraft(): PendingTeamCreationDraft | null {
     const selection = this.selectedTeamCoach();
-    if (!selection) return null;
     return {
       teamName: this.teamName.trim(),
       teamDescription: this.teamDescription.trim(),
       inviteEmails: this.inviteEmails(),
-      coach: selection.settings
+      ...(selection ? { coach: selection.settings } : {})
     };
   }
 
@@ -1507,6 +1496,10 @@ export class SetupTeamPageComponent implements OnInit {
     this.teamDescription = draft.teamDescription;
     this.inviteEmail = '';
     this.inviteEmails.set(draft.inviteEmails || []);
+    if (!draft.coach) {
+      this.resetCoachDraft();
+      return;
+    }
     this.teamCoachSelectionSource.set('custom');
     this.teamCoachBrowseMode.set('custom');
     this.selectedPrebuiltCoachId.set(null);
