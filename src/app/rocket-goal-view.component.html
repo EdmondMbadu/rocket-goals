@@ -631,7 +631,7 @@
                     <div class="momentum-insight-card emphasis">
                       <span class="momentum-insight-kicker">Today</span>
                       <p class="momentum-insight-value">{{ contributionSummary().todayLabel }}</p>
-                      <p class="momentum-insight-sub">{{ contributionSummary().todayIgnitions }} ignition · {{ contributionSummary().todayMissionLogs }} mission log</p>
+                      <p class="momentum-insight-sub">{{ contributionSummary().todayActivityBreakdown }}</p>
                     </div>
                     <div class="momentum-insight-card">
                       <span class="momentum-insight-kicker">Goal Window</span>
@@ -645,8 +645,8 @@
                     </div>
                     <div class="momentum-insight-card">
                       <span class="momentum-insight-kicker">Read the Grid</span>
-                      <p class="momentum-insight-value">Ignition + Log</p>
-                      <p class="momentum-insight-sub">Mission Log counts heavier, so mixed days glow brighter.</p>
+                      <p class="momentum-insight-value">{{ isMileageTrackingGoal() ? 'Ignition + Log + Miles' : 'Ignition + Log' }}</p>
+                      <p class="momentum-insight-sub">{{ isMileageTrackingGoal() ? 'Mileage entries count too, while Mission Log still weighs heavier for stronger days.' : 'Mission Log counts heavier, so mixed days glow brighter.' }}</p>
                     </div>
                   </div>
                   }

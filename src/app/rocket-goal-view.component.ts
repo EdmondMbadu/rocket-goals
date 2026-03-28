@@ -58,6 +58,8 @@ type ContributionCell = {
   totalCount: number;
   ignitionCount: number;
   missionLogCount: number;
+  mileageEntryCount: number;
+  milesLogged: number;
   level: ContributionCellLevel;
   isToday: boolean;
   isWithinGoal: boolean;
@@ -83,6 +85,9 @@ type ContributionSummary = {
   completedToday: number;
   todayIgnitions: number;
   todayMissionLogs: number;
+  todayMileageEntries: number;
+  todayMilesLogged: number;
+  todayActivityBreakdown: string;
   todayLabel: string;
   lastActiveLabel: string;
   windowLabel: string;
@@ -3383,12 +3388,12 @@ ${url}`;
     return addDays(this.getStartOfWeekSunday(value), 6);
   }
 
-  private getContributionLevel(ignitionCount: number, missionLogCount: number, isWithinGoal: boolean): ContributionCellLevel {
+  private getContributionLevel(ignitionCount: number, missionLogCount: number, mileageEntryCount: number, isWithinGoal: boolean): ContributionCellLevel {
     if (!isWithinGoal) {
       return 0;
     }
 
-    const score = ignitionCount + (missionLogCount * 2);
+    const score = ignitionCount + (missionLogCount * 2) + mileageEntryCount;
     if (score <= 0) return 0;
     if (score === 1) return 1;
     if (score === 2) return 2;
@@ -3400,6 +3405,8 @@ ${url}`;
     date: Date,
     ignitionCount: number,
     missionLogCount: number,
+    mileageEntryCount: number,
+    milesLogged: number,
     flags: { isWithinGoal: boolean; isBeforeGoal: boolean; isFuture: boolean; goalEnded: boolean }
   ): string {
     const dateLabel = date.toLocaleDateString('en-US', {
@@ -3425,17 +3432,21 @@ ${url}`;
       return `${dateLabel}: outside this goal window`;
     }
 
-    const totalCount = ignitionCount + missionLogCount;
+    const totalCount = ignitionCount + missionLogCount + mileageEntryCount;
     if (totalCount === 0) {
-      return `${dateLabel}: no check-ins logged`;
+      return `${dateLabel}: no activity logged`;
     }
 
-    const parts: string[] = [`${totalCount} contribution${totalCount === 1 ? '' : 's'}`];
+    const parts: string[] = [`${totalCount} activit${totalCount === 1 ? 'y' : 'ies'}`];
     if (ignitionCount > 0) {
       parts.push(`${ignitionCount} Daily Ignition${ignitionCount === 1 ? '' : 's'}`);
     }
     if (missionLogCount > 0) {
       parts.push(`${missionLogCount} Mission Log${missionLogCount === 1 ? '' : 's'}`);
+    }
+    if (mileageEntryCount > 0) {
+      const milesLabel = milesLogged > 0 ? ` (${milesLogged} mi)` : '';
+      parts.push(`${mileageEntryCount} mileage entr${mileageEntryCount === 1 ? 'y' : 'ies'}${milesLabel}`);
     }
 
     return `${dateLabel}: ${parts.join(' • ')}`;
@@ -3501,6 +3512,8 @@ ${url}`;
 
     const ignitionCounts = new Map<string, number>();
     const missionLogCounts = new Map<string, number>();
+    const mileageEntryCounts = new Map<string, number>();
+    const mileageLoggedByDate = new Map<string, number>();
 
     this.recentIgnitions().forEach(item => {
       const key = this.getRecordDateKey(item);
@@ -3514,11 +3527,23 @@ ${url}`;
       missionLogCounts.set(key, (missionLogCounts.get(key) || 0) + 1);
     });
 
+    this.mileageEntries().forEach(entry => {
+      const key = entry.dateId?.trim();
+      if (!key) return;
+      mileageEntryCounts.set(key, (mileageEntryCounts.get(key) || 0) + 1);
+      mileageLoggedByDate.set(
+        key,
+        Math.round((((mileageLoggedByDate.get(key) || 0) + (Number(entry.miles) || 0)) + Number.EPSILON) * 10) / 10
+      );
+    });
+
     const allDays: ContributionCell[] = [];
     for (let date = windowStart; date.getTime() <= displayEnd.getTime(); date = addDays(date, 1)) {
       const dateKey = formatDateId(date);
       const ignitionCount = ignitionCounts.get(dateKey) || 0;
       const missionLogCount = missionLogCounts.get(dateKey) || 0;
+      const mileageEntryCount = mileageEntryCounts.get(dateKey) || 0;
+      const milesLogged = mileageLoggedByDate.get(dateKey) || 0;
       const isToday = dateKey === formatDateId(today);
       const isBeforeGoal = date.getTime() < goalStart.getTime();
       const isFuture = date.getTime() > today.getTime();
@@ -3528,16 +3553,18 @@ ${url}`;
       allDays.push({
         date,
         dateKey,
-        totalCount: ignitionCount + missionLogCount,
+        totalCount: ignitionCount + missionLogCount + mileageEntryCount,
         ignitionCount,
         missionLogCount,
-        level: this.getContributionLevel(ignitionCount, missionLogCount, isWithinGoal),
+        mileageEntryCount,
+        milesLogged,
+        level: this.getContributionLevel(ignitionCount, missionLogCount, mileageEntryCount, isWithinGoal),
         isToday,
         isWithinGoal,
         isBeforeGoal,
         isFuture,
         isAfterDeadline,
-        title: this.getContributionCellTitle(date, ignitionCount, missionLogCount, {
+        title: this.getContributionCellTitle(date, ignitionCount, missionLogCount, mileageEntryCount, milesLogged, {
           isWithinGoal,
           isBeforeGoal,
           isFuture,
@@ -3596,13 +3623,35 @@ ${url}`;
     const windowEnd = displayedGoalCells[displayedGoalCells.length - 1]?.date || cells[cells.length - 1]?.date || toDateOnly(new Date());
     const lastActiveCell = [...activeCells].pop();
 
-    let todayLabel = 'No check-ins yet';
-    if (todayCell?.ignitionCount && todayCell.missionLogCount) {
+    let todayLabel = 'No activity yet';
+    const todayHasIgnition = !!todayCell?.ignitionCount;
+    const todayHasMissionLog = !!todayCell?.missionLogCount;
+    const todayHasMileage = !!todayCell?.mileageEntryCount;
+    if (todayHasIgnition && todayHasMissionLog && todayHasMileage) {
+      todayLabel = 'Full momentum logged';
+    } else if (todayHasIgnition && todayHasMissionLog) {
       todayLabel = 'Both check-ins logged';
-    } else if (todayCell?.ignitionCount) {
+    } else if (todayHasIgnition && todayHasMileage) {
+      todayLabel = 'Ignition + mileage logged';
+    } else if (todayHasMissionLog && todayHasMileage) {
+      todayLabel = 'Mission Log + mileage logged';
+    } else if (todayHasIgnition) {
       todayLabel = 'Daily Ignition logged';
-    } else if (todayCell?.missionLogCount) {
+    } else if (todayHasMissionLog) {
       todayLabel = 'Mission Log logged';
+    } else if (todayHasMileage) {
+      todayLabel = 'Mileage logged';
+    }
+
+    const todayActivityParts: string[] = [
+      `${todayCell?.ignitionCount || 0} ignition`,
+      `${todayCell?.missionLogCount || 0} mission log`
+    ];
+    if ((todayCell?.mileageEntryCount || 0) > 0) {
+      todayActivityParts.push(`${todayCell?.mileageEntryCount || 0} mileage entr${(todayCell?.mileageEntryCount || 0) === 1 ? 'y' : 'ies'}`);
+    }
+    if ((todayCell?.milesLogged || 0) > 0) {
+      todayActivityParts.push(`${todayCell?.milesLogged || 0} mi`);
     }
 
     return {
@@ -3616,6 +3665,9 @@ ${url}`;
       completedToday: todayCell?.totalCount || 0,
       todayIgnitions: todayCell?.ignitionCount || 0,
       todayMissionLogs: todayCell?.missionLogCount || 0,
+      todayMileageEntries: todayCell?.mileageEntryCount || 0,
+      todayMilesLogged: todayCell?.milesLogged || 0,
+      todayActivityBreakdown: todayActivityParts.join(' · '),
       todayLabel,
       lastActiveLabel: lastActiveCell
         ? lastActiveCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
