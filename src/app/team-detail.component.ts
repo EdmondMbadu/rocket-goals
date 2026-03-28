@@ -1162,10 +1162,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const shellRect = shell.getBoundingClientRect();
     const estimatedHalfWidth = 150;
     const edgePadding = 16;
-    const centerX = rect.left - shellRect.left + shell.scrollLeft + (rect.width / 2);
+    const centerX = rect.left - shellRect.left + (rect.width / 2);
     const left = Math.min(
-      Math.max(centerX, shell.scrollLeft + edgePadding + estimatedHalfWidth),
-      shell.scrollLeft + shell.clientWidth - edgePadding - estimatedHalfWidth
+      Math.max(centerX, edgePadding + estimatedHalfWidth),
+      shell.clientWidth - edgePadding - estimatedHalfWidth
     );
     const topSpace = rect.top - shellRect.top;
     const shouldRenderBelow = topSpace < 72;
@@ -1174,8 +1174,8 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       text,
       left,
       top: shouldRenderBelow
-        ? rect.bottom - shellRect.top + shell.scrollTop
-        : rect.top - shellRect.top + shell.scrollTop,
+        ? rect.bottom - shellRect.top
+        : rect.top - shellRect.top,
       placement: shouldRenderBelow ? 'below' : 'above'
     });
   }
