@@ -3449,11 +3449,13 @@
 .team-heatmap-cell.legend,
 .team-heatmap-cell.legend:hover,
 .team-heatmap-cell.legend:focus-visible {
+  display: inline-block;
+  flex: 0 0 18px;
   transform: none;
   z-index: 0;
   cursor: default;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 5px;
   border-color: rgba(148, 163, 184, 0.22);
   opacity: 1;
