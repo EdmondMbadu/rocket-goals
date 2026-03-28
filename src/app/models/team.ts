@@ -74,6 +74,8 @@ export interface TeamContributionDaySummary {
   dateId: string;
   ignitionCount: number;
   missionLogCount: number;
+  mileageEntryCount: number;
+  milesLogged: number;
   activeMemberCount: number;
   memberUserIds: string[];
 }

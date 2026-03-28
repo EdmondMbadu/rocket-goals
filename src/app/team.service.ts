@@ -1552,15 +1552,34 @@ export class TeamService {
         }
       };
 
-      const [ignitions, missionLogs] = await Promise.all([
+      const loadMileageEntries = async (): Promise<Record<string, any>[]> => {
+        const collectionRef = fm.collection(firestore, 'rocketGoals', ref.goalId, 'milestoneEntries');
+        try {
+          const q = fm.query(
+            collectionRef,
+            fm.orderBy('dateId', 'desc'),
+            fm.orderBy('createdAtMs', 'desc'),
+            fm.limit(limitCount)
+          );
+          const snapshot = await fm.getDocs(q);
+          return snapshot.docs.map(doc => doc.data() as Record<string, any>);
+        } catch {
+          const snapshot = await fm.getDocs(fm.query(collectionRef, fm.limit(limitCount)));
+          return snapshot.docs.map(doc => doc.data() as Record<string, any>);
+        }
+      };
+
+      const [ignitions, missionLogs, mileageEntries] = await Promise.all([
         loadSubcollection('dailyIgnitions'),
-        loadSubcollection('missionLogs')
+        loadSubcollection('missionLogs'),
+        loadMileageEntries()
       ]);
 
       return {
         memberUserId: ref.memberUserId,
         ignitions,
-        missionLogs
+        missionLogs,
+        mileageEntries
       };
     }));
 
@@ -1568,6 +1587,8 @@ export class TeamService {
       dateId: string;
       ignitionCount: number;
       missionLogCount: number;
+      mileageEntryCount: number;
+      milesLogged: number;
       memberUserIds: Set<string>;
     }>();
 
@@ -1581,6 +1602,8 @@ export class TeamService {
           dateId,
           ignitionCount: 0,
           missionLogCount: 0,
+          mileageEntryCount: 0,
+          milesLogged: 0,
           memberUserIds: new Set<string>()
         };
         existing.ignitionCount += 1;
@@ -1597,9 +1620,31 @@ export class TeamService {
           dateId,
           ignitionCount: 0,
           missionLogCount: 0,
+          mileageEntryCount: 0,
+          milesLogged: 0,
           memberUserIds: new Set<string>()
         };
         existing.missionLogCount += 1;
+        existing.memberUserIds.add(result.memberUserId);
+        byDate.set(dateId, existing);
+      }
+
+      for (const record of result.mileageEntries) {
+        const dateId = String(record['dateId'] || '').trim();
+        if (!dateId) {
+          continue;
+        }
+        const miles = Number(record['miles']);
+        const existing = byDate.get(dateId) || {
+          dateId,
+          ignitionCount: 0,
+          missionLogCount: 0,
+          mileageEntryCount: 0,
+          milesLogged: 0,
+          memberUserIds: new Set<string>()
+        };
+        existing.mileageEntryCount += 1;
+        existing.milesLogged += Number.isFinite(miles) && miles > 0 ? miles : 0;
         existing.memberUserIds.add(result.memberUserId);
         byDate.set(dateId, existing);
       }
@@ -1611,6 +1656,8 @@ export class TeamService {
         dateId: entry.dateId,
         ignitionCount: entry.ignitionCount,
         missionLogCount: entry.missionLogCount,
+        mileageEntryCount: entry.mileageEntryCount,
+        milesLogged: Math.round((entry.milesLogged + Number.EPSILON) * 10) / 10,
         activeMemberCount: entry.memberUserIds.size,
         memberUserIds: Array.from(entry.memberUserIds.values()).sort()
       }));

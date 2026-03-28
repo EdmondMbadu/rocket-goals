@@ -387,7 +387,6 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       : this.leaderboardConfig()
   ));
   readonly missionControlStyleOptions = MISSION_CONTROL_STYLE_OPTIONS;
-  readonly teamContributionWeeksToShow = 16;
   summaryMembers = computed(() => {
     return (this.team()?.members || []).filter(member => !!member.userId);
   });
@@ -1104,7 +1103,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   }
 
   private getTeamContributionScore(day: TeamContributionDaySummary): number {
-    return day.ignitionCount + (day.missionLogCount * 2) + day.activeMemberCount;
+    return day.ignitionCount + (day.missionLogCount * 2) + day.mileageEntryCount + day.activeMemberCount;
   }
 
   private getTeamContributionLevel(score: number, maxScore: number, isWithinGoal: boolean): TeamContributionCellLevel {
@@ -1137,14 +1136,31 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     if (flags.isAfterDeadline) {
       return `${label}: after the team deadline`;
     }
-    if (!day || (day.ignitionCount + day.missionLogCount) === 0) {
+    const total = (day?.ignitionCount || 0) + (day?.missionLogCount || 0) + (day?.mileageEntryCount || 0);
+    if (!day || total === 0) {
       return flags.isFuture
-        ? `${label}: no team check-ins yet`
-        : `${label}: no team check-ins logged`;
+        ? `${label}: no team activity yet`
+        : `${label}: no team activity logged`;
     }
 
-    const total = day.ignitionCount + day.missionLogCount;
-    return `${label}: ${total} contribution${total === 1 ? '' : 's'} from ${day.activeMemberCount} teammate${day.activeMemberCount === 1 ? '' : 's'} • ${day.ignitionCount} ignition${day.ignitionCount === 1 ? '' : 's'} • ${day.missionLogCount} mission log${day.missionLogCount === 1 ? '' : 's'}`;
+    const parts: string[] = [
+      `${total} activit${total === 1 ? 'y' : 'ies'} from ${day.activeMemberCount} teammate${day.activeMemberCount === 1 ? '' : 's'}`
+    ];
+
+    if (day.ignitionCount > 0) {
+      parts.push(`${day.ignitionCount} ignition${day.ignitionCount === 1 ? '' : 's'}`);
+    }
+    if (day.missionLogCount > 0) {
+      parts.push(`${day.missionLogCount} mission log${day.missionLogCount === 1 ? '' : 's'}`);
+    }
+    if (day.mileageEntryCount > 0) {
+      const milesLabel = Number.isFinite(day.milesLogged) && day.milesLogged > 0
+        ? ` (${Math.round((day.milesLogged + Number.EPSILON) * 10) / 10} mi)`
+        : '';
+      parts.push(`${day.mileageEntryCount} mileage entr${day.mileageEntryCount === 1 ? 'y' : 'ies'}${milesLabel}`);
+    }
+
+    return `${label}: ${parts.join(' • ')}`;
   }
 
   showTeamContributionTooltip(event: MouseEvent | FocusEvent, text: string): void {
@@ -1201,7 +1217,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const goalEndTime = this.getTeamGoalEndTime(goal);
     const goalEnd = goalEndTime ? toDateOnly(new Date(goalEndTime)) : today;
     const displayEnd = goalEnd;
-    const windowStart = addDays(this.getStartOfWeekSunday(displayEnd), -((this.teamContributionWeeksToShow - 1) * 7));
+    const windowStart = this.getStartOfWeekSunday(goalStart);
     const dayMap = new Map(this.teamContributionDays().map(day => [day.dateId, day] as const));
     const maxScore = this.teamContributionDays().reduce((max, day) => Math.max(max, this.getTeamContributionScore(day)), 0);
 
@@ -1220,7 +1236,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         dateId,
         ignitionCount: summary?.ignitionCount || 0,
         missionLogCount: summary?.missionLogCount || 0,
-        totalCount: (summary?.ignitionCount || 0) + (summary?.missionLogCount || 0),
+        totalCount: (summary?.ignitionCount || 0) + (summary?.missionLogCount || 0) + (summary?.mileageEntryCount || 0),
         activeMemberCount: summary?.activeMemberCount || 0,
         level: this.getTeamContributionLevel(score, maxScore, isWithinGoal),
         isToday: dateId === formatDateId(today),
@@ -1260,8 +1276,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     const strongestDayCount = activeDays.reduce((max, day) => Math.max(max, day.totalCount), 0);
     const today = formatDateId(toDateOnly(new Date()));
     const todayCell = days.find(day => day.dateId === today);
-    const windowStart = days[0]?.date || toDateOnly(new Date());
-    const windowEnd = days[days.length - 1]?.date || toDateOnly(new Date());
+    const displayedDays = days.filter(day => !day.isBeforeGoal && !day.isAfterDeadline);
+    const windowStart = displayedDays[0]?.date || days[0]?.date || toDateOnly(new Date());
+    const windowEnd = displayedDays[displayedDays.length - 1]?.date || days[days.length - 1]?.date || toDateOnly(new Date());
     const lastActiveCell = [...activeDays].pop();
 
     return {
@@ -1273,7 +1290,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         ? lastActiveCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : 'No team activity yet',
       windowLabel: `${windowStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${windowEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
-      weeks: weeks.length
+      weeks: displayedDays.length ? Math.ceil(displayedDays.length / 7) : weeks.length
     };
   }
 

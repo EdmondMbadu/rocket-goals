@@ -279,7 +279,6 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   weeklyResets = signal<WeeklyResetSummary[]>([]);
   weeklyResetNotice = signal<string | null>(null);
   private pendingWeeklyScroll = false;
-  readonly contributionWeeksToShow = 16;
   readonly contributionLegendLevels: ContributionCellLevel[] = [0, 1, 2, 3, 4];
   readonly contributionWeeks = computed(() => this.buildContributionWeeks());
   readonly contributionSummary = computed(() => this.buildContributionSummary(this.contributionWeeks()));
@@ -3498,7 +3497,7 @@ ${url}`;
     const goalStart = goal?.startTime ? toDateOnly(new Date(goal.startTime)) : today;
     const goalEnd = toDateOnly(this.getDateFromDayNumber(this.getTimeframeDays()));
     const displayEnd = goalEnd;
-    const windowStart = addDays(this.getStartOfWeekSunday(displayEnd), -((this.contributionWeeksToShow - 1) * 7));
+    const windowStart = this.getStartOfWeekSunday(goalStart);
 
     const ignitionCounts = new Map<string, number>();
     const missionLogCounts = new Map<string, number>();
@@ -3622,7 +3621,7 @@ ${url}`;
         ? lastActiveCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : 'No activity yet',
       windowLabel: `${windowStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${windowEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
-      weeks: weeks.length
+      weeks: displayedGoalCells.length ? Math.ceil(displayedGoalCells.length / 7) : weeks.length
     };
   }
 
