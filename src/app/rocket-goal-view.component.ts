@@ -89,6 +89,13 @@ type ContributionSummary = {
   weeks: number;
 };
 
+type HeatmapTooltipState = {
+  text: string;
+  left: number;
+  top: number;
+  placement: 'above' | 'below';
+};
+
 type WeeklyMileageRow = {
   weekId: string;
   weekStartMs: number;
@@ -276,6 +283,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   readonly contributionLegendLevels: ContributionCellLevel[] = [0, 1, 2, 3, 4];
   readonly contributionWeeks = computed(() => this.buildContributionWeeks());
   readonly contributionSummary = computed(() => this.buildContributionSummary(this.contributionWeeks()));
+  readonly activeContributionTooltip = signal<HeatmapTooltipState | null>(null);
 
   ignitionOneThingChoice = signal<IgnitionOneThingChoice>('suggested');
   ignitionOneThingText = signal('');
@@ -3432,6 +3440,49 @@ ${url}`;
     }
 
     return `${dateLabel}: ${parts.join(' • ')}`;
+  }
+
+  showContributionTooltip(event: MouseEvent | FocusEvent, text: string): void {
+    const target = event.currentTarget as HTMLElement | null;
+    if (!target) {
+      return;
+    }
+
+    const shell = target.closest('.momentum-heatmap-shell') as HTMLElement | null;
+    if (!shell) {
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const shellRect = shell.getBoundingClientRect();
+    const estimatedHalfWidth = 150;
+    const edgePadding = 16;
+    const centerX = rect.left - shellRect.left + shell.scrollLeft + (rect.width / 2);
+    const left = Math.min(
+      Math.max(centerX, shell.scrollLeft + edgePadding + estimatedHalfWidth),
+      shell.scrollLeft + shell.clientWidth - edgePadding - estimatedHalfWidth
+    );
+    const topSpace = rect.top - shellRect.top;
+    const shouldRenderBelow = topSpace < 72;
+
+    this.activeContributionTooltip.set({
+      text,
+      left,
+      top: shouldRenderBelow
+        ? rect.bottom - shellRect.top + shell.scrollTop
+        : rect.top - shellRect.top + shell.scrollTop,
+      placement: shouldRenderBelow ? 'below' : 'above'
+    });
+  }
+
+  hideContributionTooltip(): void {
+    this.activeContributionTooltip.set(null);
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  clearContributionTooltip(): void {
+    this.hideContributionTooltip();
   }
 
   private getWeekMonthLabel(weekDays: ContributionCell[], previousLabel: string): string {

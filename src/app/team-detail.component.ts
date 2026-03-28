@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, HostListener, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -114,6 +114,13 @@ type TeamContributionSummary = {
   lastActiveLabel: string;
   windowLabel: string;
   weeks: number;
+};
+
+type HeatmapTooltipState = {
+  text: string;
+  left: number;
+  top: number;
+  placement: 'above' | 'below';
 };
 
 const DEFAULT_GENERIC_MISSION_CONTROL_CARDS: TeamMissionControlCard[] = [
@@ -419,6 +426,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   });
   readonly teamContributionWeeks = computed(() => this.buildTeamContributionWeeks());
   readonly teamContributionSummary = computed(() => this.buildTeamContributionSummary(this.teamContributionWeeks()));
+  readonly activeTeamContributionTooltip = signal<HeatmapTooltipState | null>(null);
   teamDirectSummary = computed<TeamMissionSummary>(() => {
     const rows = this.participantSummaryRows();
     const totalParticipants = this.team()?.members.length || rows.length;
@@ -1137,6 +1145,49 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
     const total = day.ignitionCount + day.missionLogCount;
     return `${label}: ${total} contribution${total === 1 ? '' : 's'} from ${day.activeMemberCount} teammate${day.activeMemberCount === 1 ? '' : 's'} • ${day.ignitionCount} ignition${day.ignitionCount === 1 ? '' : 's'} • ${day.missionLogCount} mission log${day.missionLogCount === 1 ? '' : 's'}`;
+  }
+
+  showTeamContributionTooltip(event: MouseEvent | FocusEvent, text: string): void {
+    const target = event.currentTarget as HTMLElement | null;
+    if (!target) {
+      return;
+    }
+
+    const shell = target.closest('.team-heatmap-shell') as HTMLElement | null;
+    if (!shell) {
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const shellRect = shell.getBoundingClientRect();
+    const estimatedHalfWidth = 150;
+    const edgePadding = 16;
+    const centerX = rect.left - shellRect.left + shell.scrollLeft + (rect.width / 2);
+    const left = Math.min(
+      Math.max(centerX, shell.scrollLeft + edgePadding + estimatedHalfWidth),
+      shell.scrollLeft + shell.clientWidth - edgePadding - estimatedHalfWidth
+    );
+    const topSpace = rect.top - shellRect.top;
+    const shouldRenderBelow = topSpace < 72;
+
+    this.activeTeamContributionTooltip.set({
+      text,
+      left,
+      top: shouldRenderBelow
+        ? rect.bottom - shellRect.top + shell.scrollTop
+        : rect.top - shellRect.top + shell.scrollTop,
+      placement: shouldRenderBelow ? 'below' : 'above'
+    });
+  }
+
+  hideTeamContributionTooltip(): void {
+    this.activeTeamContributionTooltip.set(null);
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  clearTeamContributionTooltip(): void {
+    this.hideTeamContributionTooltip();
   }
 
   private buildTeamContributionWeeks(): TeamContributionWeek[] {

@@ -605,14 +605,25 @@
                             [class.is-outside-goal]="!cell.isWithinGoal"
                             [class.is-before-goal]="cell.isBeforeGoal"
                             [class.is-future]="cell.isFuture"
-                            [class.is-today]="cell.isToday">
-                            <span class="momentum-cell-tooltip">{{ cell.title }}</span>
-                          </button>
+                            [class.is-today]="cell.isToday"
+                            (mouseenter)="showContributionTooltip($event, cell.title)"
+                            (focus)="showContributionTooltip($event, cell.title)"
+                            (mouseleave)="hideContributionTooltip()"
+                            (blur)="hideContributionTooltip()"></button>
                           }
                         </div>
                         }
                       </div>
                     </div>
+                    @if (activeContributionTooltip(); as tooltip) {
+                    <div
+                      class="momentum-floating-tooltip"
+                      [class.is-below]="tooltip.placement === 'below'"
+                      [style.left.px]="tooltip.left"
+                      [style.top.px]="tooltip.top">
+                      {{ tooltip.text }}
+                    </div>
+                    }
                   </div>
                   <p class="daily-momentum-footnote">Window: {{ contributionSummary().windowLabel }}. Hover any square for the exact breakdown.</p>
 
