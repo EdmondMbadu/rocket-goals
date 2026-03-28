@@ -170,7 +170,7 @@ export class RocketGoalViewComponent implements OnInit, OnDestroy, AfterViewInit
   // Timeline view mode: 'daily' for day-by-day navigation, 'goal' for full timeline snapshot
   timelineViewMode = signal<'daily' | 'goal'>('daily');
   showMissionDetails = signal(false);
-  showDailyMomentum = signal(true);
+  showDailyMomentum = signal(false);
   showAllWeeks = signal(false);
   copyLinkSuccess = signal(false);
   emailShareSuccess = signal(false);
