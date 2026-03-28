@@ -676,10 +676,24 @@
             </div>
             }
           </div>
-          <div class="team-heatmap-foot">
-            <span>Window: {{ teamContributionSummary().windowLabel }}</span>
-            <span>Peak day: {{ teamContributionSummary().strongestDayCount }} activities</span>
-            <span>Last active: {{ teamContributionSummary().lastActiveLabel }}</span>
+          <div class="team-heatmap-meta">
+            <div class="team-heatmap-foot">
+              <span>Window: {{ teamContributionSummary().windowLabel }}</span>
+              <span>Peak day: {{ teamContributionSummary().strongestDayCount }} activities</span>
+              <span>Last active: {{ teamContributionSummary().lastActiveLabel }}</span>
+            </div>
+            <div class="team-heatmap-legend">
+              <span>Each square is one day</span>
+              <div class="team-heatmap-legend-scale">
+                <span>Less</span>
+                <div class="team-heatmap-legend-cells">
+                  @for (level of [0, 1, 2, 3, 4]; track level) {
+                  <span class="team-heatmap-cell legend" [attr.data-level]="level"></span>
+                  }
+                </div>
+                <span>More</span>
+              </div>
+            </div>
           </div>
           }
         </section>

@@ -7784,6 +7784,23 @@
   color: #64748b;
 }
 
+.momentum-legend-foot {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dark-mode .momentum-legend-foot {
+  color: #94a3b8;
+}
+
+.light-mode .momentum-legend-foot {
+  color: #64748b;
+}
+
 .daily-momentum-loading {
   display: flex;
   align-items: center;
@@ -7889,6 +7906,11 @@
 .momentum-cell.legend:hover {
   transform: none;
   cursor: default;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border-color: rgba(148, 163, 184, 0.22);
+  opacity: 1;
 }
 
 .momentum-floating-tooltip {
@@ -8000,7 +8022,16 @@
 }
 
 .daily-momentum-footnote {
+  margin: 0;
+}
+
+.daily-momentum-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   margin-top: 14px;
+  flex-wrap: wrap;
 }
 
 .daily-momentum-insights-row {
@@ -8034,6 +8065,11 @@
 
   .daily-momentum-insights-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-momentum-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

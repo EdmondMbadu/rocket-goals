@@ -3354,6 +3354,10 @@
   color: #94a3b8;
 }
 
+.team-heatmap-legend {
+  color: #94a3b8;
+}
+
 .team-heatmap-loading {
   display: flex;
   align-items: center;
@@ -3442,6 +3446,19 @@
   z-index: 12;
 }
 
+.team-heatmap-cell.legend,
+.team-heatmap-cell.legend:hover,
+.team-heatmap-cell.legend:focus-visible {
+  transform: none;
+  z-index: 0;
+  cursor: default;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border-color: rgba(148, 163, 184, 0.22);
+  opacity: 1;
+}
+
 .team-heatmap-cell[data-level="0"] {
   background: rgba(30, 41, 59, 0.72);
   border-color: rgba(148, 163, 184, 0.08);
@@ -3507,7 +3524,30 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+}
+
+.team-heatmap-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.team-heatmap-legend,
+.team-heatmap-legend-scale,
+.team-heatmap-legend-cells {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-heatmap-legend {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .mc-admin-actions {
@@ -5047,6 +5087,9 @@
 .light-mode .team-heatmap-weekday-labels span {
   color: #94a3b8;
 }
+.light-mode .team-heatmap-legend {
+  color: #64748b;
+}
 .light-mode .team-heatmap-cell[data-level="0"] {
   background: rgba(226, 232, 240, 0.94);
   border-color: rgba(148, 163, 184, 0.18);
@@ -5408,6 +5451,10 @@
   }
   .team-heatmap-summary {
     justify-content: flex-start;
+  }
+  .team-heatmap-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .team-heatmap-shell {
     --team-cell-size: 12px;

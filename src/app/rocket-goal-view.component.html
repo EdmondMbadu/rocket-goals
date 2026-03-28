@@ -556,15 +556,6 @@
                       <p class="daily-momentum-board-kicker">Contribution Activity</p>
                       <p class="daily-momentum-board-subtitle">A square lights up when you log Daily Ignition or Mission Log. Darker squares mean a stronger day.</p>
                     </div>
-                    <div class="momentum-legend-inline">
-                      <span>Less</span>
-                      <div class="momentum-legend-scale">
-                        @for (level of contributionLegendLevels; track level) {
-                        <span class="momentum-cell legend" [attr.data-level]="level"></span>
-                        }
-                      </div>
-                      <span>More</span>
-                    </div>
                   </div>
 
                   @if (checkinsLoading()) {
@@ -625,7 +616,21 @@
                     </div>
                     }
                   </div>
-                  <p class="daily-momentum-footnote">Window: {{ contributionSummary().windowLabel }}. Hover any square for the exact breakdown.</p>
+                  <div class="daily-momentum-meta">
+                    <p class="daily-momentum-footnote">Window: {{ contributionSummary().windowLabel }}. Hover any square for the exact breakdown.</p>
+                    <div class="momentum-legend-foot">
+                      <span>Each square is one day</span>
+                      <div class="momentum-legend-inline">
+                        <span>Less</span>
+                        <div class="momentum-legend-scale">
+                          @for (level of contributionLegendLevels; track level) {
+                          <span class="momentum-cell legend" [attr.data-level]="level"></span>
+                          }
+                        </div>
+                        <span>More</span>
+                      </div>
+                    </div>
+                  </div>
 
                   <div class="daily-momentum-insights-row">
                     <div class="momentum-insight-card emphasis">
