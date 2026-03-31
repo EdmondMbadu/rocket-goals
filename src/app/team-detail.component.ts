@@ -2990,7 +2990,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(pageUrl);
-        this.shareNotice.set('Share link copied to clipboard.');
+        this.shareNotice.set('TEAM link copied. Share it in email, group chats, or anywhere to invite people.');
         return;
       }
 
