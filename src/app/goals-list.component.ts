@@ -1172,7 +1172,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected teamCoachSelectionLabel(source: TeamCoachSource): string {
     if (source === 'prebuilt') {
-      return 'App Suite coach';
+      return 'Rocket Coach';
     }
     if (source === 'community') {
       return 'Community coach';

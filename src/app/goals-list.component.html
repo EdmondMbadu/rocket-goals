@@ -73,7 +73,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
-          App Suite
+          Rocket Coaches
         </a>
       </div>
       <div class="flex items-center gap-3 flex-none">
@@ -120,7 +120,7 @@
       <a routerLink="/goals" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Home</a>
       <a routerLink="/ai" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">AI</a>
       <a routerLink="/profile" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Profile</a>
-      <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">App Suite</a>
+      <a routerLink="/app-suite" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Rocket Coaches</a>
       <a routerLink="/pricing" (click)="closeMobileNav()" class="px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">Upgrade</a>
     </div>
   </div>
@@ -739,7 +739,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Coach/Team Lead name</label>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1">Coach/Team Lead name (Human in charge)</label>
             <input type="text"
               class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 dark:bg-slate-950/70 dark:border-white/15 dark:text-white dark:placeholder-slate-500"
               [ngModel]="newCoachTeamLeadName"
@@ -764,8 +764,8 @@
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-full bg-black text-white text-sm font-black flex items-center justify-center dark:bg-white dark:text-black">2</div>
           <div>
-            <h4 class="text-lg font-black text-black dark:text-white">Choose an AI coach or make one</h4>
-            <p class="text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach, one of your community coaches, build a custom coach right here, or skip this for now.</p>
+            <h4 class="text-lg font-black text-black dark:text-white">Choose an AI coach or Create your own</h4>
+            <p class="text-sm text-gray-500 dark:text-slate-400">Use a Rocket Coach, one of your community coaches, build a custom coach right here, or skip this for now.</p>
           </div>
         </div>
 
@@ -776,7 +776,7 @@
               ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
               : 'border-black/10 text-black hover:border-red-500 hover:text-red-600 dark:border-white/15 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300'"
             (click)="setTeamCoachBrowseMode('prebuilt')">
-            App Suite Coaches
+            Rocket Coaches
           </button>
           <button type="button"
             class="px-4 py-2 rounded-full text-sm font-bold border transition-all"
@@ -884,7 +884,7 @@
             } @else {
             <div class="rounded-2xl border border-dashed border-black/15 p-6 text-center dark:border-white/15">
               <p class="text-base font-bold text-black dark:text-white">No saved community coaches yet.</p>
-              <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">Use App Suite coaches above or create a custom coach for this team now.</p>
+              <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">Use Rocket Coaches above or create a custom coach for this team now.</p>
             </div>
             }
           }
