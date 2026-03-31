@@ -577,7 +577,7 @@ interface TeamCoachSelectionView {
                       </div>
 
                       <div>
-                        <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Coach/Team Lead name</label>
+                        <label class="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-200">Coach/Team Lead name (Human in charge)</label>
                         <input
                           type="text"
                           class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-black placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-white/15 dark:bg-slate-950/70 dark:text-white dark:placeholder-slate-500"
@@ -603,8 +603,8 @@ interface TeamCoachSelectionView {
                     <div class="flex items-center gap-3">
                       <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white dark:bg-white dark:text-black">2</div>
                       <div>
-                        <h4 class="text-lg font-black text-black dark:text-white">Choose an AI coach or make one</h4>
-                        <p class="text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach, one of your saved/community coaches, build one here, or skip this for now.</p>
+                        <h4 class="text-lg font-black text-black dark:text-white">Choose an AI coach or Create your own</h4>
+                        <p class="text-sm text-gray-500 dark:text-slate-400">Use a Rocket Coach, one of your saved/community coaches, build one here, or skip this for now.</p>
                       </div>
                     </div>
 
@@ -614,7 +614,7 @@ interface TeamCoachSelectionView {
                           ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
                           : 'border-black/10 text-black hover:border-red-500 hover:text-red-600 dark:border-white/15 dark:text-white dark:hover:border-red-400 dark:hover:text-red-300'"
                         (click)="setTeamCoachBrowseMode('prebuilt')">
-                        App Suite Coaches
+                        Rocket Coaches
                       </button>
                       <button type="button" class="rounded-full border px-4 py-2 text-sm font-bold transition-all"
                         [class]="teamCoachBrowseMode() === 'community'
@@ -716,7 +716,7 @@ interface TeamCoachSelectionView {
                         } @else {
                           <div class="rounded-2xl border border-dashed border-black/15 p-6 text-center dark:border-white/15">
                             <p class="text-base font-bold text-black dark:text-white">No saved community coaches yet.</p>
-                            <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">Use an App Suite coach above or create a custom one here.</p>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-slate-400">Use Rocket Coaches above or create a custom one here.</p>
                           </div>
                         }
                       }
@@ -1478,7 +1478,7 @@ export class SetupTeamPageComponent implements OnInit {
   }
 
   teamCoachSelectionLabel(source: PendingTeamCoachSource): string {
-    if (source === 'prebuilt') return 'App Suite coach';
+    if (source === 'prebuilt') return 'Rocket Coach';
     if (source === 'community') return 'Community coach';
     return 'Custom coach';
   }
