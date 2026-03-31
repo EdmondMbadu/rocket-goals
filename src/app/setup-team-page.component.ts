@@ -346,9 +346,28 @@ interface TeamCoachSelectionView {
         <section class="border-b border-black/5 bg-white py-20 dark:border-white/10 dark:bg-slate-950">
           <div class="container mx-auto px-6">
             <div class="grid gap-px overflow-hidden rounded-[2rem] border border-black/5 bg-black/5 dark:border-white/10 dark:bg-white/10 lg:grid-cols-2">
-              <div class="bg-red-600 px-8 py-10 text-white sm:px-12 sm:py-14">
-                <p class="text-xs font-bold uppercase tracking-[0.24em] text-red-100">AI handles</p>
-                <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">The repetition</h2>
+              <div class="relative overflow-hidden bg-red-600 px-8 py-10 text-white sm:px-12 sm:py-14">
+                <div class="pointer-events-none absolute right-0 top-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-white/12 blur-3xl"></div>
+                <div class="pointer-events-none absolute bottom-0 left-0 h-32 w-32 -translate-x-8 translate-y-8 rounded-full bg-black/10 blur-3xl"></div>
+                <div class="relative flex items-start gap-5">
+                  <div class="relative h-20 w-20 flex-none">
+                    <div class="absolute inset-0 rounded-[1.75rem] bg-white/25 blur-xl"></div>
+                    <img
+                      src="/assets/a-2.jpg"
+                      alt="AI coach"
+                      class="relative h-full w-full rounded-[1.75rem] border border-white/25 object-cover shadow-[0_20px_45px_rgba(0,0,0,0.28)]" />
+                    <div class="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-2xl border border-white/25 bg-black/70 text-white shadow-lg backdrop-blur-md">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="7" y="8" width="10" height="8" rx="2" stroke-width="2"></rect>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v2M5 10H4m16 0h-1M9.5 12h.01M14.5 12h.01M10 14h4" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="relative">
+                    <span class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-red-50">AI handles</span>
+                    <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">The repetition</h2>
+                  </div>
+                </div>
                 <div class="mt-10 space-y-5">
                   @for (item of aiHandles; track item.title) {
                     <div class="flex items-start gap-4">
@@ -366,9 +385,27 @@ interface TeamCoachSelectionView {
                 </div>
               </div>
 
-              <div class="bg-slate-50 px-8 py-10 text-black dark:bg-slate-900 sm:px-12 sm:py-14 dark:text-white">
-                <p class="text-xs font-bold uppercase tracking-[0.24em] text-red-600 dark:text-red-300">You handle</p>
-                <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">The coaching</h2>
+              <div class="relative overflow-hidden bg-slate-50 px-8 py-10 text-black dark:bg-slate-900 sm:px-12 sm:py-14 dark:text-white">
+                <div class="pointer-events-none absolute right-0 top-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-red-500/10 blur-3xl dark:bg-red-400/10"></div>
+                <div class="pointer-events-none absolute bottom-0 left-0 h-32 w-32 -translate-x-8 translate-y-8 rounded-full bg-black/5 blur-3xl dark:bg-white/5"></div>
+                <div class="relative flex items-start gap-5">
+                  <div class="relative h-20 w-20 flex-none">
+                    <div class="absolute inset-0 rounded-[1.75rem] bg-red-500/20 blur-xl dark:bg-red-400/15"></div>
+                    <img
+                      src="/assets/sarah-jenkins.jpg"
+                      alt="Human coach"
+                      class="relative h-full w-full rounded-[1.75rem] border border-red-200/80 object-cover shadow-[0_20px_45px_rgba(239,68,68,0.16)] dark:border-red-500/20" />
+                    <div class="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-2xl border border-red-200 bg-white text-red-600 shadow-lg dark:border-red-500/20 dark:bg-slate-950 dark:text-red-300">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-8 12a5 5 0 0 1 10 0" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="relative">
+                    <span class="inline-flex items-center rounded-full border border-red-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-red-600 shadow-sm dark:border-red-500/20 dark:bg-slate-950/80 dark:text-red-300">You handle</span>
+                    <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">The coaching</h2>
+                  </div>
+                </div>
                 <div class="mt-10 space-y-5">
                   @for (item of coachHandles; track item.title) {
                     <div class="flex items-start gap-4">
