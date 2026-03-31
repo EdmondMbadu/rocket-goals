@@ -1089,6 +1089,10 @@ export class SetupTeamPageComponent implements OnInit {
     {
       title: 'Live performance dashboards',
       description: 'Spot patterns across the team before they become coaching problems.'
+    },
+    {
+      title: 'Growth mindset nudges',
+      description: 'The system reframes setbacks as experiments and reminds teammates that skill grows with effort.'
     }
   ];
 
@@ -1108,6 +1112,10 @@ export class SetupTeamPageComponent implements OnInit {
     {
       title: 'Human judgment',
       description: 'Handle nuance, emotion, and leadership decisions that should stay human.'
+    },
+    {
+      title: 'Belief and identity',
+      description: 'Help people believe they can grow, and turn setbacks into meaning, confidence, and ownership.'
     }
   ];
 
