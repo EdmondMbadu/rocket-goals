@@ -1,0 +1,198 @@
+:host {
+  display: block;
+}
+
+.growth-lead-admin-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-orb {
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.18;
+}
+
+.admin-orb-left {
+  top: -10rem;
+  left: -12rem;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.7) 0%, rgba(251, 146, 60, 0.18) 50%, transparent 74%);
+}
+
+.admin-orb-right {
+  right: -12rem;
+  top: 10rem;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.55) 0%, rgba(45, 212, 191, 0.18) 50%, transparent 74%);
+}
+
+.hero-panel,
+.lead-entry-card,
+.metric-card,
+.detail-tile,
+.platform-chip {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-panel::before,
+.lead-entry-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(244, 63, 94, 0.08), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.06), transparent 28%);
+  pointer-events: none;
+}
+
+.metric-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+:host-context(.dark) .metric-card {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.7));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.metric-value {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: clamp(1.7rem, 2.4vw, 2.3rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: rgb(15 23 42);
+}
+
+.metric-subtext {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: rgb(100 116 139);
+}
+
+:host-context(.dark) .metric-label,
+:host-context(.dark) .metric-subtext {
+  color: rgb(203 213 225);
+}
+
+:host-context(.dark) .metric-value {
+  color: rgb(248 250 252);
+}
+
+.detail-tile {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(248, 250, 252, 0.9);
+  padding: 0.9rem 1rem;
+}
+
+:host-context(.dark) .detail-tile {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.58);
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.detail-value {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgb(15 23 42);
+}
+
+:host-context(.dark) .detail-label {
+  color: rgb(148 163 184);
+}
+
+:host-context(.dark) .detail-value {
+  color: rgb(241 245 249);
+}
+
+.platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgb(71 85 105);
+}
+
+:host-context(.dark) .platform-chip {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.72);
+  color: rgb(203 213 225);
+}
+
+.platform-chip-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgb(203 213 225);
+  box-shadow: 0 0 0 4px rgba(226, 232, 240, 0.75);
+}
+
+:host-context(.dark) .platform-chip-dot {
+  background: rgb(71 85 105);
+  box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.85);
+}
+
+.platform-chip-done {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(236, 253, 245, 0.95);
+  color: rgb(6 95 70);
+}
+
+.platform-chip-done .platform-chip-dot {
+  background: rgb(16 185 129);
+  box-shadow: 0 0 0 4px rgba(167, 243, 208, 0.6);
+}
+
+:host-context(.dark) .platform-chip-done {
+  border-color: rgba(52, 211, 153, 0.24);
+  background: rgba(6, 78, 59, 0.3);
+  color: rgb(167 243 208);
+}
+
+:host-context(.dark) .platform-chip-done .platform-chip-dot {
+  box-shadow: 0 0 0 4px rgba(6, 95, 70, 0.55);
+}
+
+@media (max-width: 640px) {
+  .admin-orb {
+    width: 24rem;
+    height: 24rem;
+    filter: blur(60px);
+  }
+}

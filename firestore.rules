@@ -2,10 +2,42 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isGrowthLeadShareUpdate() {
+      return resource.data.leadSource == 'growth-lead'
+        && request.resource.data.leadSource == 'growth-lead'
+        && request.resource.data.shareToken is string
+        && request.resource.data.shareToken == resource.data.shareToken
+        && request.resource.data.sharedPlatforms is map
+        && request.resource.data.sharedPlatforms.keys().hasOnly(['fb', 'tw', 'li'])
+        && request.resource.data.sharedPlatforms.fb is bool
+        && request.resource.data.sharedPlatforms.tw is bool
+        && request.resource.data.sharedPlatforms.li is bool
+        && request.resource.data.shareCount is int
+        && request.resource.data.shareCount >= 0
+        && request.resource.data.shareCount <= 3
+        && request.resource.data.codeUnlocked is bool
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'shareToken',
+          'sharedPlatforms',
+          'shareCount',
+          'codeUnlocked',
+          'codeUnlockedAt',
+          'shareUpdatedAt'
+        ])
+        && (request.resource.data.codeUnlockedAt == null || request.resource.data.codeUnlockedAt is timestamp)
+        && (request.resource.data.shareUpdatedAt == null || request.resource.data.shareUpdatedAt is timestamp);
+    }
+
     // Allow public writes to bookDownloads collection (for lead capture)
     match /bookDownloads/{document} {
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
       allow create: if true;
+      allow update: if isAuthenticated() || isGrowthLeadShareUpdate();
+      allow delete: if isAuthenticated();
     }
 
     // Telegram integration collections - Cloud Functions only
@@ -14,16 +46,15 @@ service cloud.firestore {
     }
 
     match /telegramLinkTokens/{token} {
-      allow read: if request.auth != null; // Allow authenticated users to read (for validation)
+      allow read: if isAuthenticated(); // Allow authenticated users to read (for validation)
       allow write: if false; // Only Cloud Functions can write
     }
 
     // Allow all access for authenticated users, public read for unauthenticated
     match /{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAuthenticated();
     }
   }
 }
-
 

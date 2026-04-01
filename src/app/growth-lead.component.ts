@@ -21,6 +21,10 @@ type GrowthLeadPhase = 'start' | 'quiz' | 'email' | 'results';
 type SharePlatform = 'fb' | 'tw' | 'li';
 type ShareMode = 'score' | 'link';
 type LeadCaptureStatus = 'cloud' | 'local' | 'failed' | null;
+type LeadCaptureResult = {
+  status: LeadCaptureStatus;
+  leadId: string | null;
+};
 
 interface DimensionCardView {
   dimension: GrowthDimension;
@@ -82,6 +86,8 @@ export class GrowthLeadComponent {
   protected readonly couponCopied = signal(false);
 
   private firestoreInstance?: Promise<Firestore>;
+  private leadRecordId: string | null = null;
+  private leadShareToken = this.createShareToken();
   private readonly questionRanges = this.dimensions.map(dimension => {
     const indices = this.questions
       .map((question, index) => (question.dim === dimension.id ? index : -1))
@@ -362,8 +368,9 @@ export class GrowthLeadComponent {
     }
 
     this.emailSubmitting.set(true);
-    const status = await this.persistLead();
-    this.leadCaptureStatus.set(status);
+    const result = await this.persistLead();
+    this.leadCaptureStatus.set(result.status);
+    this.leadRecordId = result.leadId;
 
     window.setTimeout(() => {
       this.phase.set('results');
@@ -382,6 +389,8 @@ export class GrowthLeadComponent {
     this.sharedPlatforms.set({ fb: false, tw: false, li: false });
     this.couponCopied.set(false);
     this.leadCaptureStatus.set(null);
+    this.leadRecordId = null;
+    this.leadShareToken = this.createShareToken();
     this.selectingAnswer.set(false);
     this.emailSubmitting.set(false);
     this.scrollToTop();
@@ -408,10 +417,18 @@ export class GrowthLeadComponent {
       window.open(shareUrl, '_blank', 'noopener,noreferrer,width=640,height=640');
     }
 
-    this.sharedPlatforms.update(current => ({
+    const current = this.sharedPlatforms();
+    if (current[platform]) {
+      return;
+    }
+
+    const nextState = {
       ...current,
       [platform]: true
-    }));
+    };
+
+    this.sharedPlatforms.set(nextState);
+    void this.syncShareProgress(nextState);
   }
 
   protected async copyCoupon(): Promise<void> {
@@ -464,19 +481,22 @@ export class GrowthLeadComponent {
     return this.firestoreInstance;
   }
 
-  private async persistLead(): Promise<LeadCaptureStatus> {
+  private async persistLead(): Promise<LeadCaptureResult> {
     const payload = this.buildLeadPayload();
 
     try {
       const firestore = await this.getFirestore();
       const firestoreModule = await import('firebase/firestore');
 
-      await firestoreModule.addDoc(firestoreModule.collection(firestore, 'bookDownloads'), {
+      const docRef = await firestoreModule.addDoc(firestoreModule.collection(firestore, 'bookDownloads'), {
         ...payload,
         downloadedAt: firestoreModule.serverTimestamp()
       });
 
-      return 'cloud';
+      return {
+        status: 'cloud',
+        leadId: docRef.id
+      };
     } catch (error) {
       console.warn('Failed to capture growth lead in Firestore, falling back to local storage.', error);
     }
@@ -488,13 +508,19 @@ export class GrowthLeadComponent {
           ...payload,
           downloadedAt: new Date().toISOString()
         }));
-        return 'local';
+        return {
+          status: 'local',
+          leadId: null
+        };
       }
     } catch (error) {
       console.warn('Failed to store growth lead locally.', error);
     }
 
-    return 'failed';
+    return {
+      status: 'failed',
+      leadId: null
+    };
   }
 
   private validateEmail(): boolean {
@@ -529,6 +555,12 @@ export class GrowthLeadComponent {
       bookTitle: 'Growth Lead Quiz',
       leadSource: 'growth-lead',
       quizName: 'growth-mindset-test',
+      shareToken: this.leadShareToken,
+      sharedPlatforms: { fb: false, tw: false, li: false },
+      shareCount: 0,
+      codeUnlocked: false,
+      codeUnlockedAt: null,
+      shareUpdatedAt: null,
       totalScore: this.totalScore(),
       archetype: this.currentArchetype().name,
       scores: this.scores(),
@@ -556,6 +588,39 @@ export class GrowthLeadComponent {
 
   private getShareUrl(): string {
     return 'https://rocketgoals.com/growth-lead';
+  }
+
+  private async syncShareProgress(sharedPlatforms: Record<SharePlatform, boolean>): Promise<void> {
+    if (this.leadCaptureStatus() !== 'cloud' || !this.leadRecordId) {
+      return;
+    }
+
+    const shareCount = (sharedPlatforms.fb ? 1 : 0) + (sharedPlatforms.tw ? 1 : 0) + (sharedPlatforms.li ? 1 : 0);
+    const codeUnlocked = shareCount >= 3;
+
+    try {
+      const firestore = await this.getFirestore();
+      const firestoreModule = await import('firebase/firestore');
+
+      await firestoreModule.updateDoc(firestoreModule.doc(firestore, 'bookDownloads', this.leadRecordId), {
+        shareToken: this.leadShareToken,
+        sharedPlatforms,
+        shareCount,
+        codeUnlocked,
+        shareUpdatedAt: firestoreModule.serverTimestamp(),
+        codeUnlockedAt: codeUnlocked ? firestoreModule.serverTimestamp() : null
+      });
+    } catch (error) {
+      console.warn('Unable to sync growth lead share progress.', error);
+    }
+  }
+
+  private createShareToken(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+
+    return `growth-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private scrollToTop(): void {
