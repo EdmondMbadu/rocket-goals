@@ -26,6 +26,7 @@ export const routes: Routes = [
   { path: 'setup-team', loadComponent: () => import('./setup-team-page.component').then(m => m.SetupTeamPageComponent) },
   { path: 'schedule', loadComponent: () => import('./schedule-demo.component').then(m => m.ScheduleDemoComponent) },
   { path: 'app-suite', loadComponent: () => import('./app-suite.component').then(m => m.AppSuiteComponent) },
+  { path: 'growth-lead', loadComponent: () => import('./growth-lead.component').then(m => m.GrowthLeadComponent) },
   { path: 'bloom-book', loadComponent: () => import('./bloom-book-page.component').then(m => m.BloomBookPageComponent) },
   { path: 'surge-book', loadComponent: () => import('./surge-book-page.component').then(m => m.SurgeBookPageComponent) },
   { path: 'goal-launch-complete', component: PendingGoalRedirectComponent },

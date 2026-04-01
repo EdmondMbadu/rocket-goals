@@ -121,7 +121,7 @@ export class App implements AfterViewInit, OnDestroy {
   private document = inject(DOCUMENT);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/setup-team', '/quiz', '/schedule', '/app-suite', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/setup-team', '/quiz', '/schedule', '/app-suite', '/growth-lead', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected mobileNavOpen = signal(false);
   protected readonly heroGoalPrompt = signal('');
@@ -277,6 +277,14 @@ export class App implements AfterViewInit, OnDestroy {
         title: 'RocketGoals App Suite | AI-Powered Productivity Tools',
         description: 'Explore the RocketGoals app suite for planning, execution, and accountability across your goals and habits.',
         canonicalPath: '/app-suite'
+      };
+    }
+
+    if (routePath === '/growth-lead') {
+      return {
+        title: 'Growth Mindset Test | RocketGoals Growth Lead Quiz',
+        description: 'Take the RocketGoals growth mindset test, unlock your personalized report, and capture the next step for your growth system.',
+        canonicalPath: '/growth-lead'
       };
     }
 

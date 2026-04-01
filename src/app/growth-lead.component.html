@@ -1,0 +1,309 @@
+<div class="growth-lead-page">
+  <div class="page-glow page-glow-left"></div>
+  <div class="page-glow page-glow-right"></div>
+
+  <header class="lead-topbar">
+    <a routerLink="/" class="brand-mark">
+      <img src="/assets/rocket-goals.png" alt="RocketGoals" class="brand-logo" />
+      <span class="brand-text">ROCKET<span>GOALS</span></span>
+    </a>
+
+    <div class="topbar-actions">
+      <a routerLink="/login" class="topbar-link">Log in</a>
+      <a routerLink="/signup" class="topbar-cta">Start Free</a>
+      <button type="button" class="theme-switch" (click)="toggleTheme()" [attr.aria-pressed]="isDarkMode()">
+        @if (isDarkMode()) {
+          <svg class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m14.364-5.364-.707.707M7.343 16.657l-.707.707m10.728 0-.707-.707M7.343 7.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        } @else {
+          <svg class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+        }
+      </button>
+    </div>
+  </header>
+
+  <main class="growth-shell">
+    @if (phase() === 'start') {
+      <section class="hero-card">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Backed by 6 research frameworks
+        </div>
+
+        <div class="hero-logo-wrap">
+          <img src="/assets/rocket-goals.png" alt="RocketGoals" class="hero-logo" />
+        </div>
+
+        <h1 class="hero-title">Are You <span>Wired to Win?</span></h1>
+        <p class="hero-subtitle">
+          Most people think they have a growth mindset.
+          <span class="hero-stat">Research says 73% are wrong.</span>
+          This 2-minute test reveals the invisible patterns shaping your potential.
+        </p>
+
+        <div class="hero-stats">
+          <article class="hero-stat-card">
+            <strong>12</strong>
+            <span>Questions</span>
+          </article>
+          <article class="hero-stat-card">
+            <strong>2</strong>
+            <span>Minutes</span>
+          </article>
+          <article class="hero-stat-card">
+            <strong>5</strong>
+            <span>Dimensions</span>
+          </article>
+        </div>
+
+        <button type="button" class="primary-launch-btn" (click)="startQuiz()">
+          Reveal Your Wiring
+        </button>
+
+        <div class="research-chip-row">
+          @for (ref of researchRefs; track ref) {
+            <span class="research-chip">{{ ref }}</span>
+          }
+        </div>
+
+        <p class="hero-footnote">
+          Developed using the GROWTH Framework - neuroplasticity, deliberate practice, behavior design, and recursive self-improvement.
+        </p>
+      </section>
+    }
+
+    @if (phase() === 'quiz' && currentQuestion(); as question) {
+      <section class="quiz-layout">
+        <div class="progress-card">
+          <div class="progress-head">
+            <span class="progress-label">Progress</span>
+            <span class="progress-count">{{ currentIndex() + 1 }} / {{ questions.length }}</span>
+          </div>
+          <div class="progress-track">
+            <span class="progress-fill" [style.width.%]="progressPercent()"></span>
+          </div>
+          <div class="dimension-pills">
+            @for (pill of dimensionPills(); track pill.dimension.id) {
+              <span class="dimension-pill" [class.done]="pill.status === 'done'" [class.active]="pill.status === 'active'">
+                <small>{{ pill.dimension.shortLabel }}</small>
+                {{ pill.dimension.name }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <article class="question-card">
+          <div class="question-head">
+            <div class="question-kicker" [style.color]="currentDimension()?.color">
+              {{ currentDimension()?.name }} - {{ currentDimension()?.phase }}
+            </div>
+            <div class="question-number">Question {{ currentIndex() + 1 }} of {{ questions.length }}</div>
+          </div>
+
+          <h2 class="question-title">{{ question.scenario }}</h2>
+          <p class="question-context">{{ question.context }}</p>
+
+          <div class="option-stack">
+            @for (option of question.options; track option.text; let optionIndex = $index) {
+              <button
+                type="button"
+                class="option-card"
+                [class.selected]="currentAnswerIndex() === optionIndex"
+                [disabled]="selectingAnswer()"
+                (click)="selectOption(optionIndex)">
+                <span class="option-marker">{{ optionLetter(optionIndex) }}</span>
+                <span class="option-copy">{{ option.text }}</span>
+              </button>
+            }
+          </div>
+
+          <div class="quiz-controls">
+            <button type="button" class="secondary-ghost-btn" (click)="previousQuestion()" [disabled]="currentIndex() === 0 || selectingAnswer()">
+              Previous
+            </button>
+          </div>
+        </article>
+      </section>
+    }
+
+    @if (phase() === 'email') {
+      <section class="gate-card">
+        <div class="gate-score-label">Your Growth Mindset Score</div>
+        <div class="gate-score" [style.color]="currentArchetype().color">{{ totalScore() }}</div>
+        <div class="gate-score-meta">out of 100</div>
+        <h2 class="gate-archetype" [style.color]="currentArchetype().color">{{ currentArchetype().name }}</h2>
+        <p class="gate-headline">{{ currentArchetype().headline }}</p>
+
+        <div class="locked-preview">
+          <p class="locked-preview-title">Your full report includes</p>
+          <div class="locked-item">Dimension-by-dimension breakdown with radar chart</div>
+          <div class="locked-item">Neuroscience-backed insights for each growth dimension</div>
+          <div class="locked-item">Personalized action plan based on your weakest areas</div>
+          <div class="locked-item">Research citations explaining your specific patterns</div>
+          <div class="locked-item">Your RSI readiness assessment</div>
+        </div>
+
+        <div class="email-form">
+          <input
+            type="email"
+            class="email-input"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            placeholder="Enter your email to unlock your report" />
+          <button type="button" class="unlock-btn" (click)="unlockReport()" [disabled]="!emailValid() || emailSubmitting()">
+            @if (emailSubmitting()) { Unlocking... } @else { Unlock Full Report }
+          </button>
+        </div>
+
+        <p class="email-note">Your report unlocks instantly on screen. No spam - just science.</p>
+
+        <div class="gate-actions">
+          <button type="button" class="secondary-ghost-btn" (click)="editAnswers()">Review Answers</button>
+        </div>
+      </section>
+    }
+
+    @if (phase() === 'results') {
+      <section class="results-layout">
+        <div class="results-header-card">
+          @if (captureNotice()) {
+            <div class="capture-notice">{{ captureNotice() }}</div>
+          }
+          <div class="gate-score-label">Your Growth Mindset Score</div>
+          <div class="results-score" [style.color]="currentArchetype().color">{{ totalScore() }}</div>
+          <h1 class="results-archetype" [style.color]="currentArchetype().color">{{ currentArchetype().name }}</h1>
+          <p class="results-description">{{ currentArchetype().desc }}</p>
+        </div>
+
+        <section class="radar-card">
+          <div class="panel-title">Your Growth Dimensions</div>
+          <svg class="radar-chart" viewBox="0 0 340 300" aria-hidden="true">
+            @for (level of radar().levels; track level.id) {
+              <polygon [attr.points]="level.points" class="radar-grid"></polygon>
+            }
+
+            @for (axis of radar().axes; track axis.dimension.id) {
+              <line x1="170" y1="150" [attr.x2]="axis.axisX" [attr.y2]="axis.axisY" class="radar-axis"></line>
+            }
+
+            <polygon [attr.points]="radar().dataPolygon" class="radar-data"></polygon>
+
+            @for (axis of radar().axes; track axis.dimension.id) {
+              <circle [attr.cx]="axis.pointX" [attr.cy]="axis.pointY" r="4.5" [attr.fill]="axis.dimension.color" class="radar-point"></circle>
+              <text [attr.x]="axis.labelX" [attr.y]="axis.labelY" [attr.text-anchor]="axis.textAnchor" class="radar-label-score" [attr.fill]="axis.dimension.color">
+                {{ axis.score }}%
+              </text>
+              <text [attr.x]="axis.labelX" [attr.y]="axis.labelY + 15" [attr.text-anchor]="axis.textAnchor" class="radar-label-name">
+                {{ axis.dimension.name }}
+              </text>
+            }
+          </svg>
+        </section>
+
+        <section class="next-move-card">
+          <div class="panel-title">Primary Unlock</div>
+          <h2>{{ weakestDimension().dimension.name }}</h2>
+          <p>{{ weakestDimension().insight?.text }}</p>
+          <div class="next-move-callout">
+            <strong>Your next move:</strong>
+            {{ weakestDimension().insight?.action }}
+          </div>
+        </section>
+
+        <section class="dimension-card-list">
+          @for (card of dimensionCards(); track card.dimension.id) {
+            <article class="dimension-card">
+              <div class="dimension-card-head">
+                <div>
+                  <div class="dimension-name">{{ card.dimension.name }}</div>
+                  <div class="dimension-phase">{{ card.dimension.phase }}</div>
+                </div>
+                <div class="dimension-score" [class.low]="card.tone === 'low'" [class.mid]="card.tone === 'mid'" [class.high]="card.tone === 'high'">
+                  {{ card.score }}%
+                </div>
+              </div>
+
+              <div class="dimension-bar">
+                <span class="dimension-bar-fill" [class.low]="card.tone === 'low'" [class.mid]="card.tone === 'mid'" [class.high]="card.tone === 'high'" [style.width.%]="card.score"></span>
+              </div>
+
+              <div class="dimension-score-copy">{{ toneLabel(card.score) }}</div>
+              <p class="dimension-insight">{{ card.insight?.text }}</p>
+
+              @if (card.insight) {
+                <div class="dimension-action">
+                  <strong>Your Next Move:</strong>
+                  {{ card.insight.action }}
+                </div>
+              }
+            </article>
+          }
+        </section>
+
+        <section class="cta-card">
+          <div class="panel-title">Share to Unlock</div>
+          <h2>Unlock 3 Free Months of Elite Coaching</h2>
+          <p>
+            Share your results and get a 3-month access code for RocketGoals - the evidence-based GROWTH framework for turning ambition into repeatable execution.
+          </p>
+
+          <div class="share-toggle">
+            <button type="button" class="share-toggle-btn" [class.active]="shareMode() === 'score'" (click)="setShareMode('score')">
+              Share My Score
+            </button>
+            <button type="button" class="share-toggle-btn" [class.active]="shareMode() === 'link'" (click)="setShareMode('link')">
+              Share Quiz Link Only
+            </button>
+          </div>
+
+          @if (!shareUnlocked()) {
+            <p class="share-helper">Share on all 3 platforms to unlock your code:</p>
+            <div class="share-buttons">
+              <button type="button" class="share-btn fb" [class.shared]="sharedPlatforms().fb" (click)="shareTo('fb')">
+                Facebook
+              </button>
+              <button type="button" class="share-btn tw" [class.shared]="sharedPlatforms().tw" (click)="shareTo('tw')">
+                X
+              </button>
+              <button type="button" class="share-btn li" [class.shared]="sharedPlatforms().li" (click)="shareTo('li')">
+                LinkedIn
+              </button>
+            </div>
+            <div class="share-progress">
+              <span class="share-dot" [class.done]="shareCount() > 0"></span>
+              <span class="share-dot" [class.done]="shareCount() > 1"></span>
+              <span class="share-dot" [class.done]="shareCount() > 2"></span>
+              <span>{{ shareCount() }} of 3 shared</span>
+            </div>
+          } @else {
+            <div class="coupon-card">
+              <h3>Your Code Is Unlocked</h3>
+              <p>3 months of RocketGoals Elite Coaching - free.</p>
+              <button type="button" class="coupon-code" (click)="copyCoupon()">{{ couponCode }}</button>
+              <div class="coupon-note">Click the code to copy it. Redeem at RocketGoals.com.</div>
+              @if (couponCopied()) {
+                <div class="coupon-copied">Copied to clipboard.</div>
+              }
+            </div>
+
+            <a href="https://rocketgoals.com" target="_blank" rel="noopener noreferrer" class="primary-launch-btn redeem-link">
+              Redeem at RocketGoals.com
+            </a>
+          }
+        </section>
+
+        <div class="results-footer">
+          <button type="button" class="secondary-ghost-btn" (click)="retake()">Retake the quiz</button>
+          <p class="results-footnote">
+            Based on research by Dweck (2006), Ericsson (2016), Fogg (2019), Deci & Ryan (2000), Blackwell et al. (2007), Huang et al. (2025), and the Recursive Self-Improvement framework (Karpathy, 2026).
+          </p>
+        </div>
+      </section>
+    }
+  </main>
+</div>
