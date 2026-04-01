@@ -148,19 +148,27 @@
           <div class="locked-item">Your RSI readiness assessment</div>
         </div>
 
-        <div class="email-form">
+        <form class="email-form" (ngSubmit)="unlockReport()">
           <input
             type="email"
             class="email-input"
+            [class.invalid]="emailTouched() && !!emailError()"
             [ngModel]="email()"
-            (ngModelChange)="email.set($event)"
+            (ngModelChange)="updateEmail($event)"
+            (blur)="emailTouched.set(true); updateEmail(email())"
+            name="growthLeadEmail"
+            autocomplete="email"
             placeholder="Enter your email to unlock your report" />
-          <button type="button" class="unlock-btn" (click)="unlockReport()" [disabled]="!emailValid() || emailSubmitting()">
+          <button type="submit" class="unlock-btn" [disabled]="!emailValid() || emailSubmitting()">
             @if (emailSubmitting()) { Unlocking... } @else { Unlock Full Report }
           </button>
-        </div>
+        </form>
 
-        <p class="email-note">Your report unlocks instantly on screen. No spam - just science.</p>
+        @if (emailTouched() && emailError()) {
+          <p class="email-error">{{ emailError() }}</p>
+        }
+
+        <p class="email-note">Your report unlocks instantly on screen. We will use that email shortly.</p>
 
         <div class="gate-actions">
           <button type="button" class="secondary-ghost-btn" (click)="editAnswers()">Review Answers</button>

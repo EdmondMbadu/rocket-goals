@@ -68,6 +68,8 @@ export class GrowthLeadComponent {
   protected readonly currentIndex = signal(0);
   protected readonly answers = signal<Record<number, number>>({});
   protected readonly email = signal('');
+  protected readonly emailTouched = signal(false);
+  protected readonly emailError = signal('');
   protected readonly selectingAnswer = signal(false);
   protected readonly emailSubmitting = signal(false);
   protected readonly leadCaptureStatus = signal<LeadCaptureStatus>(null);
@@ -344,8 +346,18 @@ export class GrowthLeadComponent {
     this.scrollToTop();
   }
 
+  protected updateEmail(value: string): void {
+    this.email.set(value);
+
+    if (this.emailTouched()) {
+      this.validateEmail();
+    }
+  }
+
   protected async unlockReport(): Promise<void> {
-    if (!this.emailValid() || this.emailSubmitting()) {
+    this.emailTouched.set(true);
+
+    if (!this.validateEmail() || this.emailSubmitting()) {
       return;
     }
 
@@ -364,6 +376,8 @@ export class GrowthLeadComponent {
     this.phase.set('start');
     this.currentIndex.set(0);
     this.answers.set({});
+    this.emailTouched.set(false);
+    this.emailError.set('');
     this.shareMode.set('score');
     this.sharedPlatforms.set({ fb: false, tw: false, li: false });
     this.couponCopied.set(false);
@@ -481,6 +495,24 @@ export class GrowthLeadComponent {
     }
 
     return 'failed';
+  }
+
+  private validateEmail(): boolean {
+    const trimmed = this.email().trim();
+    this.email.set(trimmed);
+
+    if (!trimmed) {
+      this.emailError.set('Enter your email to unlock your report.');
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      this.emailError.set('Enter a valid email address.');
+      return false;
+    }
+
+    this.emailError.set('');
+    return true;
   }
 
   private buildLeadPayload() {

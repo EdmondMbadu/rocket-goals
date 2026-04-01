@@ -720,6 +720,18 @@
   background: var(--gl-panel-strong);
   color: var(--gl-text);
   font: inherit;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: rgba(220, 38, 38, 0.34);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+}
+
+.email-input.invalid {
+  border-color: rgba(220, 38, 38, 0.42);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
 }
 
 .email-input::placeholder {
@@ -730,6 +742,13 @@
   min-width: 220px;
   padding: 16px 22px;
   font-size: 0.98rem;
+}
+
+.email-error {
+  margin: 12px 0 0;
+  color: var(--gl-red);
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .email-note {
