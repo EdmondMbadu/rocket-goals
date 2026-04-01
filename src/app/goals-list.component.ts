@@ -19,11 +19,17 @@ import { CoachCatalogService } from './coach-catalog.service';
 import { CommunityCoach, CommunityCoachService } from './community-coach.service';
 import { PrebuiltTemplate } from './coach-catalog.data';
 import {
+  buildFallbackGoalDescription,
+  buildFallbackTeamDescription,
   buildCoachPersonalityRefinementPrompt,
+  buildGoalDescriptionRefinementPrompt,
+  buildTeamDescriptionRefinementPrompt,
   buildFallbackCoachPersonality,
   COACH_CATEGORIES,
   DEFAULT_COACH_PHILOSOPHY,
-  normalizeCoachPersonality
+  normalizeCoachPersonality,
+  normalizeGoalDescription,
+  normalizeTeamDescription
 } from './coach-builder.util';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
@@ -123,10 +129,12 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly goalModalStep = signal<number>(1);
   protected readonly totalSteps = 10; // Total quiz steps (including photo capture)
   protected readonly isCreatingGoal = signal(false);
+  protected readonly refiningGoalDescription = signal(false);
   protected readonly goalCreationError = signal<string | null>(null);
   protected readonly showAuthPrompt = signal(false);
   protected readonly showCreateTeamModal = signal(false);
   protected readonly creatingTeam = signal(false);
+  protected readonly refiningTeamDescription = signal(false);
   protected newTeamName = '';
   protected newCoachTeamLeadName = '';
   protected newTeamDescription = '';
@@ -856,6 +864,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.newTeamName = '';
     this.newCoachTeamLeadName = '';
     this.newTeamDescription = '';
+    this.refiningTeamDescription.set(false);
     this.inviteEmail = '';
     this.inviteEmails.set([]);
     this.creatingTeam.set(false);
@@ -889,6 +898,31 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   protected closeCreateTeamModal(): void {
     this.showCreateTeamModal.set(false);
     this.resetCreateTeamDraft();
+  }
+
+  protected async refineTeamDescription(): Promise<void> {
+    const seed = this.newTeamDescription.trim();
+    if (!seed) {
+      return;
+    }
+
+    this.refiningTeamDescription.set(true);
+
+    try {
+      const response = await this.aiService.callAISilent(
+        buildTeamDescriptionRefinementPrompt({
+          seed,
+          teamName: this.newTeamName,
+          coachTeamLeadName: this.newCoachTeamLeadName
+        })
+      );
+      this.newTeamDescription = normalizeTeamDescription(response);
+    } catch (error) {
+      console.warn('Failed to refine team description:', error);
+      this.newTeamDescription = buildFallbackTeamDescription(seed);
+    } finally {
+      this.refiningTeamDescription.set(false);
+    }
   }
 
   protected addInviteEmail(): void {
@@ -1332,6 +1366,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showGoalModal.set(true);
     this.goalModalStep.set(1);
     this.showAuthPrompt.set(false);
+    this.refiningGoalDescription.set(false);
     this.goalCreationError.set(null);
     this.quizAnswers.set({
       goalDescription: '',
@@ -1398,6 +1433,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showGoalModal.set(false);
     this.goalModalStep.set(1);
     this.showAuthPrompt.set(false);
+    this.refiningGoalDescription.set(false);
     this.goalCreationError.set(null);
     this.isCreatingGoal.set(false);
     this.capturedPhoto.set(null);
@@ -1409,6 +1445,29 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected updateQuizAnswer<K extends keyof RocketQuizAnswers>(key: K, value: RocketQuizAnswers[K]): void {
     this.quizAnswers.update(current => ({ ...current, [key]: value }));
+  }
+
+  protected async refineGoalDescription(): Promise<void> {
+    const seed = this.quizAnswers().goalDescription.trim();
+    if (!seed) {
+      this.goalCreationError.set('Start with a short goal description first.');
+      return;
+    }
+
+    this.refiningGoalDescription.set(true);
+    this.goalCreationError.set(null);
+
+    try {
+      const response = await this.aiService.callAISilent(
+        buildGoalDescriptionRefinementPrompt(seed)
+      );
+      this.updateQuizAnswer('goalDescription', normalizeGoalDescription(response));
+    } catch (error) {
+      console.warn('Failed to refine goal description:', error);
+      this.updateQuizAnswer('goalDescription', buildFallbackGoalDescription(seed));
+    } finally {
+      this.refiningGoalDescription.set(false);
+    }
   }
 
   protected selectTimeframe(value: GoalTimeframe): void {
