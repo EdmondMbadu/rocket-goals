@@ -20,10 +20,19 @@ import { ThemeService } from './theme.service';
           </a>
           <div class="flex items-center gap-6">
             <nav class="hidden items-center gap-6 md:flex">
-              <a routerLink="/" class="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Home</a>
               <a routerLink="/app-suite" class="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Rocket Coaches</a>
               <a href="https://rocketgoals.beehiiv.com/" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Daily Rocket</a>
             </nav>
+            <div class="hidden items-center gap-3 md:flex">
+              <a routerLink="/login"
+                class="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+                Login
+              </a>
+              <a routerLink="/signup"
+                class="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-600 dark:bg-white dark:text-slate-950 dark:hover:bg-red-500 dark:hover:text-white">
+                Start Free
+              </a>
+            </div>
             <button type="button" (click)="toggleDarkMode()" [attr.aria-pressed]="isDarkMode()"
               class="rounded-full border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               title="Toggle dark mode">
