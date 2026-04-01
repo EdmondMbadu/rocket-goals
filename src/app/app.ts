@@ -121,7 +121,7 @@ export class App implements AfterViewInit, OnDestroy {
   private document = inject(DOCUMENT);
   private routerSubscription: Subscription | null = null;
   private authOnlyRoutes = new Set(['/login', '/signup', '/welcome']);
-  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/setup-team', '/quiz', '/schedule', '/app-suite', '/growth-lead', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
+  private componentRoutes = new Set(['/goals', '/rocketgoal', '/profile', '/admin', '/ai', '/pricing', '/contact', '/about', '/blogs', '/setup-team', '/quiz', '/schedule', '/app-suite', '/growth-lead', '/launchpad', '/surge-book', '/bloom-book', '/teams', '/team', '/goal-launch-complete']);
   protected currentRoute = signal<string>(this.router.url || '/');
   protected mobileNavOpen = signal(false);
   protected readonly heroGoalPrompt = signal('');
@@ -135,6 +135,7 @@ export class App implements AfterViewInit, OnDestroy {
       routePath.startsWith('/rocketgoal/') ||
       routePath.startsWith('/profile/') ||
       routePath.startsWith('/admin/') ||
+      routePath.startsWith('/blogs/') ||
       routePath.startsWith('/launchpad/') ||
       routePath.startsWith('/team/');
   });
@@ -253,6 +254,30 @@ export class App implements AfterViewInit, OnDestroy {
         title: 'About RocketGoals | The ROCKET Framework for Goal Achievement',
         description: 'Learn how RocketGoals combines the ROCKET framework, habit tracking, and AI coaching to help you achieve ambitious goals.',
         canonicalPath: '/about'
+      };
+    }
+
+    if (routePath === '/blogs') {
+      return {
+        title: 'RocketGoals Blogs | Internal Research and Coaching Frameworks',
+        description: 'Read RocketGoals internal blogs on AI coaching, behavioral science, growth mindset systems, and the future of human achievement.',
+        canonicalPath: '/blogs'
+      };
+    }
+
+    if (routePath === '/blogs/the-growth-mindset-skill') {
+      return {
+        title: 'The Growth Mindset Skill | RocketGoals Internal Blog',
+        description: 'A deep dive into the GROWTH Mindset Skill, recursive self-improvement, and why agentic AI coaching must be adaptive, evidence-based, and human-centered.',
+        canonicalPath: '/blogs/the-growth-mindset-skill'
+      };
+    }
+
+    if (routePath.startsWith('/blogs/')) {
+      return {
+        title: 'RocketGoals Blog | Internal Research and Essays',
+        description: 'Explore RocketGoals essays on coaching systems, AI-human collaboration, and evidence-based growth frameworks.',
+        canonicalPath: routePath
       };
     }
 
