@@ -684,6 +684,78 @@
     </div>
   </section>
 
+  <section class="bg-white py-8 text-black dark:bg-slate-950 dark:text-slate-100">
+    <div class="container mx-auto px-4">
+      @if (isDarkMode()) {
+        <a routerLink="/growth-lead"
+          class="group relative block overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#111827_52%,#7f1d1d_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(2,6,23,0.38)] transition hover:-translate-y-1 hover:border-red-400/30 sm:px-8">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(239,68,68,0.22),_transparent_34%)]"></div>
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(251,146,60,0.16),_transparent_30%)]"></div>
+          <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="max-w-3xl">
+              <div class="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-white/72">
+                <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                Growth Quiz
+              </div>
+              <h3 class="mt-4 text-3xl font-black leading-[0.98] tracking-[-0.04em] sm:text-4xl">
+                Are You Wired to Win?
+                <span class="block text-red-400">Take the 2-minute growth mindset test.</span>
+              </h3>
+              <p class="mt-4 max-w-2xl text-sm leading-relaxed text-white/72 sm:text-base">
+                Backed by 6 research frameworks, this assessment reveals the invisible patterns shaping your potential across 12 questions, 5 dimensions, and one personalized report.
+              </p>
+              <div class="mt-4 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white/58">
+                <span class="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">12 Questions</span>
+                <span class="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">2 Minutes</span>
+                <span class="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">5 Dimensions</span>
+              </div>
+            </div>
+            <div
+              class="inline-flex items-center justify-center gap-3 self-start rounded-full border border-white/15 bg-white/10 px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition group-hover:bg-white group-hover:text-black lg:self-center">
+              Reveal Your Wiring
+              <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
+        </a>
+      } @else {
+        <a routerLink="/growth-lead"
+          class="group relative block overflow-hidden rounded-[2rem] border border-black/8 bg-[linear-gradient(135deg,#fff7ed_0%,#fff1f2_50%,#fee2e2_100%)] px-6 py-7 text-slate-950 shadow-[0_24px_70px_rgba(244,63,94,0.14)] transition hover:-translate-y-1 hover:border-red-300 sm:px-8">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(239,68,68,0.16),_transparent_34%)]"></div>
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(251,146,60,0.12),_transparent_30%)]"></div>
+          <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="max-w-3xl">
+              <div class="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                Growth Quiz
+              </div>
+              <h3 class="mt-4 text-3xl font-black leading-[0.98] tracking-[-0.04em] sm:text-4xl">
+                Are You Wired to Win?
+                <span class="block text-red-600">Take the 2-minute growth mindset test.</span>
+              </h3>
+              <p class="mt-4 max-w-2xl text-sm leading-relaxed text-slate-700 sm:text-base">
+                Backed by 6 research frameworks, this assessment reveals the invisible patterns shaping your potential across 12 questions, 5 dimensions, and one personalized report.
+              </p>
+              <div class="mt-4 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
+                <span class="rounded-full border border-black/8 bg-white/72 px-3 py-1.5">12 Questions</span>
+                <span class="rounded-full border border-black/8 bg-white/72 px-3 py-1.5">2 Minutes</span>
+                <span class="rounded-full border border-black/8 bg-white/72 px-3 py-1.5">5 Dimensions</span>
+              </div>
+            </div>
+            <div
+              class="inline-flex items-center justify-center gap-3 self-start rounded-full bg-slate-950 px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition group-hover:bg-red-500 lg:self-center">
+              Reveal Your Wiring
+              <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+  </section>
+
   <!-- Hero Section (commented out for now)
   <div
     class="relative min-h-screen flex items-center justify-center pt-20 pb-10 overflow-hidden bg-white dark:bg-slate-950">
