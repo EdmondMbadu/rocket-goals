@@ -353,7 +353,7 @@ interface TeamCoachSelectionView {
                   <div class="relative h-20 w-20 flex-none">
                     <div class="absolute inset-0 rounded-[1.75rem] bg-white/25 blur-xl"></div>
                     <img
-                      src="/assets/a-2.jpg"
+                      src="/assets/robot.jpg"
                       alt="AI coach"
                       class="relative h-full w-full rounded-[1.75rem] border border-white/25 object-cover shadow-[0_20px_45px_rgba(0,0,0,0.28)]" />
                     <div class="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-2xl border border-white/25 bg-black/70 text-white shadow-lg backdrop-blur-md">
