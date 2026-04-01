@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import type { Firestore } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import {
   GROWTH_ARCHETYPES,
   GROWTH_DIMENSIONS,
@@ -48,7 +49,7 @@ interface RadarAxisView {
 @Component({
   selector: 'app-growth-lead',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AvatarDropdownComponent],
   templateUrl: './growth-lead.component.html',
   styleUrl: './growth-lead.component.css'
 })
@@ -68,6 +69,7 @@ export class GrowthLeadComponent {
   protected readonly couponCode = 'Growth2026';
 
   protected readonly isDarkMode = this.theme.isDarkMode;
+  protected readonly isLoggedIn = computed(() => !!(this.authService.profile()?.userId || this.authService.user()));
   protected readonly phase = signal<GrowthLeadPhase>('start');
   protected readonly currentIndex = signal(0);
   protected readonly answers = signal<Record<number, number>>({});

@@ -3,14 +3,22 @@
   <div class="page-glow page-glow-right"></div>
 
   <header class="lead-topbar">
-    <a routerLink="/" class="brand-mark">
+    <a [routerLink]="isLoggedIn() ? '/goals' : '/'" class="brand-mark">
       <img src="/assets/rocket-goals.png" alt="RocketGoals" class="brand-logo" />
       <span class="brand-text">ROCKET<span>GOALS</span></span>
     </a>
 
     <div class="topbar-actions">
-      <a routerLink="/login" class="topbar-link">Log in</a>
-      <a routerLink="/signup" class="topbar-cta">Start Free</a>
+      @if (isLoggedIn()) {
+        <nav class="topbar-nav" aria-label="Growth lead navigation">
+          <a routerLink="/goals" class="topbar-nav-link">Home</a>
+          <a routerLink="/ai" class="topbar-nav-link">AI</a>
+          <a routerLink="/profile" class="topbar-nav-link">Profile</a>
+        </nav>
+      } @else {
+        <a routerLink="/login" class="topbar-link">Log in</a>
+        <a routerLink="/signup" class="topbar-cta">Start Free</a>
+      }
       <button type="button" class="theme-switch" (click)="toggleTheme()" [attr.aria-pressed]="isDarkMode()">
         @if (isDarkMode()) {
           <svg class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -24,6 +32,11 @@
           </svg>
         }
       </button>
+      @if (isLoggedIn()) {
+        <div class="topbar-avatar">
+          <app-avatar-dropdown />
+        </div>
+      }
     </div>
   </header>
 
