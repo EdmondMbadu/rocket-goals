@@ -182,7 +182,7 @@
 
         <section class="radar-card">
           <div class="panel-title">Your Growth Dimensions</div>
-          <svg class="radar-chart" viewBox="0 0 340 300" aria-hidden="true">
+          <svg class="radar-chart" viewBox="0 0 340 324" aria-hidden="true">
             @for (level of radar().levels; track level.id) {
               <polygon [attr.points]="level.points" class="radar-grid"></polygon>
             }
@@ -199,10 +199,24 @@
                 {{ axis.score }}%
               </text>
               <text [attr.x]="axis.labelX" [attr.y]="axis.labelY + 15" [attr.text-anchor]="axis.textAnchor" class="radar-label-name">
-                {{ axis.dimension.name }}
+                {{ axis.dimension.radarLabel }}
               </text>
             }
           </svg>
+
+          <div class="dimension-summary-grid">
+            @for (row of dimensionSummaryRows(); track row.dimension.id) {
+              <article class="dimension-summary-card">
+                <div class="dimension-summary-top">
+                  <span class="dimension-summary-name">{{ row.dimension.name }}</span>
+                  <span class="dimension-summary-score" [style.color]="row.dimension.color">{{ row.score }}%</span>
+                </div>
+                <div class="dimension-summary-track">
+                  <span class="dimension-summary-fill" [style.width.%]="row.score" [style.background]="row.dimension.color"></span>
+                </div>
+              </article>
+            }
+          </div>
         </section>
 
         <section class="next-move-card">

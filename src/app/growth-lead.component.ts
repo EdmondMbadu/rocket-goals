@@ -29,6 +29,18 @@ interface DimensionCardView {
   tone: 'low' | 'mid' | 'high';
 }
 
+interface RadarAxisView {
+  dimension: GrowthDimension;
+  axisX: number;
+  axisY: number;
+  labelX: number;
+  labelY: number;
+  pointX: number;
+  pointY: number;
+  score: number;
+  textAnchor: 'start' | 'middle' | 'end';
+}
+
 @Component({
   selector: 'app-growth-lead',
   standalone: true,
@@ -187,6 +199,8 @@ export class GrowthLeadComponent {
     return cards.reduce((lowest, card) => (card.score < lowest.score ? card : lowest), cards[0]);
   });
 
+  protected readonly dimensionSummaryRows = computed(() => this.dimensionCards());
+
   protected readonly emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email().trim()));
 
   protected readonly shareCount = computed(() => {
@@ -219,8 +233,8 @@ export class GrowthLeadComponent {
 
   protected readonly radar = computed(() => {
     const centerX = 170;
-    const centerY = 150;
-    const radius = 108;
+    const centerY = 158;
+    const radius = 100;
     const count = this.dimensions.length;
     const step = (Math.PI * 2) / count;
     const startAngle = -Math.PI / 2;
@@ -234,12 +248,12 @@ export class GrowthLeadComponent {
         })
         .join(' ');
 
-    const axes = this.dimensions.map((dimension, index) => {
+    const axes: RadarAxisView[] = this.dimensions.map((dimension, index) => {
       const angle = startAngle + index * step;
       const axisX = centerX + radius * Math.cos(angle);
       const axisY = centerY + radius * Math.sin(angle);
-      const labelX = centerX + (radius + 28) * Math.cos(angle);
-      const labelY = centerY + (radius + 28) * Math.sin(angle);
+      const labelX = centerX + (radius + 36) * Math.cos(angle);
+      const labelY = centerY + (radius + 36) * Math.sin(angle);
       const textAnchor = Math.abs(Math.cos(angle)) < 0.1 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
       const score = scores[dimension.id] ?? 0;
       const pointX = centerX + radius * (score / 100) * Math.cos(angle);

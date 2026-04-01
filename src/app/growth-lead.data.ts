@@ -6,6 +6,7 @@ export interface GrowthDimension {
   phase: string;
   color: string;
   shortLabel: string;
+  radarLabel: string;
 }
 
 export interface GrowthQuestionOption {
@@ -37,11 +38,11 @@ export interface GrowthInsight {
 }
 
 export const GROWTH_DIMENSIONS: GrowthDimension[] = [
-  { id: 'beliefs', name: 'Mindset Beliefs', phase: 'GROUND', color: '#7c3aed', shortLabel: 'MB' },
-  { id: 'failure', name: 'Failure Response', phase: 'REFRAME', color: '#dc2626', shortLabel: 'FR' },
-  { id: 'action', name: 'Action Architecture', phase: 'ORCHESTRATE', color: '#0369a1', shortLabel: 'AA' },
-  { id: 'practice', name: 'Practice Quality', phase: 'WORK', color: '#15803d', shortLabel: 'PQ' },
-  { id: 'reinforce', name: 'Self-Reinforcement', phase: 'TRIUMPH & HABITUATE', color: '#b45309', shortLabel: 'SR' }
+  { id: 'beliefs', name: 'Mindset Beliefs', phase: 'GROUND', color: '#7c3aed', shortLabel: 'MB', radarLabel: 'Beliefs' },
+  { id: 'failure', name: 'Failure Response', phase: 'REFRAME', color: '#dc2626', shortLabel: 'FR', radarLabel: 'Failure' },
+  { id: 'action', name: 'Action Architecture', phase: 'ORCHESTRATE', color: '#0369a1', shortLabel: 'AA', radarLabel: 'Action' },
+  { id: 'practice', name: 'Practice Quality', phase: 'WORK', color: '#15803d', shortLabel: 'PQ', radarLabel: 'Practice' },
+  { id: 'reinforce', name: 'Self-Reinforcement', phase: 'TRIUMPH & HABITUATE', color: '#b45309', shortLabel: 'SR', radarLabel: 'Reinforce' }
 ];
 
 export const GROWTH_QUESTIONS: GrowthQuestion[] = [
