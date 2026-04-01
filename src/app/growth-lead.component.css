@@ -47,7 +47,8 @@
     radial-gradient(circle at top left, rgba(220, 38, 38, 0.12), transparent 34%),
     radial-gradient(circle at bottom right, rgba(3, 105, 161, 0.14), transparent 32%),
     linear-gradient(180deg, var(--gl-bg), var(--gl-bg-strong));
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .page-glow {
@@ -85,6 +86,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  z-index: 12;
 }
 
 .brand-mark {
@@ -171,6 +173,8 @@
 .topbar-avatar {
   display: inline-flex;
   align-items: center;
+  position: relative;
+  z-index: 20;
 }
 
 .theme-icon {
