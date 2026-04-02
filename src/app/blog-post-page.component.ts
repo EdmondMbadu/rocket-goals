@@ -153,6 +153,17 @@ import { ThemeService } from './theme.service';
                   <p class="text-xs font-semibold uppercase tracking-widest text-red-600 dark:text-red-400">{{ asCallout(block).title }}</p>
                   <p class="mt-2 text-[1.0625rem] leading-[1.8] text-slate-700 dark:text-slate-300">{{ asCallout(block).text }}</p>
                 </div>
+
+                <div *ngSwitchCase="'image'" class="my-8">
+                  <div class="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                    <img [src]="asImage(block).src" [alt]="asImage(block).alt" class="block w-full object-cover shadow-2xl transition-transform duration-700 hover:scale-[1.02]" />
+                  </div>
+                  @if (asImage(block).caption) {
+                  <p class="mt-4 text-center text-sm italic text-slate-400 dark:text-slate-500">
+                    {{ asImage(block).caption }}
+                  </p>
+                  }
+                </div>
               </div>
               }
             </div>
@@ -251,5 +262,9 @@ export class BlogPostPageComponent implements OnInit, OnDestroy {
 
   protected asCallout(block: InternalBlogBlock): Extract<InternalBlogBlock, { type: 'callout' }> {
     return block as Extract<InternalBlogBlock, { type: 'callout' }>;
+  }
+
+  protected asImage(block: InternalBlogBlock): Extract<InternalBlogBlock, { type: 'image' }> {
+    return block as Extract<InternalBlogBlock, { type: 'image' }>;
   }
 }

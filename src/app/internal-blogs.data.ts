@@ -3,7 +3,8 @@ export type InternalBlogBlock =
   | { type: 'bullet-list'; items: string[] }
   | { type: 'numbered-list'; items: Array<{ title: string; text: string }> }
   | { type: 'table'; columns: string[]; rows: string[][] }
-  | { type: 'callout'; title: string; text: string };
+  | { type: 'callout'; title: string; text: string }
+  | { type: 'image'; src: string; alt: string; caption?: string };
 
 export interface InternalBlogSection {
   title: string;
@@ -48,6 +49,12 @@ export const INTERNAL_BLOG_POSTS: InternalBlogPost[] = [
       {
         title: 'The Coaching Revolution Is Here - And It Is Agentic',
         blocks: [
+          {
+            type: 'image',
+            src: '/assets/blog/growth-mindset-hero.webp',
+            alt: 'Recursive Self-Improvement Visualization',
+            caption: 'A cinematic visualization of the recursive self-improvement loop: where bio-industrial architecture meets neural growth.'
+          },
           {
             type: 'paragraph',
             text: `For decades, coaching was treated like a premium service reserved for executives, founders, and elite athletes. Everyone else was left with self-help books, generic habit trackers, and motivational slogans that felt good for a moment and disappeared by Tuesday.`
