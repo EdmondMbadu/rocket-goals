@@ -218,7 +218,7 @@ export class GrowthLeadComponent {
     return (shared.fb ? 1 : 0) + (shared.tw ? 1 : 0) + (shared.li ? 1 : 0);
   });
 
-  protected readonly shareUnlocked = computed(() => this.shareCount() >= 3);
+  protected readonly shareUnlocked = computed(() => this.shareCount() >= 1);
 
   protected readonly shareText = computed(() => {
     const archetype = this.currentArchetype();
@@ -598,7 +598,7 @@ export class GrowthLeadComponent {
     }
 
     const shareCount = (sharedPlatforms.fb ? 1 : 0) + (sharedPlatforms.tw ? 1 : 0) + (sharedPlatforms.li ? 1 : 0);
-    const codeUnlocked = shareCount >= 3;
+    const codeUnlocked = shareCount >= 1;
 
     try {
       const firestore = await this.getFirestore();

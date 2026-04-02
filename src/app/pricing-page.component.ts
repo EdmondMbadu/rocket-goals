@@ -151,7 +151,7 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                 </p>
               }
             </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <!-- Free/Launch -->
               <div class="pricing-card relative current-plan-free"
                    [class.current-plan]="isCurrentPlan('free')"
@@ -217,6 +217,27 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                 } @else {
                 <button disabled class="btn-outline opacity-50 cursor-not-allowed">Included in your plan</button>
                 }
+              </div>
+
+              <!-- Team -->
+              <div class="pricing-card relative">
+                <div class="card-top">
+                  <span class="rocket-emoji rocket-size-3 rocket-red">🚀</span>
+                  <div class="badge bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300">Teams</div>
+                </div>
+                <div class="space-y-2">
+                  <div class="title text-red-600 dark:text-red-400">Team</div>
+                  <div class="price dark:text-white">$19.99</div>
+                  <div class="sub dark:text-slate-400">per month</div>
+                  <p class="desc dark:text-slate-300">A shared accountability setup for coaches, small teams, and group momentum.</p>
+                </div>
+                <ul class="features dark:text-slate-200">
+                  <li><span></span>Up to 20 team members</li>
+                  <li><span></span>Use your own AI coach or choose from the Rocket Coach list</li>
+                  <li><span></span>Team reminders, accountability flows, and shared momentum tools</li>
+                </ul>
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Coming Soon</button>
+                <p class="text-sm text-black/45 dark:text-slate-400">Placeholder for now while Stripe setup is in progress.</p>
               </div>
 
               <!-- Interplanetary -->
@@ -301,7 +322,7 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                     <div class="badge bg-red-600 text-white animate-pulse">Enterprise</div>
                   </div>
                   <div class="space-y-3">
-                    <div class="title text-red-600 dark:text-red-400" style="font-size: 16px;">5. Enterprise Consulting & Build</div>
+                    <div class="title text-red-600 dark:text-red-400" style="font-size: 16px;">6. Enterprise Consulting & Build</div>
                     <div class="price dark:text-white" style="font-size: 48px;">Custom</div>
                     <div class="sub dark:text-slate-400">Build at light speed</div>
                     <p class="desc dark:text-slate-300" style="font-size: 16px; line-height: 1.6;">

@@ -54,7 +54,7 @@
 
         <h1 class="hero-title">Are You <span>Wired to Win?</span></h1>
         <p class="hero-subtitle">
-          Most people think they have a growth mindset.
+          Most people think they have a <strong>Growth Mindset</strong>.
           <span class="hero-stat">Research says 73% are wrong.</span>
           This 2-minute test reveals the invisible patterns shaping your potential.
         </p>
@@ -146,13 +146,14 @@
 
     @if (phase() === 'email') {
       <section class="gate-card">
-        <div class="gate-score-label">Your Growth Mindset Score</div>
+        <div class="gate-score-label">Your <span class="gate-score-focus">Growth Mindset</span> Score</div>
         <div class="gate-score" [style.color]="currentArchetype().color">{{ totalScore() }}</div>
         <div class="gate-score-meta">out of 100</div>
         <h2 class="gate-archetype" [style.color]="currentArchetype().color">{{ currentArchetype().name }}</h2>
         <p class="gate-headline">{{ currentArchetype().headline }}</p>
 
         <div class="locked-preview">
+          <h3 class="locked-preview-heading">Accelerate Your Growth Mindset</h3>
           <p class="locked-preview-title">Your full report includes</p>
           <div class="locked-item">Dimension-by-dimension breakdown with radar chart</div>
           <div class="locked-item">Neuroscience-backed insights for each growth dimension</div>
@@ -173,7 +174,7 @@
             autocomplete="email"
             placeholder="Enter your email to unlock your report" />
           <button type="submit" class="unlock-btn" [disabled]="!emailValid() || emailSubmitting()">
-            @if (emailSubmitting()) { Unlocking... } @else { Unlock Full Report }
+            @if (emailSubmitting()) { Unlocking... } @else { Unlock Free Report }
           </button>
         </form>
 
@@ -181,7 +182,7 @@
           <p class="email-error">{{ emailError() }}</p>
         }
 
-        <p class="email-note">Your report unlocks instantly on screen. We will use that email shortly.</p>
+        <p class="email-note">Your report unlocks instantly on screen.</p>
 
         <div class="gate-actions">
           <button type="button" class="secondary-ghost-btn" (click)="editAnswers()">Review Answers</button>
@@ -195,7 +196,7 @@
           @if (captureNotice()) {
             <div class="capture-notice">{{ captureNotice() }}</div>
           }
-          <div class="gate-score-label">Your Growth Mindset Score</div>
+          <div class="gate-score-label">Your <span class="gate-score-focus">Growth Mindset</span> Score</div>
           <div class="results-score" [style.color]="currentArchetype().color">{{ totalScore() }}</div>
           <h1 class="results-archetype" [style.color]="currentArchetype().color">{{ currentArchetype().name }}</h1>
           <p class="results-description">{{ currentArchetype().desc }}</p>
@@ -284,7 +285,7 @@
           <div class="panel-title">Share to Unlock</div>
           <h2>Unlock 3 Free Months of Elite Coaching</h2>
           <p>
-            Share your results and get a 3-month access code for RocketGoals - the evidence-based GROWTH framework for turning ambition into repeatable execution.
+            Share your results and get a 3-month access code for RocketGoals - the evidence-based GROWTH MINDSET framework for turning ambition into repeatable execution.
           </p>
 
           <div class="share-toggle">
@@ -297,7 +298,7 @@
           </div>
 
           @if (!shareUnlocked()) {
-            <p class="share-helper">Share on all 3 platforms to unlock your code:</p>
+            <p class="share-helper">Share on one platform to unlock your code:</p>
             <div class="share-buttons">
               <button type="button" class="share-btn fb" [class.shared]="sharedPlatforms().fb" (click)="shareTo('fb')">
                 Facebook
@@ -311,9 +312,7 @@
             </div>
             <div class="share-progress">
               <span class="share-dot" [class.done]="shareCount() > 0"></span>
-              <span class="share-dot" [class.done]="shareCount() > 1"></span>
-              <span class="share-dot" [class.done]="shareCount() > 2"></span>
-              <span>{{ shareCount() }} of 3 shared</span>
+              <span>{{ shareCount() }} of 1 shared</span>
             </div>
           } @else {
             <div class="coupon-card">
