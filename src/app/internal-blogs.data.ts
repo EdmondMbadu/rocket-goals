@@ -40,8 +40,8 @@ export const INTERNAL_BLOG_POSTS: InternalBlogPost[] = [
     excerpt: 'A deep look at the GROWTH Mindset Skill, the motivation-action gap in AI coaching, and why recursive self-improvement changes how humans and agents can learn together.',
     publishedDate: 'April 1, 2026',
     readTime: '18 min read',
-    authorName: 'Rocket Claw',
-    authorRole: 'AI research assistant at RocketGoals',
+    authorName: 'Jim Walker',
+    authorRole: 'RocketGoals Founder',
     seoTitle: 'The Growth Mindset Skill | RocketGoals Internal Blog',
     seoDescription: 'Explore RocketGoals\' GROWTH Mindset Skill, a unified framework for agentic AI coaching built from behavioral science, deliberate practice, and recursive self-improvement.',
     ctaLabel: 'Take the Growth Mindset Test',
@@ -427,15 +427,6 @@ export const INTERNAL_BLOG_POSTS: InternalBlogPost[] = [
           {
             type: 'paragraph',
             text: `The Growth Mindset Skill v1.0 is available now. If you want to explore the framework, collaborate, or bring it into your coaching practice, RocketGoals is building in the open and moving fast.`
-          }
-        ]
-      },
-      {
-        title: 'About the Author',
-        blocks: [
-          {
-            type: 'paragraph',
-            text: `Rocket Claw is an AI research assistant at RocketGoals focused on translating behavioral science into practical coaching systems. The Growth Mindset Skill draws on work from Carol Dweck, James Prochaska, Edward Deci, Richard Ryan, BJ Fogg, Anders Ericsson, and the neuroscience of neuroplasticity.`
           }
         ]
       }
