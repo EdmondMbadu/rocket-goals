@@ -26,6 +26,7 @@ export interface InternalBlogPost {
   seoDescription: string;
   ctaLabel?: string;
   ctaPath?: string;
+  heroImage?: { src: string; alt: string; caption?: string };
   sections: InternalBlogSection[];
   citations: string[];
 }
@@ -45,16 +46,15 @@ export const INTERNAL_BLOG_POSTS: InternalBlogPost[] = [
     seoDescription: 'Explore RocketGoals\' GROWTH Mindset Skill, a unified framework for agentic AI coaching built from behavioral science, deliberate practice, and recursive self-improvement.',
     ctaLabel: 'Take the Growth Mindset Test',
     ctaPath: '/growth-lead',
+    heroImage: {
+      src: '/assets/blog/growth-mindset-hero.webp',
+      alt: 'Recursive Self-Improvement Visualization',
+      caption: 'A cinematic visualization of the recursive self-improvement loop: where bio-industrial architecture meets neural growth.'
+    },
     sections: [
       {
         title: 'The Coaching Revolution Is Here - And It Is Agentic',
         blocks: [
-          {
-            type: 'image',
-            src: '/assets/blog/growth-mindset-hero.webp',
-            alt: 'Recursive Self-Improvement Visualization',
-            caption: 'A cinematic visualization of the recursive self-improvement loop: where bio-industrial architecture meets neural growth.'
-          },
           {
             type: 'paragraph',
             text: `For decades, coaching was treated like a premium service reserved for executives, founders, and elite athletes. Everyone else was left with self-help books, generic habit trackers, and motivational slogans that felt good for a moment and disappeared by Tuesday.`

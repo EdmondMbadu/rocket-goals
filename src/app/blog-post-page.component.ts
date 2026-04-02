@@ -96,6 +96,21 @@ import { ThemeService } from './theme.service';
           </div>
         </section>
 
+        <!-- Hero image -->
+        @if (article.heroImage) {
+        <section class="mx-auto max-w-[1100px] px-6 pb-12">
+          <div class="overflow-hidden rounded-2xl">
+            <img [src]="article.heroImage.src" [alt]="article.heroImage.alt"
+              class="block w-full object-cover" />
+          </div>
+          @if (article.heroImage.caption) {
+          <p class="mt-3 text-center text-sm text-slate-400 dark:text-slate-500">
+            {{ article.heroImage.caption }}
+          </p>
+          }
+        </section>
+        }
+
         <!-- Content -->
         <article class="mx-auto max-w-[840px] px-6 pb-24">
           @for (section of article.sections; track section.title) {
