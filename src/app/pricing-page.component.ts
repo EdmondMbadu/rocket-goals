@@ -237,6 +237,7 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                   <li><span></span>Team reminders, accountability flows, and shared momentum tools</li>
                 </ul>
                 <button disabled class="btn-outline opacity-50 cursor-not-allowed">Coming Soon</button>
+                <p class="text-sm text-black/55 dark:text-slate-300">*If you need more than 20 team members or multiple teams, <a routerLink="/contact" class="font-semibold underline underline-offset-2 hover:text-red-600 dark:hover:text-red-400">contact us</a>.</p>
                 <p class="text-sm text-black/45 dark:text-slate-400">Placeholder for now while Stripe setup is in progress.</p>
               </div>
 
@@ -263,6 +264,7 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                   <li><span></span>App + Email + SMS reminders</li>
                   <li><span></span>Personality-coached, predictive nudges</li>
                   <li><span></span>Deep weekly report + ROCKET Blast Pro</li>
+                  <li><span></span>Group live coaching with Human Coach</li>
                 </ul>
                 @if (isCurrentPlan('interplanetary')) {
                 <button disabled class="btn-primary opacity-50 cursor-not-allowed">Current Plan</button>
@@ -297,6 +299,7 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                   <li><span></span>Mentor nudges + leadership dashboards</li>
                   <li><span></span>Build templates, lead pods/masterminds</li>
                   <li><span></span>Advanced AI insights + ROCKET Blast Elite</li>
+                  <li><span></span>Weekly coaching 1-on-1</li>
                 </ul>
                 @if (isCurrentPlan('galactic')) {
                 <button disabled class="btn-outline opacity-50 cursor-not-allowed">Current Plan</button>
