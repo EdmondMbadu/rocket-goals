@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { Firestore } from 'firebase/firestore';
@@ -22,6 +22,7 @@ type GrowthLeadPhase = 'start' | 'quiz' | 'email' | 'results';
 type SharePlatform = 'fb' | 'tw' | 'li';
 type ShareMode = 'score' | 'link';
 type LeadCaptureStatus = 'cloud' | 'local' | 'failed' | null;
+type GrowthLeadSessionStatus = 'started' | 'in_progress' | 'email_gate' | 'completed' | 'abandoned';
 type LeadCaptureResult = {
   status: LeadCaptureStatus;
   leadId: string | null;
@@ -53,7 +54,7 @@ interface RadarAxisView {
   templateUrl: './growth-lead.component.html',
   styleUrl: './growth-lead.component.css'
 })
-export class GrowthLeadComponent {
+export class GrowthLeadComponent implements OnDestroy {
   protected readonly theme = inject(ThemeService);
   protected readonly authService = inject(AuthService);
   protected readonly dimensions = GROWTH_DIMENSIONS;
@@ -89,7 +90,10 @@ export class GrowthLeadComponent {
 
   private firestoreInstance?: Promise<Firestore>;
   private leadRecordId: string | null = null;
+  private sessionRecordId: string | null = null;
   private leadShareToken = this.createShareToken();
+  private sessionWriteChain: Promise<void> = Promise.resolve();
+  private pageExitTracked = false;
   private readonly questionRanges = this.dimensions.map(dimension => {
     const indices = this.questions
       .map((question, index) => (question.dim === dimension.id ? index : -1))
@@ -212,6 +216,7 @@ export class GrowthLeadComponent {
   protected readonly dimensionSummaryRows = computed(() => this.dimensionCards());
 
   protected readonly emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email().trim()));
+  protected readonly answeredCount = computed(() => Object.keys(this.answers()).length);
 
   protected readonly shareCount = computed(() => {
     const shared = this.sharedPlatforms();
@@ -304,6 +309,15 @@ export class GrowthLeadComponent {
     });
   }
 
+  ngOnDestroy(): void {
+    this.trackPageExit();
+  }
+
+  @HostListener('window:pagehide')
+  protected onPageHide(): void {
+    this.trackPageExit();
+  }
+
   protected toggleTheme(): void {
     this.theme.toggleDarkMode();
   }
@@ -311,6 +325,7 @@ export class GrowthLeadComponent {
   protected startQuiz(): void {
     this.phase.set('quiz');
     this.currentIndex.set(0);
+    void this.persistSessionProgress('started');
     this.scrollToTop();
   }
 
@@ -333,6 +348,7 @@ export class GrowthLeadComponent {
       ...current,
       [questionIndex]: optionIndex
     }));
+    void this.persistSessionProgress('in_progress');
     this.selectingAnswer.set(true);
 
     window.setTimeout(() => {
@@ -343,6 +359,7 @@ export class GrowthLeadComponent {
         this.currentIndex.update(index => index + 1);
       }
 
+      void this.persistSessionProgress();
       this.selectingAnswer.set(false);
       this.scrollToTop();
     }, 260);
@@ -351,6 +368,7 @@ export class GrowthLeadComponent {
   protected editAnswers(): void {
     this.phase.set('quiz');
     this.currentIndex.set(Math.max(0, this.questions.length - 1));
+    void this.persistSessionProgress('in_progress');
     this.scrollToTop();
   }
 
@@ -373,6 +391,11 @@ export class GrowthLeadComponent {
     const result = await this.persistLead();
     this.leadCaptureStatus.set(result.status);
     this.leadRecordId = result.leadId;
+    await this.persistSessionProgress('completed', {
+      markCompleted: true,
+      finishedLeadId: result.leadId,
+      finishedLeadCaptured: result.status !== 'failed'
+    });
 
     window.setTimeout(() => {
       this.phase.set('results');
@@ -392,7 +415,9 @@ export class GrowthLeadComponent {
     this.couponCopied.set(false);
     this.leadCaptureStatus.set(null);
     this.leadRecordId = null;
+    this.sessionRecordId = null;
     this.leadShareToken = this.createShareToken();
+    this.pageExitTracked = false;
     this.selectingAnswer.set(false);
     this.emailSubmitting.set(false);
     this.scrollToTop();
@@ -492,6 +517,7 @@ export class GrowthLeadComponent {
 
       const docRef = await firestoreModule.addDoc(firestoreModule.collection(firestore, 'bookDownloads'), {
         ...payload,
+        completedAt: firestoreModule.serverTimestamp(),
         downloadedAt: firestoreModule.serverTimestamp()
       });
 
@@ -508,6 +534,7 @@ export class GrowthLeadComponent {
         const key = `growthLead:${Date.now()}`;
         localStorage.setItem(key, JSON.stringify({
           ...payload,
+          completedAt: new Date().toISOString(),
           downloadedAt: new Date().toISOString()
         }));
         return {
@@ -549,6 +576,7 @@ export class GrowthLeadComponent {
     const cleanedEmail = this.email().trim().toLowerCase();
 
     return {
+      sessionRecordId: this.sessionRecordId,
       userId: profile?.userId || profile?.id || user?.uid || null,
       firstName: profile?.firstName || '',
       lastName: profile?.lastName || '',
@@ -563,6 +591,11 @@ export class GrowthLeadComponent {
       codeUnlocked: false,
       codeUnlockedAt: null,
       shareUpdatedAt: null,
+      answerCount: this.answeredCount(),
+      questionCount: this.questions.length,
+      quizCompleted: this.answeredCount() >= this.questions.length,
+      emailCaptured: !!cleanedEmail,
+      lastPhase: this.phase(),
       totalScore: this.totalScore(),
       archetype: this.currentArchetype().name,
       scores: this.scores(),
@@ -629,5 +662,155 @@ export class GrowthLeadComponent {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  private trackPageExit(): void {
+    if (
+      this.pageExitTracked
+      || !this.shouldTrackSession()
+      || this.phase() === 'results'
+      || this.leadCaptureStatus() === 'cloud'
+      || this.leadCaptureStatus() === 'local'
+    ) {
+      return;
+    }
+
+    this.pageExitTracked = true;
+    void this.persistSessionProgress('abandoned', {
+      markAbandoned: true,
+      finishedLeadCaptured: this.leadCaptureStatus() !== 'failed' && !!this.leadRecordId
+    });
+  }
+
+  private shouldTrackSession(): boolean {
+    return this.phase() !== 'start' || this.answeredCount() > 0 || this.sessionRecordId !== null;
+  }
+
+  private getSessionStatus(override?: GrowthLeadSessionStatus): GrowthLeadSessionStatus {
+    if (override) {
+      return override;
+    }
+
+    if (this.phase() === 'results') {
+      return 'completed';
+    }
+
+    if (this.phase() === 'email') {
+      return 'email_gate';
+    }
+
+    if (this.phase() === 'quiz') {
+      return this.answeredCount() > 0 ? 'in_progress' : 'started';
+    }
+
+    return 'started';
+  }
+
+  private getCurrentQuestionNumber(): number | null {
+    if (this.phase() === 'quiz') {
+      return Math.min(this.currentIndex() + 1, this.questions.length);
+    }
+
+    if (this.answeredCount() === 0) {
+      return null;
+    }
+
+    return Math.min(this.answeredCount(), this.questions.length);
+  }
+
+  private getSessionProgressPercent(status: GrowthLeadSessionStatus): number {
+    if (status === 'email_gate' || status === 'completed') {
+      return 100;
+    }
+
+    return Math.round((this.answeredCount() / this.questions.length) * 100);
+  }
+
+  private buildSessionPayload(
+    status: GrowthLeadSessionStatus,
+    options?: {
+      finishedLeadId?: string | null;
+      finishedLeadCaptured?: boolean;
+      markAbandoned?: boolean;
+    }
+  ) {
+    const profile = this.authService.profile();
+    const user = this.authService.user();
+    const cleanedEmail = this.email().trim().toLowerCase();
+    const quizCompleted = this.answeredCount() >= this.questions.length;
+
+    return {
+      userId: profile?.userId || profile?.id || user?.uid || null,
+      firstName: profile?.firstName || '',
+      lastName: profile?.lastName || '',
+      email: cleanedEmail,
+      hasAccount: !!user,
+      isAnonymous: !cleanedEmail,
+      leadSource: 'growth-lead',
+      quizName: 'growth-mindset-test',
+      shareToken: this.leadShareToken,
+      sessionStatus: status,
+      answerCount: this.answeredCount(),
+      questionCount: this.questions.length,
+      currentQuestionNumber: this.getCurrentQuestionNumber(),
+      progressPercent: this.getSessionProgressPercent(status),
+      lastPhase: this.phase(),
+      quizCompleted,
+      emailCaptured: !!cleanedEmail,
+      droppedOff: options?.markAbandoned === true,
+      finishedLeadId: options?.finishedLeadId ?? this.leadRecordId,
+      finishedLeadCaptured: options?.finishedLeadCaptured === true,
+      scoreSnapshot: quizCompleted ? this.totalScore() : null,
+      archetypeSnapshot: quizCompleted ? this.currentArchetype().name : '',
+      scoresSnapshot: quizCompleted ? this.scores() : {},
+      answers: this.serializedAnswers()
+    };
+  }
+
+  private async persistSessionProgress(
+    statusOverride?: GrowthLeadSessionStatus,
+    options?: {
+      markCompleted?: boolean;
+      markAbandoned?: boolean;
+      finishedLeadId?: string | null;
+      finishedLeadCaptured?: boolean;
+    }
+  ): Promise<void> {
+    if (!this.shouldTrackSession()) {
+      return;
+    }
+
+    this.sessionWriteChain = this.sessionWriteChain
+      .catch(() => undefined)
+      .then(async () => {
+        const status = this.getSessionStatus(statusOverride);
+        const payload = this.buildSessionPayload(status, options);
+        const firestore = await this.getFirestore();
+        const firestoreModule = await import('firebase/firestore');
+
+        if (!this.sessionRecordId) {
+          const docRef = await firestoreModule.addDoc(firestoreModule.collection(firestore, 'growthLeadSessions'), {
+            ...payload,
+            startedAt: firestoreModule.serverTimestamp(),
+            lastActiveAt: firestoreModule.serverTimestamp(),
+            completedAt: options?.markCompleted ? firestoreModule.serverTimestamp() : null,
+            droppedOffAt: options?.markAbandoned ? firestoreModule.serverTimestamp() : null
+          });
+          this.sessionRecordId = docRef.id;
+          return;
+        }
+
+        await firestoreModule.updateDoc(firestoreModule.doc(firestore, 'growthLeadSessions', this.sessionRecordId), {
+          ...payload,
+          lastActiveAt: firestoreModule.serverTimestamp(),
+          ...(options?.markCompleted ? { completedAt: firestoreModule.serverTimestamp() } : {}),
+          ...(options?.markAbandoned ? { droppedOffAt: firestoreModule.serverTimestamp() } : {})
+        });
+      })
+      .catch(error => {
+        console.warn('Unable to sync growth lead session progress.', error);
+      });
+
+    await this.sessionWriteChain;
   }
 }
