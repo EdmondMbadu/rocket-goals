@@ -307,8 +307,8 @@ export class App implements AfterViewInit, OnDestroy {
 
     if (routePath === '/growth-lead') {
       return {
-        title: 'Growth Mindset Test | RocketGoals Growth Lead Quiz',
-        description: 'Take the RocketGoals growth mindset test, unlock your personalized report, and capture the next step for your growth system.',
+        title: 'Growth Mindset Test for Adults and Students | RocketGoals',
+        description: 'Take the RocketGoals growth mindset test for adults or students, unlock your personalized report, and capture your next growth move.',
         canonicalPath: '/growth-lead'
       };
     }

@@ -15,6 +15,7 @@ type GrowthLeadAdminEntry = {
   firstName: string;
   lastName: string;
   email: string;
+  quizMode: 'adult' | 'student' | 'unknown';
   totalScore: number | null;
   archetype: string;
   downloadedAt: Date;
@@ -61,7 +62,8 @@ export class GrowthLeadAdminComponent implements OnInit {
         this.fullName(entry),
         entry.email,
         entry.archetype,
-        entry.userId
+        entry.userId,
+        entry.quizMode
       ]
         .join(' ')
         .toLowerCase();
@@ -233,6 +235,7 @@ export class GrowthLeadAdminComponent implements OnInit {
             firstName: data['firstName'] || '',
             lastName: data['lastName'] || '',
             email: data['email'] || '',
+            quizMode: data['quizMode'] === 'adult' || data['quizMode'] === 'student' ? data['quizMode'] : 'unknown',
             totalScore: typeof data['totalScore'] === 'number' ? data['totalScore'] : null,
             archetype: data['archetype'] || 'Unclassified',
             downloadedAt: this.toDate(data['downloadedAt']),
@@ -240,7 +243,7 @@ export class GrowthLeadAdminComponent implements OnInit {
             codeUnlockedAt: this.toDateOrNull(data['codeUnlockedAt']),
             shareCount,
             sharedPlatforms,
-            codeUnlocked: data['codeUnlocked'] === true || shareCount >= 3,
+            codeUnlocked: data['codeUnlocked'] === true || shareCount >= 1,
             hasAccount: data['hasAccount'] === true
           } satisfies GrowthLeadAdminEntry;
         })

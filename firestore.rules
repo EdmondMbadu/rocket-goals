@@ -36,13 +36,15 @@ service cloud.firestore {
       return resource.data.leadSource == 'growth-lead'
         && request.resource.data.leadSource == 'growth-lead'
         && request.resource.data.quizName == 'growth-mindset-test'
+        && request.resource.data.quizMode is string
+        && (request.resource.data.quizMode == 'adult' || request.resource.data.quizMode == 'student')
         && request.resource.data.shareToken is string
         && request.resource.data.shareToken == resource.data.shareToken
         && request.resource.data.answerCount is int
         && request.resource.data.answerCount >= 0
         && request.resource.data.answerCount <= 12
         && request.resource.data.questionCount is int
-        && request.resource.data.questionCount == 12
+        && (request.resource.data.questionCount == 8 || request.resource.data.questionCount == 12)
         && (request.resource.data.currentQuestionNumber == null || request.resource.data.currentQuestionNumber is int)
         && request.resource.data.progressPercent is int
         && request.resource.data.progressPercent >= 0
@@ -62,6 +64,7 @@ service cloud.firestore {
           'isAnonymous',
           'leadSource',
           'quizName',
+          'quizMode',
           'shareToken',
           'sessionStatus',
           'answerCount',

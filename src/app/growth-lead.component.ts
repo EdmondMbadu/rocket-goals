@@ -7,14 +7,15 @@ import { firebaseConfig } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { AvatarDropdownComponent } from './avatar-dropdown.component';
 import {
-  GROWTH_ARCHETYPES,
   GROWTH_DIMENSIONS,
-  GROWTH_INSIGHTS,
-  GROWTH_QUESTIONS,
   type GrowthArchetype,
   type GrowthDimension,
   type GrowthDimensionId,
-  type GrowthQuestion
+  type GrowthLeadMode,
+  type GrowthQuestion,
+  getGrowthArchetypes,
+  getGrowthInsights,
+  getGrowthQuestions
 } from './growth-lead.data';
 import { ThemeService } from './theme.service';
 
@@ -58,19 +59,11 @@ export class GrowthLeadComponent implements OnDestroy {
   protected readonly theme = inject(ThemeService);
   protected readonly authService = inject(AuthService);
   protected readonly dimensions = GROWTH_DIMENSIONS;
-  protected readonly questions = GROWTH_QUESTIONS;
-  protected readonly researchRefs = [
-    'Dweck (2006)',
-    'Ericsson (2016)',
-    'Fogg (2019)',
-    'Deci & Ryan (2000)',
-    'Karpathy (2026)',
-    'Huang et al. (2025)'
-  ];
   protected readonly couponCode = 'Growth2026';
 
   protected readonly isDarkMode = this.theme.isDarkMode;
   protected readonly isLoggedIn = computed(() => !!(this.authService.profile()?.userId || this.authService.user()));
+  protected readonly mode = signal<GrowthLeadMode>('adult');
   protected readonly phase = signal<GrowthLeadPhase>('start');
   protected readonly currentIndex = signal(0);
   protected readonly answers = signal<Record<number, number>>({});
@@ -94,8 +87,51 @@ export class GrowthLeadComponent implements OnDestroy {
   private leadShareToken = this.createShareToken();
   private sessionWriteChain: Promise<void> = Promise.resolve();
   private pageExitTracked = false;
-  private readonly questionRanges = this.dimensions.map(dimension => {
-    const indices = this.questions
+
+  protected readonly isStudentMode = computed(() => this.mode() === 'student');
+  protected readonly questions = computed(() => getGrowthQuestions(this.mode()));
+  protected readonly archetypes = computed(() => getGrowthArchetypes(this.mode()));
+  protected readonly insights = computed(() => getGrowthInsights(this.mode()));
+  protected readonly researchRefs = computed(() => (
+    this.isStudentMode()
+      ? ['Brain Science', 'Growth Mindset', 'Study Skills']
+      : ['Dweck (2006)', 'Ericsson (2016)', 'Fogg (2019)', 'Deci & Ryan (2000)', 'Karpathy (2026)', 'Huang et al. (2025)']
+  ));
+  protected readonly heroBadgeText = computed(() => (
+    this.isStudentMode() ? 'Built for students' : 'Backed by 6 research frameworks'
+  ));
+  protected readonly heroSubtitleLead = computed(() => (
+    this.isStudentMode()
+      ? 'This quick quiz shows you how your brain handles challenges, setbacks, and learning.'
+      : 'Most people think they have a Growth Mindset.'
+  ));
+  protected readonly heroSubtitleStat = computed(() => (
+    this.isStudentMode() ? '' : 'Research says 73% are wrong.'
+  ));
+  protected readonly heroSubtitleTail = computed(() => (
+    this.isStudentMode()
+      ? 'No right or wrong answers - just be honest.'
+      : 'This 2-minute test reveals the invisible patterns shaping your potential.'
+  ));
+  protected readonly lockedPreviewHeading = computed(() => (
+    this.isStudentMode() ? 'Build Your Growth Mindset' : 'Accelerate Your Growth Mindset'
+  ));
+  protected readonly lockedPreviewItems = computed(() => (
+    this.isStudentMode()
+      ? ['Your strengths and growth areas', 'Tips backed by brain science', 'Your personal action plan']
+      : [
+          'Dimension-by-dimension breakdown with radar chart',
+          'Neuroscience-backed insights for each growth dimension',
+          'Personalized action plan based on your weakest areas',
+          'Research citations explaining your specific patterns',
+          'Your RSI readiness assessment'
+        ]
+  ));
+  protected readonly nextMoveLabel = computed(() => (
+    this.isStudentMode() ? 'Try This:' : 'Your next move:'
+  ));
+  protected readonly questionRanges = computed(() => this.dimensions.map(dimension => {
+    const indices = this.questions()
       .map((question, index) => (question.dim === dimension.id ? index : -1))
       .filter(index => index >= 0);
 
@@ -104,13 +140,13 @@ export class GrowthLeadComponent implements OnDestroy {
       first: indices[0],
       last: indices[indices.length - 1]
     };
-  });
+  }));
 
   protected readonly currentQuestion = computed<GrowthQuestion | null>(() => {
     if (this.phase() !== 'quiz') {
       return null;
     }
-    return this.questions[this.currentIndex()] ?? null;
+    return this.questions()[this.currentIndex()] ?? null;
   });
 
   protected readonly currentDimension = computed(() => {
@@ -131,13 +167,13 @@ export class GrowthLeadComponent implements OnDestroy {
     if (this.phase() !== 'quiz') {
       return 0;
     }
-    return Math.round(((this.currentIndex() + 1) / this.questions.length) * 100);
+    return Math.round(((this.currentIndex() + 1) / this.questions().length) * 100);
   });
 
   protected readonly dimensionPills = computed(() => {
     const index = this.currentIndex();
 
-    return this.questionRanges.map(range => {
+    return this.questionRanges().map(range => {
       let status: 'pending' | 'active' | 'done' = 'pending';
       if (index > range.last) {
         status = 'done';
@@ -155,9 +191,10 @@ export class GrowthLeadComponent implements OnDestroy {
   protected readonly scores = computed<Record<GrowthDimensionId, number>>(() => {
     const allAnswers = this.answers();
     const base = {} as Record<GrowthDimensionId, number>;
+    const questions = this.questions();
 
     for (const dimension of this.dimensions) {
-      const matchingQuestions = this.questions
+      const matchingQuestions = questions
         .map((question, index) => ({ question, index }))
         .filter(entry => entry.question.dim === dimension.id);
 
@@ -189,15 +226,17 @@ export class GrowthLeadComponent implements OnDestroy {
 
   protected readonly currentArchetype = computed<GrowthArchetype>(() => {
     const total = this.totalScore();
-    return GROWTH_ARCHETYPES.find(archetype => total >= archetype.min && total <= archetype.max) ?? GROWTH_ARCHETYPES[0];
+    const archetypes = this.archetypes();
+    return archetypes.find(archetype => total >= archetype.min && total <= archetype.max) ?? archetypes[0];
   });
 
   protected readonly dimensionCards = computed<DimensionCardView[]>(() => {
     const allScores = this.scores();
+    const insights = this.insights();
 
     return this.dimensions.map(dimension => {
       const score = allScores[dimension.id] ?? 0;
-      const insight = GROWTH_INSIGHTS[dimension.id].find(item => score >= item.min && score <= item.max) ?? null;
+      const insight = insights[dimension.id].find(item => score >= item.min && score <= item.max) ?? null;
 
       return {
         dimension,
@@ -329,6 +368,15 @@ export class GrowthLeadComponent implements OnDestroy {
     this.scrollToTop();
   }
 
+  protected setMode(mode: GrowthLeadMode): void {
+    if (this.mode() === mode) {
+      return;
+    }
+
+    this.mode.set(mode);
+    this.resetFlowState();
+  }
+
   protected previousQuestion(): void {
     if (this.currentIndex() === 0 || this.selectingAnswer()) {
       return;
@@ -352,7 +400,7 @@ export class GrowthLeadComponent implements OnDestroy {
     this.selectingAnswer.set(true);
 
     window.setTimeout(() => {
-      const isLastQuestion = questionIndex >= this.questions.length - 1;
+      const isLastQuestion = questionIndex >= this.questions().length - 1;
       if (isLastQuestion) {
         this.phase.set('email');
       } else {
@@ -367,7 +415,7 @@ export class GrowthLeadComponent implements OnDestroy {
 
   protected editAnswers(): void {
     this.phase.set('quiz');
-    this.currentIndex.set(Math.max(0, this.questions.length - 1));
+    this.currentIndex.set(Math.max(0, this.questions().length - 1));
     void this.persistSessionProgress('in_progress');
     this.scrollToTop();
   }
@@ -405,6 +453,24 @@ export class GrowthLeadComponent implements OnDestroy {
   }
 
   protected retake(): void {
+    this.resetFlowState();
+    this.scrollToTop();
+  }
+
+  protected dimensionLabel(dimension: GrowthDimension): string {
+    return this.isStudentMode() ? dimension.studentName : dimension.name;
+  }
+
+  protected radarDimensionLabel(dimension: GrowthDimension): string {
+    return this.isStudentMode() ? dimension.studentName : dimension.radarLabel;
+  }
+
+  protected currentDimensionLabel(): string {
+    const dimension = this.currentDimension();
+    return dimension ? this.dimensionLabel(dimension) : '';
+  }
+
+  private resetFlowState(): void {
     this.phase.set('start');
     this.currentIndex.set(0);
     this.answers.set({});
@@ -420,7 +486,6 @@ export class GrowthLeadComponent implements OnDestroy {
     this.pageExitTracked = false;
     this.selectingAnswer.set(false);
     this.emailSubmitting.set(false);
-    this.scrollToTop();
   }
 
   protected setShareMode(mode: ShareMode): void {
@@ -582,9 +647,10 @@ export class GrowthLeadComponent implements OnDestroy {
       lastName: profile?.lastName || '',
       email: cleanedEmail,
       hasAccount: !!user,
-      bookTitle: 'Growth Lead Quiz',
+      bookTitle: this.isStudentMode() ? 'Growth Lead Quiz - Student' : 'Growth Lead Quiz - Adult',
       leadSource: 'growth-lead',
       quizName: 'growth-mindset-test',
+      quizMode: this.mode(),
       shareToken: this.leadShareToken,
       sharedPlatforms: { fb: false, tw: false, li: false },
       shareCount: 0,
@@ -592,8 +658,8 @@ export class GrowthLeadComponent implements OnDestroy {
       codeUnlockedAt: null,
       shareUpdatedAt: null,
       answerCount: this.answeredCount(),
-      questionCount: this.questions.length,
-      quizCompleted: this.answeredCount() >= this.questions.length,
+      questionCount: this.questions().length,
+      quizCompleted: this.answeredCount() >= this.questions().length,
       emailCaptured: !!cleanedEmail,
       lastPhase: this.phase(),
       totalScore: this.totalScore(),
@@ -605,8 +671,9 @@ export class GrowthLeadComponent implements OnDestroy {
 
   private serializedAnswers() {
     const allAnswers = this.answers();
+    const questions = this.questions();
 
-    return this.questions.map((question, index) => {
+    return questions.map((question, index) => {
       const answerIndex = allAnswers[index];
       const answer = typeof answerIndex === 'number' ? question.options[answerIndex] : null;
 
@@ -708,14 +775,14 @@ export class GrowthLeadComponent implements OnDestroy {
 
   private getCurrentQuestionNumber(): number | null {
     if (this.phase() === 'quiz') {
-      return Math.min(this.currentIndex() + 1, this.questions.length);
+      return Math.min(this.currentIndex() + 1, this.questions().length);
     }
 
     if (this.answeredCount() === 0) {
       return null;
     }
 
-    return Math.min(this.answeredCount(), this.questions.length);
+    return Math.min(this.answeredCount(), this.questions().length);
   }
 
   private getSessionProgressPercent(status: GrowthLeadSessionStatus): number {
@@ -723,7 +790,7 @@ export class GrowthLeadComponent implements OnDestroy {
       return 100;
     }
 
-    return Math.round((this.answeredCount() / this.questions.length) * 100);
+    return Math.round((this.answeredCount() / this.questions().length) * 100);
   }
 
   private buildSessionPayload(
@@ -737,7 +804,7 @@ export class GrowthLeadComponent implements OnDestroy {
     const profile = this.authService.profile();
     const user = this.authService.user();
     const cleanedEmail = this.email().trim().toLowerCase();
-    const quizCompleted = this.answeredCount() >= this.questions.length;
+    const quizCompleted = this.answeredCount() >= this.questions().length;
 
     return {
       userId: profile?.userId || profile?.id || user?.uid || null,
@@ -748,10 +815,11 @@ export class GrowthLeadComponent implements OnDestroy {
       isAnonymous: !cleanedEmail,
       leadSource: 'growth-lead',
       quizName: 'growth-mindset-test',
+      quizMode: this.mode(),
       shareToken: this.leadShareToken,
       sessionStatus: status,
       answerCount: this.answeredCount(),
-      questionCount: this.questions.length,
+      questionCount: this.questions().length,
       currentQuestionNumber: this.getCurrentQuestionNumber(),
       progressPercent: this.getSessionProgressPercent(status),
       lastPhase: this.phase(),

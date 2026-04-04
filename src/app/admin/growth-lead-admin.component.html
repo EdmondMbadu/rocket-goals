@@ -62,7 +62,7 @@
             <div class="space-y-2">
               <h2 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">See who finished the challenge and who actually unlocked the code.</h2>
               <p class="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">
-                Every entry below shows the lead, the submission time, the platforms they touched, and whether they completed all three shares required to unlock the coaching code.
+                Every entry below shows the lead, the submission time, the mode they used, the platforms they touched, and whether they shared enough to unlock the coaching code.
               </p>
             </div>
             <div class="flex flex-wrap gap-3">
@@ -89,7 +89,7 @@
             <article class="metric-card">
               <span class="metric-label">Code Unlocked</span>
               <strong class="metric-value">{{ unlockedEntries() }}</strong>
-              <span class="metric-subtext">Completed all 3 social shares</span>
+              <span class="metric-subtext">Unlocked after at least 1 share</span>
             </article>
             <article class="metric-card">
               <span class="metric-label">Avg Shares</span>
@@ -185,6 +185,9 @@
                         Existing Account
                       </span>
                     }
+                    <span class="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
+                      {{ entry.quizMode === 'student' ? 'Student' : entry.quizMode === 'adult' ? 'Adult' : 'Unknown Mode' }}
+                    </span>
                   </div>
 
                   <div>

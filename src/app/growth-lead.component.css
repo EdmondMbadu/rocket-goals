@@ -293,6 +293,15 @@
   color: var(--gl-red);
 }
 
+.hero-kicker {
+  margin: 12px 0 0;
+  font-family: var(--gl-heading);
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--gl-blue);
+}
+
 .hero-subtitle,
 .results-description,
 .dimension-insight,
@@ -307,7 +316,7 @@
 
 .hero-subtitle {
   max-width: 580px;
-  margin: 18px auto 0;
+  margin: 20px auto 0;
   font-size: 1.05rem;
 }
 
@@ -323,6 +332,52 @@
   gap: 16px;
   margin: 32px 0;
   flex-wrap: wrap;
+}
+
+.mode-select {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 24px 0 0;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  min-width: 170px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1.5px solid var(--gl-border);
+  background: var(--gl-panel-strong);
+  color: var(--gl-text-soft);
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.mode-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(220, 38, 38, 0.24);
+}
+
+.mode-btn.active {
+  border-color: rgba(220, 38, 38, 0.34);
+  background: var(--gl-red-soft);
+  color: var(--gl-red);
+}
+
+.mode-btn-label,
+.mode-btn-sub {
+  display: block;
+}
+
+.mode-btn-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.mode-btn-sub {
+  margin-top: 4px;
+  font-size: 0.76rem;
+  color: var(--gl-text-muted);
 }
 
 .hero-stat-card {
@@ -482,6 +537,15 @@
   letter-spacing: 0.06em;
 }
 
+.gate-mode-kicker {
+  margin-bottom: 12px;
+  font-family: var(--gl-heading);
+  font-size: clamp(1.15rem, 2.6vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--gl-blue);
+}
+
 .progress-count {
   font-size: 0.74rem;
   font-weight: 800;
@@ -562,6 +626,10 @@
   margin-bottom: 8px;
   font-size: 0.8rem;
   font-weight: 900;
+}
+
+.question-phase {
+  color: var(--gl-text-muted);
 }
 
 .question-title {
@@ -1209,6 +1277,10 @@
     font-size: 2.5rem;
   }
 
+  .mode-btn {
+    min-width: calc(50% - 6px);
+  }
+
   .email-form,
   .results-footer {
     flex-direction: column;
@@ -1252,6 +1324,15 @@
 
   .hero-stats {
     gap: 12px;
+  }
+
+  .mode-select {
+    gap: 10px;
+  }
+
+  .mode-btn {
+    width: 100%;
+    min-width: 0;
   }
 
   .hero-stat-card {

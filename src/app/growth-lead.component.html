@@ -45,7 +45,7 @@
       <section class="hero-card">
         <div class="hero-badge">
           <span class="hero-badge-dot"></span>
-          Backed by 6 research frameworks
+          {{ heroBadgeText() }}
         </div>
 
         <div class="hero-logo-wrap">
@@ -53,15 +53,33 @@
         </div>
 
         <h1 class="hero-title">Are You <span>Wired to Win?</span></h1>
+        <p class="hero-kicker">The Growth Mindset Test</p>
+
+        <div class="mode-select" aria-label="Quiz mode">
+          <button type="button" class="mode-btn" [class.active]="mode() === 'adult'" (click)="setMode('adult')">
+            <span class="mode-btn-label">Adults</span>
+            <span class="mode-btn-sub">Professional scenarios</span>
+          </button>
+          <button type="button" class="mode-btn" [class.active]="mode() === 'student'" (click)="setMode('student')">
+            <span class="mode-btn-label">Students</span>
+            <span class="mode-btn-sub">School and life scenarios</span>
+          </button>
+        </div>
+
         <p class="hero-subtitle">
-          Most people think they have a <strong>Growth Mindset</strong>.
-          <span class="hero-stat">Research says 73% are wrong.</span>
-          This 2-minute test reveals the invisible patterns shaping your potential.
+          @if (isStudentMode()) {
+            {{ heroSubtitleLead() }}
+            {{ heroSubtitleTail() }}
+          } @else {
+            Most people think they have a <strong>Growth Mindset</strong>.
+            <span class="hero-stat">{{ heroSubtitleStat() }}</span>
+            {{ heroSubtitleTail() }}
+          }
         </p>
 
         <div class="hero-stats">
           <article class="hero-stat-card">
-            <strong>12</strong>
+            <strong>{{ questions().length }}</strong>
             <span>Questions</span>
           </article>
           <article class="hero-stat-card">
@@ -79,7 +97,7 @@
         </button>
 
         <div class="research-chip-row">
-          @for (ref of researchRefs; track ref) {
+          @for (ref of researchRefs(); track ref) {
             <span class="research-chip">{{ ref }}</span>
           }
         </div>
@@ -95,7 +113,7 @@
         <div class="progress-card">
           <div class="progress-head">
             <span class="progress-label">Progress</span>
-            <span class="progress-count">{{ currentIndex() + 1 }} / {{ questions.length }}</span>
+            <span class="progress-count">{{ currentIndex() + 1 }} / {{ questions().length }}</span>
           </div>
           <div class="progress-track">
             <span class="progress-fill" [style.width.%]="progressPercent()"></span>
@@ -104,7 +122,7 @@
             @for (pill of dimensionPills(); track pill.dimension.id) {
               <span class="dimension-pill" [class.done]="pill.status === 'done'" [class.active]="pill.status === 'active'">
                 <small>{{ pill.dimension.shortLabel }}</small>
-                {{ pill.dimension.name }}
+                {{ dimensionLabel(pill.dimension) }}
               </span>
             }
           </div>
@@ -113,9 +131,12 @@
         <article class="question-card">
           <div class="question-head">
             <div class="question-kicker" [style.color]="currentDimension()?.color">
-              {{ currentDimension()?.name }} - {{ currentDimension()?.phase }}
+              {{ currentDimensionLabel() }}
+              @if (!isStudentMode()) {
+                <span class="question-phase">- {{ currentDimension()?.phase }}</span>
+              }
             </div>
-            <div class="question-number">Question {{ currentIndex() + 1 }} of {{ questions.length }}</div>
+            <div class="question-number">Question {{ currentIndex() + 1 }} of {{ questions().length }}</div>
           </div>
 
           <h2 class="question-title">{{ question.scenario }}</h2>
@@ -146,20 +167,27 @@
 
     @if (phase() === 'email') {
       <section class="gate-card">
-        <div class="gate-score-label">Your <span class="gate-score-focus">Growth Mindset</span> Score</div>
+        @if (isStudentMode()) {
+          <div class="gate-mode-kicker">Growth Mindset Score</div>
+        }
+        <div class="gate-score-label">
+          @if (isStudentMode()) {
+            Your Score
+          } @else {
+            Your <span class="gate-score-focus">Growth Mindset</span> Score
+          }
+        </div>
         <div class="gate-score" [style.color]="currentArchetype().color">{{ totalScore() }}</div>
         <div class="gate-score-meta">out of 100</div>
         <h2 class="gate-archetype" [style.color]="currentArchetype().color">{{ currentArchetype().name }}</h2>
         <p class="gate-headline">{{ currentArchetype().headline }}</p>
 
         <div class="locked-preview">
-          <h3 class="locked-preview-heading">Accelerate Your Growth Mindset</h3>
+          <h3 class="locked-preview-heading">{{ lockedPreviewHeading() }}</h3>
           <p class="locked-preview-title">Your full report includes</p>
-          <div class="locked-item">Dimension-by-dimension breakdown with radar chart</div>
-          <div class="locked-item">Neuroscience-backed insights for each growth dimension</div>
-          <div class="locked-item">Personalized action plan based on your weakest areas</div>
-          <div class="locked-item">Research citations explaining your specific patterns</div>
-          <div class="locked-item">Your RSI readiness assessment</div>
+          @for (item of lockedPreviewItems(); track item) {
+            <div class="locked-item">{{ item }}</div>
+          }
         </div>
 
         <form class="email-form" (ngSubmit)="unlockReport()">
@@ -196,7 +224,16 @@
           @if (captureNotice()) {
             <div class="capture-notice">{{ captureNotice() }}</div>
           }
-          <div class="gate-score-label">Your <span class="gate-score-focus">Growth Mindset</span> Score</div>
+          @if (isStudentMode()) {
+            <div class="gate-mode-kicker">Growth Mindset Score</div>
+          }
+          <div class="gate-score-label">
+            @if (isStudentMode()) {
+              Your Score
+            } @else {
+              Your <span class="gate-score-focus">Growth Mindset</span> Score
+            }
+          </div>
           <div class="results-score" [style.color]="currentArchetype().color">{{ totalScore() }}</div>
           <h1 class="results-archetype" [style.color]="currentArchetype().color">{{ currentArchetype().name }}</h1>
           <p class="results-description">{{ currentArchetype().desc }}</p>
@@ -221,7 +258,7 @@
                 {{ axis.score }}%
               </text>
               <text [attr.x]="axis.labelX" [attr.y]="axis.labelY + 15" [attr.text-anchor]="axis.textAnchor" class="radar-label-name">
-                {{ axis.dimension.radarLabel }}
+                {{ radarDimensionLabel(axis.dimension) }}
               </text>
             }
           </svg>
@@ -230,7 +267,7 @@
             @for (row of dimensionSummaryRows(); track row.dimension.id) {
               <article class="dimension-summary-card">
                 <div class="dimension-summary-top">
-                  <span class="dimension-summary-name">{{ row.dimension.name }}</span>
+                  <span class="dimension-summary-name">{{ dimensionLabel(row.dimension) }}</span>
                   <span class="dimension-summary-score" [style.color]="row.dimension.color">{{ row.score }}%</span>
                 </div>
                 <div class="dimension-summary-track">
@@ -243,10 +280,10 @@
 
         <section class="next-move-card">
           <div class="panel-title">Primary Unlock</div>
-          <h2>{{ weakestDimension().dimension.name }}</h2>
+          <h2>{{ dimensionLabel(weakestDimension().dimension) }}</h2>
           <p>{{ weakestDimension().insight?.text }}</p>
           <div class="next-move-callout">
-            <strong>Your next move:</strong>
+            <strong>{{ nextMoveLabel() }}</strong>
             {{ weakestDimension().insight?.action }}
           </div>
         </section>
@@ -256,8 +293,10 @@
             <article class="dimension-card">
               <div class="dimension-card-head">
                 <div>
-                  <div class="dimension-name">{{ card.dimension.name }}</div>
-                  <div class="dimension-phase">{{ card.dimension.phase }}</div>
+                  <div class="dimension-name">{{ dimensionLabel(card.dimension) }}</div>
+                  @if (!isStudentMode()) {
+                    <div class="dimension-phase">{{ card.dimension.phase }}</div>
+                  }
                 </div>
                 <div class="dimension-score" [class.low]="card.tone === 'low'" [class.mid]="card.tone === 'mid'" [class.high]="card.tone === 'high'">
                   {{ card.score }}%
@@ -273,7 +312,7 @@
 
               @if (card.insight) {
                 <div class="dimension-action">
-                  <strong>Your Next Move:</strong>
+                  <strong>{{ isStudentMode() ? 'Try This:' : 'Your Next Move:' }}</strong>
                   {{ card.insight.action }}
                 </div>
               }
