@@ -15,7 +15,7 @@ type GrowthLeadAdminEntry = {
   firstName: string;
   lastName: string;
   email: string;
-  quizMode: 'adult' | 'student' | 'unknown';
+  quizMode: 'adult' | 'student';
   totalScore: number | null;
   archetype: string;
   downloadedAt: Date;
@@ -235,7 +235,7 @@ export class GrowthLeadAdminComponent implements OnInit {
             firstName: data['firstName'] || '',
             lastName: data['lastName'] || '',
             email: data['email'] || '',
-            quizMode: data['quizMode'] === 'adult' || data['quizMode'] === 'student' ? data['quizMode'] : 'unknown',
+          quizMode: data['quizMode'] === 'student' ? 'student' : 'adult',
             totalScore: typeof data['totalScore'] === 'number' ? data['totalScore'] : null,
             archetype: data['archetype'] || 'Unclassified',
             downloadedAt: this.toDate(data['downloadedAt']),
