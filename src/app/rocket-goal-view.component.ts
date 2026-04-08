@@ -5999,6 +5999,7 @@ Generate the milestones now (JSON array only, no other text):`;
     this.telegramConnecting.set(true);
     this.telegramError.set(null);
     this.telegramDeepLink.set(null);
+    const currentGoalId = String(this.goal()?.id || '').trim();
     const isMobile = this.isMobileDevice();
     if (!isMobile) {
       this.showTelegramQrModal.set(true);
@@ -6015,7 +6016,7 @@ Generate the milestones now (JSON array only, no other text):`;
 
       const functions = functionsModule.getFunctions(app, 'us-central1');
       const generateTelegramDeepLink = functionsModule.httpsCallable(functions, 'generateTelegramDeepLink');
-      const result = await generateTelegramDeepLink({});
+      const result = await generateTelegramDeepLink(currentGoalId ? { goalId: currentGoalId } : {});
       const data = result.data as { alreadyLinked: boolean; deepLink: string | null };
 
       if (data.alreadyLinked) {

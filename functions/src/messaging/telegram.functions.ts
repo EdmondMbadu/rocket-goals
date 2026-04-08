@@ -232,6 +232,10 @@ function getTeamMemberDisplayName(teamData: any, userId: string, fallback = 'Par
   return fullName || member.email || fallback;
 }
 
+function buildGoalThreadTitle(goalTitle: string): string {
+  return sanitizeTopicTitle(`Goal • ${goalTitle}`, 'Goal • Your Goal');
+}
+
 async function createTelegramForumTopic(chatId: number, title: string, botToken: string): Promise<number | null> {
   try {
     const response = await fetch(`https://api.telegram.org/bot${botToken}/createForumTopic`, {
@@ -298,6 +302,170 @@ async function getOrCreateParticipantThreadId(params: {
   }
   await threadRef.set(payload, { merge: true });
   return createdThreadId;
+}
+
+async function getOrCreateTelegramGoalThreadId(params: {
+  userId: string;
+  chatId: number;
+  goalId: string;
+  goalTitle: string;
+  botToken: string;
+}): Promise<number | null> {
+  const { userId, chatId, goalId, goalTitle, botToken } = params;
+  const normalizedGoalId = String(goalId || '').trim();
+  if (!normalizedGoalId) {
+    return null;
+  }
+
+  const threadRef = admin.firestore()
+    .collection('userProfiles')
+    .doc(userId)
+    .collection('telegramGoalThreads')
+    .doc(normalizedGoalId);
+
+  const existing = await threadRef.get();
+  const existingThreadId = Number(existing.data()?.threadId);
+  const threadTitle = buildGoalThreadTitle(goalTitle);
+
+  if (Number.isFinite(existingThreadId) && existingThreadId > 0) {
+    await threadRef.set({
+      goalId: normalizedGoalId,
+      title: threadTitle,
+      chatId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return existingThreadId;
+  }
+
+  const createdThreadId = await createTelegramForumTopic(chatId, threadTitle, botToken);
+  if (!createdThreadId) {
+    return null;
+  }
+
+  const payload: Record<string, any> = {
+    goalId: normalizedGoalId,
+    title: threadTitle,
+    chatId,
+    threadId: createdThreadId,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  if (!existing.exists) {
+    payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+  }
+
+  await threadRef.set(payload, { merge: true });
+  return createdThreadId;
+}
+
+async function resolveGoalIdFromTelegramThread(
+  userId: string,
+  messageThreadId: number | null
+): Promise<string | null> {
+  if (!Number.isFinite(messageThreadId) || Number(messageThreadId) <= 0) {
+    return null;
+  }
+
+  const snapshot = await admin.firestore()
+    .collection('userProfiles')
+    .doc(userId)
+    .collection('telegramGoalThreads')
+    .where('threadId', '==', Number(messageThreadId))
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const data = snapshot.docs[0].data() || {};
+  const goalId = String(data.goalId || snapshot.docs[0].id || '').trim();
+  return goalId || null;
+}
+
+async function resolveSelectedGoalIdForTelegramMessage(
+  userId: string,
+  telegramId: string,
+  messageThreadId: number | null
+): Promise<string | null> {
+  const threadGoalId = await resolveGoalIdFromTelegramThread(userId, messageThreadId);
+  if (threadGoalId) {
+    const selectedGoalId = await getSelectedGoalId(telegramId);
+    if (selectedGoalId !== threadGoalId) {
+      try {
+        await setSelectedGoalId(telegramId, threadGoalId);
+      } catch (error) {
+        console.warn(`Unable to persist Telegram selectedGoalId ${threadGoalId} for ${telegramId}:`, error);
+      }
+    }
+    return threadGoalId;
+  }
+
+  return getSelectedGoalId(telegramId);
+}
+
+async function activateTelegramGoalThread(params: {
+  userId: string;
+  telegramId: string;
+  chatId: number;
+  goalContext: any;
+  botToken: string;
+  sendThreadIntro?: boolean;
+  sendGeneralNotice?: boolean;
+}): Promise<number | null> {
+  const {
+    userId,
+    telegramId,
+    chatId,
+    goalContext,
+    botToken,
+    sendThreadIntro = true,
+    sendGeneralNotice = false
+  } = params;
+
+  const goalId = String(goalContext?.id || '').trim();
+  if (!goalId) {
+    return null;
+  }
+
+  const goalTitle = String(goalContext?.title || goalContext?.primaryGoal || 'Your Goal').trim() || 'Your Goal';
+  const threadId = await getOrCreateTelegramGoalThreadId({
+    userId,
+    chatId,
+    goalId,
+    goalTitle,
+    botToken
+  });
+
+  await setSelectedGoalId(telegramId, goalId);
+
+  if (!threadId) {
+    return null;
+  }
+
+  if (sendThreadIntro) {
+    const coachName = goalContext?.teamAiSettings?.displayName || goalContext?.copilot?.name || 'AI Coach';
+    const coachAvatar = goalContext?.teamAiSettings?.avatarUrl || goalContext?.copilot?.avatar;
+    const introMessage =
+      `*${escapeMarkdown(goalTitle)}*\n` +
+      `Coach: ${escapeMarkdown(coachName)}\n\n` +
+      `This goal now has its own Telegram topic. Continue here so this conversation stays separate.`;
+
+    if (coachAvatar) {
+      await sendTelegramPhoto(chatId, coachAvatar, introMessage, botToken, threadId);
+    } else {
+      await sendTelegramMessage(chatId, introMessage, botToken, 'Markdown', threadId);
+    }
+  }
+
+  if (sendGeneralNotice) {
+    await sendTelegramMessage(
+      chatId,
+      `Opened *${escapeMarkdown(goalTitle)}* in its own Telegram topic. Continue there so this goal stays separate.`,
+      botToken
+    );
+  }
+
+  return threadId;
 }
 
 async function resolveTelegramThreadContext(teamId: string, messageThreadId: number | null): Promise<TelegramThreadContext> {
@@ -973,6 +1141,36 @@ async function createLinkToken(
   return token;
 }
 
+async function getGoalIdFromTelegramLinkToken(
+  token: string,
+  userId: string
+): Promise<string | null> {
+  try {
+    const tokenDoc = await admin.firestore().collection('telegramLinkTokens').doc(token).get();
+    if (!tokenDoc.exists) {
+      return null;
+    }
+
+    const tokenData = tokenDoc.data() || {};
+    const tokenUserId = String(tokenData.userId || '').trim();
+    if (tokenUserId && tokenUserId !== userId) {
+      return null;
+    }
+
+    const expiresAt = tokenData.expiresAt;
+    const now = admin.firestore.Timestamp.now();
+    if (expiresAt && typeof expiresAt.toMillis === 'function' && expiresAt.toMillis() < now.toMillis()) {
+      return null;
+    }
+
+    const goalId = String(tokenData.goalId || '').trim();
+    return goalId || null;
+  } catch (error) {
+    console.warn('Failed to resolve goalId from Telegram link token:', error);
+    return null;
+  }
+}
+
 /**
  * Try to auto-link a Telegram account using a pre-generated token from the web app
  * This enables 2-step linking: user clicks deep link from web → bot auto-links
@@ -983,36 +1181,37 @@ async function tryAutoLink(
   chatId: number,
   firstName: string,
   username?: string
-): Promise<boolean> {
+): Promise<{ linked: boolean; goalId: string | null }> {
   try {
     const tokenRef = admin.firestore().collection('telegramLinkTokens').doc(token);
     const tokenDoc = await tokenRef.get();
 
     if (!tokenDoc.exists) {
       console.log('Auto-link: Token not found');
-      return false;
+      return { linked: false, goalId: null };
     }
 
     const tokenData = tokenDoc.data();
+    const goalId = String(tokenData?.goalId || '').trim() || null;
 
     // Check if token is already used
     if (tokenData?.used) {
       console.log('Auto-link: Token already used');
-      return false;
+      return { linked: false, goalId: null };
     }
 
     // Check if token has expired
     const now = admin.firestore.Timestamp.now();
     if (tokenData?.expiresAt && tokenData.expiresAt.toMillis() < now.toMillis()) {
       console.log('Auto-link: Token expired');
-      return false;
+      return { linked: false, goalId: null };
     }
 
     // Get the userId from the token (this is the key difference - token was created by authenticated user)
     const userId = tokenData?.userId;
     if (!userId) {
       console.log('Auto-link: Token has no userId (old-style token)');
-      return false;
+      return { linked: false, goalId: null };
     }
 
     // Check if this Telegram account is already linked to another user
@@ -1025,10 +1224,10 @@ async function tryAutoLink(
       const existingData = existingLink.data();
       if (existingData?.userId !== userId) {
         console.log('Auto-link: Telegram already linked to different user');
-        return false;
+        return { linked: false, goalId: null };
       }
       // Already linked to this user - success
-      return true;
+      return { linked: true, goalId };
     }
 
     // Create the link
@@ -1058,10 +1257,10 @@ async function tryAutoLink(
     await batch.commit();
 
     console.log(`✅ Auto-linked Telegram ${telegramId} to user ${userId}`);
-    return true;
+    return { linked: true, goalId };
   } catch (error) {
     console.error('Auto-link error:', error);
-    return false;
+    return { linked: false, goalId: null };
   }
 }
 
@@ -1469,6 +1668,7 @@ export const telegramWebhook = onRequest({
 
     const telegramId = update.message.from?.id?.toString();
     const chatId = update.message.chat.id;
+    const messageThreadId = getTelegramMessageThreadId(update.message);
     const userMessage = update.message.text.trim();
     const firstName = update.message.from?.first_name || 'Friend';
     const username = update.message.from?.username;
@@ -1503,22 +1703,74 @@ export const telegramWebhook = onRequest({
       }
 
       if (existingUser) {
-        // Already linked
-        await sendTelegramMessage(
-          chatId,
-          `Welcome back, ${firstName}! 🚀\n\nYour account is connected. How can I help you with your goals today?\n\n*Commands:*\n/goals - List your goals\n/current - Show current goal\n/milestones - Today + next 5 days\n/milestones-all - All milestones\n/help - Show all commands`,
-          botToken
-        );
-      } else if (autoLinkToken) {
-        // Try to auto-link with the provided token
-        const linked = await tryAutoLink(autoLinkToken, telegramId, chatId, firstName, username);
+        const userId = existingUser.userId;
+        const goalIdFromToken = autoLinkToken
+          ? await getGoalIdFromTelegramLinkToken(autoLinkToken, userId)
+          : null;
+        const tokenGoalContext = goalIdFromToken
+          ? await getGoalById(goalIdFromToken, userId)
+          : null;
 
-        if (linked) {
+        if (tokenGoalContext?.id) {
+          const threadId = await activateTelegramGoalThread({
+            userId,
+            telegramId,
+            chatId,
+            goalContext: tokenGoalContext,
+            botToken,
+            sendThreadIntro: true,
+            sendGeneralNotice: true
+          });
+
+          if (!threadId) {
+            await sendTelegramMessage(
+              chatId,
+              `Welcome back, ${firstName}! 🚀\n\nI couldn't open a separate topic for *${escapeMarkdown(tokenGoalContext.title || 'this goal')}* yet, but your account is connected. How can I help you with your goals today?`,
+              botToken
+            );
+          }
+        } else {
           await sendTelegramMessage(
             chatId,
-            `🎉 Account linked successfully, ${firstName}!\n\nYou're all set to chat with your RocketGoals AI coach. I'll help you stay on track with your goals.\n\n*Commands:*\n/goals - List your goals\n/current - Show current goal\n/milestones - Today + next 5 days\n/milestones-all - All milestones\n/help - Show all commands\n\nTry saying: "What should I focus on today?"`,
+            `Welcome back, ${firstName}! 🚀\n\nYour account is connected. How can I help you with your goals today?\n\n*Commands:*\n/goals - List your goals\n/current - Show current goal\n/milestones - Today + next 5 days\n/milestones-all - All milestones\n/help - Show all commands`,
             botToken
           );
+        }
+      } else if (autoLinkToken) {
+        // Try to auto-link with the provided token
+        const autoLinkResult = await tryAutoLink(autoLinkToken, telegramId, chatId, firstName, username);
+
+        if (autoLinkResult.linked) {
+          const freshlyLinkedUser = await findUserByTelegramId(telegramId);
+          const tokenGoalContext = freshlyLinkedUser && autoLinkResult.goalId
+            ? await getGoalById(autoLinkResult.goalId, freshlyLinkedUser.userId)
+            : null;
+
+          if (freshlyLinkedUser && tokenGoalContext?.id) {
+            const threadId = await activateTelegramGoalThread({
+              userId: freshlyLinkedUser.userId,
+              telegramId,
+              chatId,
+              goalContext: tokenGoalContext,
+              botToken,
+              sendThreadIntro: true,
+              sendGeneralNotice: true
+            });
+
+            if (!threadId) {
+              await sendTelegramMessage(
+                chatId,
+                `🎉 Account linked successfully, ${firstName}!\n\nI couldn't open a separate topic for *${escapeMarkdown(tokenGoalContext.title || 'this goal')}* yet, but you're all set to chat with your RocketGoals AI coach.`,
+                botToken
+              );
+            }
+          } else {
+            await sendTelegramMessage(
+              chatId,
+              `🎉 Account linked successfully, ${firstName}!\n\nYou're all set to chat with your RocketGoals AI coach. I'll help you stay on track with your goals.\n\n*Commands:*\n/goals - List your goals\n/current - Show current goal\n/milestones - Today + next 5 days\n/milestones-all - All milestones\n/help - Show all commands\n\nTry saying: "What should I focus on today?"`,
+              botToken
+            );
+          }
         } else {
           // Token invalid or expired - fall back to regular flow
           const linkToken = await createLinkToken(telegramId, chatId, firstName, username);
@@ -1560,6 +1812,8 @@ export const telegramWebhook = onRequest({
 
     // User is linked - process commands and messages
     const userId = linkedUser.userId;
+    const selectedGoalId = await resolveSelectedGoalIdForTelegramMessage(userId, telegramId, messageThreadId);
+    const activeGoalContext = await getActiveGoalContext(userId, selectedGoalId);
 
     // Handle /help command
     if (userMessage === '/help') {
@@ -1582,14 +1836,15 @@ export const telegramWebhook = onRequest({
 
     // Handle /milestones command - deterministic milestone window
     if (userMessage === '/milestones' || userMessage === '?milestones') {
-      const selectedGoalId = await getSelectedGoalId(telegramId);
-      const goalContext = await getActiveGoalContext(userId, selectedGoalId);
+      const goalContext = activeGoalContext;
 
       if (!goalContext?.id) {
         await sendTelegramMessage(
           chatId,
           `You don't have an active goal selected.\n\nUse /goals to pick one first.`,
-          botToken
+          botToken,
+          null,
+          messageThreadId
         );
         res.sendStatus(200);
         return;
@@ -1597,21 +1852,22 @@ export const telegramWebhook = onRequest({
 
       const milestones = await getGoalMilestones(goalContext.id);
       const message = buildMilestonesWindowMessage(goalContext, milestones);
-      await sendTelegramMessage(chatId, message, botToken, null);
+      await sendTelegramMessage(chatId, message, botToken, null, messageThreadId);
       res.sendStatus(200);
       return;
     }
 
     // Handle /milestones-all command - deterministic full milestone list
     if (userMessage === '/milestones-all' || userMessage === '?milestones-all') {
-      const selectedGoalId = await getSelectedGoalId(telegramId);
-      const goalContext = await getActiveGoalContext(userId, selectedGoalId);
+      const goalContext = activeGoalContext;
 
       if (!goalContext?.id) {
         await sendTelegramMessage(
           chatId,
           `You don't have an active goal selected.\n\nUse /goals to pick one first.`,
-          botToken
+          botToken,
+          null,
+          messageThreadId
         );
         res.sendStatus(200);
         return;
@@ -1619,7 +1875,7 @@ export const telegramWebhook = onRequest({
 
       const milestones = await getGoalMilestones(goalContext.id);
       const message = buildAllMilestonesMessage(goalContext, milestones);
-      await sendTelegramMessage(chatId, message, botToken, null);
+      await sendTelegramMessage(chatId, message, botToken, null, messageThreadId);
       res.sendStatus(200);
       return;
     }
@@ -1632,10 +1888,11 @@ export const telegramWebhook = onRequest({
         await sendTelegramMessage(
           chatId,
           `You don't have any active goals yet.\n\nCreate one at rocketgoals.com!`,
-          botToken
+          botToken,
+          'Markdown',
+          messageThreadId
         );
       } else {
-        const selectedGoalId = await getSelectedGoalId(telegramId);
         let message = `*Your Goals:*\n\n`;
 
         goals.forEach((goal, index) => {
@@ -1647,7 +1904,7 @@ export const telegramWebhook = onRequest({
 
         message += `Use /switch [number] to change goals.\nExample: /switch 2`;
 
-        await sendTelegramMessage(chatId, message, botToken);
+        await sendTelegramMessage(chatId, message, botToken, 'Markdown', messageThreadId);
       }
       res.sendStatus(200);
       return;
@@ -1681,17 +1938,33 @@ export const telegramWebhook = onRequest({
       }
 
       const selectedGoal = goals[goalNumber - 1];
-      await setSelectedGoalId(telegramId, selectedGoal.id);
+      const threadId = await activateTelegramGoalThread({
+        userId,
+        telegramId,
+        chatId,
+        goalContext: selectedGoal,
+        botToken,
+        sendThreadIntro: true,
+        sendGeneralNotice: messageThreadId !== null
+      });
 
-      const coachName = selectedGoal.teamAiSettings?.displayName || selectedGoal.copilot?.name || 'AI Coach';
-      const coachAvatar = selectedGoal.teamAiSettings?.avatarUrl || selectedGoal.copilot?.avatar;
-
-      const message = `Switched to: *${selectedGoal.title}*\nCoach: ${coachName}\n\nHow can I help you with this goal?`;
-
-      if (coachAvatar) {
-        await sendTelegramPhoto(chatId, coachAvatar, message, botToken);
+      if (!threadId) {
+        const coachName = selectedGoal.teamAiSettings?.displayName || selectedGoal.copilot?.name || 'AI Coach';
+        const coachAvatar = selectedGoal.teamAiSettings?.avatarUrl || selectedGoal.copilot?.avatar;
+        const message = `Switched to: *${selectedGoal.title}*\nCoach: ${coachName}\n\nHow can I help you with this goal?`;
+        if (coachAvatar) {
+          await sendTelegramPhoto(chatId, coachAvatar, message, botToken, messageThreadId);
+        } else {
+          await sendTelegramMessage(chatId, message, botToken, 'Markdown', messageThreadId);
+        }
       } else {
-        await sendTelegramMessage(chatId, message, botToken);
+        await sendTelegramMessage(
+          chatId,
+          `Switched to *${escapeMarkdown(selectedGoal.title)}*. I opened its dedicated topic so this goal stays separate.`,
+          botToken,
+          'Markdown',
+          messageThreadId
+        );
       }
 
       res.sendStatus(200);
@@ -1700,14 +1973,15 @@ export const telegramWebhook = onRequest({
 
     // Handle /current command - show current goal
     if (userMessage === '/current') {
-      const selectedGoalId = await getSelectedGoalId(telegramId);
-      const goalContext = await getActiveGoalContext(userId, selectedGoalId);
+      const goalContext = activeGoalContext;
 
       if (!goalContext) {
         await sendTelegramMessage(
           chatId,
           `You don't have an active goal selected.\n\nUse /goals to see your goals.`,
-          botToken
+          botToken,
+          'Markdown',
+          messageThreadId
         );
       } else {
         const coachName = goalContext.teamAiSettings?.displayName || goalContext.copilot?.name || 'AI Coach';
@@ -1716,9 +1990,9 @@ export const telegramWebhook = onRequest({
         const message = `*Current Goal:* ${goalContext.title}\n*Coach:* ${coachName}\n\nUse /goals to switch to a different goal.`;
 
         if (coachAvatar) {
-          await sendTelegramPhoto(chatId, coachAvatar, message, botToken);
+          await sendTelegramPhoto(chatId, coachAvatar, message, botToken, messageThreadId);
         } else {
-          await sendTelegramMessage(chatId, message, botToken);
+          await sendTelegramMessage(chatId, message, botToken, 'Markdown', messageThreadId);
         }
       }
       res.sendStatus(200);
@@ -1726,8 +2000,7 @@ export const telegramWebhook = onRequest({
     }
 
     // Regular message - chat with AI
-    const selectedGoalId = await getSelectedGoalId(telegramId);
-    const goalContext = await getActiveGoalContext(userId, selectedGoalId);
+    const goalContext = activeGoalContext;
 
     // Get or create session
     const sessionId = await getOrCreateSession(userId, goalContext?.id);
@@ -1749,9 +2022,9 @@ export const telegramWebhook = onRequest({
     // Send response to Telegram (with coach avatar on first message of conversation)
     const coachAvatar = goalContext?.teamAiSettings?.avatarUrl || goalContext?.copilot?.avatar;
     if (coachAvatar && history.length === 0) {
-      await sendTelegramPhoto(chatId, coachAvatar, aiResponse, botToken);
+      await sendTelegramPhoto(chatId, coachAvatar, aiResponse, botToken, messageThreadId);
     } else {
-      await sendTelegramMessage(chatId, aiResponse, botToken);
+      await sendTelegramMessage(chatId, aiResponse, botToken, 'Markdown', messageThreadId);
     }
 
     console.log(`✅ Telegram response sent to ${firstName}`);

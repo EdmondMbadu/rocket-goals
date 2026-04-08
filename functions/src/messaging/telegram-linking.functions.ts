@@ -13,19 +13,25 @@ const telegramBotToken = defineSecret('TELEGRAM_BOT_TOKEN');
 async function sendTelegramMessage(
   chatId: number,
   text: string,
-  botToken: string
+  botToken: string,
+  messageThreadId: number | null = null
 ): Promise<boolean> {
   try {
+    const payload: Record<string, any> = {
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'Markdown'
+    };
+    if (Number.isFinite(messageThreadId) && Number(messageThreadId) > 0) {
+      payload.message_thread_id = Number(messageThreadId);
+    }
+
     const response = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: text,
-          parse_mode: 'Markdown'
-        })
+        body: JSON.stringify(payload)
       }
     );
 
@@ -34,6 +40,160 @@ async function sendTelegramMessage(
     console.error('Error sending Telegram message:', error);
     return false;
   }
+}
+
+function sanitizeTopicTitle(value: string, fallback: string): string {
+  const raw = String(value || '').replace(/\s+/g, ' ').trim();
+  const candidate = raw || fallback;
+  return candidate.slice(0, 120);
+}
+
+function escapeMarkdown(text: string): string {
+  return String(text || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .replace(/`/g, '\\`');
+}
+
+async function getGoalById(goalId: string, userId: string): Promise<{ id: string; title: string } | null> {
+  const normalizedGoalId = String(goalId || '').trim();
+  if (!normalizedGoalId) {
+    return null;
+  }
+
+  const goalDoc = await admin.firestore().collection('rocketGoals').doc(normalizedGoalId).get();
+  if (!goalDoc.exists) {
+    return null;
+  }
+
+  const goalData = goalDoc.data() || {};
+  if (String(goalData.userId || '').trim() !== String(userId || '').trim()) {
+    return null;
+  }
+
+  const title = String(goalData.primaryGoal || goalData.answers?.primary_goal || 'Your Goal').trim() || 'Your Goal';
+  return { id: goalDoc.id, title };
+}
+
+async function createTelegramForumTopic(chatId: number, title: string, botToken: string): Promise<number | null> {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/createForumTopic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        name: title
+      })
+    });
+    const data = await response.json();
+    if (!data?.ok) {
+      console.warn(`Unable to create Telegram goal topic "${title}" in chat ${chatId}:`, data);
+      return null;
+    }
+    const threadId = Number(data?.result?.message_thread_id);
+    return Number.isFinite(threadId) && threadId > 0 ? threadId : null;
+  } catch (error) {
+    console.warn(`Unable to create Telegram goal topic "${title}" in chat ${chatId}:`, error);
+    return null;
+  }
+}
+
+async function getOrCreateTelegramGoalThreadId(params: {
+  userId: string;
+  chatId: number;
+  goalId: string;
+  goalTitle: string;
+  botToken: string;
+}): Promise<number | null> {
+  const { userId, chatId, goalId, goalTitle, botToken } = params;
+  const normalizedGoalId = String(goalId || '').trim();
+  if (!normalizedGoalId) {
+    return null;
+  }
+
+  const threadRef = admin.firestore()
+    .collection('userProfiles')
+    .doc(userId)
+    .collection('telegramGoalThreads')
+    .doc(normalizedGoalId);
+
+  const existing = await threadRef.get();
+  const existingThreadId = Number(existing.data()?.threadId);
+  const threadTitle = sanitizeTopicTitle(`Goal • ${goalTitle}`, 'Goal • Your Goal');
+
+  if (Number.isFinite(existingThreadId) && existingThreadId > 0) {
+    await threadRef.set({
+      goalId: normalizedGoalId,
+      title: threadTitle,
+      chatId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return existingThreadId;
+  }
+
+  const createdThreadId = await createTelegramForumTopic(chatId, threadTitle, botToken);
+  if (!createdThreadId) {
+    return null;
+  }
+
+  const payload: Record<string, any> = {
+    goalId: normalizedGoalId,
+    title: threadTitle,
+    chatId,
+    threadId: createdThreadId,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  if (!existing.exists) {
+    payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+  }
+
+  await threadRef.set(payload, { merge: true });
+  return createdThreadId;
+}
+
+async function activateTelegramGoalThread(params: {
+  userId: string;
+  telegramId: string;
+  chatId: number;
+  goalId: string;
+  goalTitle: string;
+  botToken: string;
+}): Promise<number | null> {
+  const { userId, telegramId, chatId, goalId, goalTitle, botToken } = params;
+  const threadId = await getOrCreateTelegramGoalThreadId({
+    userId,
+    chatId,
+    goalId,
+    goalTitle,
+    botToken
+  });
+
+  await admin.firestore().collection('telegramToUser').doc(telegramId).set({
+    selectedGoalId: goalId
+  }, { merge: true });
+
+  if (!threadId) {
+    return null;
+  }
+
+  await sendTelegramMessage(
+    chatId,
+    `*${escapeMarkdown(goalTitle)}*\n\nThis goal now has its own Telegram topic. Continue here so this conversation stays separate.`,
+    botToken,
+    threadId
+  );
+  await sendTelegramMessage(
+    chatId,
+    `Opened *${escapeMarkdown(goalTitle)}* in its own Telegram topic. Continue there so this goal stays separate.`,
+    botToken
+  );
+
+  return threadId;
 }
 
 /**
@@ -250,6 +410,7 @@ export const unlinkTelegramAccount = onCall({
  */
 export const generateTelegramDeepLink = onCall({
   region: "us-central1",
+  secrets: [telegramBotToken],
   cors: [
     "https://rocket-goals.web.app",
     "https://rocket-goals.firebaseapp.com",
@@ -260,6 +421,7 @@ export const generateTelegramDeepLink = onCall({
   ]
 }, async (request) => {
   const userId = request.auth?.uid;
+  const requestedGoalId = String(request.data?.goalId || '').trim();
 
   if (!userId) {
     throw new HttpsError('unauthenticated', 'Must be logged in to generate Telegram link');
@@ -271,7 +433,36 @@ export const generateTelegramDeepLink = onCall({
     .doc(userId)
     .get();
 
-  const alreadyLinked = !!(userProfile.exists && userProfile.data()?.telegramId);
+  const userData = userProfile.exists ? (userProfile.data() || {}) : {};
+  const alreadyLinked = !!userData?.telegramId;
+  let goalContext: { id: string; title: string } | null = null;
+
+  if (requestedGoalId) {
+    goalContext = await getGoalById(requestedGoalId, userId);
+    if (!goalContext) {
+      throw new HttpsError('not-found', 'Goal not found');
+    }
+  }
+
+  if (alreadyLinked && goalContext && userData?.telegramId && userData?.telegramChatId) {
+    const botToken = telegramBotToken.value();
+    if (botToken) {
+      await activateTelegramGoalThread({
+        userId,
+        telegramId: String(userData.telegramId),
+        chatId: Number(userData.telegramChatId),
+        goalId: goalContext.id,
+        goalTitle: goalContext.title,
+        botToken
+      });
+    }
+
+    return {
+      alreadyLinked: true,
+      deepLink: 'https://t.me/RocketGoalsBot',
+      expiresAt: null
+    };
+  }
 
   // Generate a token with the userId embedded
   const token = admin.firestore().collection('telegramLinkTokens').doc().id;
@@ -284,6 +475,7 @@ export const generateTelegramDeepLink = onCall({
     .doc(token)
     .set({
       userId, // This is the key difference - we know who the user is
+      goalId: goalContext?.id || null,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
       used: false,
@@ -294,7 +486,7 @@ export const generateTelegramDeepLink = onCall({
   // Format: https://t.me/BotUsername?start=TOKEN
   const deepLink = `https://t.me/RocketGoalsBot?start=${token}`;
 
-  console.log(`🔗 Generated Telegram deep link for user ${userId}`);
+  console.log(`🔗 Generated Telegram deep link for user ${userId}${goalContext ? `, goal ${goalContext.id}` : ''}`);
 
   return {
     alreadyLinked,

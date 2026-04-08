@@ -13,19 +13,25 @@ const telegramBotToken = defineSecret('TELEGRAM_BOT_TOKEN');
 async function sendTelegramMessage(
   chatId: number,
   text: string,
-  botToken: string
+  botToken: string,
+  messageThreadId: number | null = null
 ): Promise<boolean> {
   try {
+    const payload: Record<string, any> = {
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'Markdown'
+    };
+    if (Number.isFinite(messageThreadId) && Number(messageThreadId) > 0) {
+      payload.message_thread_id = Number(messageThreadId);
+    }
+
     const response = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: text,
-          parse_mode: 'Markdown'
-        })
+        body: JSON.stringify(payload)
       }
     );
 
@@ -43,9 +49,9 @@ async function sendTelegramMessage(
 }
 
 /**
- * Get user's active goal title
+ * Get user's active goal
  */
-async function getActiveGoalTitle(userId: string): Promise<string | null> {
+async function getActiveGoal(userId: string): Promise<{ id: string; title: string } | null> {
   try {
     const goalsSnapshot = await admin.firestore()
       .collection("rocketGoals")
@@ -63,32 +69,121 @@ async function getActiveGoalTitle(userId: string): Promise<string | null> {
       return bTime - aTime;
     });
 
-    const goalData = sortedDocs[0].data();
-    return goalData.primaryGoal || goalData.answers?.primary_goal || "your goal";
+    const goalDoc = sortedDocs[0];
+    const goalData = goalDoc.data() || {};
+    return {
+      id: goalDoc.id,
+      title: goalData.primaryGoal || goalData.answers?.primary_goal || "your goal"
+    };
   } catch (error) {
-    console.error("Error getting active goal title:", error);
+    console.error("Error getting active goal:", error);
     return null;
   }
+}
+
+async function getGoalById(userId: string, goalId: string): Promise<{ id: string; title: string } | null> {
+  const normalizedGoalId = String(goalId || '').trim();
+  if (!normalizedGoalId) {
+    return null;
+  }
+
+  try {
+    const goalDoc = await admin.firestore().collection('rocketGoals').doc(normalizedGoalId).get();
+    if (!goalDoc.exists) {
+      return null;
+    }
+
+    const goalData = goalDoc.data() || {};
+    if (String(goalData.userId || '').trim() !== String(userId || '').trim()) {
+      return null;
+    }
+
+    return {
+      id: goalDoc.id,
+      title: goalData.primaryGoal || goalData.answers?.primary_goal || 'your goal'
+    };
+  } catch (error) {
+    console.error('Error getting goal by ID for Telegram schedule:', error);
+    return null;
+  }
+}
+
+async function getSelectedGoalIdForTelegramUser(telegramId: string | null | undefined): Promise<string | null> {
+  const normalizedTelegramId = String(telegramId || '').trim();
+  if (!normalizedTelegramId) {
+    return null;
+  }
+
+  try {
+    const doc = await admin.firestore().collection('telegramToUser').doc(normalizedTelegramId).get();
+    if (!doc.exists) {
+      return null;
+    }
+    return String(doc.data()?.selectedGoalId || '').trim() || null;
+  } catch (error) {
+    console.error('Error getting Telegram selected goal:', error);
+    return null;
+  }
+}
+
+async function getTelegramGoalThreadId(userId: string, goalId: string): Promise<number | null> {
+  const normalizedGoalId = String(goalId || '').trim();
+  if (!normalizedGoalId) {
+    return null;
+  }
+
+  try {
+    const threadDoc = await admin.firestore()
+      .collection('userProfiles')
+      .doc(userId)
+      .collection('telegramGoalThreads')
+      .doc(normalizedGoalId)
+      .get();
+
+    if (!threadDoc.exists) {
+      return null;
+    }
+
+    const threadId = Number(threadDoc.data()?.threadId);
+    return Number.isFinite(threadId) && threadId > 0 ? threadId : null;
+  } catch (error) {
+    console.error('Error getting Telegram goal thread:', error);
+    return null;
+  }
+}
+
+async function resolveTelegramDeliveryGoal(userId: string, telegramId?: string | null): Promise<{
+  goalId: string | null;
+  goalTitle: string | null;
+  messageThreadId: number | null;
+}> {
+  const selectedGoalId = await getSelectedGoalIdForTelegramUser(telegramId);
+  const selectedGoal = selectedGoalId ? await getGoalById(userId, selectedGoalId) : null;
+  const activeGoal = selectedGoal || await getActiveGoal(userId);
+
+  if (!activeGoal?.id) {
+    return {
+      goalId: null,
+      goalTitle: null,
+      messageThreadId: null
+    };
+  }
+
+  return {
+    goalId: activeGoal.id,
+    goalTitle: activeGoal.title,
+    messageThreadId: await getTelegramGoalThreadId(userId, activeGoal.id)
+  };
 }
 
 /**
  * Check if user has already done their daily ignition today
  */
-async function hasCompletedIgnitionToday(userId: string): Promise<boolean> {
+async function hasCompletedIgnitionToday(goalId: string): Promise<boolean> {
   const today = new Date();
   const dateId = today.toISOString().split('T')[0]; // YYYY-MM-DD
 
-  // Get user's active goal
-  const goalsSnapshot = await admin.firestore()
-    .collection('rocketGoals')
-    .where('userId', '==', userId)
-    .where('status', '==', 'active')
-    .limit(1)
-    .get();
-
-  if (goalsSnapshot.empty) return false;
-
-  const goalId = goalsSnapshot.docs[0].id;
+  if (!goalId) return false;
 
   // Check for today's ignition
   const ignitionSnapshot = await admin.firestore()
@@ -105,20 +200,10 @@ async function hasCompletedIgnitionToday(userId: string): Promise<boolean> {
 /**
  * Check if user has logged their mission today
  */
-async function hasLoggedMissionToday(userId: string): Promise<boolean> {
+async function hasLoggedMissionToday(goalId: string): Promise<boolean> {
   const today = new Date();
   const dateId = today.toISOString().split('T')[0];
-
-  const goalsSnapshot = await admin.firestore()
-    .collection('rocketGoals')
-    .where('userId', '==', userId)
-    .where('status', '==', 'active')
-    .limit(1)
-    .get();
-
-  if (goalsSnapshot.empty) return false;
-
-  const goalId = goalsSnapshot.docs[0].id;
+  if (!goalId) return false;
 
   const missionSnapshot = await admin.firestore()
     .collection('rocketGoals')
@@ -221,16 +306,15 @@ export const sendTelegramDailyCheckins = onSchedule({
       continue;
     }
 
-    // Check if user already did their ignition today
-    if (await hasCompletedIgnitionToday(doc.id)) {
-      skippedCount++;
-      continue;
+    const deliveryGoal = await resolveTelegramDeliveryGoal(doc.id, user.telegramId);
+    if (!deliveryGoal.goalId || !deliveryGoal.goalTitle) {
+      continue; // No active goal
     }
 
-    // Get user's active goal
-    const goalTitle = await getActiveGoalTitle(doc.id);
-    if (!goalTitle) {
-      continue; // No active goal
+    // Check if user already did their ignition today
+    if (await hasCompletedIgnitionToday(deliveryGoal.goalId)) {
+      skippedCount++;
+      continue;
     }
 
     const chatId = user.telegramChatId;
@@ -239,9 +323,9 @@ export const sendTelegramDailyCheckins = onSchedule({
     }
 
     const firstName = user.firstName || 'Friend';
-    const message = getRandomMessage(MORNING_MESSAGES, firstName, goalTitle);
+    const message = getRandomMessage(MORNING_MESSAGES, firstName, deliveryGoal.goalTitle);
 
-    const success = await sendTelegramMessage(chatId, message, botToken);
+    const success = await sendTelegramMessage(chatId, message, botToken, deliveryGoal.messageThreadId);
     if (success) {
       sentCount++;
       console.log(`📤 Morning check-in sent to ${firstName}`);
@@ -299,15 +383,14 @@ export const sendTelegramMissionLogReminders = onSchedule({
       continue;
     }
 
-    // Check if user already logged their mission today
-    if (await hasLoggedMissionToday(doc.id)) {
-      skippedCount++;
+    const deliveryGoal = await resolveTelegramDeliveryGoal(doc.id, user.telegramId);
+    if (!deliveryGoal.goalId || !deliveryGoal.goalTitle) {
       continue;
     }
 
-    // Get user's active goal
-    const goalTitle = await getActiveGoalTitle(doc.id);
-    if (!goalTitle) {
+    // Check if user already logged their mission today
+    if (await hasLoggedMissionToday(deliveryGoal.goalId)) {
+      skippedCount++;
       continue;
     }
 
@@ -317,9 +400,9 @@ export const sendTelegramMissionLogReminders = onSchedule({
     }
 
     const firstName = user.firstName || 'Friend';
-    const message = getRandomMessage(EVENING_MESSAGES, firstName, goalTitle);
+    const message = getRandomMessage(EVENING_MESSAGES, firstName, deliveryGoal.goalTitle);
 
-    const success = await sendTelegramMessage(chatId, message, botToken);
+    const success = await sendTelegramMessage(chatId, message, botToken, deliveryGoal.messageThreadId);
     if (success) {
       sentCount++;
       console.log(`📤 Evening reminder sent to ${firstName}`);
@@ -362,15 +445,20 @@ export const sendTelegramGoalNudge = functions
       throw new functions.https.HttpsError('failed-precondition', 'User has no Telegram linked');
     }
 
-    const goalTitle = await getActiveGoalTitle(userId);
-    if (!goalTitle) {
+    const deliveryGoal = await resolveTelegramDeliveryGoal(userId, user.telegramId);
+    if (!deliveryGoal.goalTitle) {
       throw new functions.https.HttpsError('failed-precondition', 'User has no active goal');
     }
 
     const firstName = user.firstName || 'Friend';
-    const message = `Hey ${firstName}! 👋\n\nJust checking in on "${goalTitle}".\n\nWhat's one small step you can take today?`;
+    const message = `Hey ${firstName}! 👋\n\nJust checking in on "${deliveryGoal.goalTitle}".\n\nWhat's one small step you can take today?`;
 
-    const success = await sendTelegramMessage(user.telegramChatId, message, botToken);
+    const success = await sendTelegramMessage(
+      user.telegramChatId,
+      message,
+      botToken,
+      deliveryGoal.messageThreadId
+    );
 
     return { success, message: success ? 'Nudge sent' : 'Failed to send nudge' };
   });
