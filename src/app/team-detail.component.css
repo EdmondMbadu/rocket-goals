@@ -2984,6 +2984,48 @@
 
 /* ── Telegram Integration ── */
 
+.telegram-admin-panel {
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(38, 165, 228, 0.2);
+  background: linear-gradient(135deg, rgba(38, 165, 228, 0.08), rgba(14, 165, 233, 0.03));
+}
+
+.telegram-admin-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.telegram-admin-panel-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.telegram-admin-panel-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.telegram-admin-panel-subtitle {
+  margin: 8px 0 0;
+  max-width: 760px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
 .telegram-banner {
   position: relative;
   border-radius: 14px;
@@ -3083,6 +3125,17 @@
   color: #38bdf8;
 }
 
+.telegram-help-link {
+  color: #38bdf8;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.telegram-help-link:hover {
+  color: #7dd3fc;
+}
+
 .telegram-open-btn {
   align-self: flex-start;
   display: inline-flex;
@@ -3168,7 +3221,8 @@
 
 .light-mode .telegram-setup-desc,
 .light-mode .telegram-banner-desc,
-.light-mode .telegram-setup-steps {
+.light-mode .telegram-setup-steps,
+.light-mode .telegram-admin-panel-subtitle {
   color: #64748b;
 }
 
@@ -3181,6 +3235,10 @@
 }
 
 .light-mode .telegram-admin-tip {
+  color: #0c4a6e;
+}
+
+.light-mode .telegram-help-link {
   color: #0c4a6e;
 }
 

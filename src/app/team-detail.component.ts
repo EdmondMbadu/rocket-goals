@@ -342,7 +342,18 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     return !!this.findCurrentUserTeamMember(team);
   });
 
-  isAdmin = computed(() => this.team()?.adminId === this.currentUserId());
+  isAdmin = computed(() => {
+    const team = this.team();
+    const currentUserId = this.currentUserId();
+    if (!team || !currentUserId) {
+      return false;
+    }
+    if (team.adminId === currentUserId) {
+      return true;
+    }
+    const currentMember = this.findCurrentUserTeamMember(team);
+    return currentMember?.role === 'admin';
+  });
   currentUserTeamMember = computed(() => this.findCurrentUserTeamMember(this.team()));
   isCurrentUserTeamLead = computed(() => {
     const team = this.team();
@@ -372,6 +383,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
   canWriteParticipantProgressNotes = computed(() => this.isAdmin() || !!this.currentUserLeadershipRole());
   canManageMissionControlCards = computed(() => this.isAdmin() || this.isCurrentUserTeamLead());
   canLeaveTeam = computed(() => this.isCurrentUserMember() && !this.isAdmin());
+  canAccessTeamChat = computed(() => this.isCurrentUserMember() || this.isAdmin());
   readonly teamGoalTracksMileage = computed(() => this.isMileageTrackingTeamGoal(this.teamGoal()));
   readonly missionControlMetricOptions = computed(() => (
     this.teamGoalTracksMileage()
@@ -692,7 +704,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         this.showJoinModal.set(true);
       }
 
-        if (team?.id && isMember && this.messagesLoadedForTeamId !== team.id) {
+      if (team?.id && this.canAccessTeamChat() && this.messagesLoadedForTeamId !== team.id) {
           void this.loadMessages(team.id);
         }
 
@@ -774,7 +786,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     effect(() => {
       const isChatTab = this.activeTab() === 'chat';
       const messageCount = this.messages().length;
-      if (!isChatTab || !this.isCurrentUserMember()) {
+      if (!isChatTab || !this.canAccessTeamChat()) {
         return;
       }
       if (messageCount === 0) {
@@ -928,7 +940,7 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   openTeamRocketGoalView() {
     const teamId = this.team()?.id || this.teamId();
-    if (!teamId || !this.isCurrentUserMember()) {
+    if (!teamId || !this.canAccessTeamChat()) {
       return;
     }
 
@@ -3799,10 +3811,17 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
         this.startTelegramLinkPolling(teamId);
       } else if (result.success) {
         // Group was linked immediately (from pending groups or already connected)
-        this.telegramConnectSuccess.set(
-          `Connected to Telegram group "${result.telegramGroupTitle || 'group'}"!`
-        );
         await this.loadTeam(teamId);
+        const refreshedInviteLink = String(this.team()?.telegramGroupInviteLink || '').trim();
+        if (refreshedInviteLink) {
+          this.telegramConnectSuccess.set(
+            `Connected to Telegram group "${result.telegramGroupTitle || this.team()?.telegramGroupTitle || 'group'}"!`
+          );
+        } else {
+          this.telegramConnectError.set(
+            'The team is connected to Telegram, but RocketGoals could not generate a join link for members. In Telegram, make sure @RocketGoalsBot is an admin and can create invite links, then try "Refresh Join Link" again.'
+          );
+        }
         this.connectingTelegram.set(false);
       }
     } catch (err: any) {
@@ -3865,6 +3884,10 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   dismissTelegramBanner() {
     this.showTelegramBanner.set(false);
+  }
+
+  openTeamChatTab(): void {
+    this.activeTab.set('chat');
   }
 
   toggleTheme(): void {

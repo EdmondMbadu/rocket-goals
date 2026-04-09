@@ -262,6 +262,28 @@ async function createTelegramForumTopic(chatId: number, title: string, botToken:
   }
 }
 
+async function exportTelegramChatInviteLink(chatId: number, botToken: string): Promise<string | null> {
+  try {
+    const inviteResp = await fetch(
+      `https://api.telegram.org/bot${botToken}/exportChatInviteLink`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId })
+      }
+    );
+    const inviteData = await inviteResp.json();
+    if (inviteData.ok && inviteData.result) {
+      return String(inviteData.result);
+    }
+    console.warn(`Failed to export Telegram invite link for chat ${chatId}:`, inviteData);
+    return null;
+  } catch (error) {
+    console.error(`Failed to export Telegram invite link for chat ${chatId}:`, error);
+    return null;
+  }
+}
+
 async function getOrCreateParticipantThreadId(params: {
   teamId: string;
   groupChatId: number;
@@ -2084,18 +2106,36 @@ export const setupTeamTelegramGroup = onCall({
   if (!teamDoc.exists) {
     throw new HttpsError('not-found', 'Team not found');
   }
-  const teamData = teamDoc.data();
-  if (teamData?.adminId !== userId) {
+  const teamData = teamDoc.data() || {};
+  const members = Array.isArray(teamData?.members) ? teamData.members : [];
+  const isAdminMember = members.some((member: any) => (
+    String(member?.userId || '').trim() === userId &&
+    String(member?.role || '').trim() === 'admin'
+  ));
+  if (teamData?.adminId !== userId && !isAdminMember) {
     throw new HttpsError('permission-denied', 'Only the team admin can connect Telegram');
   }
 
+  const botToken = telegramBotToken.value();
+
   // If team already has a telegram group, return it
   if (teamData?.telegramGroupId) {
+    let inviteLink = String(teamData?.telegramGroupInviteLink || '').trim() || null;
+    if (!inviteLink && botToken) {
+      inviteLink = await exportTelegramChatInviteLink(Number(teamData.telegramGroupId), botToken);
+      if (inviteLink) {
+        await teamDoc.ref.update({
+          telegramGroupInviteLink: inviteLink,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+
     return {
       success: true,
       alreadyConnected: true,
       telegramGroupId: teamData.telegramGroupId,
-      telegramGroupInviteLink: teamData.telegramGroupInviteLink,
+      telegramGroupInviteLink: inviteLink,
       telegramGroupTitle: teamData.telegramGroupTitle
     };
   }
@@ -2116,19 +2156,9 @@ export const setupTeamTelegramGroup = onCall({
 
     // Generate invite link
     let inviteLink: string | null = null;
-    const botToken = telegramBotToken.value();
     try {
-      const inviteResp = await fetch(
-        `https://api.telegram.org/bot${botToken}/exportChatInviteLink`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: groupChatId })
-        }
-      );
-      const inviteData = await inviteResp.json();
-      if (inviteData.ok && inviteData.result) {
-        inviteLink = inviteData.result;
+      if (botToken) {
+        inviteLink = await exportTelegramChatInviteLink(groupChatId, botToken);
       }
     } catch (err) {
       console.error('Failed to generate invite link:', err);
@@ -2165,7 +2195,6 @@ export const setupTeamTelegramGroup = onCall({
 
   // No pending group found - create a pending link and return deep link
   // First, ensure the webhook is configured to receive my_chat_member events
-  const botToken = telegramBotToken.value();
   if (botToken) {
     await ensureWebhookConfigured(botToken);
   }

@@ -941,6 +941,103 @@
       }
 
       @if (isAdmin()) {
+      <section class="telegram-admin-panel glass">
+        <div class="telegram-admin-panel-head">
+          <div>
+            <p class="telegram-admin-panel-kicker">Telegram</p>
+            <h3 class="telegram-admin-panel-title">Team Chat Setup</h3>
+            <p class="telegram-admin-panel-subtitle">
+              Connect one Telegram group for the whole team. Team-wide chat happens in the main group, and one-on-one coaching uses Telegram Topics inside that group.
+            </p>
+          </div>
+          <div class="telegram-setup-actions">
+            @if (hasTelegramGroup() && telegramInviteLink()) {
+            <a [href]="telegramInviteLink()" target="_blank" rel="noopener" class="btn solid sm telegram-open-btn">
+              Open Group
+            </a>
+            }
+            <button type="button" class="btn ghost sm" (click)="openTeamChatTab()">
+              Open Chat Tab
+            </button>
+          </div>
+        </div>
+
+        @if (waitingForTelegramLink()) {
+        <p class="telegram-setup-desc">Telegram is waiting for you to pick a group for this team.</p>
+        <div class="telegram-waiting-indicator">
+          <span class="spinner small"></span>
+          <span>Listening for your Telegram group...</span>
+        </div>
+        <ol class="telegram-setup-steps">
+          <li><strong>Step 1:</strong> Telegram should open a group picker for <strong>&#64;RocketGoalsBot</strong>.</li>
+          <li><strong>Step 2:</strong> Choose an existing group or create a new one for this team.</li>
+          <li><strong>Step 3:</strong> Keep <strong>Topics</strong> enabled and grant the bot admin rights with <strong>Manage Topics</strong>.</li>
+          <li><strong>Step 4:</strong> Return here. This page will update automatically once the group is linked.</li>
+        </ol>
+        <p class="telegram-admin-tip">
+          If Telegram opened a private bot chat instead of a group picker, create a Telegram group manually and add <strong>&#64;RocketGoalsBot</strong> as an admin.
+        </p>
+        <div class="telegram-setup-actions">
+          @if (telegramDeepLink()) {
+          <a [href]="telegramDeepLink()" target="_blank" rel="noopener" class="btn solid sm telegram-open-btn">
+            Open Telegram Again
+          </a>
+          }
+        </div>
+        } @else if (!hasTelegramGroup()) {
+        <p class="telegram-setup-desc">No Telegram group is connected yet. Use the button below, then follow the steps in Telegram to create and connect the team group.</p>
+        <ol class="telegram-setup-steps">
+          <li><strong>Step 1:</strong> Click <strong>Connect Telegram Group</strong> to open Telegram.</li>
+          <li><strong>Step 2:</strong> In Telegram, tap <strong>New Group</strong>. If Telegram asks you to add someone first, add any teammate for now. You can change members later. <a class="telegram-help-link" href="https://telegram.org/faq" target="_blank" rel="noopener">How to create a group</a></li>
+          <li><strong>Step 3:</strong> Name the group for this team, for example <strong>{{ team()?.name || 'your team' }}</strong>.</li>
+          <li><strong>Step 4:</strong> Add <strong>&#64;RocketGoalsBot</strong> to that group and make the bot an <strong>admin</strong>. <a class="telegram-help-link" href="https://telegram.org/faq" target="_blank" rel="noopener">How Telegram admins work</a></li>
+          <li><strong>Step 5:</strong> In the bot's admin permissions, allow it to <strong>create invite links</strong>. Keep <strong>Topics</strong> turned on so private coaching threads can be created. <a class="telegram-help-link" href="https://telegram.org/faq" target="_blank" rel="noopener">About invite links</a></li>
+          <li><strong>Step 6:</strong> Return here. Once the group is connected, members can join from the QR code in the <strong>Team Chat</strong> tab.</li>
+        </ol>
+        <p class="telegram-admin-tip">
+          Need a quick overview first? Read <a class="telegram-help-link" href="https://telegram.org/tour/groups" target="_blank" rel="noopener">Telegram Groups</a> and <a class="telegram-help-link" href="https://telegram.org/tour/channels" target="_blank" rel="noopener">how channels are different</a>.
+        </p>
+        @if (telegramConnectError()) {
+        <p class="alert-inline error">{{ telegramConnectError() }}</p>
+        }
+        @if (telegramConnectSuccess()) {
+        <p class="alert-inline success">{{ telegramConnectSuccess() }}</p>
+        }
+        <div class="telegram-setup-actions">
+          <button class="btn solid sm telegram-open-btn" (click)="connectTelegramGroup()" [disabled]="connectingTelegram()">
+            @if (connectingTelegram()) {
+            <span class="spinner small"></span> Setting up...
+            } @else {
+            Connect Telegram Group
+            }
+          </button>
+        </div>
+        } @else {
+        <p class="telegram-setup-desc">
+          Connected to <strong>{{ team()?.telegramGroupTitle || 'your Telegram group' }}</strong>.
+        </p>
+        <ol class="telegram-setup-steps">
+          <li><strong>Main chat:</strong> Team-wide messages stay in the main Telegram group.</li>
+          <li><strong>Private coaching:</strong> RocketGoals creates a Telegram Topic for each participant when a private thread starts.</li>
+          <li><strong>Next step:</strong> Open the <strong>Team Chat</strong> tab to show the member QR code.</li>
+        </ol>
+        @if (telegramConnectSuccess()) {
+        <p class="alert-inline success">{{ telegramConnectSuccess() }}</p>
+        }
+        <div class="telegram-setup-actions">
+          @if (telegramInviteLink()) {
+          <a [href]="telegramInviteLink()" target="_blank" rel="noopener" class="btn solid sm telegram-open-btn">
+            Open Group in Telegram
+          </a>
+          }
+          <button type="button" class="btn ghost sm" (click)="openTeamChatTab()">
+            Show Member QR
+          </button>
+        </div>
+        <p class="telegram-admin-tip">Admin tip: after changing Telegram permissions, send one new private participant message from this page to create their topic.</p>
+        }
+      </section>
+
       <section class="ai-settings-panel glass">
         <div class="ai-settings-head">
           <div class="ai-settings-head-copy">
@@ -1064,11 +1161,11 @@
     </div>
     }
 
-    @if (activeTab() === 'chat' && isCurrentUserMember()) {
+    @if (activeTab() === 'chat' && canAccessTeamChat()) {
     <div class="chat-wrapper fade-in">
 
       <!-- Telegram Group Connection / QR Code Banner -->
-      @if (hasTelegramGroup() && telegramInviteLink() && showTelegramBanner()) {
+      @if (hasTelegramGroup() && showTelegramBanner()) {
       <div class="telegram-banner glass">
         <button class="telegram-banner-close" (click)="dismissTelegramBanner()" aria-label="Dismiss">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1077,11 +1174,15 @@
         </button>
         <div class="telegram-banner-content">
           <div class="telegram-qr-wrap">
-            @if (telegramQrDataUrl()) {
+            @if (telegramInviteLink() && telegramQrDataUrl()) {
             <img [src]="telegramQrDataUrl()" alt="Telegram group QR code" class="telegram-qr-img" />
             } @else {
             <div class="telegram-qr-placeholder">
+              @if (telegramInviteLink()) {
               <span class="spinner small"></span>
+              } @else {
+              <span style="font-size: 24px; color: #26a5e4;">!</span>
+              }
             </div>
             }
           </div>
@@ -1092,6 +1193,7 @@
               </svg>
               Join on Telegram
             </div>
+            @if (telegramInviteLink()) {
             <p class="telegram-banner-desc">Scan the QR code or tap the button to join the team chat on Telegram. Messages sync automatically.</p>
             <a [href]="telegramInviteLink()" target="_blank" rel="noopener" class="btn solid sm telegram-open-btn">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -1099,14 +1201,41 @@
               </svg>
               Open in Telegram
             </a>
-            <ul class="telegram-onboarding-steps">
-              <li><strong>Join once:</strong> Scan the QR code or tap the Telegram button above.</li>
-              <li><strong>Team chat:</strong> Use the main Telegram chat for updates visible to everyone.</li>
-              <li><strong>Private coaching:</strong> Use Telegram Topics for one-on-one participant threads.</li>
-              <li><strong>If private threads are missing:</strong> Ask an admin to keep Topics enabled and give <strong>&#64;RocketGoalsBot</strong> admin rights with <strong>Manage Topics</strong>.</li>
-            </ul>
             @if (isAdmin()) {
-            <p class="telegram-admin-tip">Admin tip: after changing Telegram permissions, send one new private message from this page to create the participant topic.</p>
+            <p class="telegram-admin-tip">Admin tip: if private participant topics are missing, keep <strong>Topics</strong> enabled and give <strong>&#64;RocketGoalsBot</strong> admin rights with <strong>Manage Topics</strong>.</p>
+            }
+            } @else {
+            <p class="telegram-banner-desc">This team is connected to Telegram, but the member invite link is missing, so the QR code cannot be shown yet.</p>
+            @if (isAdmin()) {
+            <ul class="telegram-onboarding-steps">
+              <li><strong>Open Telegram:</strong> Open the Telegram app on your phone or desktop.</li>
+              <li><strong>Create the team group:</strong> In Telegram, tap the top-right button, choose <strong>New Group</strong>, and create a group for this team. Name it <strong>{{ team()?.name || 'your team' }}</strong> if you have not already created one. <a class="telegram-help-link" href="https://telegram.org/faq" target="_blank" rel="noopener">How to create a group</a> <span aria-hidden="true">•</span> <a class="telegram-help-link" href="https://telegram.org/tour/channels" target="_blank" rel="noopener">Why not a channel</a></li>
+              <li><strong>Open the connected group:</strong> In Telegram, open <strong>{{ team()?.telegramGroupTitle || 'your team group' }}</strong>. If that is the wrong chat, create the correct Telegram group first and reconnect it here.</li>
+              <li><strong>Add the bot:</strong> Add <strong>&#64;RocketGoalsBot</strong> to the group if it is not already there.</li>
+              <li><strong>Make the bot an admin:</strong> In the group settings, give <strong>&#64;RocketGoalsBot</strong> admin access and allow it to <strong>create invite links</strong>. <a class="telegram-help-link" href="https://telegram.org/faq" target="_blank" rel="noopener">How Telegram admins work</a> <span aria-hidden="true">•</span> <a class="telegram-help-link" href="https://telegram.org/faq" target="_blank" rel="noopener">About invite links</a></li>
+              <li><strong>Keep Topics on:</strong> Leave <strong>Topics</strong> enabled so RocketGoals can create private coaching threads for participants.</li>
+              <li><strong>Come back here:</strong> After updating Telegram, click <strong>Refresh Join Link</strong> to generate the member QR code.</li>
+            </ul>
+            <p class="telegram-admin-tip">If you created a Telegram channel by mistake, create a Telegram group instead, move the team there, and add <strong>&#64;RocketGoalsBot</strong> to that group.</p>
+            @if (telegramConnectError()) {
+            <p class="alert-inline error">{{ telegramConnectError() }}</p>
+            }
+            @if (telegramConnectSuccess()) {
+            <p class="alert-inline success">{{ telegramConnectSuccess() }}</p>
+            }
+            }
+            @if (!isAdmin()) {
+            <p class="telegram-banner-desc">Ask your team admin to finish Telegram setup so the join QR code can be generated.</p>
+            }
+            @if (isAdmin()) {
+            <button class="btn solid sm telegram-open-btn" (click)="connectTelegramGroup()" [disabled]="connectingTelegram()">
+              @if (connectingTelegram()) {
+              <span class="spinner small"></span> Refreshing...
+              } @else {
+              Refresh Join Link
+              }
+            </button>
+            }
             }
           </div>
         </div>
