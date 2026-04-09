@@ -1255,6 +1255,12 @@
             <span class="spinner small"></span>
             <span>Listening for your Telegram group...</span>
           </div>
+          <ol class="telegram-setup-steps">
+            <li><strong>Create or open the team group:</strong> In Telegram, use a <strong>group</strong>, not a channel.</li>
+            <li><strong>Add the bot to that group:</strong> Add <strong>&#64;RocketGoalsBot</strong> to the exact team group you want to sync.</li>
+            <li><strong>Make the bot an admin:</strong> Allow it to create invite links. Keep <strong>Topics</strong> enabled for private coaching threads.</li>
+            <li><strong>Wait here:</strong> RocketGoals only connects the group after Telegram sends back the bot-added event.</li>
+          </ol>
           <p class="telegram-setup-desc" style="margin-top: 8px">
             <strong>On mobile:</strong> Telegram should show a group picker. <br/>
             <strong>On desktop:</strong> If the bot opened in a private chat instead, create a Telegram group first, then add <strong>&#64;RocketGoalsBot</strong> to it. It will auto-connect.
@@ -1272,6 +1278,14 @@
           } @else {
           <h3 class="telegram-setup-title">Sync Chat with Telegram</h3>
           <p class="telegram-setup-desc">Connect a Telegram group to sync messages. Members will get a QR code to join instantly.</p>
+          <ol class="telegram-setup-steps">
+            <li><strong>Create the team group first:</strong> In Telegram, create or open the team <strong>group</strong>. Do not use a channel.</li>
+            <li><strong>Add RocketGoalsBot:</strong> Add <strong>&#64;RocketGoalsBot</strong> to that group.</li>
+            <li><strong>Make it admin:</strong> Give the bot admin access and allow it to create invite links.</li>
+            <li><strong>Keep Topics enabled:</strong> Topics are used for private participant coaching threads.</li>
+            <li><strong>Then connect here:</strong> Click <strong>Connect Telegram Group</strong>. Telegram will open and RocketGoals will link the group after it receives the bot-added event.</li>
+          </ol>
+          <p class="telegram-admin-tip">RocketGoals connects the Telegram group back to this team by listening for the bot being added to the group and then saving that group's Telegram chat ID on the team.</p>
           @if (telegramConnectError()) {
           <p class="alert-inline error">{{ telegramConnectError() }}</p>
           }

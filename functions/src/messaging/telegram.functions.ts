@@ -324,6 +324,14 @@ async function exportTelegramChatInviteLinkDetailed(chatId: number, botToken: st
   }
 }
 
+function telegramErrorNeedsReconnect(error: string | null): boolean {
+  const normalized = String(error || '').toLowerCase();
+  return (
+    normalized.includes('kicked from the supergroup chat') ||
+    normalized.includes('chat not found')
+  );
+}
+
 async function getOrCreateParticipantThreadId(params: {
   teamId: string;
   groupChatId: number;
@@ -1384,7 +1392,20 @@ export const telegramWebhook = onRequest({
           const data = doc.data();
           // Check if this pending link was created recently (within 10 minutes)
           if (Date.now() - createdAt < 10 * 60 * 1000) {
-            linkedTeamId = data.teamId;
+            const candidateTeamId = String(data.teamId || '').trim();
+            if (!candidateTeamId) {
+              await doc.ref.delete().catch(() => undefined);
+              continue;
+            }
+
+            const candidateTeamDoc = await admin.firestore().collection('teams').doc(candidateTeamId).get();
+            if (!candidateTeamDoc.exists) {
+              console.warn(`Skipping stale Telegram pending team link for missing team ${candidateTeamId}`);
+              await doc.ref.delete().catch(() => undefined);
+              continue;
+            }
+
+            linkedTeamId = candidateTeamId;
 
             // Generate invite link
             let inviteLink: string | null = null;
@@ -1422,8 +1443,7 @@ export const telegramWebhook = onRequest({
               completedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            const teamDoc = await admin.firestore().collection('teams').doc(linkedTeamId).get();
-            const teamName = teamDoc.data()?.name || 'your team';
+            const teamName = candidateTeamDoc.data()?.name || 'your team';
 
             await sendTelegramMessage(
               groupChatId,
@@ -2158,6 +2178,30 @@ export const setupTeamTelegramGroup = onCall({
 
   const botToken = telegramBotToken.value();
 
+  const createPendingTeamDeepLink = async () => {
+    if (botToken) {
+      await ensureWebhookConfigured(botToken);
+    }
+
+    const deepLink = `https://t.me/RocketGoalsBot?startgroup=team_${teamId}&admin=true`;
+
+    await admin.firestore().collection('telegramPendingTeamLinks').add({
+      teamId,
+      userId,
+      status: 'pending',
+      deepLink,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`🔗 Generated Telegram group deep link for team ${teamId}`);
+
+    return {
+      success: true,
+      needsGroupCreation: true,
+      deepLink
+    };
+  };
+
   // If team already has a telegram group, return it
   if (teamData?.telegramGroupId) {
     let inviteLink = String(teamData?.telegramGroupInviteLink || '').trim() || null;
@@ -2172,6 +2216,15 @@ export const setupTeamTelegramGroup = onCall({
           telegramGroupInviteLink: inviteLink,
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
+      } else if (telegramErrorNeedsReconnect(inviteLinkResult.error)) {
+        await teamDoc.ref.update({
+          telegramGroupId: admin.firestore.FieldValue.delete(),
+          telegramGroupInviteLink: admin.firestore.FieldValue.delete(),
+          telegramGroupTitle: admin.firestore.FieldValue.delete(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return createPendingTeamDeepLink();
       } else if (resolvedChatId !== Number(teamData.telegramGroupId)) {
         await teamDoc.ref.update({
           telegramGroupId: resolvedChatId,
@@ -2199,91 +2252,7 @@ export const setupTeamTelegramGroup = onCall({
     };
   }
 
-  // Check if there's a pending group that was added but not yet linked
-  const pendingGroups = await admin.firestore()
-    .collection('telegramPendingGroups')
-    .orderBy('addedAt', 'desc')
-    .limit(3)
-    .get();
-
-  if (!pendingGroups.empty) {
-    // Use the most recent pending group
-    const group = pendingGroups.docs[0];
-    const groupData = group.data();
-    const groupChatId = groupData.groupChatId;
-    const groupTitle = groupData.groupTitle;
-
-    // Generate invite link
-    let inviteLink: string | null = null;
-    let inviteLinkError: string | null = null;
-    let resolvedGroupChatId = Number(groupChatId);
-    try {
-      if (botToken) {
-        const inviteLinkResult = await exportTelegramChatInviteLinkDetailed(groupChatId, botToken);
-        inviteLink = inviteLinkResult.inviteLink;
-        inviteLinkError = inviteLinkResult.error;
-        resolvedGroupChatId = Number(inviteLinkResult.resolvedChatId || groupChatId);
-      }
-    } catch (err) {
-      console.error('Failed to generate invite link:', err);
-    }
-
-    // Link group to team
-    await admin.firestore().collection('teams').doc(teamId).update({
-      telegramGroupId: resolvedGroupChatId,
-      telegramGroupInviteLink: inviteLink,
-      telegramGroupTitle: groupTitle,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    // Clean up pending group
-    await group.ref.delete();
-
-    if (botToken) {
-      await sendTelegramMessage(
-        resolvedGroupChatId,
-        `🚀 *Connected to ${teamData?.name || 'your team'}!*\n\nMessages here will sync with the team chat on RocketGoals.`,
-        botToken
-      );
-    }
-
-    console.log(`✅ Team ${teamId} connected to pending Telegram group ${resolvedGroupChatId}`);
-
-    return {
-      success: true,
-      telegramGroupId: resolvedGroupChatId,
-      telegramGroupInviteLink: inviteLink,
-      telegramGroupTitle: groupTitle,
-      telegramInviteLinkError: inviteLinkError
-    };
-  }
-
-  // No pending group found - create a pending link and return deep link
-  // First, ensure the webhook is configured to receive my_chat_member events
-  if (botToken) {
-    await ensureWebhookConfigured(botToken);
-  }
-
-  // startgroup= opens Telegram's "pick a group" screen and adds the bot
-  // admin=true requests admin permissions so the bot can generate invite links
-  const deepLink = `https://t.me/RocketGoalsBot?startgroup=team_${teamId}&admin=true`;
-
-  // Store pending link so the webhook can auto-complete it
-  await admin.firestore().collection('telegramPendingTeamLinks').add({
-    teamId,
-    userId,
-    status: 'pending',
-    deepLink,
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-
-  console.log(`🔗 Generated Telegram group deep link for team ${teamId}`);
-
-  return {
-    success: true,
-    needsGroupCreation: true,
-    deepLink
-  };
+  return createPendingTeamDeepLink();
 });
 
 export const disconnectTeamTelegramGroup = onCall({
