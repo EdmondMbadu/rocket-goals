@@ -3818,8 +3818,11 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
             `Connected to Telegram group "${result.telegramGroupTitle || this.team()?.telegramGroupTitle || 'group'}"!`
           );
         } else {
+          const telegramReason = String(result.telegramInviteLinkError || '').trim();
           this.telegramConnectError.set(
-            'The team is connected to Telegram, but RocketGoals could not generate a join link for members. In Telegram, make sure @RocketGoalsBot is an admin and can create invite links, then try "Refresh Join Link" again.'
+            telegramReason
+              ? `The team is connected to Telegram, but RocketGoals could not generate a join link for members. Telegram said: ${telegramReason}`
+              : 'The team is connected to Telegram, but RocketGoals could not generate a join link for members. In Telegram, make sure @RocketGoalsBot is an admin and can create invite links, then try "Refresh Join Link" again.'
           );
         }
         this.connectingTelegram.set(false);

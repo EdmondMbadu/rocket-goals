@@ -262,7 +262,10 @@ async function createTelegramForumTopic(chatId: number, title: string, botToken:
   }
 }
 
-async function exportTelegramChatInviteLink(chatId: number, botToken: string): Promise<string | null> {
+async function exportTelegramChatInviteLinkDetailed(chatId: number, botToken: string): Promise<{
+  inviteLink: string | null;
+  error: string | null;
+}> {
   try {
     const inviteResp = await fetch(
       `https://api.telegram.org/bot${botToken}/exportChatInviteLink`,
@@ -274,13 +277,22 @@ async function exportTelegramChatInviteLink(chatId: number, botToken: string): P
     );
     const inviteData = await inviteResp.json();
     if (inviteData.ok && inviteData.result) {
-      return String(inviteData.result);
+      return {
+        inviteLink: String(inviteData.result),
+        error: null
+      };
     }
     console.warn(`Failed to export Telegram invite link for chat ${chatId}:`, inviteData);
-    return null;
+    return {
+      inviteLink: null,
+      error: String(inviteData?.description || inviteData?.error_code || 'Unknown Telegram error')
+    };
   } catch (error) {
     console.error(`Failed to export Telegram invite link for chat ${chatId}:`, error);
-    return null;
+    return {
+      inviteLink: null,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
@@ -2122,13 +2134,23 @@ export const setupTeamTelegramGroup = onCall({
   if (teamData?.telegramGroupId) {
     let inviteLink = String(teamData?.telegramGroupInviteLink || '').trim() || null;
     if (!inviteLink && botToken) {
-      inviteLink = await exportTelegramChatInviteLink(Number(teamData.telegramGroupId), botToken);
+      const inviteLinkResult = await exportTelegramChatInviteLinkDetailed(Number(teamData.telegramGroupId), botToken);
+      inviteLink = inviteLinkResult.inviteLink;
       if (inviteLink) {
         await teamDoc.ref.update({
           telegramGroupInviteLink: inviteLink,
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
       }
+
+      return {
+        success: true,
+        alreadyConnected: true,
+        telegramGroupId: teamData.telegramGroupId,
+        telegramGroupInviteLink: inviteLink,
+        telegramGroupTitle: teamData.telegramGroupTitle,
+        telegramInviteLinkError: inviteLinkResult.error
+      };
     }
 
     return {
@@ -2136,7 +2158,8 @@ export const setupTeamTelegramGroup = onCall({
       alreadyConnected: true,
       telegramGroupId: teamData.telegramGroupId,
       telegramGroupInviteLink: inviteLink,
-      telegramGroupTitle: teamData.telegramGroupTitle
+      telegramGroupTitle: teamData.telegramGroupTitle,
+      telegramInviteLinkError: null
     };
   }
 
@@ -2156,9 +2179,12 @@ export const setupTeamTelegramGroup = onCall({
 
     // Generate invite link
     let inviteLink: string | null = null;
+    let inviteLinkError: string | null = null;
     try {
       if (botToken) {
-        inviteLink = await exportTelegramChatInviteLink(groupChatId, botToken);
+        const inviteLinkResult = await exportTelegramChatInviteLinkDetailed(groupChatId, botToken);
+        inviteLink = inviteLinkResult.inviteLink;
+        inviteLinkError = inviteLinkResult.error;
       }
     } catch (err) {
       console.error('Failed to generate invite link:', err);
@@ -2189,7 +2215,8 @@ export const setupTeamTelegramGroup = onCall({
       success: true,
       telegramGroupId: groupChatId,
       telegramGroupInviteLink: inviteLink,
-      telegramGroupTitle: groupTitle
+      telegramGroupTitle: groupTitle,
+      telegramInviteLinkError: inviteLinkError
     };
   }
 

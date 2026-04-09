@@ -1704,6 +1704,7 @@ export class TeamService {
     telegramGroupId?: number;
     telegramGroupInviteLink?: string;
     telegramGroupTitle?: string;
+    telegramInviteLinkError?: string | null;
   }> {
     const appModule = await import('firebase/app');
     const app =
@@ -1723,6 +1724,7 @@ export class TeamService {
       telegramGroupId?: number;
       telegramGroupInviteLink?: string;
       telegramGroupTitle?: string;
+      telegramInviteLinkError?: string | null;
     };
   }
 
