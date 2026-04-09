@@ -2,7 +2,6 @@
 export {
   telegramWebhook,
   setupTeamTelegramGroup,
-  disconnectTeamTelegramGroup,
   syncTeamMessageToTelegram,
   syncTeamDirectMessageToTelegram,
   configureTelegramWebhook,

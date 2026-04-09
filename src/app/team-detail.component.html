@@ -956,15 +956,6 @@
             Open Group
           </a>
           }
-          @if (hasTelegramGroup()) {
-          <button type="button" class="btn ghost sm" (click)="reconnectTelegramGroup()" [disabled]="disconnectingTelegram() || connectingTelegram()">
-            @if (disconnectingTelegram()) {
-            <span class="spinner small"></span> Reconnecting...
-            } @else {
-            Reconnect Telegram Group
-            }
-          </button>
-          }
           <button type="button" class="btn ghost sm" (click)="openTeamChatTab()">
             Open Chat Tab
           </button>
@@ -1242,13 +1233,6 @@
               <span class="spinner small"></span> Refreshing...
               } @else {
               Refresh Join Link
-              }
-            </button>
-            <button type="button" class="btn ghost sm" (click)="reconnectTelegramGroup()" [disabled]="disconnectingTelegram() || connectingTelegram()">
-              @if (disconnectingTelegram()) {
-              <span class="spinner small"></span> Reconnecting...
-              } @else {
-              Reconnect Telegram Group
               }
             </button>
             }

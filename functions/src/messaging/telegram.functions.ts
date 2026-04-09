@@ -265,33 +265,61 @@ async function createTelegramForumTopic(chatId: number, title: string, botToken:
 async function exportTelegramChatInviteLinkDetailed(chatId: number, botToken: string): Promise<{
   inviteLink: string | null;
   error: string | null;
+  resolvedChatId: number | null;
 }> {
-  try {
+  const exportInviteLink = async (targetChatId: number) => {
     const inviteResp = await fetch(
       `https://api.telegram.org/bot${botToken}/exportChatInviteLink`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId })
+        body: JSON.stringify({ chat_id: targetChatId })
       }
     );
-    const inviteData = await inviteResp.json();
+    return inviteResp.json();
+  };
+
+  try {
+    const inviteData = await exportInviteLink(chatId);
     if (inviteData.ok && inviteData.result) {
       return {
         inviteLink: String(inviteData.result),
-        error: null
+        error: null,
+        resolvedChatId: chatId
       };
     }
+
+    const migratedChatId = Number(inviteData?.parameters?.migrate_to_chat_id);
+    if (Number.isFinite(migratedChatId) && migratedChatId !== chatId) {
+      console.warn(`Telegram chat ${chatId} was upgraded. Retrying invite-link export with ${migratedChatId}.`);
+      const migratedInviteData = await exportInviteLink(migratedChatId);
+      if (migratedInviteData.ok && migratedInviteData.result) {
+        return {
+          inviteLink: String(migratedInviteData.result),
+          error: null,
+          resolvedChatId: migratedChatId
+        };
+      }
+      console.warn(`Failed to export Telegram invite link for migrated chat ${migratedChatId}:`, migratedInviteData);
+      return {
+        inviteLink: null,
+        error: String(migratedInviteData?.description || migratedInviteData?.error_code || 'Unknown Telegram error'),
+        resolvedChatId: migratedChatId
+      };
+    }
+
     console.warn(`Failed to export Telegram invite link for chat ${chatId}:`, inviteData);
     return {
       inviteLink: null,
-      error: String(inviteData?.description || inviteData?.error_code || 'Unknown Telegram error')
+      error: String(inviteData?.description || inviteData?.error_code || 'Unknown Telegram error'),
+      resolvedChatId: null
     };
   } catch (error) {
     console.error(`Failed to export Telegram invite link for chat ${chatId}:`, error);
     return {
       inviteLink: null,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      resolvedChatId: null
     };
   }
 }
@@ -2133,12 +2161,20 @@ export const setupTeamTelegramGroup = onCall({
   // If team already has a telegram group, return it
   if (teamData?.telegramGroupId) {
     let inviteLink = String(teamData?.telegramGroupInviteLink || '').trim() || null;
+    let resolvedChatId = Number(teamData.telegramGroupId);
     if (!inviteLink && botToken) {
       const inviteLinkResult = await exportTelegramChatInviteLinkDetailed(Number(teamData.telegramGroupId), botToken);
       inviteLink = inviteLinkResult.inviteLink;
+      resolvedChatId = Number(inviteLinkResult.resolvedChatId || teamData.telegramGroupId);
       if (inviteLink) {
         await teamDoc.ref.update({
+          telegramGroupId: resolvedChatId,
           telegramGroupInviteLink: inviteLink,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      } else if (resolvedChatId !== Number(teamData.telegramGroupId)) {
+        await teamDoc.ref.update({
+          telegramGroupId: resolvedChatId,
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
       }
@@ -2146,7 +2182,7 @@ export const setupTeamTelegramGroup = onCall({
       return {
         success: true,
         alreadyConnected: true,
-        telegramGroupId: teamData.telegramGroupId,
+        telegramGroupId: resolvedChatId,
         telegramGroupInviteLink: inviteLink,
         telegramGroupTitle: teamData.telegramGroupTitle,
         telegramInviteLinkError: inviteLinkResult.error
@@ -2156,7 +2192,7 @@ export const setupTeamTelegramGroup = onCall({
     return {
       success: true,
       alreadyConnected: true,
-      telegramGroupId: teamData.telegramGroupId,
+      telegramGroupId: resolvedChatId,
       telegramGroupInviteLink: inviteLink,
       telegramGroupTitle: teamData.telegramGroupTitle,
       telegramInviteLinkError: null
@@ -2180,11 +2216,13 @@ export const setupTeamTelegramGroup = onCall({
     // Generate invite link
     let inviteLink: string | null = null;
     let inviteLinkError: string | null = null;
+    let resolvedGroupChatId = Number(groupChatId);
     try {
       if (botToken) {
         const inviteLinkResult = await exportTelegramChatInviteLinkDetailed(groupChatId, botToken);
         inviteLink = inviteLinkResult.inviteLink;
         inviteLinkError = inviteLinkResult.error;
+        resolvedGroupChatId = Number(inviteLinkResult.resolvedChatId || groupChatId);
       }
     } catch (err) {
       console.error('Failed to generate invite link:', err);
@@ -2192,7 +2230,7 @@ export const setupTeamTelegramGroup = onCall({
 
     // Link group to team
     await admin.firestore().collection('teams').doc(teamId).update({
-      telegramGroupId: groupChatId,
+      telegramGroupId: resolvedGroupChatId,
       telegramGroupInviteLink: inviteLink,
       telegramGroupTitle: groupTitle,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -2203,17 +2241,17 @@ export const setupTeamTelegramGroup = onCall({
 
     if (botToken) {
       await sendTelegramMessage(
-        groupChatId,
+        resolvedGroupChatId,
         `🚀 *Connected to ${teamData?.name || 'your team'}!*\n\nMessages here will sync with the team chat on RocketGoals.`,
         botToken
       );
     }
 
-    console.log(`✅ Team ${teamId} connected to pending Telegram group ${groupChatId}`);
+    console.log(`✅ Team ${teamId} connected to pending Telegram group ${resolvedGroupChatId}`);
 
     return {
       success: true,
-      telegramGroupId: groupChatId,
+      telegramGroupId: resolvedGroupChatId,
       telegramGroupInviteLink: inviteLink,
       telegramGroupTitle: groupTitle,
       telegramInviteLinkError: inviteLinkError

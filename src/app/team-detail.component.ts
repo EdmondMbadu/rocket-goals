@@ -294,7 +294,6 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
 
   // Telegram group
   connectingTelegram = signal(false);
-  disconnectingTelegram = signal(false);
   telegramConnectError = signal<string | null>(null);
   telegramConnectSuccess = signal<string | null>(null);
   telegramQrDataUrl = signal<string | null>(null);
@@ -3837,32 +3836,6 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  async reconnectTelegramGroup() {
-    const teamId = this.team()?.id;
-    if (!teamId || !this.isAdmin() || this.connectingTelegram() || this.disconnectingTelegram()) return;
-    if (!confirm('Disconnect the current Telegram group for this team and reconnect a different one?')) return;
-
-    this.disconnectingTelegram.set(true);
-    this.telegramConnectError.set(null);
-    this.telegramConnectSuccess.set(null);
-    this.telegramDeepLink.set(null);
-    this.waitingForTelegramLink.set(false);
-    this.stopTelegramLinkPolling();
-
-    try {
-      await this.teamService.disconnectTeamTelegramGroup(teamId);
-      await this.loadTeam(teamId);
-      this.telegramConnectSuccess.set('Telegram group disconnected. Connect the correct group now.');
-      this.disconnectingTelegram.set(false);
-      await this.connectTelegramGroup();
-    } catch (err: any) {
-      console.error('Failed to reconnect Telegram group:', err);
-      this.telegramConnectError.set(
-        'Unable to disconnect the current Telegram group right now. Please try again.'
-      );
-      this.disconnectingTelegram.set(false);
-    }
-  }
 
   private startTelegramLinkPolling(teamId: string) {
     this.stopTelegramLinkPolling();

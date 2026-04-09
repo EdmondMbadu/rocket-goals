@@ -1728,24 +1728,6 @@ export class TeamService {
     };
   }
 
-  async disconnectTeamTelegramGroup(teamId: string): Promise<{
-    success: boolean;
-  }> {
-    const appModule = await import('firebase/app');
-    const app =
-      appModule.getApps().length === 0
-        ? appModule.initializeApp(firebaseConfig)
-        : appModule.getApp();
-
-    const functionsModule = await import('firebase/functions');
-    const functions = functionsModule.getFunctions(app, 'us-central1');
-    const disconnect = functionsModule.httpsCallable(functions, 'disconnectTeamTelegramGroup');
-    const result = await disconnect({ teamId });
-    return result.data as {
-      success: boolean;
-    };
-  }
-
   async createTeamMeetingRoom(teamId: string): Promise<{
     success: boolean;
     created: boolean;
