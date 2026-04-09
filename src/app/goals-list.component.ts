@@ -123,6 +123,7 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
   editingTeamId = signal<string | null>(null);
   editingTeamTitleValue = signal<string>('');
   activeTeamMenuId = signal<string | null>(null);
+  expandedTeamDescriptionIds = signal<Record<string, boolean>>({});
 
   // Goal creation modal state (Launch Your GOAL wizard)
   protected readonly showGoalModal = signal(false);
@@ -208,6 +209,8 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     { value: 'always', label: 'Always – I never miss a day' }
   ];
 
+  protected readonly teamDescriptionPreviewThreshold = 110;
+
   async ngOnInit() {
     // Load custom dashboard title from localStorage
     const savedTitle = localStorage.getItem('dashboardTitle');
@@ -228,6 +231,22 @@ export class GoalsListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.isLoggedIn()) {
       await this.checkPendingGoalCreation();
     }
+  }
+
+  protected isTeamDescriptionExpanded(teamId: string): boolean {
+    return !!this.expandedTeamDescriptionIds()[teamId];
+  }
+
+  protected toggleTeamDescription(teamId: string, event: Event): void {
+    event.stopPropagation();
+    this.expandedTeamDescriptionIds.update(current => ({
+      ...current,
+      [teamId]: !current[teamId]
+    }));
+  }
+
+  protected shouldShowTeamDescriptionToggle(description?: string): boolean {
+    return (description || '').trim().length > this.teamDescriptionPreviewThreshold;
   }
 
   ngAfterViewInit() {
