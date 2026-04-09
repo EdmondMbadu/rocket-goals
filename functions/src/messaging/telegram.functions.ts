@@ -2248,6 +2248,65 @@ export const setupTeamTelegramGroup = onCall({
   };
 });
 
+export const disconnectTeamTelegramGroup = onCall({
+  region: "us-central1",
+  cors: [
+    "https://rocket-goals.web.app",
+    "https://rocket-goals.firebaseapp.com",
+    "https://www.rocketgoals.com",
+    "https://rocketgoals.com",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200"
+  ]
+}, async (request) => {
+  const userId = request.auth?.uid;
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { teamId } = request.data;
+  if (!teamId) {
+    throw new HttpsError('invalid-argument', 'teamId is required');
+  }
+
+  const teamRef = admin.firestore().collection('teams').doc(teamId);
+  const teamDoc = await teamRef.get();
+  if (!teamDoc.exists) {
+    throw new HttpsError('not-found', 'Team not found');
+  }
+
+  const teamData = teamDoc.data() || {};
+  const members = Array.isArray(teamData?.members) ? teamData.members : [];
+  const isAdminMember = members.some((member: any) => (
+    String(member?.userId || '').trim() === userId &&
+    String(member?.role || '').trim() === 'admin'
+  ));
+  if (teamData?.adminId !== userId && !isAdminMember) {
+    throw new HttpsError('permission-denied', 'Only the team admin can disconnect Telegram');
+  }
+
+  await teamRef.update({
+    telegramGroupId: admin.firestore.FieldValue.delete(),
+    telegramGroupInviteLink: admin.firestore.FieldValue.delete(),
+    telegramGroupTitle: admin.firestore.FieldValue.delete(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  const pendingLinks = await admin.firestore()
+    .collection('telegramPendingTeamLinks')
+    .where('teamId', '==', teamId)
+    .get();
+  for (const doc of pendingLinks.docs) {
+    await doc.ref.delete();
+  }
+
+  console.log(`🔌 Disconnected Telegram group from team ${teamId}`);
+
+  return {
+    success: true
+  };
+});
+
 /**
  * Reconfigure the Telegram webhook to receive all necessary update types,
  * including my_chat_member events (required for auto-detecting when the bot

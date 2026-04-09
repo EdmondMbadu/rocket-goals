@@ -950,16 +950,25 @@
               Connect one Telegram group for the whole team. Team-wide chat happens in the main group, and one-on-one coaching uses Telegram Topics inside that group.
             </p>
           </div>
-          <div class="telegram-setup-actions">
-            @if (hasTelegramGroup() && telegramInviteLink()) {
-            <a [href]="telegramInviteLink()" target="_blank" rel="noopener" class="btn solid sm telegram-open-btn">
-              Open Group
-            </a>
+        <div class="telegram-setup-actions">
+          @if (hasTelegramGroup() && telegramInviteLink()) {
+          <a [href]="telegramInviteLink()" target="_blank" rel="noopener" class="btn solid sm telegram-open-btn">
+            Open Group
+          </a>
+          }
+          @if (hasTelegramGroup()) {
+          <button type="button" class="btn ghost sm" (click)="reconnectTelegramGroup()" [disabled]="disconnectingTelegram() || connectingTelegram()">
+            @if (disconnectingTelegram()) {
+            <span class="spinner small"></span> Reconnecting...
+            } @else {
+            Reconnect Telegram Group
             }
-            <button type="button" class="btn ghost sm" (click)="openTeamChatTab()">
-              Open Chat Tab
-            </button>
-          </div>
+          </button>
+          }
+          <button type="button" class="btn ghost sm" (click)="openTeamChatTab()">
+            Open Chat Tab
+          </button>
+        </div>
         </div>
 
         @if (waitingForTelegramLink()) {
@@ -1233,6 +1242,13 @@
               <span class="spinner small"></span> Refreshing...
               } @else {
               Refresh Join Link
+              }
+            </button>
+            <button type="button" class="btn ghost sm" (click)="reconnectTelegramGroup()" [disabled]="disconnectingTelegram() || connectingTelegram()">
+              @if (disconnectingTelegram()) {
+              <span class="spinner small"></span> Reconnecting...
+              } @else {
+              Reconnect Telegram Group
               }
             </button>
             }
