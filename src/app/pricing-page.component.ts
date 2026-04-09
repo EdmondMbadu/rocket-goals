@@ -220,7 +220,14 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
               </div>
 
               <!-- Team -->
-              <div class="pricing-card relative">
+              <div class="pricing-card relative current-plan-team"
+                   [class.current-plan]="isCurrentPlan('team')"
+                   [class.opacity-60]="isDowngrade('team')">
+                @if (isCurrentPlan('team')) {
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-rose-500 text-white text-xs font-bold rounded-full z-10 shadow-lg">
+                  YOUR PLAN
+                </div>
+                }
                 <div class="card-top">
                   <span class="rocket-emoji rocket-size-3 rocket-red">🚀</span>
                   <div class="badge bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300">Teams</div>
@@ -236,9 +243,17 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
                   <li><span></span>Use your own AI coach or choose from the Rocket Coach list</li>
                   <li><span></span>Team reminders, accountability flows, and shared momentum tools</li>
                 </ul>
-                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Coming Soon</button>
+                @if (isCurrentPlan('team')) {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Current Plan</button>
+                } @else if (canUpgradeTo('team')) {
+                <button (click)="selectPlan(stripePrices.team)" [disabled]="loading()" class="btn-outline">
+                  {{ getButtonText('team') }}
+                </button>
+                } @else {
+                <button disabled class="btn-outline opacity-50 cursor-not-allowed">Included in your plan</button>
+                }
                 <p class="text-sm text-black/55 dark:text-slate-300">*If you need more than 20 team members or multiple teams, <a routerLink="/contact" class="font-semibold underline underline-offset-2 hover:text-red-600 dark:hover:text-red-400">contact us</a>.</p>
-                <p class="text-sm text-black/45 dark:text-slate-400">Placeholder for now while Stripe setup is in progress.</p>
+                <p class="text-sm text-black/45 dark:text-slate-400">Need more than 20 members or multiple teams? We can set up a larger team plan.</p>
               </div>
 
               <!-- Interplanetary -->
@@ -597,6 +612,20 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
         box-shadow: 0 35px 80px rgba(249, 115, 22, 0.4), 0 0 0 8px rgba(249, 115, 22, 0.3);
       }
     }
+    .pricing-card.current-plan-team.current-plan {
+      border-color: rgba(244, 63, 94, 0.8);
+      box-shadow: 0 30px 70px rgba(244, 63, 94, 0.3), 0 0 0 6px rgba(244, 63, 94, 0.2);
+      background: linear-gradient(145deg, rgba(255, 241, 242, 0.95), rgba(255,255,255,1));
+      animation: pulse-glow-rose 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-rose {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(244, 63, 94, 0.3), 0 0 0 6px rgba(244, 63, 94, 0.2);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(244, 63, 94, 0.4), 0 0 0 8px rgba(244, 63, 94, 0.3);
+      }
+    }
     .pricing-card.current-plan-interplanetary.current-plan {
       border-color: rgba(220, 38, 38, 0.8);
       box-shadow: 0 30px 70px rgba(220, 38, 38, 0.3), 0 0 0 6px rgba(220, 38, 38, 0.2);
@@ -781,6 +810,20 @@ import { stripePrices, firebaseConfig } from '../../environments/environment';
         box-shadow: 0 35px 80px rgba(249, 115, 22, 0.5), 0 0 0 8px rgba(249, 115, 22, 0.35);
       }
     }
+    :host-context(.dark) .pricing-card.current-plan-team.current-plan {
+      border-color: rgba(244, 63, 94, 0.8);
+      box-shadow: 0 30px 70px rgba(244, 63, 94, 0.4), 0 0 0 6px rgba(244, 63, 94, 0.25);
+      background: linear-gradient(145deg, rgba(159, 18, 57, 0.3), rgba(15,23,42,0.98));
+      animation: pulse-glow-rose-dark 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow-rose-dark {
+      0%, 100% {
+        box-shadow: 0 30px 70px rgba(244, 63, 94, 0.4), 0 0 0 6px rgba(244, 63, 94, 0.25);
+      }
+      50% {
+        box-shadow: 0 35px 80px rgba(244, 63, 94, 0.5), 0 0 0 8px rgba(244, 63, 94, 0.35);
+      }
+    }
     :host-context(.dark) .pricing-card.current-plan-interplanetary.current-plan {
       border-color: rgba(220, 38, 38, 0.8);
       box-shadow: 0 30px 70px rgba(220, 38, 38, 0.4), 0 0 0 6px rgba(220, 38, 38, 0.25);
@@ -935,8 +978,9 @@ export class PricingPageComponent implements OnInit {
   private readonly planHierarchy: Record<string, number> = {
     'free': 0,
     'moonshot': 1,
-    'interplanetary': 2,
-    'galactic': 3
+    'team': 2,
+    'interplanetary': 3,
+    'galactic': 4
   };
   private readonly promoCodePlanMap = signal<Record<string, string>>({
     'NY2026MOONSHOT': 'moonshot',
@@ -1007,6 +1051,7 @@ export class PricingPageComponent implements OnInit {
   }
   private readonly priceIdPlanMap: Record<string, string> = {
     [stripePrices.moonshot]: 'moonshot',
+    [stripePrices.team]: 'team',
     [stripePrices.interplanetary]: 'interplanetary',
     [stripePrices.galactic]: 'galactic'
   };
@@ -1047,6 +1092,7 @@ export class PricingPageComponent implements OnInit {
     const planNames: Record<string, string> = {
       'free': 'Free',
       'moonshot': 'Moonshot',
+      'team': 'Team',
       'interplanetary': 'Interplanetary',
       'galactic': 'Galactic'
     };
@@ -1098,6 +1144,7 @@ export class PricingPageComponent implements OnInit {
     const names: Record<string, string> = {
       'free': 'Free',
       'moonshot': 'Moonshot',
+      'team': 'Team',
       'interplanetary': 'Interplanetary',
       'galactic': 'Galactic'
     };
@@ -1185,6 +1232,7 @@ export class PricingPageComponent implements OnInit {
     switch (plan) {
       case 'free': return 'bg-green-500 text-white';
       case 'moonshot': return 'bg-orange-500 text-white';
+      case 'team': return 'bg-rose-500 text-white';
       case 'interplanetary': return 'bg-red-600 text-white';
       case 'galactic': return 'bg-purple-600 text-white';
       default: return 'bg-gray-500 text-white';
@@ -1355,6 +1403,11 @@ export class PricingPageComponent implements OnInit {
         'Custom reminders + AI encouragement',
         'Weekly PDF + bottleneck nudges',
         'Dynamic micro-wins + ROCKET Blast'
+      ],
+      team: [
+        'Up to 20 team members',
+        'Bring your own AI coach or choose a Rocket Coach',
+        'Shared team reminders and accountability tools'
       ],
       interplanetary: [
         'App + Email + SMS reminders',

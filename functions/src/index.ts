@@ -67,13 +67,14 @@ const toTimestamp = (unixSeconds?: number | null) => {
 };
 
 // Map Stripe price IDs to plan names
-const PRICE_TO_PLAN: Record<string, 'moonshot' | 'interplanetary' | 'galactic'> = {
+const PRICE_TO_PLAN: Record<string, 'moonshot' | 'team' | 'interplanetary' | 'galactic'> = {
     'price_1ShFV1G26VVCdyeuhiUrkRfy': 'moonshot',
+    'price_1TKL4ZG26VVCdyeuUvaBIpRX': 'team',
     'price_1ShFVtG26VVCdyeu1stsZFw5': 'interplanetary',
     'price_1ShFWGG26VVCdyeuANsvCWFA': 'galactic'
 };
 
-const getPlanFromPriceId = (priceId: string | null | undefined): 'moonshot' | 'interplanetary' | 'galactic' | null => {
+const getPlanFromPriceId = (priceId: string | null | undefined): 'moonshot' | 'team' | 'interplanetary' | 'galactic' | null => {
     if (!priceId) return null;
     return PRICE_TO_PLAN[priceId] || null;
 };
@@ -4896,6 +4897,7 @@ async function incrementPromoCodeUsage(promoCode: string, tier: string, userId: 
 
 const stripePriceByPlan: Record<string, string> = {
     moonshot: 'price_1ShFV1G26VVCdyeuhiUrkRfy',
+    team: 'price_1TKL4ZG26VVCdyeuUvaBIpRX',
     interplanetary: 'price_1ShFVtG26VVCdyeu1stsZFw5',
     galactic: 'price_1ShFWGG26VVCdyeuANsvCWFA'
 };
@@ -6503,7 +6505,7 @@ export const saveCommunityCoach = functions.runWith({
         const userDoc = await admin.firestore().collection('userProfiles').doc(context.auth.uid).get();
         const userData = userDoc.data();
         const plan = userData?.subscriptionPlan || 'free';
-        const planHierarchy: Record<string, number> = { free: 0, moonshot: 1, interplanetary: 2, galactic: 3 };
+        const planHierarchy: Record<string, number> = { free: 0, moonshot: 1, team: 2, interplanetary: 3, galactic: 4 };
         if ((planHierarchy[plan] || 0) < 1) {
             throw new functions.https.HttpsError(
                 'permission-denied',

@@ -104,7 +104,7 @@ export class AppSuiteComponent implements OnInit {
   protected readonly hasMoonshot = computed(() => {
     const plan = this.authService.profile()?.subscriptionPlan;
     if (!plan) return false;
-    const hierarchy: Record<string, number> = { moonshot: 1, interplanetary: 2, galactic: 3 };
+    const hierarchy: Record<string, number> = { moonshot: 1, team: 2, interplanetary: 3, galactic: 4 };
     return (hierarchy[plan] || 0) >= 1;
   });
 

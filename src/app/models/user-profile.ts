@@ -40,7 +40,7 @@ export interface UserProfile {
   admin?: boolean;
   role?: string;
   subscriptionStatus?: string;
-  subscriptionPlan?: 'moonshot' | 'interplanetary' | 'galactic';
+  subscriptionPlan?: 'moonshot' | 'team' | 'interplanetary' | 'galactic';
   subscriptionPriceId?: string;
   subscriptionPaidAt?: unknown;
   subscriptionExpiresAt?: unknown;

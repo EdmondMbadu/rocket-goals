@@ -1119,6 +1119,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!plan) return 'Free';
     const planNames: Record<string, string> = {
       'moonshot': 'Moonshot',
+      'team': 'Team',
       'interplanetary': 'Interplanetary',
       'galactic': 'Galactic'
     };
@@ -1129,6 +1130,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const plan = this.getSubscriptionPlan();
     switch (plan) {
       case 'moonshot': return 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300';
+      case 'team': return 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300';
       case 'interplanetary': return 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300';
       case 'galactic': return 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300';
       default: return 'bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-300';
