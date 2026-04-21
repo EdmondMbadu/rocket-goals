@@ -50,123 +50,101 @@ export const GROWTH_DIMENSIONS: GrowthDimension[] = [
 const ADULT_QUESTIONS: GrowthQuestion[] = [
   {
     dim: 'beliefs',
-    scenario: "You discover a colleague learned a complex new skill in 6 months that you've struggled with for years.",
-    context: 'Neuroplasticity research (Blackwell et al., 2007) shows beliefs about brain malleability predict achievement.',
+    scenario: "A colleague learned a complex skill in 6 months that you've struggled with for years.",
+    context: 'Neuroplasticity research shows beliefs about brain malleability predict achievement (Blackwell et al., 2007).',
     options: [
-      { text: "They must have a natural aptitude I don't have. Some people are just wired differently.", score: 1 },
-      { text: "That's impressive. I wonder what they're doing differently - their method might work for me too.", score: 4 },
-      { text: "Six months of focused practice can rewire neural pathways. I need to examine my practice quality, not my 'talent.'", score: 5 },
-      { text: 'Good for them, but my situation is different. Not everyone can pick things up that easily.', score: 2 }
-    ]
-  },
-  {
-    dim: 'beliefs',
-    scenario: "A hiring manager says: 'We need someone who's a natural leader, not someone who has to work at it.'",
-    context: "Dweck's research distinguishes entity theorists (talent is fixed) from incremental theorists (talent is developed).",
-    options: [
-      { text: "That's a reasonable filter. Some people are born leaders and some aren't.", score: 1 },
-      { text: "That's a red flag - it means they don't value growth and will plateau as an organization.", score: 5 },
-      { text: 'I get what they mean, but leadership can definitely be developed over time.', score: 3 },
-      { text: 'They probably just want someone with existing experience, which makes sense.', score: 2 }
+      { text: "They have a natural aptitude I don't.", score: 1 },
+      { text: 'Impressive - I wonder what method they used. It might work for me.', score: 4 },
+      { text: 'Focused practice rewires neural pathways. I need to examine my approach, not my talent.', score: 5 },
+      { text: 'Good for them, but my situation is different.', score: 2 }
     ]
   },
   {
     dim: 'beliefs',
     scenario: "Your teenager says 'I'm just not a math person' after a bad test grade.",
-    context: 'Research shows that labeling ability as innate reduces effort investment by up to 40%.',
+    context: 'Labeling ability as innate reduces effort investment by up to 40%.',
     options: [
-      { text: "Some people genuinely aren't math-oriented. Help them find their strengths elsewhere.", score: 1 },
-      { text: "Tell them: 'You're not a math person YET. Your brain builds math circuits through practice - what specific part tripped you up?'", score: 5 },
-      { text: 'Encourage them to try harder next time and maybe get a tutor.', score: 3 },
-      { text: 'Show them examples of people who were bad at math but got better with effort.', score: 4 }
+      { text: "Some people genuinely aren't math-oriented. Help them find other strengths.", score: 1 },
+      { text: "Tell them: 'Not yet. Your brain builds math circuits with practice - what part tripped you up?'", score: 5 },
+      { text: 'Encourage them to try harder and maybe get a tutor.', score: 3 },
+      { text: 'Show them examples of people who improved at math with effort.', score: 4 }
     ]
   },
   {
     dim: 'failure',
-    scenario: 'You give a presentation at work. Afterward, a senior colleague sends you detailed critical feedback - 12 specific points.',
-    context: "Dweck's 4-step reframe: Accept -> Observe -> Name -> Educate. Attribution training reduces fear of failure by 54.8% (Huang et al., 2025).",
+    scenario: 'After a work presentation, a senior colleague sends 12 points of critical feedback.',
+    context: 'Attribution training reduces fear of failure by 54.8% (Huang et al., 2025).',
     options: [
-      { text: "Feel defensive. Twelve points? That's excessive - clearly they have an agenda.", score: 1 },
-      { text: 'Feel the sting, then systematically categorize: which 3 points would create the biggest improvement if I addressed them first?', score: 5 },
-      { text: 'Thank them and try to incorporate the feedback next time.', score: 3 },
-      { text: "Feel discouraged. Maybe presenting isn't my strong suit - I should let someone else handle it.", score: 1 }
+      { text: "Twelve points? That's excessive - they clearly have an agenda.", score: 1 },
+      { text: 'Feel the sting, then prioritize: which 3 points would create the biggest improvement?', score: 5 },
+      { text: 'Thank them and try to use the feedback next time.', score: 3 },
+      { text: "Maybe presenting isn't my strength - someone else should handle it.", score: 1 }
     ]
   },
   {
     dim: 'failure',
-    scenario: "You've been trying to build a habit (exercise, writing, meditation) for 3 months. You just missed an entire week.",
-    context: "BJ Fogg's research shows that how you respond to habit breaks predicts long-term success more than the break itself.",
+    scenario: "You've been building a habit for 3 months. You just missed an entire week.",
+    context: 'How you respond to habit breaks predicts long-term success more than the break itself (Fogg).',
     options: [
-      { text: 'I knew it. I always start strong and fall off. This is who I am.', score: 1 },
-      { text: "Reset and restart tomorrow. One week doesn't erase three months.", score: 3 },
-      { text: 'Analyze what happened this week specifically, shrink the habit smaller, redesign the trigger, and run the experiment again.', score: 5 },
-      { text: 'Maybe I need to try a different approach entirely.', score: 2 }
+      { text: 'I always start strong and fall off. This is who I am.', score: 1 },
+      { text: "One bad week doesn't erase three months. Restart tomorrow.", score: 3 },
+      { text: 'What went wrong this week? Shrink the habit, redesign the trigger, run the experiment again.', score: 5 },
+      { text: 'Maybe I should try a completely different approach.', score: 2 }
     ]
   },
   {
     dim: 'action',
-    scenario: 'You want to learn data visualization. You have evenings free. How do you start?',
+    scenario: 'You want to learn a new skill. You have evenings free. How do you start?',
     context: 'Fogg Behavior Model: Behavior = Motivation x Ability x Prompt.',
     options: [
-      { text: 'Buy a comprehensive online course and work through it start to finish.', score: 2 },
-      { text: 'Design a tiny daily practice: after dinner (prompt), open one dataset and make one chart (ability). Track completion, not quality.', score: 5 },
-      { text: 'Watch some YouTube tutorials when I feel motivated and practice when I can.', score: 1 },
-      { text: 'Set a goal to complete 3 visualization projects in the next month.', score: 3 }
+      { text: 'Buy a comprehensive course and work through it start to finish.', score: 2 },
+      { text: 'Design a tiny daily practice: same time each evening, one small exercise, track completion not quality.', score: 5 },
+      { text: 'Watch tutorials when I feel motivated and practice when I can.', score: 1 },
+      { text: 'Set a goal to complete 3 projects in the next month.', score: 3 }
     ]
   },
   {
     dim: 'action',
-    scenario: "You need to change how your team runs meetings (they're unproductive). What's your approach?",
+    scenario: "Your team's meetings are unproductive. How do you fix them?",
     context: 'Behavior design research shows environment design outperforms motivation-based approaches by 3:1.',
     options: [
-      { text: 'Send an email explaining why meetings need to improve and ask everyone to come prepared.', score: 1 },
-      { text: 'Redesign the meeting structure: standing format (prompt), 15-min max (ability), async pre-reads (environment). Run a 2-week experiment and measure.', score: 5 },
-      { text: 'Lead by example - run my own meetings better and hope others follow.', score: 2 },
-      { text: 'Implement a new meeting framework I read about and train the team on it.', score: 3 }
+      { text: 'Send an email asking everyone to come more prepared.', score: 1 },
+      { text: 'Redesign the structure: 15-min max, standing format, async pre-reads. Test for 2 weeks and measure.', score: 5 },
+      { text: 'Run my own meetings better and hope others follow.', score: 2 },
+      { text: 'Implement a framework I read about and train the team on it.', score: 3 }
     ]
   },
   {
     dim: 'practice',
-    scenario: "You're learning to play guitar. You can play 5 songs reasonably well. What does your next month look like?",
-    context: "Ericsson's deliberate practice: well-defined goals, immediate feedback, operation at the edge of ability.",
+    scenario: 'You can play 5 songs on guitar. What does your next month of practice look like?',
+    context: 'Ericsson: well-defined goals, immediate feedback, operating at the edge of ability.',
     options: [
-      { text: 'Play those 5 songs regularly to keep them sharp, and maybe learn a 6th.', score: 1 },
-      { text: 'Identify the specific technique holding me back, isolate it, practice at 60% speed with a metronome, increase tempo by 5 BPM when clean.', score: 5 },
+      { text: 'Keep playing those 5 songs to stay sharp. Maybe learn a 6th.', score: 1 },
+      { text: 'Find the specific technique holding me back, isolate it, practice slowly, increase difficulty when clean.', score: 5 },
       { text: 'Push myself to learn harder songs that stretch my abilities.', score: 3 },
-      { text: 'Practice for an hour a day and trust that the time will pay off.', score: 2 }
+      { text: 'Practice an hour a day and trust the time will pay off.', score: 2 }
     ]
   },
   {
     dim: 'practice',
-    scenario: "You're a manager trying to get better at giving feedback. How do you improve?",
-    context: "Deliberate practice requires decomposition into micro-skills, not just 'more reps.'",
+    scenario: "You're a manager trying to improve at giving feedback. What's your approach?",
+    context: 'Deliberate practice requires breaking skills into micro-components.',
     options: [
-      { text: 'Give more feedback more often - practice makes perfect.', score: 2 },
-      { text: 'Read a book on feedback frameworks and implement what I learn.', score: 3 },
-      { text: "Decompose 'feedback' into micro-skills (opening, specificity, tone, timing). Practice one per week. Record myself. Review. Adjust.", score: 5 },
-      { text: 'Ask my reports what kind of feedback works best for them and adapt.', score: 3 }
-    ]
-  },
-  {
-    dim: 'practice',
-    scenario: 'Two people both practice public speaking for 100 hours. One improves dramatically, the other barely. Why?',
-    context: "Time-on-task without deliberate structure creates 'arrested development.'",
-    options: [
-      { text: 'Natural talent - some people are born communicators.', score: 1 },
-      { text: 'One practiced with specific goals, immediate feedback, and progressive difficulty. The other just did more reps.', score: 5 },
-      { text: 'One was probably more motivated and passionate about it.', score: 2 },
-      { text: 'One had better opportunities and exposure to good speakers.', score: 2 }
+      { text: 'Give feedback more often - practice makes perfect.', score: 2 },
+      { text: 'Read a book on feedback and implement what I learn.', score: 3 },
+      { text: "Break 'feedback' into sub-skills (opening, specificity, tone, timing). Practice one per week. Record and review.", score: 5 },
+      { text: 'Ask my reports what feedback style works best for them.', score: 3 }
     ]
   },
   {
     dim: 'reinforce',
-    scenario: 'You just completed a difficult project ahead of deadline. How do you process this win?',
-    context: 'Dopamine research shows that specific, immediate celebration of process strengthens neural pathways.',
+    scenario: 'You completed a difficult project ahead of deadline. How do you process the win?',
+    context: 'Specific celebration of process (not just outcome) strengthens neural pathways via dopamine.',
     options: [
-      { text: 'Feel relieved and move on to the next thing on my list.', score: 1 },
-      { text: 'Celebrate by treating myself - dinner, day off, something fun.', score: 2 },
-      { text: 'Identify exactly which strategy made this work, feel genuine pride in that choice, and note it for next time.', score: 5 },
-      { text: "Share the win with my team and acknowledge everyone's contributions.", score: 3 }
+      { text: 'Feel relieved. Move on to the next thing.', score: 1 },
+      { text: 'Treat myself - dinner out, a day off.', score: 2 },
+      { text: 'Pinpoint which strategy made it work, feel pride in that choice, and note it for next time.', score: 5 },
+      { text: 'Share the win with my team and acknowledge their contributions.', score: 3 }
     ]
   },
   {
@@ -174,10 +152,10 @@ const ADULT_QUESTIONS: GrowthQuestion[] = [
     scenario: 'Which statement feels most true to you right now?',
     context: 'Identity-based habits are 3x more persistent than goal-based habits.',
     options: [
-      { text: 'I am who I am. I focus on playing to my existing strengths.', score: 1 },
+      { text: 'I am who I am. I play to my existing strengths.', score: 1 },
       { text: "I'm working on becoming a better version of myself.", score: 3 },
-      { text: "I'm someone who runs experiments on my own development. Growth isn't something I do - it's who I am.", score: 5 },
-      { text: 'I try to improve when I can, but life often gets in the way.', score: 2 }
+      { text: "I run experiments on my own development. Growth is who I am, not just what I do.", score: 5 },
+      { text: 'I try to improve when I can, but life gets in the way.', score: 2 }
     ]
   }
 ];
