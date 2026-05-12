@@ -90,7 +90,12 @@ service cloud.firestore {
         && (request.resource.data.droppedOffAt == null || request.resource.data.droppedOffAt is timestamp);
     }
 
-    // Allow public writes to bookDownloads collection (for lead capture)
+    // Shared public docs used by rocket-prompt.
+    match /public/{documentId} {
+      allow read, write: if true;
+    }
+
+    // Lead capture flows used by rocket-goals.
     match /bookDownloads/{document} {
       allow read: if isAuthenticated();
       allow create: if true;
@@ -105,17 +110,16 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
-    // Telegram integration collections - Cloud Functions only
+    // Cloud Functions only.
     match /telegramToUser/{telegramId} {
-      allow read, write: if false; // Only Cloud Functions can access
+      allow read, write: if false;
     }
 
     match /telegramLinkTokens/{token} {
-      allow read: if isAuthenticated(); // Allow authenticated users to read (for validation)
-      allow write: if false; // Only Cloud Functions can write
+      allow read: if isAuthenticated();
+      allow write: if false;
     }
 
-    // Allow all access for authenticated users, public read for unauthenticated
     match /{document=**} {
       allow read: if true;
       allow write: if isAuthenticated();

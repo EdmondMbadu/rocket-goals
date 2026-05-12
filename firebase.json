@@ -8,7 +8,7 @@
   "functions": [
     {
       "source": "functions",
-      "codebase": "default",
+      "codebase": "rocket-goals",
       "ignore": [
         "node_modules",
         ".git",
