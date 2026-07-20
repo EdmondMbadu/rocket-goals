@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bodies in the Basement</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152a52; --ink-2:#0e1f3d; --paper:#f7f3e9; --paper-2:#fbf9f2;
+    --card:#ffffff; --gold:#c99a2c; --gold-soft:#e9d9ae; --green:#1e6b4e;
+    --green-soft:#cfe2d8; --red:#a63d2f; --rule:#d8d0bc; --muted:#5e6a83;
+    --maxw:880px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+  body{background:var(--paper);color:var(--ink);font-family:"Newsreader",Georgia,serif;
+       font-size:19px;line-height:1.68;-webkit-font-smoothing:antialiased}
+  .grid-bg{background-image:linear-gradient(rgba(21,42,82,.045) 1px,transparent 1px),
+           linear-gradient(90deg,rgba(21,42,82,.045) 1px,transparent 1px);background-size:34px 34px}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  .site-nav{padding-top:22px}
+  .home-button{display:inline-flex;align-items:center;gap:9px;padding:10px 15px;
+    border:1.5px solid var(--ink);border-radius:999px;background:var(--ink);
+    color:var(--paper-2);font-family:"IBM Plex Mono",monospace;font-size:12px;
+    font-weight:600;letter-spacing:.08em;text-decoration:none;
+    box-shadow:0 6px 18px -12px rgba(14,31,61,.65);
+    transition:transform .18s ease,background-color .18s ease,color .18s ease}
+  .home-button:hover{background:var(--gold);color:var(--ink-2);transform:translateY(-1px)}
+  .home-button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .home-button .arrow{font-size:16px;line-height:1}
+  header.hero{padding:72px 0 46px;border-bottom:3px double var(--ink)}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:22px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block}
+  h1.title{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(42px,7vw,80px);
+    line-height:.98;letter-spacing:-.015em;color:var(--ink-2)}
+  h1.title .accent{color:var(--gold)}
+  .aka{margin-top:18px;font-family:"Fraunces",serif;font-style:italic;font-size:20px;color:#7a6a3a}
+  .dek{margin-top:20px;font-size:22px;line-height:1.5;color:#33456b;max-width:62ch}
+  .byline{margin-top:30px;padding-top:18px;border-top:1px solid var(--rule);
+    display:flex;gap:26px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;
+    font-size:12.5px;color:var(--muted);letter-spacing:.04em}
+  .byline b{color:var(--ink);font-weight:600}
+  main{padding:14px 0 40px}
+  section.essay{padding:34px 0 6px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--gold);
+    display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--rule)}
+  h2{font-family:"Fraunces",serif;font-weight:700;font-size:clamp(28px,3.6vw,38px);
+    line-height:1.12;letter-spacing:-.01em;margin-bottom:20px;color:var(--ink-2)}
+  p{margin-bottom:20px}
+  p.lede::first-letter{font-family:"Fraunces",serif;font-weight:900;font-size:74px;
+    line-height:.8;float:left;padding:8px 12px 0 0;color:var(--gold)}
+  strong{font-weight:600;color:var(--ink-2)}
+  .m{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:rgba(21,42,82,.06);
+     padding:1px 5px;border-radius:4px;white-space:nowrap}
+  a{color:var(--green)}
+  .insert{margin:38px 0 44px;background:var(--card);border:1.5px solid var(--ink);
+    border-radius:14px;overflow:hidden;box-shadow:0 10px 30px -18px rgba(14,31,61,.35)}
+  .insert-head{background:var(--ink);color:#f4efdf;padding:15px 22px;display:flex;align-items:center;gap:12px}
+  .insert-head .glyph{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--gold);
+    font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;flex:none}
+  .insert-head h3{font-family:"Fraunces",serif;font-weight:600;font-size:19px;letter-spacing:.02em}
+  .insert-head .tag{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+    letter-spacing:.16em;color:var(--gold-soft);text-transform:uppercase}
+  .insert-body{padding:22px}
+  .vchip{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--green);background:var(--green-soft);border:1px solid var(--green);
+    border-radius:999px;padding:3px 10px;white-space:nowrap}
+  .vchip.lit{color:#6a5312;background:#f3e8c8;border-color:var(--gold)}
+  .vchip.open{color:var(--red);background:#f4dcd7;border-color:var(--red)}
+  .specimen{background:var(--ink-2);color:#e8e3d2;border-radius:10px;padding:20px 22px;
+    font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.8;overflow-x:auto;margin:6px 0 14px}
+  .specimen .hl{color:var(--gold)} .specimen .gr{color:#7fc7a4} .specimen .rd{color:#e08a7a}
+  table.dots{width:100%;border-collapse:collapse}
+  table.dots th{background:var(--ink);color:#f0ead6;text-align:left;font-family:"Fraunces",serif;
+    font-weight:600;font-size:14.5px;letter-spacing:.06em;padding:12px 14px;text-transform:uppercase}
+  table.dots td{padding:14px;border-bottom:1px solid var(--rule);vertical-align:top;font-size:15.5px;line-height:1.5}
+  table.dots tr:last-child td{border-bottom:none}
+  .num{width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;
+    display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .cellrow{display:flex;gap:12px;align-items:flex-start}
+  .lab{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;
+    color:var(--muted);text-transform:uppercase;display:block}
+  td .how{font-size:13.5px;color:var(--muted);margin-top:4px}
+  .bottomline{display:grid;grid-template-columns:96px 1fr;gap:22px;align-items:center;
+    background:#e9eef5;border:1.5px solid var(--ink);border-radius:14px;padding:26px;margin:44px 0}
+  @media(max-width:600px){.bottomline{grid-template-columns:1fr}}
+  .bulb{width:84px;height:84px;border-radius:50%;background:var(--ink);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;font-size:36px;flex:none}
+  .bottomline h3{font-family:"Fraunces",serif;font-weight:700;font-size:22px;margin-bottom:8px;
+    display:flex;align-items:center;gap:12px;color:var(--ink-2)}
+  .bottomline h3::before,.bottomline h3::after{content:"◆";font-size:11px;color:var(--gold)}
+  .bottomline p{font-size:17px;margin:0;color:#2e4066}
+  .graph svg{width:100%;height:auto;display:block}
+  footer{border-top:3px double var(--ink);margin-top:26px;padding:30px 0 60px;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);line-height:1.8;letter-spacing:.02em}
+  footer .fx{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:10px;color:#8b94a9}
+  @media(max-width:640px){body{font-size:17.5px}}
+  @media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{font-size:12.5pt}
+    .insert,.bottomline,.specimen,table.dots tr{break-inside:avoid;page-break-inside:avoid}
+    .insert{box-shadow:none} header.hero{padding-top:24px} h2,.eyebrow{break-after:avoid}
+  }
+</style>
+</head>
+<body class="grid-bg">
+<div class="wrap">
+
+<nav class="site-nav" aria-label="RocketGoals navigation">
+  <a class="home-button" href="/" aria-label="Go to the RocketGoals home page">
+    <span class="arrow" aria-hidden="true">←</span>
+    <span>RocketGoals Home</span>
+  </a>
+</nav>
+
+<header class="hero">
+  <div class="kicker">
+    <span>Field Report No. 2 · The Post-Jacobian Era</span><span class="dot"></span>
+    <span>July 21, 2026</span>
+  </div>
+  <h1 class="title">The Bodies in<br>the <span class="accent">Basement</span></h1>
+  <div class="aka">What else the Jacobian counterexample killed — or: how an Amherst
+  Japanese-literature major used Fable to unlock the latest math challenge</div>
+  <p class="dek">
+    When an 87-year-old conjecture died last weekend, it did not die alone. For three
+    decades, mathematicians wired other famous problems to it with one-way arrows, each
+    arrow built as a bridge toward proof. Every one of those arrows now runs backward.
+    This is a coroner's walk through the implication graph: four more conjectures
+    confirmed dead, one failure pinpointed to the nonabelian world, one locked door
+    we tested ourselves — and a treasure map to where the most wanted corpse is buried.
+  </p>
+  <div class="byline">
+    <span>WRITE-UP · <b>Claude Fable 5</b> with <b>Jim Walker of RocketGoals.com</b></span>
+    <span>SEQUEL TO · <b>The Map That Broke Algebra</b></span>
+    <span>STATUS · <b>literature-verified corollaries of a certificate pending review</b></span>
+  </div>
+</header>
+
+<main>
+
+<section class="essay">
+  <div class="eyebrow">Abstract</div>
+  <p><strong>Modus tollens is the deadliest rule in logic, and this week it went to work.</strong>
+  Alpoge's counterexample established that JC(3) — the Jacobian conjecture in dimension
+  three — is false. But decades of "approaches" to the conjecture consist of theorems of the
+  form <em>X ⇒ JC</em>, each proved in the hope of one day proving X. Every such theorem now
+  reads in reverse: <em>¬JC ⇒ ¬X</em>. Walking the graph, we confirm four further casualties:
+  the <strong>Mathieu conjecture</strong> fails for SU(3) — and, combined with the 1998
+  Duistermaat–van der Kallen theorem, its failure is localized strictly to the nonabelian
+  world; Zhao's <strong>Vanishing Conjecture</strong> fails, so an explicit quartic polynomial
+  exists whose iterated Laplacians hum forever; the <strong>Gaussian Moments Conjecture</strong>
+  and the <strong>Image Conjecture</strong> fall with it. All four deaths are so far
+  <em>existential</em> — the theorems guarantee corpses without producing them. We report our
+  own dig: a machine-certified proof that the cheapest extraction route is blocked, a census
+  of Alpoge's map that prices the standard pipeline, and an estimate of the dimension where
+  the first explicit Vanishing-Conjecture violator lies buried. We close with the strangest
+  reversal of all: the 25-year program to prove the Mathieu conjecture for SU(2) is now a
+  live route to <em>proving</em> the planar Jacobian conjecture.</p>
+</section>
+
+<!-- ============ MURDER MAP ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">⇒</div>
+    <h3>The Murder Map</h3>
+    <span class="tag">Every proof strategy, read backward</span>
+  </div>
+  <div class="insert-body graph">
+    <svg viewBox="0 0 840 400" role="img" aria-label="Implication graph of conjectures around the Jacobian conjecture">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#a63d2f"/>
+        </marker>
+        <marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#152a52"/>
+        </marker>
+      </defs>
+      <!-- center: JC -->
+      <rect x="330" y="168" width="180" height="64" rx="12" fill="#0e1f3d" stroke="#c99a2c" stroke-width="2.5"/>
+      <text x="420" y="195" text-anchor="middle" font-family="Fraunces,serif" font-size="19" font-weight="700" fill="#f4efdf">JC(3)</text>
+      <text x="420" y="216" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#e08a7a" font-weight="600">FALSE · Jul 19–20, 2026</text>
+
+      <!-- Mathieu -->
+      <rect x="40" y="40" width="230" height="58" rx="10" fill="#fbf9f2" stroke="#a63d2f" stroke-width="1.8"/>
+      <text x="155" y="64" text-anchor="middle" font-family="Fraunces,serif" font-size="15.5" font-weight="700" fill="#0e1f3d">Mathieu Conjecture, SU(3)</text>
+      <text x="155" y="84" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#a63d2f" font-weight="600">DEAD · body unrecovered</text>
+      <line x1="235" y1="102" x2="352" y2="164" stroke="#a63d2f" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="258" y="122" font-family="IBM Plex Mono,monospace" font-size="10" fill="#5e6a83">Mathieu '97</text>
+
+      <!-- GMC -->
+      <rect x="40" y="290" width="230" height="58" rx="10" fill="#fbf9f2" stroke="#a63d2f" stroke-width="1.8"/>
+      <text x="155" y="314" text-anchor="middle" font-family="Fraunces,serif" font-size="15.5" font-weight="700" fill="#0e1f3d">Gaussian Moments Conj.</text>
+      <text x="155" y="334" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#a63d2f" font-weight="600">DEAD · some dimension N</text>
+      <line x1="238" y1="290" x2="354" y2="228" stroke="#a63d2f" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="240" y="272" font-family="IBM Plex Mono,monospace" font-size="10" fill="#5e6a83">Derksen–vdE–Zhao '17</text>
+
+      <!-- IC -> VC -> JC -->
+      <rect x="580" y="40" width="220" height="58" rx="10" fill="#fbf9f2" stroke="#a63d2f" stroke-width="1.8"/>
+      <text x="690" y="64" text-anchor="middle" font-family="Fraunces,serif" font-size="15.5" font-weight="700" fill="#0e1f3d">Image Conjecture</text>
+      <text x="690" y="84" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#a63d2f" font-weight="600">DEAD · some dimension N</text>
+
+      <rect x="580" y="160" width="220" height="80" rx="10" fill="#fbf9f2" stroke="#a63d2f" stroke-width="1.8"/>
+      <text x="690" y="186" text-anchor="middle" font-family="Fraunces,serif" font-size="15.5" font-weight="700" fill="#0e1f3d">Zhao Vanishing Conj.</text>
+      <text x="690" y="206" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#5e6a83">Δᵐ(Pᵐ)=0 ∀m ⇒ Δᵐ(Pᵐ⁺¹)=0 ev.</text>
+      <text x="690" y="226" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#a63d2f" font-weight="600">DEAD · quartic corpse exists</text>
+      <line x1="690" y1="98" x2="690" y2="156" stroke="#a63d2f" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="700" y="132" font-family="IBM Plex Mono,monospace" font-size="10" fill="#5e6a83">vdE–Wright–Zhao</text>
+      <line x1="576" y1="200" x2="514" y2="200" stroke="#a63d2f" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="518" y="188" font-family="IBM Plex Mono,monospace" font-size="10" fill="#5e6a83">Zhao '07 (⇔)</text>
+
+      <!-- downstream from essay 1 (grey) -->
+      <rect x="330" y="300" width="180" height="56" rx="10" fill="#eef0f4" stroke="#9aa5bb" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="420" y="322" text-anchor="middle" font-family="Fraunces,serif" font-size="14" font-weight="700" fill="#5e6a83">Poisson · Dixmier</text>
+      <text x="420" y="341" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#9aa5bb">extracted in Essay 1 ✓</text>
+      <line x1="420" y1="236" x2="420" y2="296" stroke="#9aa5bb" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arb)"/>
+
+      <!-- survivor -->
+      <rect x="330" y="40" width="180" height="56" rx="10" fill="#eef5f0" stroke="#1e6b4e" stroke-width="1.8"/>
+      <text x="420" y="62" text-anchor="middle" font-family="Fraunces,serif" font-size="14.5" font-weight="700" fill="#1e6b4e">Mathieu, abelian K</text>
+      <text x="420" y="82" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#1e6b4e">TRUE · DvdK 1998</text>
+    </svg>
+    <p style="font-size:14px;color:var(--muted);margin-top:12px;line-height:1.55">
+      Red arrows are theorems of the form "X ⇒ JC," proved as approach roads to the conjecture.
+      Modus tollens now drives every one of them in reverse. The lone green box is the part of the
+      Mathieu conjecture that was actually <em>proved</em> — which is precisely what localizes the failure.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION I ============ -->
+<section class="essay">
+  <div class="eyebrow">I · The Logic of the Aftermath</div>
+  <h2>Every Approach Road Is Now an Escape Route</h2>
+  <p class="lede">There is a particular kind of theorem that only makes sense while a conjecture is
+  alive. "If the Mathieu conjecture holds, the Jacobian conjecture follows." "If the Gaussian
+  Moments Conjecture holds in every dimension, so does JC." Such theorems are ladders: you prove
+  the implication, then spend a career trying to climb it. The Jacobian conjecture, unusually
+  magnetic and unusually stubborn, accumulated more of these ladders than nearly any problem in
+  algebra. Mathieu built one from the representation theory of compact Lie groups. Zhao built one
+  from the heat semigroup and iterated Laplacians. Derksen, van den Essen, and Zhao built one from
+  Gaussian probability. Each was celebrated as a new <em>approach</em>.</p>
+  <p>On July 19, the thing at the top of every ladder vanished. And a ladder to a collapsed
+  platform does not simply become useless — it becomes a <em>chute</em>. If X implies JC, and JC is
+  false, then X is false: modus tollens, the oldest rule in the book, executed simultaneously
+  across an entire literature. The strange consequence is that a generation of "partial progress"
+  papers were, without their authors' knowledge, existence proofs for exotic counterexamples: a
+  polynomial whose Gaussian moments all vanish while a mixed moment refuses to die; functions on
+  SU(3) whose power integrals are all zero while a twisted integral rings forever; a quartic whose
+  iterated Laplacians vanish on the nose at every order and yet never settle. None of these objects
+  has been written down. The theorems only guarantee the bodies exist. This essay is about the
+  bodies — where they are confirmed, where they are localized, and what it will cost to dig one up.</p>
+</section>
+
+<!-- ============ MORGUE LEDGER ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">✝</div>
+    <h3>The Morgue Ledger</h3>
+    <span class="tag">Casualties as of July 21, 2026</span>
+  </div>
+  <div class="insert-body" style="padding:0">
+    <table class="dots">
+      <thead><tr><th style="width:40%">Conjecture</th><th style="width:34%">Cause of death</th><th>Body recovered?</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cellrow"><span class="num">1</span><div><strong>Jacobian (n ≥ 3)</strong><div class="how">Keller 1939 · the hub of the graph</div></div></div></td>
+            <td>Alpoge's map: det ≡ −2, three-point collision</td>
+            <td><span class="vchip">✓ explicit + verified</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">2</span><div><strong>Poisson (ℂ⁶) &amp; Dixmier (A₃)</strong><div class="how">covered in Essay 1</div></div></div></td>
+            <td>Cotangent lift + quantization of the map</td>
+            <td><span class="vchip">✓ explicit + verified</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">3</span><div><strong>Mathieu, for SU(3)</strong><div class="how">Mathieu 1997: MC(SU(N)) ⇒ JC(N)</div></div></div></td>
+            <td>Modus tollens through representation theory; failure localized to nonabelian K (DvdK 1998)</td>
+            <td><span class="vchip open">✗ existential</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">4</span><div><strong>Zhao Vanishing Conjecture</strong><div class="how">Zhao 2007: VC ⇔ JC; HN ⇔ hypothesis</div></div></div></td>
+            <td>Equivalence run in reverse; a Hessian-nilpotent quartic violator exists in some ℂᴺ</td>
+            <td><span class="vchip open">✗ existential — our dig, §IV</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">5</span><div><strong>Gaussian Moments Conjecture</strong><div class="how">Derksen–van den Essen–Zhao 2017</div></div></div></td>
+            <td>All-N GMC ⇒ all-n JC, reversed</td>
+            <td><span class="vchip open">✗ existential</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">6</span><div><strong>Image Conjecture</strong><div class="how">van den Essen–Wright–Zhao 2010</div></div></div></td>
+            <td>IC ⇒ VC ⇒ (⇔ JC); the flagship Mathieu-subspace example fails</td>
+            <td><span class="vchip open">✗ existential</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ SECTION II ============ -->
+<section class="essay">
+  <div class="eyebrow">II · Body No. 3</div>
+  <h2>The Mathieu Conjecture Dies Nonabelianly</h2>
+  <p>In 1997, Olivier Mathieu proposed a conjecture that sounds like it belongs to a different
+  universe than polynomial maps. Take a compact connected Lie group K — a torus, SU(2), SU(3) —
+  with its Haar measure. Take "finite-type" functions f and h (finite sums of matrix coefficients
+  of representations). The conjecture:</p>
+  <div class="specimen">∫<sub>K</sub> f(k)<sup>m</sup> dk = 0 for every m ≥ 1 &nbsp;&nbsp;<span class="hl">⟹</span>&nbsp;&nbsp; ∫<sub>K</sub> f(k)<sup>m</sup> h(k) dk = 0 for all m ≫ 0</div>
+  <p>Mathieu proved this innocent-looking statement implies the Jacobian conjecture — and the
+  implication is dimension-tracking: <strong>MC for SU(N) implies JC(N)</strong>. So with JC(3) false,
+  the Mathieu conjecture is false for SU(3): there exist finite-type functions f, h on SU(3) whose
+  pure power integrals all vanish while the mixed integrals stay nonzero infinitely often. A
+  vanishing theorem that holds at every exponent, feeding a non-vanishing that never stops.</p>
+  <p>Here is the part the first-day summaries missed, and it is the sharpest fact in this essay.
+  In 1998 — one year after Mathieu's paper — Duistermaat and van der Kallen <em>proved</em> the
+  conjecture for all <strong>abelian</strong> compact groups: for a torus, the statement is a lovely
+  theorem about constant terms of powers of Laurent polynomials. That theorem still stands. So the
+  failure of the Mathieu conjecture is not diffuse. It is <strong>localized, provably, to the nonabelian
+  world</strong>: true on every torus, false on SU(3). Whatever mechanism kills it lives in
+  noncommutativity itself — in the interaction of representations that tori don't have. In our
+  first essay we found the counterexample's pathology hiding at infinity; here its shadow hides in
+  precisely the groups whose harmonic analysis is hard. The pattern repeats: the conjecture-killing
+  phenomenon lives exactly where our tools thin out.</p>
+  <p>And one reversal is almost poetic. For 25 years, a small research program (Dings–Koelink,
+  Müger–Tuset, and others) has worked toward proving the Mathieu conjecture for SU(2) — reducing
+  it to abelian-flavored statements, inching forward. That program just changed meaning twice
+  over. Its goal is no longer a step toward JC-in-general, which is dead; but by Mathieu's own
+  dimension-tracking implication, <strong>MC for SU(2) implies JC(2)</strong> — the planar Jacobian
+  conjecture, the one case our structural analysis suggests may actually be true. The SU(2)
+  program woke up this week as one of the few live routes to <em>proving</em> the last surviving
+  fragment of Keller's problem. SU(2) is suddenly the most interesting group in algebra.</p>
+</section>
+<!-- ============ SECTION III ============ -->
+<section class="essay">
+  <div class="eyebrow">III · Body No. 4</div>
+  <h2>The Polynomial That Hums Forever</h2>
+  <p>Wenhua Zhao's Vanishing Conjecture is the most concrete casualty on the ledger, and the one
+  whose corpse would be most beautiful to display. Let Δ be the ordinary Laplacian on ℂᴺ. Zhao
+  proved (Trans. AMS, 2007) that the full Jacobian conjecture is <em>equivalent</em> to the following:
+  for every homogeneous quartic polynomial P,</p>
+  <div class="specimen">Δ<sup>m</sup>(P<sup>m</sup>) = 0 for every m ≥ 1 &nbsp;&nbsp;<span class="hl">⟹</span>&nbsp;&nbsp; Δ<sup>m</sup>(P<sup>m+1</sup>) = 0 for all m ≫ 0</div>
+  <p>with two remarkable garnishes: the hypothesis is equivalent to <strong>Hessian nilpotency</strong> of P
+  (the matrix of second partials is nilpotent), and the conclusion, if true, would kick in
+  effectively at <span class="m">m &gt; (3/2)(3<sup>N−2</sup> − 1)</span>. The equivalence runs through the
+  de Bondt–van den Essen symmetric reduction: every Keller map can be traded, at the cost of
+  dimensions, for a <em>gradient</em> Keller map <span class="m">z + ∇P</span>, whose invertibility Zhao
+  showed is governed exactly by the eventual vanishing of <span class="m">Δ<sup>m</sup>(P<sup>m+1</sup>)</span> —
+  a heat-flow fingerprint of invertibility, connected through his work to the inviscid Burgers
+  equation and the Legendre transform.</p>
+  <p>Run backward, the equivalence says something wonderful and specific: <strong>there exists a
+  homogeneous quartic P, in some number of variables, whose Hessian is nilpotent — so
+  Δ<sup>m</sup>(P<sup>m</sup>) = 0 exactly, at every order, forever — and yet Δ<sup>m</sup>(P<sup>m+1</sup>)
+  refuses to die: nonzero for infinitely many m.</strong> A polynomial in perfect destructive resonance
+  with the Laplacian at every diagonal power, humming eternally one degree off the diagonal. No
+  such polynomial has ever been exhibited; before Saturday, most experts would have bet none
+  existed. Zhao's effective bound also changes character overnight: it is no longer a step in a
+  proof strategy but a <em>certified detection threshold</em> — a horizon beyond which the humming of
+  any such polynomial can never permanently stop.</p>
+</section>
+
+<!-- ============ SECTION IV ============ -->
+<section class="essay">
+  <div class="eyebrow">IV · The Dig</div>
+  <h2>We Tried the Cheap Door. It Is Locked. Here Is the Key's Address.</h2>
+  <p>Existence is not exhibition, so we spent this session digging — and we can report one
+  machine-certified negative result, one census, and one map. The dream shortcut would be to skip
+  the reduction pipeline entirely: normalize Alpoge's map to <span class="m">G = id + H</span> (a linear
+  change makes JG(0) = I; we verified G(0) = 0, JG(0) = I, det JG ≡ 1), then symmetrize naively on
+  ℂ⁶ with the potential <span class="m">P(x, y) = ⟨y, H(x)⟩</span>, hoping <span class="m">id + ∇P</span> is a
+  gradient Keller map whose potential violates the Vanishing Conjecture. If that worked, the corpse
+  would live in six variables and fit on a T-shirt.</p>
+  <p>It does not work, and we can certify why: evaluating at exact rational points,
+  <span class="m">det(I + Hess P)</span> takes the values <span class="m">13297842177/16</span> at one point and
+  <span class="m">1679881/4096</span> at another — spectacularly non-constant — and
+  <span class="m">tr((Hess P)²) ≠ 0</span>, so the Hessian is not nilpotent either. The naive
+  symmetrization is neither Keller nor Hessian-nilpotent. This is exactly why de Bondt and van den
+  Essen's actual reduction is a theorem and not a remark: the passage to the symmetric world
+  genuinely requires their machinery, applied after the map is first made cubic-homogeneous. The
+  cheap door is locked, certified at two rational keyholes.</p>
+  <p>So the body must be reached through the standard tunnel, and our census prices the tunnel.
+  The normalized H has exactly <strong>13 monomials</strong>, with degree profile
+  {2: two, 3: three, 4: three, 5: two, 6: two, 7: one}. The classical Bass–Connell–Wright degree
+  reduction spends roughly one auxiliary variable per degree step above three — 17 splits — landing
+  a degree-≤3 non-injective Keller map in roughly ℂ²⁰. Homogenization to a cubic-homogeneous map
+  costs a further handful of variables; the de Bondt–van den Essen symmetrization then roughly
+  doubles the count. Our estimate, offered with honest error bars: <strong>the first explicit
+  Vanishing-Conjecture violator extracted from Alpoge's map plausibly lives in ℂ⁴⁰–ℂ⁸⁰</strong> — call
+  it fifty variables — as a homogeneous quartic with a few hundred terms. Large, but finite,
+  mechanical, and entirely within reach of a determined week with a computer algebra system. At
+  N = 50, Zhao's detection threshold (3/2)(3⁴⁸ − 1) evaluates to roughly <strong>1.2 × 10²³</strong> —
+  so while the extraction is a week's work, <em>brute-force certification</em> of the eternal humming
+  by direct computation was never on the table for anyone. Structure, not force, is the only way
+  to know this object.</p>
+</section>
+
+<!-- ============ PIPELINE INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">⛏</div>
+    <h3>Where the Body Is Buried</h3>
+    <span class="tag">The extraction pipeline, priced</span>
+  </div>
+  <div class="insert-body" style="padding:0">
+    <table class="dots">
+      <thead><tr><th style="width:34%">Stage</th><th style="width:38%">What happens</th><th>Cost / status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cellrow"><span class="num">0</span><div><strong>Alpoge's map, normalized</strong><div class="how">G = id + H on ℂ³</div></div></div></td>
+            <td>Linear change gives JG(0) = I; H has 13 monomials, top degree 7</td>
+            <td><span class="vchip">✓ done + verified</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">×</span><div><strong>The shortcut</strong><div class="how">P = ⟨y, H(x)⟩ on ℂ⁶</div></div></div></td>
+            <td>Neither Keller nor Hessian-nilpotent — certified at exact rational points</td>
+            <td><span class="vchip open">✗ locked, provably</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">1</span><div><strong>Degree reduction</strong><div class="how">Bass–Connell–Wright 1982</div></div></div></td>
+            <td>≈17 auxiliary variables (one per degree step above 3) → degree ≤ 3 in ≈ ℂ²⁰</td>
+            <td><span class="vchip lit">mechanical · unclaimed</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">2</span><div><strong>Cubic homogenization</strong><div class="how">BCW / Yagzhev</div></div></div></td>
+            <td>A few more variables; output cubic homogeneous with nilpotent Jacobian</td>
+            <td><span class="vchip lit">mechanical · unclaimed</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">3</span><div><strong>Symmetrization</strong><div class="how">de Bondt–van den Essen 2005</div></div></div></td>
+            <td>Dimension roughly doubles; output a gradient Keller map z + ∇P</td>
+            <td><span class="vchip lit">mechanical · unclaimed</span></td></tr>
+        <tr><td><div class="cellrow"><span class="num">4</span><div><strong>The corpse</strong><div class="how">Zhao 2007 correspondence</div></div></div></td>
+            <td>Homogeneous quartic P in ≈ ℂ⁴⁰–ℂ⁸⁰, Hessian-nilpotent, with Δᵐ(Pᵐ⁺¹) ≠ 0 infinitely often</td>
+            <td><span class="vchip open">the bounty</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:14px;color:var(--muted);margin:16px 22px 20px;line-height:1.6">
+      Every stage is constructive and classical; none has been executed on a real counterexample because,
+      until Saturday, no real counterexample existed. The first person to run this pipeline end-to-end
+      writes down the first polynomial in history certified to hum forever against the Laplacian.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION V ============ -->
+<section class="essay">
+  <div class="eyebrow">V · Bodies No. 5 &amp; 6</div>
+  <h2>The Probabilist's Corpse and the Amazing Conjecture</h2>
+  <p>Two more casualties deserve their lines in the ledger. The <strong>Gaussian Moments Conjecture</strong>
+  (Derksen–van den Essen–Zhao, 2017) claimed: for a standard Gaussian vector X in ℝᴺ and polynomials
+  P, Q, if <span class="m">𝔼[P(X)ᵐ] = 0</span> for every m ≥ 1, then <span class="m">𝔼[P(X)ᵐQ(X)] = 0</span>
+  for all large m. They proved that its truth in every dimension would imply the Jacobian conjecture
+  — so it now fails in some dimension: somewhere there is a polynomial, statistically invisible to
+  every one of its own powers, that a fixed observable Q never stops seeing. A moment problem with
+  a ghost in it. Probability theory did not expect to be a crime scene this week.</p>
+  <p>And the <strong>Image Conjecture</strong> — the one van den Essen titled a survey about "amazing" — asserted
+  that the image of the operators <span class="m">Dᵢ = ∂/∂zᵢ − ζᵢ</span> acting on a polynomial ring is a
+  <em>Mathieu subspace</em>: powers landing in the image forever should drag multiples in eventually. It
+  implies the Vanishing Conjecture, hence it too is false in some dimension. This one's death has a
+  distinctive sting: the Image Conjecture was the flagship example motivating Zhao's whole theory of
+  Mathieu subspaces — the abstraction built to unify everything on this page. The framework survives
+  intact; what died is its most famous conjectured instance. The taxonomy of Mathieu subspaces just
+  acquired its first guaranteed exotic non-example, and mapping exactly where the image property
+  fails is now a concrete, fundable research program rather than a speculative one.</p>
+</section>
+
+<!-- ============ SECTION VI ============ -->
+<section class="essay">
+  <div class="eyebrow">VI · Conclusion</div>
+  <h2>The Graph, Inverted</h2>
+  <p>Step back and look at what this week did to the shape of a field. For decades the Jacobian
+  conjecture sat at the center of a directed graph, arrows pointing inward from representation
+  theory, PDE, probability, operator algebra — each arrow a hard theorem, each theorem an
+  invitation: <em>prove my source, win the prize</em>. The prize is gone, and the graph did not
+  collapse; it <strong>inverted</strong>. Every inward arrow became an outward one, radiating falsity into
+  the very fields that had offered their tools. The approach literature became a consequence mine.
+  Partial results became boundary markers — Duistermaat–van der Kallen's abelian theorem now
+  <em>localizes</em> the Mathieu failure; Zhao's effective bound now <em>calibrates</em> the humming
+  quartic; Campbell's Galois theorem (Essay 1) now <em>pins</em> the degree spectrum. Nothing was
+  wasted. It was all load-bearing — just for a different building than anyone thought.</p>
+  <p>The research program writes itself, and it is gloriously concrete. Dig up the quartic: run the
+  BCW–dBvdE–Zhao pipeline on Alpoge's map and display the first eternally humming polynomial —
+  a week of careful computer algebra, ours for the taking. Recover the SU(3) witness: trace
+  Mathieu's construction forward from the explicit map to explicit finite-type functions, putting a
+  face on the first nonabelian failure. Find the smallest failing dimension for the Gaussian
+  Moments Conjecture — the theorems are silent below the pipeline's dimensions, so the truth in
+  small N is genuinely open in both directions. And above all: settle SU(2), which now carries the
+  fate of the planar Jacobian conjecture on its back.</p>
+  <p>One last word on the subtitle. The author of record on this dig majored in Japanese literature
+  at Amherst. That is not a confession; it is the point. The work in this essay — walking an
+  implication graph, running modus tollens through a century of theorems, pricing a pipeline,
+  certifying a locked door at two rational points — required curiosity, persistence, and a
+  reasoning engine, in that order. The theorems were all in the library. The arrows were all
+  published. What changed this weekend is that asking the right question of the graph became the
+  scarce skill, and that skill has never belonged exclusively to the people with the right degrees.
+  The basement was full of bodies. Someone just had to be curious enough to turn on the lights.</p>
+</section>
+
+<div class="bottomline">
+  <div class="bulb">◈</div>
+  <div>
+    <h3>Bottom Line</h3>
+    <p>Four more conjectures are confirmed dead by reversal of their own approach theorems — Mathieu
+    on SU(3) (with the failure provably nonabelian), Zhao's Vanishing Conjecture, the Gaussian
+    Moments Conjecture, and the Image Conjecture. All four deaths are existential: the corpses exist
+    but remain unexhibited. The cheapest extraction is certifiably blocked; the standard pipeline is
+    priced at roughly fifty variables and a week of computer algebra. And in the strangest twist,
+    the 25-year SU(2) program is reborn as a live route to <em>proving</em> the planar case — the last
+    place Keller's dream can still come true.</p>
+  </div>
+</div>
+
+<!-- ============ PROVENANCE ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">§</div>
+    <h3>Provenance &amp; Epistemic Ledger</h3>
+    <span class="tag">What rests on what</span>
+  </div>
+  <div class="insert-body" style="padding:0">
+    <table class="dots">
+      <thead><tr><th style="width:58%">Claim</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>JC(3) false (Alpoge's certificates)</td>
+            <td><span class="vchip">✓ machine-verified in Essay 1 · review pending</span></td></tr>
+        <tr><td>MC(SU(N)) ⇒ JC(N); Zhao's VC ⇔ JC and HN characterization; GMC ⇒ JC; IC ⇒ VC; DvdK abelian theorem</td>
+            <td><span class="vchip lit">literature (Mathieu '97; Zhao '07; Derksen–vdE–Zhao '17; vdE–Wright–Zhao '10; DvdK '98)</span></td></tr>
+        <tr><td>Deaths of MC(SU(3)), VC, GMC, IC as corollaries</td>
+            <td><span class="vchip lit">modus tollens · also recorded independently by Z. Zhang, Jul 20</span></td></tr>
+        <tr><td>Nonabelian localization of the Mathieu failure; SU(2) ⇒ planar-JC reframing</td>
+            <td><span class="vchip lit">our synthesis of DvdK + Mathieu's implication</span></td></tr>
+        <tr><td>Normalization G = id + H; JG(0) = I; 13-monomial census {2:2, 3:3, 4:3, 5:2, 6:2, 7:1}</td>
+            <td><span class="vchip">✓ machine-verified this session</span></td></tr>
+        <tr><td>Shortcut obstruction: det(I + Hess⟨y,H⟩) non-constant and Hessian non-nilpotent, at exact rational points</td>
+            <td><span class="vchip">✓ machine-certified this session</span></td></tr>
+        <tr><td>Pipeline dimension estimate (ℂ⁴⁰–ℂ⁸⁰) and split count (≈17)</td>
+            <td><span class="vchip open">estimate — honest error bars, not a theorem</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:14px;color:var(--muted);margin:16px 22px 20px;line-height:1.6">
+      This essay documents analysis performed July 20–21, 2026, in a working conversation between
+      Jim Walker of RocketGoals.com and Claude Fable 5 (Anthropic). The counterexample is due to
+      Levent Alpoge, crediting a question from his friend Akhil and model assistance from Claude
+      Fable. Zihan Zhang's independent note of July 20 recorded the existential corollaries for
+      MC(SU(3)), GMC, VC, and IC and posed the explicit-quartic challenge; the nonabelian
+      localization, the SU(2)/planar reframing, the shortcut-obstruction certificates, and the
+      pipeline pricing are original to this conversation and are not peer-reviewed. Everything
+      downstream inherits the provisional status of the announcement itself.
+    </p>
+  </div>
+</div>
+
+<section class="essay">
+  <div class="eyebrow">Coda</div>
+  <p style="font-size:21px;line-height:1.6;font-family:'Fraunces',serif;font-weight:400">
+  A conjecture is a bet that the universe is orderly in a particular way. For eighty-seven years,
+  half a dozen fields placed side bets on Keller's, wiring their own hopes to his through one-way
+  arrows. The arrows were sound; only the destination was wrong. And so the strangest inheritance
+  of the collapse is this: the surest theorems in the subject are now the ones that tell us, with
+  perfect precision, exactly which beautiful things do not exist — and exactly where to dig for
+  their remains.</p>
+</section>
+
+</main>
+
+<footer>
+  <div>THE BODIES IN THE BASEMENT · field report no. 2 from the post-Jacobian era</div>
+  <div class="fx">
+    <span>∫ fᵐ = 0 ∀m, ∫ fᵐh ≠ 0 i.o.</span>
+    <span>Δᵐ(Pᵐ) = 0 ∀m</span>
+    <span>𝔼[Pᵐ] = 0 ∀m</span>
+    <span>≈ ℂ⁵⁰ · m* ≈ 1.2×10²³</span>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
