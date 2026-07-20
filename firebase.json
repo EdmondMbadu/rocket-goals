@@ -30,7 +30,18 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      {
+        "source": "/bodies-in-the-basement.html",
+        "destination": "/bodies-in-the-basement",
+        "type": 301
+      }
+    ],
     "rewrites": [
+      {
+        "source": "/bodies-in-the-basement",
+        "destination": "/bodies-in-the-basement.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"
