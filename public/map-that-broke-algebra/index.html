@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Map That Broke Algebra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152a52;          /* deep navy */
+    --ink-2:#0e1f3d;
+    --paper:#f7f3e9;        /* warm parchment */
+    --paper-2:#fbf9f2;
+    --card:#ffffff;
+    --gold:#c99a2c;
+    --gold-soft:#e9d9ae;
+    --green:#1e6b4e;
+    --green-soft:#cfe2d8;
+    --red:#a63d2f;
+    --rule:#d8d0bc;
+    --muted:#5e6a83;
+    --maxw:880px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Newsreader", Georgia, serif;
+    font-size:19px;
+    line-height:1.68;
+    -webkit-font-smoothing:antialiased;
+  }
+  .grid-bg{
+    background-image:
+      linear-gradient(rgba(21,42,82,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(21,42,82,0.045) 1px, transparent 1px);
+    background-size:34px 34px;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .mono{font-family:"IBM Plex Mono", ui-monospace, monospace}
+  .disp{font-family:"Fraunces", Georgia, serif}
+
+  /* ---------- SITE NAV ---------- */
+  .site-nav{padding-top:22px}
+  .home-button{
+    display:inline-flex;align-items:center;gap:9px;padding:10px 15px;
+    border:1.5px solid var(--ink);border-radius:999px;background:var(--ink);
+    color:var(--paper-2);font-family:"IBM Plex Mono",monospace;font-size:12px;
+    font-weight:600;letter-spacing:.08em;text-decoration:none;
+    box-shadow:0 6px 18px -12px rgba(14,31,61,.65);
+    transition:transform .18s ease,background-color .18s ease,color .18s ease;
+  }
+  .home-button:hover{background:var(--gold);color:var(--ink-2);transform:translateY(-1px)}
+  .home-button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .home-button .arrow{font-size:16px;line-height:1}
+
+  /* ---------- HERO ---------- */
+  header.hero{padding:72px 0 46px;border-bottom:3px double var(--ink)}
+  .kicker{
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:22px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block}
+  h1.title{
+    font-family:"Fraunces",serif;font-weight:900;font-size:clamp(44px,7.4vw,84px);
+    line-height:.98;letter-spacing:-.015em;color:var(--ink-2);
+  }
+  h1.title .accent{color:var(--gold)}
+  .dek{
+    margin-top:26px;font-size:22px;line-height:1.5;color:#33456b;max-width:60ch;
+    font-weight:400;
+  }
+  .byline{
+    margin-top:30px;padding-top:18px;border-top:1px solid var(--rule);
+    display:flex;gap:26px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;
+    font-size:12.5px;color:var(--muted);letter-spacing:.04em;
+  }
+  .byline b{color:var(--ink);font-weight:600}
+
+  /* ---------- ESSAY BODY ---------- */
+  main{padding:14px 0 40px}
+  section.essay{padding:34px 0 6px}
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--gold);
+    display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  }
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--rule)}
+  h2{
+    font-family:"Fraunces",serif;font-weight:700;font-size:clamp(28px,3.6vw,38px);
+    line-height:1.12;letter-spacing:-.01em;margin-bottom:20px;color:var(--ink-2);
+  }
+  p{margin-bottom:20px}
+  p.lede::first-letter{
+    font-family:"Fraunces",serif;font-weight:900;font-size:74px;line-height:.8;
+    float:left;padding:8px 12px 0 0;color:var(--gold);
+  }
+  em{font-style:italic}
+  strong{font-weight:600;color:var(--ink-2)}
+  .m{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:rgba(21,42,82,.06);
+     padding:1px 5px;border-radius:4px;white-space:nowrap}
+  a{color:var(--green)}
+
+  /* ---------- SHARED CARD CHROME ---------- */
+  .insert{
+    margin:38px 0 44px;background:var(--card);
+    border:1.5px solid var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 10px 30px -18px rgba(14,31,61,.35);
+  }
+  .insert-head{
+    background:var(--ink);color:#f4efdf;padding:15px 22px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .insert-head .glyph{
+    width:30px;height:30px;border:1.5px solid var(--gold);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--gold);
+    font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;flex:none;
+  }
+  .insert-head h3{
+    font-family:"Fraunces",serif;font-weight:600;font-size:19px;letter-spacing:.02em;
+  }
+  .insert-head .tag{
+    margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+    letter-spacing:.16em;color:var(--gold-soft);text-transform:uppercase;
+  }
+  .insert-body{padding:22px}
+  .vchip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--green);
+    background:var(--green-soft);border:1px solid var(--green);
+    border-radius:999px;padding:3px 10px;white-space:nowrap;
+  }
+  .vchip.lit{color:#6a5312;background:#f3e8c8;border-color:var(--gold)}
+  .vchip.open{color:var(--red);background:#f4dcd7;border-color:var(--red)}
+
+  /* ---------- TIMELINE ---------- */
+  .timeline{display:flex;flex-direction:column}
+  .t-row{display:grid;grid-template-columns:110px 26px 1fr;gap:0 14px;padding:13px 0;position:relative}
+  .t-row + .t-row{border-top:1px dashed var(--rule)}
+  .t-year{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;color:var(--ink);text-align:right;padding-top:2px}
+  .t-node{display:flex;justify-content:center;padding-top:7px}
+  .t-node span{width:11px;height:11px;border-radius:50%;background:var(--paper);border:2.5px solid var(--ink)}
+  .t-row.hot .t-node span{background:var(--gold);border-color:var(--gold)}
+  .t-row.hot .t-year{color:var(--gold)}
+  .t-text b{font-weight:600;color:var(--ink-2)}
+  .t-text{font-size:16.5px;line-height:1.5;color:#3a4a6e}
+
+  /* ---------- SPECIMEN / FORMULA CARDS ---------- */
+  .specimen{
+    background:var(--ink-2);color:#e8e3d2;border-radius:10px;
+    padding:20px 22px;font-family:"IBM Plex Mono",monospace;font-size:14px;
+    line-height:1.75;overflow-x:auto;margin:6px 0 14px;
+  }
+  .specimen .hl{color:var(--gold)}
+  .specimen .gr{color:#7fc7a4}
+  .cert-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.cert-grid{grid-template-columns:1fr}}
+  .cert{
+    border:1.5px solid var(--rule);border-radius:10px;padding:18px;
+    background:var(--paper-2);position:relative;
+  }
+  .cert h4{font-family:"Fraunces",serif;font-size:17.5px;font-weight:700;margin-bottom:8px;color:var(--ink-2)}
+  .cert p{font-size:15.5px;line-height:1.55;color:#3a4a6e;margin-bottom:12px}
+  .cert .mono{font-size:13px;color:var(--ink)}
+
+  /* ---------- DOT TABLES (echo of user's infographic) ---------- */
+  table.dots{width:100%;border-collapse:collapse}
+  table.dots th{
+    background:var(--ink);color:#f0ead6;text-align:left;
+    font-family:"Fraunces",serif;font-weight:600;font-size:14.5px;letter-spacing:.06em;
+    padding:12px 14px;text-transform:uppercase;
+  }
+  table.dots td{
+    padding:14px;border-bottom:1px solid var(--rule);vertical-align:top;
+    font-size:15.5px;line-height:1.5;
+  }
+  table.dots tr:last-child td{border-bottom:none}
+  .num{
+    width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;
+    display:inline-flex;align-items:center;justify-content:center;flex:none;
+  }
+  .cellrow{display:flex;gap:12px;align-items:flex-start}
+  .pipdots{display:inline-flex;gap:5px;margin-top:6px}
+  .pip{width:11px;height:11px;border-radius:50%;background:#d9d3c2}
+  .pip.g{background:var(--green)}
+  .pip.y{background:var(--gold)}
+  .lab{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block}
+  td .how{font-size:13.5px;color:var(--muted);margin-top:4px}
+
+  /* ---------- ALTITUDE LADDER ---------- */
+  .ladder{display:flex;flex-direction:column;gap:0;align-items:stretch}
+  .rung{
+    display:grid;grid-template-columns:118px 1fr;gap:16px;align-items:center;
+    border:1.5px solid var(--ink);border-radius:10px;padding:16px 18px;background:var(--paper-2);
+  }
+  .rung .alt{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--card);
+    background:var(--ink);border-radius:7px;padding:10px 8px;text-align:center;line-height:1.45;
+  }
+  .rung.gold .alt{background:var(--gold);color:var(--ink-2)}
+  .rung.green .alt{background:var(--green)}
+  .rung h4{font-family:"Fraunces",serif;font-size:18px;font-weight:700;margin-bottom:4px}
+  .rung p{font-size:15px;line-height:1.5;color:#3a4a6e;margin:0}
+  .rung .mono{font-size:13px}
+  .ladder .drop{
+    align-self:center;display:flex;flex-direction:column;align-items:center;
+    color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+    letter-spacing:.12em;padding:6px 0;text-transform:uppercase;
+  }
+  .ladder .drop::before{content:"↓";font-size:20px;color:var(--gold);line-height:1}
+
+  /* ---------- SPECTRUM STRIP ---------- */
+  .spectrum{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin:8px 0 10px}
+  .deg{
+    flex:1;min-width:120px;border-radius:10px;padding:14px 12px;text-align:center;
+    border:1.5px solid var(--rule);background:var(--paper-2);
+  }
+  .deg .n{font-family:"Fraunces",serif;font-weight:900;font-size:38px;line-height:1}
+  .deg .s{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+          text-transform:uppercase;margin-top:8px;display:block;line-height:1.6}
+  .deg.ok{border-color:var(--green);background:#eef5f0}
+  .deg.ok .n{color:var(--green)}
+  .deg.dead{border-color:var(--red);background:#f9ece8}
+  .deg.dead .n{color:var(--red);text-decoration:line-through;text-decoration-thickness:4px}
+  .deg.new{border-color:var(--gold);background:#fbf4df;box-shadow:0 0 0 3px rgba(201,154,44,.18)}
+  .deg.new .n{color:var(--gold)}
+
+  /* ---------- MACHINE DIAGRAM ---------- */
+  .machine svg{width:100%;height:auto;display:block}
+
+  /* ---------- BOTTOM LINE ---------- */
+  .bottomline{
+    display:grid;grid-template-columns:96px 1fr;gap:22px;align-items:center;
+    background:#e9eef5;border:1.5px solid var(--ink);border-radius:14px;
+    padding:26px;margin:44px 0;
+  }
+  @media(max-width:600px){.bottomline{grid-template-columns:1fr}}
+  .bulb{
+    width:84px;height:84px;border-radius:50%;background:var(--ink);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;font-size:36px;flex:none;
+  }
+  .bottomline h3{
+    font-family:"Fraunces",serif;font-weight:700;font-size:22px;margin-bottom:8px;
+    display:flex;align-items:center;gap:12px;color:var(--ink-2);
+  }
+  .bottomline h3::before,.bottomline h3::after{content:"◆";font-size:11px;color:var(--gold)}
+  .bottomline p{font-size:17px;margin:0;color:#2e4066}
+
+  /* ---------- LEDGER ---------- */
+  .ledger td:first-child{width:58%}
+  .ledger td{font-size:15px}
+
+  footer{
+    border-top:3px double var(--ink);margin-top:26px;padding:30px 0 60px;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+    line-height:1.8;letter-spacing:.02em;
+  }
+  footer .fx{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:10px;color:#8b94a9}
+  @media(max-width:640px){
+    body{font-size:17.5px}
+    .t-row{grid-template-columns:74px 22px 1fr}
+    .rung{grid-template-columns:1fr}
+    .rung .alt{width:max-content;padding:6px 12px}
+  }
+  /* ---------- PRINT / PDF EXPORT ---------- */
+  @media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{font-size:12.5pt}
+    .insert,.bottomline,.cert,.rung,.specimen,.t-row,table.dots tr{break-inside:avoid;page-break-inside:avoid}
+    .insert{box-shadow:none}
+    header.hero{padding-top:24px}
+    h2,.eyebrow{break-after:avoid}
+  }
+</style>
+</head>
+<body class="grid-bg">
+
+<div class="wrap">
+
+<nav class="site-nav" aria-label="RocketGoals navigation">
+  <a class="home-button" href="/" aria-label="Go to the RocketGoals home page">
+    <span class="arrow" aria-hidden="true">←</span>
+    <span>RocketGoals Home</span>
+  </a>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="kicker">
+    <span>Field Report · Affine Algebraic Geometry</span><span class="dot"></span>
+    <span>Trooper, PA → ℂ³</span><span class="dot"></span>
+    <span>July 20, 2026</span>
+  </div>
+  <h1 class="title">The Map That<br>Broke <span class="accent">Algebra</span></h1>
+  <p class="dek">
+    An 87-year-old conjecture that generations of mathematicians believed was
+    "obviously true" collapsed over a World Cup weekend — killed by a single
+    polynomial map and two lines of arithmetic anyone can check. This is the
+    story of what fell, what it dragged down with it, how the machine actually
+    works inside, and the 53-year-old theorem left standing alone in the rubble.
+  </p>
+  <div class="byline">
+    <span>WRITE-UP · <b>Claude Fable 5</b> with <b>Jim Walker of RocketGoals.com</b></span>
+    <span>COUNTEREXAMPLE · <b>L. Alpoge</b>, announced Jul 19, 2026</span>
+    <span>STATUS · <b>certificates machine-verified · write-up pending review</b></span>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ ABSTRACT ============ -->
+<section class="essay">
+  <div class="eyebrow">Abstract</div>
+  <p><strong>We report and dissect a live mathematical event.</strong> On July 19, 2026, number
+  theorist Levent Alpoge announced an explicit polynomial map <span class="m">F : ℂ³ → ℂ³</span> with
+  constant Jacobian determinant −2 that sends three distinct points to a common image — a
+  counterexample to the Jacobian conjecture (Keller, 1939), found in collaboration with an AI model.
+  In this thread we independently verified both certificates three ways; constructed the explicit
+  downstream counterexamples the equivalence literature predicted, refuting the
+  <em>Poisson conjecture</em> on ℂ⁶ and the <em>Dixmier conjecture</em> for the Weyl algebra A₃;
+  reverse-engineered the map's internal mechanism (a hidden ℂ* symmetry, a plane map that folds
+  along a line it contracts, and a compensating fiber scaling); and identified why the announced
+  family of counterexamples begins at fiber degree 3 — a 1973 theorem of Campbell, newly sharp,
+  which our computations confirm the map threads exactly, with full S₃ monodromy generated
+  entirely at infinity. We close with the research program this opens.</p>
+</section>
+
+<!-- ============ TIMELINE INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">t</div>
+    <h3>Eighty-Seven Years in Six Rows</h3>
+    <span class="tag">Timeline</span>
+  </div>
+  <div class="insert-body">
+    <div class="timeline">
+      <div class="t-row"><div class="t-year">1939</div><div class="t-node"><span></span></div>
+        <div class="t-text"><b>O.-H. Keller poses the problem.</b> Does constant nonzero Jacobian
+        determinant force a polynomial map to be invertible? "Understandable with little beyond calculus."</div></div>
+      <div class="t-row"><div class="t-year">1973</div><div class="t-node"><span></span></div>
+        <div class="t-text"><b>Campbell proves the Galois case.</b> If ℂ(x)/ℂ(F) is Galois, a Keller map
+        is an automorphism (Razar and Wright later generalize). Filed under "partial progress." It will wait 53 years to become the sharp edge of the subject.</div></div>
+      <div class="t-row"><div class="t-year">1980s</div><div class="t-node"><span></span></div>
+        <div class="t-text"><b>The reduction era.</b> Bass–Connell–Wright and Yagzhev compress the conjecture
+        to cubic-homogeneous maps; Moh verifies the planar case to degree 100. Belief hardens.</div></div>
+      <div class="t-row"><div class="t-year">2005–07</div><div class="t-node"><span></span></div>
+        <div class="t-text"><b>The trio is welded together.</b> Tsuchimoto, Kanel-Belov &amp; Kontsevich, and
+        Adjamagbo &amp; van den Essen prove the Jacobian, Dixmier, and Poisson conjectures stand or fall together.</div></div>
+      <div class="t-row hot"><div class="t-year">Jul 19 '26</div><div class="t-node"><span></span></div>
+        <div class="t-text"><b>The fall.</b> During the World Cup final, Alpoge posts an explicit degree-(7,6,4)
+        map on ℂ³ with Jacobian ≡ −2 and a three-point collision, crediting a question from his friend Akhil
+        and model assistance from Claude Fable.</div></div>
+      <div class="t-row hot"><div class="t-year">Jul 20 '26</div><div class="t-node"><span></span></div>
+        <div class="t-text"><b>The dissection (this document).</b> Independent verification; explicit Poisson and
+        Dixmier counterexamples; the anatomy of the mechanism; the degree-2 gap explained and confirmed.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION I ============ -->
+<section class="essay">
+  <div class="eyebrow">I · The Event</div>
+  <h2>A Conjecture Dies on a Sunday Night</h2>
+  <p class="lede">Some conjectures die of old age, ground down by decades of partial results until the
+  final step is almost a formality. The Jacobian conjecture did not die that way. It died the way a
+  bridge fails: suddenly, publicly, and from a direction nobody was watching. On the evening of
+  July 19, 2026 — while much of the world watched the World Cup final — a post appeared giving a
+  single explicit polynomial map from ℂ³ to itself, together with two finite claims about it. Either
+  claim can be checked by a patient undergraduate. Together, they end an 87-year-old problem.</p>
+  <p>The Jacobian conjecture asked something that sounds self-evidently true. Take any polynomial map
+  <span class="m">F : ℂⁿ → ℂⁿ</span>. Its Jacobian determinant measures local volume distortion; if that
+  determinant is a nonzero <em>constant</em>, the map is everywhere a local isomorphism — no folding,
+  no crushing, anywhere, at any point. The conjecture asserted that such a map must then be globally
+  invertible, with polynomial inverse. Local perfection should imply global perfection. Every low-degree
+  case said yes. The planar case was verified through degree 100. The claim survived every attack for
+  87 years — and accumulated an ecosystem of reductions, equivalences, and partial theorems premised
+  on its truth.</p>
+  <p>The counterexample, which we will call <em>Alpoge's map</em>, is the triple
+  <span class="m">F = (F₁, F₂, F₃)</span> of degrees 7, 6, and 4:</p>
+  <div class="specimen">
+F₁ = (1+xy)³z + y²(1+xy)(4+3xy)<br>
+F₂ = y + 3x(1+xy)²z + 3xy²(4+3xy)<br>
+F₃ = 2x − 3x²y − x³z
+  </div>
+  <p>The disproof consists of exactly two certificates, and their brutality is the point: no limits, no
+  estimates, no cohomology — just polynomial arithmetic that a computer algebra system confirms in
+  under a second.</p>
+</section>
+
+<!-- ============ CERTIFICATES INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">✓</div>
+    <h3>The Two Certificates</h3>
+    <span class="tag">Finite · Checkable · Fatal</span>
+  </div>
+  <div class="insert-body">
+    <div class="cert-grid">
+      <div class="cert">
+        <h4>Certificate 1 — the hypothesis holds</h4>
+        <p>Expanding the 3×3 Jacobian determinant of F symbolically, every non-constant term cancels:</p>
+        <div class="mono">det J_F(x, y, z) ≡ −2 &nbsp;(identically)</div>
+        <p style="margin-top:12px;margin-bottom:8px">So F is a local isomorphism at <em>every single point</em> of ℂ³ — precisely a Keller map.</p>
+        <span class="vchip">✓ machine-verified ×3</span>
+      </div>
+      <div class="cert">
+        <h4>Certificate 2 — the conclusion fails</h4>
+        <p>Three distinct points share one image:</p>
+        <div class="mono">
+          F(0, 0, −¼) = (−¼, 0, 0)<br>
+          F(1, −³⁄₂, ¹³⁄₂) = (−¼, 0, 0)<br>
+          F(−1, ³⁄₂, ¹³⁄₂) = (−¼, 0, 0)
+        </div>
+        <p style="margin-top:12px;margin-bottom:8px">A map with a three-point collision has no inverse of any kind — polynomial or otherwise.</p>
+        <span class="vchip">✓ machine-verified ×3</span>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin:16px 0 0;line-height:1.55">
+      Verification in this thread: exact symbolic expansion (SymPy), exact rational-arithmetic evaluation, and
+      finite-difference numerics at random complex points — three independent routes, one verdict.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION II ============ -->
+<section class="essay">
+  <div class="eyebrow">II · The Cascade</div>
+  <h2>One Object, Three Conjectures, Zero Survivors</h2>
+  <p>The Jacobian conjecture did not live alone. Two decades of work — Tsuchimoto, Kanel-Belov and
+  Kontsevich, Adjamagbo and van den Essen — had welded it to two other famous open problems: the
+  <strong>Dixmier conjecture</strong> (every endomorphism of a Weyl algebra Aₙ is an automorphism) and the
+  <strong>Poisson conjecture</strong> (every polynomial endomorphism of ℂ²ⁿ preserving the standard Poisson
+  bracket is an automorphism), through the implication chain
+  <span class="m">JC₂ₙ ⇒ PCₙ ⇒ DCₙ ⇒ JCₙ</span>. Those equivalences were built as ladders toward proof.
+  Run in reverse, they are demolition charges.</p>
+  <p>But abstract contrapositives satisfy nobody, so in this thread we built the downstream
+  counterexamples <em>explicitly</em> — and the construction turned out to be one line. Because
+  <span class="m">det J_F ≡ −2</span> never vanishes, the inverse-transpose Jacobian
+  <span class="m">(J_Fᵀ)⁻¹ = adj(J_Fᵀ)/(−2)</span> has polynomial entries. The <strong>cotangent lift</strong></p>
+  <div class="specimen">Φ(x, p) &nbsp;=&nbsp; ( F(x), &nbsp;(J_F(x)ᵀ)⁻¹ p ) &nbsp;: &nbsp;ℂ⁶ → ℂ⁶</div>
+  <p>is then a polynomial map that pulls back the canonical 1-form <span class="m">p·dx</span> to itself
+  exactly. We machine-verified all fifteen Poisson brackets among its six components — every one comes
+  out canonical — and exhibited three distinct points of ℂ⁶ (the three collision points, with momenta
+  zero) sharing one image. A non-injective Poisson endomorphism: <strong>the Poisson conjecture is false
+  on ℂ⁶</strong>. And because Φ is symplectic, its own Jacobian determinant is exactly 1 — so Φ is
+  simultaneously a <em>second</em> Jacobian counterexample, in dimension six, in Keller's original
+  unimodular normalization.</p>
+  <p>One altitude higher, the same matrix <span class="m">B = (J_Fᵀ)⁻¹</span> quantizes the construction.
+  Defining <span class="m">φ(xᵢ) = Fᵢ</span> and <span class="m">φ(∂ⱼ) = Σₖ Bⱼₖ(x)∂ₖ</span> on the third
+  Weyl algebra, we machine-verified every Weyl relation: the commutator matrix
+  <span class="m">[φ(∂ⱼ), φ(xᵢ)]</span> is exactly the identity, and the lifted derivations commute — the
+  identity that makes them commute is <em>literally the same polynomial identity</em> that made the
+  Poisson brackets vanish. The endomorphism φ is injective automatically (A₃ is simple), and a short
+  filtration argument shows it preserves operator order exactly, which yields an explicit element
+  outside its image: the coordinate <span class="m">x₁</span> itself. If <span class="m">x₁ = φ(u)</span>,
+  order forces <span class="m">u ∈ ℂ[x]</span>, hence <span class="m">x₁ = c(F)</span> identically — but
+  evaluating at the collision points makes <span class="m">c(F)</span> take one value where
+  <span class="m">x₁</span> takes the values 0 and 1. So <strong>the Dixmier conjecture is false for A₃</strong>:
+  an injective, non-surjective endomorphism, written out in full with integer and half-integer
+  coefficients. The three-point collision does the killing in two lines.</p>
+</section>
+
+<!-- ============ ALTITUDE LADDER INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">∴</div>
+    <h3>One Object at Three Altitudes</h3>
+    <span class="tag">Refutation commutes with quantization</span>
+  </div>
+  <div class="insert-body">
+    <div class="ladder">
+      <div class="rung">
+        <div class="alt">Quantum<br>Weyl algebra A₃</div>
+        <div>
+          <h4>φ : A₃ → A₃ &nbsp;·&nbsp; kills Dixmier</h4>
+          <p>x ↦ F(x), &nbsp;∂ ↦ B(x)∂ with B = (J_Fᵀ)⁻¹. Injective, not surjective — the generator
+          <span class="mono">x₁</span> is explicitly missing from the image. &nbsp;<span class="vchip">✓ relations machine-verified</span></p>
+        </div>
+      </div>
+      <div class="drop">associated graded (order filtration)</div>
+      <div class="rung gold">
+        <div class="alt">Classical<br>phase space ℂ⁶</div>
+        <div>
+          <h4>Φ : ℂ⁶ → ℂ⁶ &nbsp;·&nbsp; kills Poisson (and JC₆, with det = 1)</h4>
+          <p>The cotangent lift of F. Preserves all 15 canonical brackets; three points, one image;
+          det J_Φ ≡ 1. &nbsp;<span class="vchip">✓ machine-verified</span></p>
+        </div>
+      </div>
+      <div class="drop">forget momenta / ℂ*-quotient</div>
+      <div class="rung green">
+        <div class="alt">Base<br>configuration ℂ³</div>
+        <div>
+          <h4>F : ℂ³ → ℂ³ &nbsp;·&nbsp; kills the Jacobian conjecture</h4>
+          <p>Alpoge's map: degrees (7, 6, 4), det ≡ −2, generic fiber = 3 points. Padding with identity
+          factors kills all three conjectures in every dimension n ≥ 3. &nbsp;<span class="vchip">✓ machine-verified</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ============ SECTION III ============ -->
+<section class="essay">
+  <div class="eyebrow">III · The Anatomy</div>
+  <h2>How the Machine Actually Works</h2>
+  <p>A counterexample this clean is not a lightning strike; it is engineering. When we opened the map
+  up, the formulas collapsed dramatically. Writing <span class="m">u = 1+xy</span> — and noticing that
+  the mysterious <span class="m">4+3xy</span> is just <span class="m">3u+1</span> — the whole map is
+  one line: with <span class="m">w = u²z + (3u+1)y²</span>,</p>
+  <div class="specimen">F &nbsp;=&nbsp; ( <span class="hl">u·w</span>, &nbsp;&nbsp;y + 3x·<span class="hl">w</span>, &nbsp;&nbsp;x·(5 − 3u − x²z) )</div>
+  <p>Beneath that compression sits a hidden symmetry. Assign the variables the weights
+  <span class="m">(1, −1, −2)</span> and the target the weights <span class="m">(−2, −1, 1)</span>: then F is
+  exactly equivariant for the ℂ* action <span class="m">t·(x,y,z) = (tx, t⁻¹y, t⁻²z)</span>. The invariants
+  of that action are generated by <span class="m">u = 1+xy</span> and <span class="m">v = x²z</span> — and F
+  <em>descends</em> to a two-variable map on the quotient plane. On the chart <span class="m">x ≠ 0</span>,
+  in coordinates <span class="m">(x, u, v)</span>, the whole three-dimensional map is triangular:</p>
+  <div class="specimen">(x, u, v) &nbsp;⟼&nbsp; ( x·<span class="gr">h(u,v)</span>, &nbsp;<span class="gr">Q(u,v)</span> ), &nbsp;&nbsp;&nbsp;h = 5 − 3u − v</div>
+  <p>Everything that matters happens in the base map Q, and we verified three facts about it. It is
+  generically <strong>3-to-1</strong> (Gröbner quotient dimension = 3, matching the fiber degree of F itself).
+  It <strong>contracts the entire line</strong> <span class="m">L = {h = 0}</span> to the single point (1, 0). And
+  its Jacobian is <span class="m">det J_Q = 2h²</span> — vanishing to order exactly two along the line it
+  crushes. Now the volume bookkeeping closes with a click: the fiber direction is scaled by h, the base
+  is folded with degeneracy h², and</p>
+  <div class="specimen">det J_F &nbsp;=&nbsp; − det J_Q / h² &nbsp;=&nbsp; <span class="hl">−2</span></div>
+  <p><strong>The fold of the base and the collapse of the fiber cancel each other exactly.</strong> The map is
+  singular downstairs and singular along the fiber, and the two singularities multiply to a constant.
+  That is the entire trick — a local isomorphism everywhere, welded together out of two things that are
+  each degenerate.</p>
+  <p>Non-injectivity is then not a sporadic accident but a designed structure. The
+  ℤ/2 inside the torus (<span class="m">x ↦ −x</span>) pairs points; the pairs collide wherever the last two
+  output coordinates vanish; and that locus is an entire ℂ*-orbit — the curve
+  <span class="m">s ↦ (s, −3/2s, 13/2s²)</span>, which we verified maps to <span class="m">(−1/4s², 0, 0)</span>
+  for <em>every</em> s, folding two-to-one onto the punctured axis, while the z-axis
+  (<span class="m">F(0,0,z) = (z,0,0)</span>) supplies a clean third sheet. As the target slides to the origin,
+  <span class="m">s → ∞</span>: the extra preimages escape to infinity. Bézout says the fibers "should"
+  contain 7·6·4 = 168 points; the true count is 3. The other 165 intersections — and all the sheet-merging —
+  live on the hyperplane at infinity, which is precisely where the Jacobian hypothesis says nothing at all.</p>
+  <p>And the deepest lesson: the construction converts a rigid problem into a flexible one. Building a
+  3D map with <em>constant</em> Jacobian became, downstairs, building a 2D map with <em>prescribed
+  non-constant</em> Jacobian 2h² — a soft problem with plenty of solutions, exactly the freedom that
+  Keller's two-variable problem lacks. Eighty-five years of planar rigidity theorems simply do not apply
+  to Q, because Q never claimed a constant Jacobian.</p>
+</section>
+
+<!-- ============ MACHINE DIAGRAM INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">⚙</div>
+    <h3>The Counterexample Machine</h3>
+    <span class="tag">Fold × Scale = Constant</span>
+  </div>
+  <div class="insert-body machine">
+    <svg viewBox="0 0 840 330" role="img" aria-label="Schematic of the fibered structure of Alpoge's map">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#152a52"/>
+        </marker>
+        <marker id="arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#c99a2c"/>
+        </marker>
+      </defs>
+      <!-- SOURCE PANEL -->
+      <rect x="18" y="22" width="330" height="286" rx="12" fill="#fbf9f2" stroke="#152a52" stroke-width="1.5"/>
+      <text x="34" y="50" font-family="IBM Plex Mono, monospace" font-size="12" letter-spacing="2" fill="#1e6b4e" font-weight="600">SOURCE ℂ³ = (x-FIBERS) × (u,v)-PLANE</text>
+      <!-- base plane -->
+      <path d="M46 250 L200 210 L322 250 L168 290 Z" fill="#e9eef5" stroke="#152a52" stroke-width="1.3"/>
+      <text x="60" y="284" font-family="IBM Plex Mono, monospace" font-size="11" fill="#5e6a83">(u, v) quotient plane</text>
+      <!-- fold line L -->
+      <line x1="96" y1="252" x2="268" y2="228" stroke="#a63d2f" stroke-width="2.6" stroke-dasharray="7 4"/>
+      <text x="238" y="216" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#a63d2f" font-weight="600">L : h = 0</text>
+      <!-- fibers -->
+      <g stroke="#1e6b4e" stroke-width="1.6">
+        <line x1="120" y1="245" x2="120" y2="92"/>
+        <line x1="182" y1="236" x2="182" y2="80"/>
+        <line x1="244" y1="231" x2="244" y2="70"/>
+      </g>
+      <text x="112" y="76" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#1e6b4e">x-fibers (ℂ*-orbits), scaled by h(u,v)</text>
+      <!-- orbit pair on the special fiber -->
+      <circle cx="182" cy="118" r="5.5" fill="#c99a2c" stroke="#152a52" stroke-width="1.2"/>
+      <circle cx="182" cy="176" r="5.5" fill="#c99a2c" stroke="#152a52" stroke-width="1.2"/>
+      <path d="M196 118 C216 132 216 162 196 176" fill="none" stroke="#c99a2c" stroke-width="1.6" marker-end="url(#arrg)"/>
+      <text x="206" y="152" font-family="IBM Plex Mono, monospace" font-size="11" fill="#8a6a12">x ↦ −x</text>
+      <!-- MAP ARROW -->
+      <line x1="360" y1="165" x2="462" y2="165" stroke="#152a52" stroke-width="2.4" marker-end="url(#arr)"/>
+      <text x="411" y="148" text-anchor="middle" font-family="Fraunces, serif" font-size="21" font-weight="700" fill="#152a52">F</text>
+      <text x="411" y="188" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5e6a83">det ≡ −2</text>
+      <!-- TARGET PANEL -->
+      <rect x="474" y="22" width="348" height="286" rx="12" fill="#fbf9f2" stroke="#152a52" stroke-width="1.5"/>
+      <text x="490" y="50" font-family="IBM Plex Mono, monospace" font-size="12" letter-spacing="2" fill="#1e6b4e" font-weight="600">TARGET ℂ³ · GENERIC FIBER = 3 SHEETS</text>
+      <!-- target plane -->
+      <path d="M502 250 L662 210 L800 250 L640 290 Z" fill="#e9eef5" stroke="#152a52" stroke-width="1.3"/>
+      <!-- contracted point -->
+      <circle cx="655" cy="242" r="6.5" fill="#a63d2f" stroke="#152a52" stroke-width="1.4"/>
+      <text x="600" y="274" font-family="IBM Plex Mono, monospace" font-size="11" fill="#a63d2f" font-weight="600">L contracted to (1, 0)</text>
+      <!-- three sheets -->
+      <g font-family="IBM Plex Mono, monospace" font-size="11">
+        <path d="M520 96 C600 70 720 70 796 96" fill="none" stroke="#1e6b4e" stroke-width="2"/>
+        <path d="M520 130 C600 104 720 104 796 130" fill="none" stroke="#c99a2c" stroke-width="2"/>
+        <path d="M520 164 C600 138 720 138 796 164" fill="none" stroke="#c99a2c" stroke-width="2"/>
+        <text x="524" y="88" fill="#1e6b4e">sheet 1 · z-axis section</text>
+        <text x="524" y="122" fill="#8a6a12">sheets 2 &amp; 3 · folded orbit —</text>
+        <text x="524" y="156" fill="#8a6a12">merge only at infinity (s → ∞)</text>
+      </g>
+      <!-- escape arrow -->
+      <line x1="700" y1="147" x2="806" y2="147" stroke="#a63d2f" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arr)"/>
+      <text x="700" y="182" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#a63d2f">escape: 165 of 168 Bézout points at ∞</text>
+    </svg>
+    <p style="font-size:14px;color:var(--muted);margin-top:14px;line-height:1.55">
+      The base map Q folds the (u,v)-plane along the line L and contracts L to a point (det J_Q = 2h²);
+      the fiber direction is rescaled by h. The two degeneracies multiply to the constant −2, so the total map is a
+      local isomorphism at every finite point — while its sheets merge only over the horizon.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION IV ============ -->
+<section class="essay">
+  <div class="eyebrow">IV · The Gap at Two</div>
+  <h2>The 53-Year-Old Theorem Left Standing</h2>
+  <p>The announced family of counterexamples reportedly exists for every generic fiber degree
+  n ≥ 3 — and conspicuously not for n = 2. We went hunting for the reason, expecting to find a new
+  theorem waiting to be proved. What we found instead was better: an old one, waiting to be
+  <em>promoted</em>. In 1973, L.A. Campbell proved that a Keller map whose function-field extension
+  ℂ(x)/ℂ(F) is <strong>Galois</strong> must be an automorphism (Razar, and independently Wright, later extended
+  this to general fields). And in characteristic zero, every degree-2 extension is automatically Galois.
+  Degree 2 forces Galois; Galois forces invertible; invertible forces degree 1. Fiber degree 2 is
+  impossible — and has been, quietly, for 53 years.</p>
+  <p>The proof skeleton deserves to be seen, because it is beautiful. A degree-2 cover carries a deck
+  involution σ with <span class="m">F∘σ = F</span>. At any fixed point the chain rule gives
+  <span class="m">J_F · J_σ = J_F</span>, and J_F is invertible — that is the Keller hypothesis doing real
+  work — so <span class="m">J_σ = Id</span>; but a finite-order map with identity differential at a fixed
+  point <em>is</em> the identity near it (Cartan's linearization), so a nontrivial σ must act <strong>freely</strong>.
+  And P.A. Smith's fixed-point theorem forbids a finite group from acting freely on a contractible
+  space like ℂⁿ. Contradiction. (The technical heart of Campbell's paper is making σ regular enough
+  for this to bite; the skeleton above is our reconstruction of its shape.)</p>
+  <p>So the true statement of affairs, as of this weekend, is a sharp dichotomy that could not have
+  been stated before: <strong>the degree spectrum of Keller maps is {1} ∪ {3, 4, 5, …}</strong>. Degree 1 always
+  (automorphisms); degree 2 never (Campbell–Razar–Wright); and — for the first time in 87 years —
+  the second half of the spectrum is known to be inhabited.</p>
+</section>
+
+<!-- ============ SPECTRUM INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">#</div>
+    <h3>The Degree Spectrum of Keller Maps</h3>
+    <span class="tag">Now sharp · as of Jul 19, 2026</span>
+  </div>
+  <div class="insert-body">
+    <div class="spectrum">
+      <div class="deg ok"><div class="n">1</div><span class="s">Automorphisms<br>always possible</span></div>
+      <div class="deg dead"><div class="n">2</div><span class="s">Impossible<br>Campbell 1973<br>(quadratic ⇒ Galois)</span></div>
+      <div class="deg new"><div class="n">3</div><span class="s">Realized Jul 2026<br>Alpoge's map<br>S₃ forced &amp; verified</span></div>
+      <div class="deg ok"><div class="n">4</div><span class="s">Claimed<br>(announced family)</span></div>
+      <div class="deg ok"><div class="n">5+</div><span class="s">Claimed<br>every n ≥ 3</span></div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.55">
+      Two is the only degree whose field extension is <em>forced</em> to be Galois — and Galois is exactly
+      what a Keller counterexample cannot afford to be.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION V ============ -->
+<section class="essay">
+  <div class="eyebrow">V · The Needle, Threaded</div>
+  <h2>Non-Galois by Necessity — and Verifiably So</h2>
+  <p>Campbell's theorem does more than forbid degree 2: it forbids <em>any</em> Galois counterexample.
+  A degree-3 extension is Galois exactly when its group is ℤ/3, exactly when its discriminant is a
+  square. So the theorem makes a hard, checkable prediction about Alpoge's map: its monodromy
+  <em>must</em> be the full symmetric group S₃. The map had no choice. We checked.</p>
+  <p>Working on the quotient plane, elimination produced the minimal polynomial of
+  <span class="m">u = 1+xy</span> over the target field — and it came out startlingly clean. Writing
+  <span class="m">A = 1+bc</span> and <span class="m">B = ac²</span> for the target invariants, the three
+  base values of u over any fiber satisfy a <em>depressed</em> cubic (the three sheets of every fiber
+  obey <span class="m">u₁+u₂+u₃ = 0</span> — check it on the collision fiber: 1 − ½ − ½ = 0):</p>
+  <div class="specimen">a(A,B)·u³ + c(A,B)·u − 4B = 0<br>
+a = A³−4A²−18AB+5A+27B²+34B−2 &nbsp;&nbsp;&nbsp;c = A²−2A−12B+1</div>
+  <p>Its discriminant factors exactly as</p>
+  <div class="specimen">Δ &nbsp;=&nbsp; −4 · <span class="hl">a</span> · <span class="gr">s²</span>, &nbsp;&nbsp;&nbsp;s = A³−3A²−18AB+54B²+18B−1</div>
+  <p>The odd-multiplicity factor makes Δ a non-square in ℂ(A,B): the monodromy contains a
+  transposition, and with irreducibility it is all of <strong>S₃ — non-Galois, precisely as demanded</strong>.
+  But look at <em>which</em> factor carries the odd multiplicity: it is the <strong>leading coefficient</strong> of the
+  cubic — the locus where a root escapes to infinity, the image of the non-properness set. The finite
+  branch locus <span class="m">{s = 0}</span> enters squared, so monodromy around it is even; the odd
+  elements that break Galois-ness — the elements that make the counterexample possible at all — are
+  generated <em>only</em> by loops around the escape divisor. The map is non-Galois <em>because of</em> its
+  behavior at infinity: the same horizon that hides the merging sheets, evades every local obstruction,
+  and slips through Campbell's fingers. One mechanism, three escapes.</p>
+</section>
+<!-- ============ SECTION VI ============ -->
+<section class="essay">
+  <div class="eyebrow">VI · Conclusion</div>
+  <h2>What Grows in the Rubble</h2>
+  <p>Three days ago, the Jacobian conjecture was an 87-year-old fortress. Today it is a quarry — and
+  the stones are already being carried off to new construction sites. The core lesson your infographic
+  put well deserves restating as the epitaph: <em>local checks can look perfect while global behavior
+  still fails</em>. Every finite-distance test this map faces, it passes flawlessly; its pathology lives
+  entirely at infinity. Any field that infers global structure from local regularity — and that
+  includes swaths of geometry, dynamics, and the theory of invertible computation — has just been
+  handed the sharpest possible cautionary specimen.</p>
+  <p>What should be studied next? The demolition itself defines the program. The most striking
+  feature of the aftermath is an <em>inversion of status</em>: theorems once filed as "partial progress
+  toward the conjecture" (Campbell's Galois case, Moh's planar bounds, the properness criteria) are
+  now the load-bearing walls of a new subject — the structure theory of Keller counterexamples. The
+  table below is our honest assessment of where the open ground lies.</p>
+</section>
+
+<!-- ============ RESEARCH TABLE INSERT ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">→</div>
+    <h3>The Post-Conjecture Research Program</h3>
+    <span class="tag">Eight open directions</span>
+  </div>
+  <div class="insert-body" style="padding:0">
+    <table class="dots">
+      <thead><tr><th style="width:46%">Direction</th><th>Tractability</th><th>Potential impact</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cellrow"><span class="num">1</span><div><strong>The planar case.</strong> Keller's original n = 2 problem is untouched — counterexamples pad upward, never down, and our anatomy shows the trick needs a spare fiber direction to hide the fold in. Does dimension two survive?<div class="how">The one place the conjecture may still be true — and now the most famous open problem in the area.</div></div></div></td>
+        <td><span class="lab">Hard</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div></td>
+        <td><span class="lab">Very high</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">2</span><div><strong>The monodromy inverse-Galois problem.</strong> Which permutation groups arise as monodromy of Keller counterexamples? Degree 3 forces S₃ (verified here); degree 4 admits non-Galois candidates like D₄ — realizable or not?<div class="how">A brand-new problem that literally could not be posed before this weekend.</div></div></div></td>
+        <td><span class="lab">Medium</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip"></span><span class="pip"></span></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">3</span><div><strong>Minimality &amp; classification in ℂ³.</strong> Are degrees (7,6,4) minimal? Classify all ℂ*-equivariant counterexamples via the prescribed-Jacobian equation det J_Q = c·h² on the quotient plane.<div class="how">Our reduction converts the search into a tractable 2-variable PDE with divisibility side-conditions.</div></div></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip"></span></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">4</span><div><strong>Low Weyl algebras: A₁ and A₂.</strong> Dixmier's original 1968 question for A₁ — and the Poisson analogue in the lowest cases — are untouched by the collapse. The quantum plane may yet be rigid.<div class="how">The quantum mirror of the planar case; the two problems will likely fall or stand together.</div></div></div></td>
+        <td><span class="lab">Hard</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div></td>
+        <td><span class="lab">Very high</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">5</span><div><strong>Geometry at infinity of Keller maps.</strong> Our discriminant computation shows all odd monodromy is generated at the escape divisor. Build the general dictionary: asymptotic variety ↔ sheet-merging ↔ Galois obstruction.<div class="how">Jelonek's non-properness theory is the natural launching pad.</div></div></div></td>
+        <td><span class="lab">Medium</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip"></span><span class="pip"></span></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">6</span><div><strong>Real forms.</strong> Alpoge's map has rational coefficients and real collision points — its restriction to ℝ³ already refutes the real polynomial analogue with everywhere-nonzero constant Jacobian. Map the full real landscape beyond Pinchuk.<div class="how">Connects to real algebraic geometry and global inverse-function theorems used in applications.</div></div></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip"></span></div></td>
+        <td><span class="lab">Moderate</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip"></span><span class="pip"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">7</span><div><strong>Formal verification.</strong> The certificates are finite arithmetic — a Lean or Coq formalization is a weekend project and would make this the first major conjecture <em>resolved</em> with a machine-checked proof end-to-end.<div class="how">Also the cleanest possible answer to "has it really been peer-reviewed?"</div></div></div></td>
+        <td><span class="lab">Very high</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip"></span></div></td></tr>
+
+        <tr><td><div class="cellrow"><span class="num">8</span><div><strong>Salvage theory.</strong> Re-examine the reduction literature (Bass–Connell–Wright cubic reductions, Drużkowski forms) in reverse: each reduction is now a counterexample <em>factory</em>, transporting Alpoge's map into every reduced normal form.<div class="how">Decades of machinery built for proof, instantly repurposed for construction.</div></div></div></td>
+        <td><span class="lab">High</span><div class="pipdots"><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip g"></span><span class="pip"></span></div></td>
+        <td><span class="lab">Moderate</span><div class="pipdots"><span class="pip y"></span><span class="pip y"></span><span class="pip y"></span><span class="pip"></span><span class="pip"></span></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ BOTTOM LINE ============ -->
+<div class="bottomline">
+  <div class="bulb">◈</div>
+  <div>
+    <h3>Bottom Line</h3>
+    <p>An 87-year-old conjecture, two famous companions, and an entire proof-strategy ecosystem fell to
+    one polynomial whose only pathology lives at infinity. The near-term impact is a reorientation of
+    pure mathematics around the <em>structure theory of counterexamples</em>; the enduring lesson, for any
+    field that infers global truth from local checks, is that the horizon is where certainty goes to die.
+    The planar case — where Keller began — is now the most interesting open problem in the subject.</p>
+  </div>
+</div>
+
+<!-- ============ PROVENANCE / HONESTY LEDGER ============ -->
+<div class="insert">
+  <div class="insert-head">
+    <div class="glyph">§</div>
+    <h3>Provenance &amp; Epistemic Ledger</h3>
+    <span class="tag">What rests on what</span>
+  </div>
+  <div class="insert-body" style="padding:0">
+    <table class="dots ledger">
+      <thead><tr><th>Claim</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Both certificates of Alpoge's map (det ≡ −2; three-point collision)</td>
+            <td><span class="vchip">✓ verified in-thread, 3 ways</span></td></tr>
+        <tr><td>Poisson counterexample Φ on ℂ⁶ (polynomiality, all 15 brackets, non-injectivity, det = 1)</td>
+            <td><span class="vchip">✓ verified in-thread</span></td></tr>
+        <tr><td>Dixmier endomorphism φ of A₃ (all Weyl relations; explicit coefficients)</td>
+            <td><span class="vchip">✓ verified in-thread</span></td></tr>
+        <tr><td>x₁ ∉ image of φ (order-filtration argument)</td>
+            <td><span class="vchip lit">proof sketch, elementary</span></td></tr>
+        <tr><td>Anatomy: compact form, ℂ*-equivariance, descent to Q, det J_Q = 2h², contraction of L, fiber degree 3, folded orbit</td>
+            <td><span class="vchip">✓ verified in-thread</span></td></tr>
+        <tr><td>Fiber cubic, discriminant Δ = −4·a·s², S₃ monodromy</td>
+            <td><span class="vchip">✓ verified in-thread</span></td></tr>
+        <tr><td>Campbell 1973 (Galois case); Razar / Wright generalizations; JC–DC–PC equivalences</td>
+            <td><span class="vchip lit">literature</span></td></tr>
+        <tr><td>Announced family for every fiber degree n ≥ 3</td>
+            <td><span class="vchip open">reported · not independently verified</span></td></tr>
+        <tr><td>Community acceptance / formal peer review of the announcement</td>
+            <td><span class="vchip open">pending — days old</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:14px;color:var(--muted);margin:16px 22px 20px;line-height:1.6">
+      This essay documents a live event first announced on July 19, 2026, and analysis performed on
+      July 20, 2026, in a working conversation between Jim Walker of RocketGoals.com and Claude Fable 5
+      (Anthropic). The structural dissection in Sections III–V is original to that conversation and has
+      not been peer-reviewed; the forthcoming official write-up may tell the story differently. The
+      counterexample is due to Levent Alpoge, who credited a question from his friend Akhil and
+      model assistance from Claude Fable; historical attributions follow the standard literature
+      (Keller 1939; Campbell 1973; Razar 1979; Wright 1981; Tsuchimoto, Kanel-Belov–Kontsevich,
+      Adjamagbo–van den Essen 2005–07). All computations were performed in exact rational arithmetic
+      with SymPy, cross-checked numerically.
+    </p>
+  </div>
+</div>
+
+<!-- ============ CODA ============ -->
+<section class="essay">
+  <div class="eyebrow">Coda</div>
+  <p style="font-size:21px;line-height:1.6;font-family:'Fraunces',serif;font-weight:400">
+  Keller asked his question in 1939 believing, like nearly everyone after him, that the answer was yes.
+  The answer was no — but only barely, only in dimension three and above, only at infinity, and only by
+  a mechanism so delicate that two exact degeneracies must cancel to the last coefficient. The
+  conjecture was wrong the way a great conjecture should be wrong: in a manner more interesting
+  than being right.</p>
+</section>
+
+</main>
+
+<footer>
+  <div>THE MAP THAT BROKE ALGEBRA · a field report from the week the Jacobian conjecture fell</div>
+  <div class="fx">
+    <span>det J_F(x) ≡ −2 &nbsp;∀x ∈ ℂ³</span>
+    <span>u₁ + u₂ + u₃ = 0</span>
+    <span>Δ = −4 · a · s²</span>
+    <span>{1} ∪ {3, 4, 5, …}</span>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
