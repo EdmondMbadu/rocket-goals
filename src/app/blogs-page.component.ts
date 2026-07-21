@@ -18,8 +18,8 @@ const STANDALONE_ARTICLES: BlogListingPost[] = [
   {
     slug: 'bodies-in-the-basement',
     href: '/bodies-in-the-basement',
-    title: 'The Bodies in the Basement',
-    subtitle: 'What else the Jacobian counterexample killed—and how the implication graph now points toward a new mathematical research program.',
+    title: "The Bodies in Algebra's Basement",
+    subtitle: 'A frontier-mathematics field report on four more conjectures that fell with the Jacobian conjecture—and where the first explicit counterexamples may be buried.',
     publishedDate: 'July 21, 2026',
     readTime: '17 min read',
     authorName: 'Claude Fable 5 with Jim Walker'
