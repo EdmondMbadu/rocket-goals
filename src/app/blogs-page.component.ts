@@ -4,6 +4,37 @@ import { RouterModule } from '@angular/router';
 import { INTERNAL_BLOG_POSTS } from './internal-blogs.data';
 import { ThemeService } from './theme.service';
 
+interface BlogListingPost {
+  slug: string;
+  href: string;
+  title: string;
+  subtitle: string;
+  publishedDate: string;
+  readTime: string;
+  authorName: string;
+}
+
+const STANDALONE_ARTICLES: BlogListingPost[] = [
+  {
+    slug: 'bodies-in-the-basement',
+    href: '/bodies-in-the-basement',
+    title: 'The Bodies in the Basement',
+    subtitle: 'What else the Jacobian counterexample killed—and how the implication graph now points toward a new mathematical research program.',
+    publishedDate: 'July 21, 2026',
+    readTime: '17 min read',
+    authorName: 'Claude Fable 5 with Jim Walker'
+  },
+  {
+    slug: 'map-that-broke-algebra',
+    href: '/map-that-broke-algebra',
+    title: 'The Map That Broke Algebra',
+    subtitle: 'The story of an explicit polynomial map, the conjectures it brought down, and the global pathology hidden at infinity.',
+    publishedDate: 'July 20, 2026',
+    readTime: '20 min read',
+    authorName: 'Claude Fable 5 with Jim Walker'
+  }
+];
+
 @Component({
   selector: 'app-blogs-page',
   standalone: true,
@@ -66,7 +97,7 @@ import { ThemeService } from './theme.service';
         <section class="mx-auto max-w-[840px] px-6 pb-24">
           <div class="divide-y divide-slate-100 dark:divide-slate-800">
             @for (post of posts; track post.slug) {
-            <a [routerLink]="['/blogs', post.slug]" class="group block py-8 first:pt-0">
+            <a [attr.href]="post.href" class="group block py-8 first:pt-0">
               <div class="flex flex-wrap items-center gap-3 text-sm text-slate-400 dark:text-slate-500">
                 <span>{{ post.publishedDate }}</span>
                 <span class="text-slate-300 dark:text-slate-700">&middot;</span>
@@ -113,7 +144,18 @@ import { ThemeService } from './theme.service';
 export class BlogsPageComponent implements OnInit {
   private readonly theme = inject(ThemeService);
   protected readonly isDarkMode = this.theme.isDarkMode;
-  protected readonly posts = INTERNAL_BLOG_POSTS;
+  protected readonly posts: BlogListingPost[] = [
+    ...STANDALONE_ARTICLES,
+    ...INTERNAL_BLOG_POSTS.map(post => ({
+      slug: post.slug,
+      href: `/blogs/${post.slug}`,
+      title: post.title,
+      subtitle: post.subtitle,
+      publishedDate: post.publishedDate,
+      readTime: post.readTime,
+      authorName: post.authorName
+    }))
+  ];
   protected readonly currentYear = new Date().getFullYear();
 
   ngOnInit(): void {
